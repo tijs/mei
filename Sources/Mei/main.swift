@@ -1,5 +1,6 @@
 import Foundation
 import MeiCore
+import MLX
 
 @main
 struct MeiMain {
@@ -22,6 +23,11 @@ struct MeiMain {
             exit(1)
         }
         print("mei: model loaded")
+        fflush(stdout)
+        let device = GPU.deviceInfo()
+        let loaded = await engine.loadMemory
+        print("mei: device \(device.architecture) memory \(device.memorySize) bytes; recommended working set \(GPU.maxRecommendedWorkingSetBytes() ?? -1) bytes")
+        print("mei: memory after load: active \(loaded?.activeMemory ?? -1) cache \(loaded?.cacheMemory ?? -1) peak \(loaded?.peakMemory ?? -1) bytes; limit \(Memory.memoryLimit) cache-limit \(Memory.cacheLimit)")
         fflush(stdout)
 
         let router = Router(engine: engine, config: config)

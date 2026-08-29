@@ -54,6 +54,8 @@ public final class Router: @unchecked Sendable {
             return models()
         case (.GET, "/healthz"), (.GET, "/health"):
             return .plain(status: .ok, contentType: "application/json", body: #"{"status":"ok"}"#)
+        case (.GET, "/v1/mei/status"):
+            return await status()
         case (.POST, "/v1/chat/completions"):
             return await chat(body: body)
         case (.POST, "/v1/completions"):
@@ -67,6 +69,21 @@ public final class Router: @unchecked Sendable {
         let response = ModelsResponse(data: [
             .init(id: config.servedModelID, created: Int(startedAt.timeIntervalSince1970))
         ])
+        return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
+    }
+
+    private func status() async -> RouteResult {
+        let report = await engine.memoryReport()
+        let response = MeiStatusResponse(
+            status: "ok",
+            model: config.servedModelID,
+            contextCap: config.contextCap,
+            prefillStepSize: config.prefillStepSize,
+            maxTokens: config.maxTokensDefault,
+            kvBits: config.kvBits,
+            cacheReuse: config.cacheReuse,
+            uptimeSeconds: Int(Date().timeIntervalSince(startedAt)),
+            memory: report)
         return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
     }
 

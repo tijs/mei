@@ -186,6 +186,20 @@ def main() -> int:
 
     probe("models_identity", result, identity)
 
+    def status() -> dict[str, Any]:
+        response, elapsed = request_json(f"{args.base_url.rstrip('/')}/mei/status", timeout=30)
+        if response.get("status") != "ok":
+            raise AssertionError(f"unexpected mei status response: {response!r}")
+        return {
+            "memory": response.get("memory"),
+            "device": (response.get("memory") or {}).get("device"),
+            "context_cap": response.get("context_cap"),
+            "prefill_step_size": response.get("prefill_step_size"),
+            "request_seconds": elapsed,
+        }
+
+    probe("mei_status", result, status)
+
     def plain() -> dict[str, Any]:
         response, elapsed = request_json(chat_url, {
             "model": args.model,

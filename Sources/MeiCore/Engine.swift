@@ -63,9 +63,10 @@ public actor Engine {
     /// Serializes all engine work onto one FIFO queue.
     private var queueTail: Task<Void, Never>?
 
-    public init(container: ModelContainer, config: ServerConfig) {
+    public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
         self.config = config
+        self.loadMemory = loadMemory
     }
 
     /// Load a model from a local directory (config.json + safetensors +
@@ -75,15 +76,47 @@ public actor Engine {
         guard FileManager.default.fileExists(atPath: directory.path) else {
             throw EngineError.modelDirectoryMissing(config.modelDirectory)
         }
+        // A reported memory limit below the model's working set makes MLX
+        // alloc calls wait on scheduled tasks instead of failing — the
+        // "hang" failure mode. If the operator configured an explicit limit
+        // (bytes), apply it before the allocator starts seeing load traffic.
+        if config.memoryLimitBytes > 0 {
+            Memory.memoryLimit = config.memoryLimitBytes
+            if config.cacheLimitBytes > 0 {
+                Memory.cacheLimit = config.cacheLimitBytes
+            }
+        }
         let container = try await loadModelContainer(
             from: directory,
             using: #huggingFaceTokenizerLoader(),
             loadConfiguration: (try? LoadConfiguration()) ?? LoadConfiguration()
         )
-        return Engine(container: container, config: config)
+        // Peak memory is program-wide; reset it after weights are resident so
+        // per-run peak numbers describe inference, not tokenizer/model init.
+        Memory.peakMemory = 0
+        return Engine(container: container, config: config, loadMemory: Memory.snapshot())
     }
 
     public var servedModelID: String { config.servedModelID }
+
+    /// MLX allocator snapshot immediately after the weights are resident.
+    public private(set) var loadMemory: Memory.Snapshot?
+
+    /// Current allocator + device report for /v1/mei/status. Uses the MLX
+    /// `Memory`/`GPU` APIs (the nonexistent `get_physical_memory` Cmlx entry
+    /// is NOT used).
+    public func memoryReport() -> MeiMemoryReport {
+        let snapshot = Memory.snapshot()
+        let info = GPU.deviceInfo()
+        return MeiMemoryReport(
+            activeBytes: snapshot.activeMemory,
+            cacheBytes: snapshot.cacheMemory,
+            peakBytes: snapshot.peakMemory,
+            memoryLimitBytes: Memory.memoryLimit,
+            cacheLimitBytes: Memory.cacheLimit,
+            recommendedWorkingSetBytes: GPU.maxRecommendedWorkingSetBytes(),
+            device: .init(architecture: info.architecture, memoryBytes: info.memorySize))
+    }
 
     // MARK: - Serialized execution
 
@@ -290,6 +323,7 @@ public actor Engine {
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.cacheHit = reuseSlot.reuseApplied
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        captureRunMemory(&run)
 
         return run
     }
@@ -397,6 +431,7 @@ public actor Engine {
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.cacheHit = slot.reuseApplied
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        captureRunMemory(&run)
 
         continuation.yield(.finish(run))
         adoptSlot(tokens: tokens, cache: cache, reuseApplied: slot.reuseApplied)
@@ -463,6 +498,7 @@ public actor Engine {
             run.promptTokenCount = tokens.count
         }
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        captureRunMemory(&run)
         return run
     }
 
@@ -551,6 +587,14 @@ public actor Engine {
     }
 
     // MARK: - Stop reason mapping
+
+    /// Patch a run with the MLX allocator snapshot captured at completion.
+    private func captureRunMemory(_ run: inout GenerationRun) {
+        let snapshot = Memory.snapshot()
+        run.memoryActiveBytes = snapshot.activeMemory
+        run.memoryCacheBytes = snapshot.cacheMemory
+        run.memoryPeakBytes = snapshot.peakMemory
+    }
 
     public static func mapStopReason(_ reason: GenerateStopReason, toolCallCount: Int) -> String {
         if toolCallCount > 0 { return "tool_calls" }

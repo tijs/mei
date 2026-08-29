@@ -31,6 +31,12 @@ public struct ServerConfig: Sendable {
     public var maxCacheSlotTokens: Int = 131_072
     public var cacheReuse: Bool = true
     public var logRequests: Bool = false
+    /// Explicit MLX allocator limits in bytes (0 = MLX default: 1.5x the
+    /// Metal recommended working set). A default limit below the model's
+    /// working set makes MLX malloc calls WAIT on scheduled tasks — the
+    /// hang failure mode — so benchmark configs set these explicitly.
+    public var memoryLimitBytes: Int = 0
+    public var cacheLimitBytes: Int = 0
 
     public init(modelDirectory: String, servedModelID: String) {
         self.modelDirectory = modelDirectory
@@ -118,6 +124,10 @@ public extension ServerConfig {
                 config.cacheReuse = try parseBool(flag, value())
             case "--log-requests":
                 config.logRequests = try parseBool(flag, value())
+            case "--memory-limit-bytes":
+                config.memoryLimitBytes = try parseInt(flag, value())
+            case "--cache-limit-bytes":
+                config.cacheLimitBytes = try parseInt(flag, value())
             case "-h", "--help":
                 print(usage)
                 exit(0)
@@ -179,6 +189,13 @@ public extension ServerConfig {
     Caching:
       --cache-reuse BOOL        In-process KV/prefix reuse across turns (default true)
       --max-cache-slot-tokens N Reset the reused slot above this size (default 131072)
+
+    Memory:
+      --memory-limit-bytes N    Explicit MLX allocator limit (default 0 = MLX
+                                default of 1.5x Metal recommended working set;
+                                set this when the default limit is below the
+                                model working set, which otherwise hangs)
+      --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)

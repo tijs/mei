@@ -22,8 +22,11 @@ public enum MeiJSONValue: Sendable, Equatable {
     }
 
     /// Compact JSON string of this value (used for tool arguments output).
+    /// `.sortedKeys` keeps tool-call arguments byte-deterministic across runs
+    /// (same request → identical arguments JSON, regardless of dictionary
+    /// hashing).
     public func jsonString() throws -> String {
-        let data = try JSONSerialization.data(withJSONObject: anyValue)
+        let data = try JSONSerialization.data(withJSONObject: anyValue, options: [.sortedKeys])
         guard let string = String(data: data, encoding: .utf8) else {
             throw MeiJSONValueError.notSerializable
         }
@@ -521,10 +524,52 @@ public struct GenerationRun: Sendable {
     public var generateMilliseconds: Double = 0
     public var wallMilliseconds: Double = 0
     public var cacheHit = false
+    /// MLX allocator snapshot captured when the run finished: active (live
+    /// arrays), cache (recyclable buffer pool), and program peak so far.
+    /// All bytes; 0 until the first run (the engine patches these before the
+    /// run leaves the actor).
+    public var memoryActiveBytes = 0
+    public var memoryCacheBytes = 0
+    public var memoryPeakBytes = 0
 
     public struct ToolCallEmitting: Sendable {
         public var id: String?
         public var name: String
         public var argumentsJSON: String
     }
+}
+
+/// Runtime memory + device report for /v1/mei/status. Replacement for the
+/// nonexistent `get_physical_memory` Cmlx API: MLX's allocator exposes
+/// active/cache/peak via `Memory.snapshot()` and the Metal device carries
+/// the working-set budget.
+public struct MeiMemoryReport: Sendable, Codable {
+    public var activeBytes: Int
+    public var cacheBytes: Int
+    public var peakBytes: Int
+    public var memoryLimitBytes: Int
+    public var cacheLimitBytes: Int
+    public var recommendedWorkingSetBytes: Int?
+
+    /// Snapshot of GPU/device facts (architecture, physical memory).
+    public struct Device: Sendable, Codable {
+        public var architecture: String
+        public var memoryBytes: Int
+    }
+
+    public var device: Device?
+}
+
+/// Shape of GET /v1/mei/status — convenience status surface for the
+/// benchmark harness (probe records it; OpenAI-compat surface stays clean).
+public struct MeiStatusResponse: Sendable, Codable {
+    public var status: String
+    public var model: String
+    public var contextCap: Int
+    public var prefillStepSize: Int
+    public var maxTokens: Int
+    public var kvBits: Int?
+    public var cacheReuse: Bool
+    public var uptimeSeconds: Int
+    public var memory: MeiMemoryReport
 }
