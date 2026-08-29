@@ -41,3 +41,14 @@ NOT used for the primary loaded-context benchmark.
 ## Decision record
 - Eager decode + fp16 KV is the default config for all artifact runs.
 - kv-bits 4 and prefill-step-size A/B runs follow in this log if executed.
+
+## Post-script: co-residency interference (00:15-00:45)
+local-model-bench's own fixture suite (another agent, run_fixture_suite.py
++ llama-server 35B GGUF on its ports) started while this session's second
+bench pass was running. Under that co-resident workload the 9B server's
+decode starves on the shared 26.8GB Metal working set (a 16-token chat
+completion did not return within 120s) — attributed to Metal allocation
+wait, not a Mei regression. Per the repository boundary the other agent's
+backend was not stopped. All official numbers in this log predate 00:15 and
+are uncontended. The commit 9b8790a and artifacts/bench-9B-45000-*
+remain the clean session record.
