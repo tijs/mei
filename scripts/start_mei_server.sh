@@ -28,6 +28,13 @@ TOP_P="${MEI_TOP_P:-0.95}"
 TOP_K="${MEI_TOP_K:-20}"
 EMIT_REASONING="${MEI_EMIT_REASONING:-true}"
 CACHE_REUSE="${MEI_CACHE_REUSE:-true}"
+MEMORY_LIMIT_BYTES="${MEI_MEMORY_LIMIT_BYTES:-0}"
+CACHE_LIMIT_BYTES="${MEI_CACHE_LIMIT_BYTES:-0}"
+KV_CACHE_DIR="${MEI_KV_CACHE_DIR:-}"
+LOG_REQUESTS="${MEI_LOG_REQUESTS:-false}"
+SSM_REDERIVE="${MEI_SSM_REDERIVE:-true}"
+COMPILED_DECODE="${MEI_COMPILED_DECODE:-false}"
+LOAD_MMAP="${MEI_LOAD_MMAP:-true}"
 
 usage() {
   cat <<EOF
@@ -71,8 +78,11 @@ ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
   --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
   --prefill-step-size "$PREFILL_STEP_SIZE"
   --temperature "$TEMPERATURE" --top-p "$TOP_P" --top-k "$TOP_K"
-  --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE")
+  --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
+  --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
+  --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
 [[ -n "$KV_BITS" ]] && ARGS+=(--kv-bits "$KV_BITS")
+[[ -n "$KV_CACHE_DIR" ]] && ARGS+=(--kv-cache-dir "$KV_CACHE_DIR")
 
 printf 'mei isolated launch: '
 printf '%q ' "$BIN" "${ARGS[@]}"

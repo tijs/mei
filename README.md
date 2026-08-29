@@ -37,10 +37,41 @@ swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
 `Package.resolved` pins) and `Package.resolved` is committed. Re-pinning is a
 deliberate decision that must re-run the whole acceptance suite.
 
+### Metal kernel library (mlx.metallib)
+
+`vmlx-swift`'s SwiftPM build does not emit the compiled Metal kernel library
+(the vendored mlx ships kernels as `.metal` sources; compiling them needs
+Xcode's `metallib` archiver, which is not installed on this machine).
+`scripts/prepare_metallib.sh` provisions a prebuilt `mlx.metallib` next to the
+release binary:
+
+- prefers a wheel whose mlx version matches the vendored `0.31.1`
+  (`Source/Cmlx/include-framework/mlx-version.h`) — the exact
+  version-matched artifact, since kernels are looked up by name at runtime
+- verifies every candidate structurally (MTLB magic, size, `file`
+  classification) before installing — never a blind copy
+- records provenance in `mlx.metallib.provenance` next to the artifact
+- falls back to the compile path on machines that do have the archiver
+
+The definitive verification is runtime: the server loads the library at
+startup and fails loudly if kernels are missing.
+
+## Memory measurement
+
+Memory numbers come from MLX's allocator (`Memory.snapshot()`:
+active/cache/peak bytes, plus explicit `--memory-limit-bytes` and
+`--cache-limit-bytes` config) and `GPU.deviceInfo()` (architecture, physical
+memory, recommended working set). The long-gone Cmlx `get_physical_memory`
+entry point does not exist in this stack and is not used; `/v1/mei/status`
+exposes live allocator state and the startup log prints the post-load
+footprint. An MLX memory limit below the model working set makes alloc calls
+wait on scheduled tasks (the hang failure mode), so benchmark configs pin
+explicit limits.
+
 ## Run
 
 ```bash
-scripts/stage_model.sh   # downloads the model once (~20GB)
+scripts/stage_model.sh   # downloads the primary model once (~20GB)
 scripts/start_mei_server.sh    # builds + serves on 127.0.0.1:8024
 scripts/stop_mei_server.sh
 ```
@@ -50,31 +81,65 @@ or directly:
 ```bash
 swift run mei --model-dir ~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit \
   --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit --port 8024 \
-  --context-cap 65536 --prefill-step-size 512
+  --context-cap 65536 --prefill-step-size 512 \
+  --kv-cache-dir ~/.local/share/local-model-bench/mei-runtime/kv-cache
 ```
+
+Hybrid families (Ornith's qwen3_5_moe) need the disk tier for prefix reuse:
+`--kv-cache-dir` (or `MEI_KV_CACHE_DIR`) enables it; without it every
+request full-prefills (correct, just slower). Set `--memory-limit-bytes`
+above the model's working set — the MLX default limit can otherwise sit
+below it and make allocation wait on scheduled tasks (the hang failure
+mode).
+
+### Models
+
+- **Primary (MVP)**: `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` — the model
+  author's official plain 4-bit text-generation MLX quant (19.5 GB). The 30
+  decode tok/s goal is defined against this artifact on the 32 GB Sulaco
+  machine.
+- **Documented fallback (same family, smaller)**: `ornith-ai/Ornith-1.5-9B-MLX-4bit`
+  — the official 9B plain 4-bit quant (5.0 GB), same `qwen3_5` architecture,
+  same 4-bit-affine/group-64 quant scheme, same chat template and
+  qwen3_coder-style tool-call format. Used to validate server correctness and
+  tool-call behavior on hardware where the 35B cannot be resident
+  (e.g. while other engines hold the machine's RAM). It is a fallback for
+  exercising the identical Mei path, never a silent substitution for the
+  primary artifact.
 
 ## Bench integration
 
 The `local-model-bench` harness drives Mei as a first-class
-`inference_engine`:
+`inference_engine` (its commit `9df216e` wires the launch scripts and
+config; the boundary preserves that repo read-only — Mei's own copy of the
+probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
 
-- `configs/Ornith-1.5-35B-A3B/mei.yaml` — launch command, endpoint, settings
-- `runner/start_mei_server.sh` / `runner/stop_mei_server.sh` — isolated lifecycle
-- `runner/probe_mei.py` — acceptance/parity/tooling gate
-- `runner/run_mei_acceptance.py` — config-driven sequential acceptance runs
+- `tools/probe_mei.py` — acceptance/parity/tooling gate (authoritative copy)
+- `tools/probe_long_context.py` — chunked-prefill survival at 30K/80K
+- `tools/bench_mei.py` — full benchmark rows (short, tool, 45K-loaded
+  fresh + reuse, 40K chat) with engine-reported tok/s, TTFT/prefill ms and
+  allocator bytes; artifact-only output under `artifacts/`
 
 ## Design notes
 
 - **Chunked prefill**: `GenerateParameters.prefillStepSize` defaults to 512
   and is always on — the long-context safeguard for hybrid (GatedDelta)
   architectures; the Python serving wrappers this project replaces lacked it.
-- **KV/prefix reuse**: the engine keeps the rendered token sequence + live KV
-  of the last request; when the next request's rendered tokens exactly extend
-  that sequence (identical system prompt + growing transcript — the standard
-  agentic pattern), generation resumes from the cached KV and only the new
-  tokens are prefilled. `usage.prompt_tokens_details.cached_tokens` reports
-  the reused prefix. Any divergence falls back to a full prefill (always
-  correct).
+- **KV/prefix reuse**: in-process (and cross-restart, via the on-disk tier)
+  prefix reuse is owned by `vmlx-swift`'s `CacheCoordinator` — hash-chained
+  KV blocks plus hybrid companion state (Ornith's GatedDelta/SSM layers are
+  disk-backed-restore only, so the disk tier must be enabled for reuse on
+  this family). The chat template's generation-prompt suffix is stripped at
+  store time so the standard agentic pattern (identical system prompt,
+  growing transcript) hits. `usage.prompt_tokens_details.cached_tokens`
+  reports the reused prefix; `/v1/mei/status` exposes live paged/disk/SSM
+  counters. The disk cache lives under `MEI_KV_CACHE_DIR`
+  (default `~/.local/share/local-model-bench/mei-runtime/kv-cache`) and is
+  transient runtime state like the build dir, never part of the artifacts.
+  Any divergence or missing companion state falls back to a full prefill
+  (always correct). The SSM re-derive pass after each chat turn costs ~1x
+  prefill at turn end (upstream default on; `--ssm-rederive false` turns it
+  off for A/B rows).
 - **Tool calls**: vmlx-swift parses Qwen/Ornith-style `<tool_call>{json}`
   envelopes inside its generate loop; Mei maps `.toolCall` events to OpenAI
   `tool_calls` in both streaming and non-streaming shapes.

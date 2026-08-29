@@ -205,7 +205,11 @@ def main() -> int:
             "model": args.model,
             "messages": [{"role": "user", "content": "Reply with exactly: ready"}],
             "temperature": 0,
-            "max_tokens": 8,
+            # Thinking models (Ornith is Qwen3.5-lineage) spend their first
+            # 100+ tokens on the thinking preamble; the omlx-era 8-token
+            # budget truncated before any visible content. 1024 covers a
+            # full think+answer cycle while keeping the probe cheap.
+            "max_tokens": 1024,
             "stream": False,
         }, timeout=args.timeout)
         choices = response.get("choices") or []
@@ -260,7 +264,9 @@ def main() -> int:
         "model": args.model,
         "messages": [{"role": "user", "content": "Reply with exactly: parity-ok"}],
         "temperature": 0,
-        "max_tokens": 12,
+        # Same thinking-preamble rationale as plain_completion: 1024 tokens
+        # so both legs produce visible content to compare.
+        "max_tokens": 1024,
     }
 
     def parity() -> dict[str, Any]:
@@ -297,6 +303,60 @@ def main() -> int:
                 }, timeout=args.timeout)
                 return {"usage": response.get("usage"), "request_seconds": elapsed}
             probe(f"cache_repeat_{repetition}", result, cache_request)
+
+        # The agentic pattern the slot is built for: identical system prompt,
+        # growing transcript. Turn 2 must reuse the turn-1 prefix (strict
+        # extension => cached_tokens ≈ turn-1 prompt tokens).
+        system_cache_prompt = ("system stability marker " * 256)
+
+        def growing_turn(messages: list[dict[str, Any]]) -> tuple[dict[str, Any], str]:
+            response, elapsed = request_json(chat_url, {
+                "model": args.model,
+                "messages": messages,
+                "temperature": 0,
+                "max_tokens": 16,
+                "stream": False,
+            }, timeout=args.timeout)
+            usage = response.get("usage") or {}
+            choices = response.get("choices") or []
+            assistant_content = ""
+            if choices:
+                assistant_content = ((choices[0].get("message") or {}).get("content") or "")
+            return {
+                "usage": usage,
+                "cached_tokens": ((usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0),
+                "request_seconds": elapsed,
+            }, assistant_content
+
+        turn1 = [{"role": "system", "content": system_cache_prompt},
+                 {"role": "user", "content": "First instruction: answer nothing yet."}]
+        turn1_replies: dict[str, str] = {}
+
+        def cache_growing_turn1() -> dict[str, Any]:
+            detail, reply = growing_turn(turn1)
+            turn1_replies["assistant_content"] = reply
+            return detail
+
+        probe("cache_growing_turn1", result, cache_growing_turn1)
+
+        def cache_growing_turn2() -> dict[str, Any]:
+            # The agentic pattern: turn 2 = turn 1 + assistant reply + next
+            # user turn. The coordinator strips the generation-prompt suffix
+            # at store time, so the re-rendered turn 2 strictly extends the
+            # stored turn-1 prefix and the whole turn-1 prefix must be
+            # restored from the KV cache (cached_tokens ≈ turn-1 tokens).
+            detail, _ = growing_turn(turn1 + [
+                {"role": "assistant", "content": turn1_replies.get("assistant_content", "")},
+                {"role": "user", "content": "Second instruction: reply cache-reuse-ok."},
+            ])
+            expected_cache = (detail["usage"].get("prompt_tokens") or 0) >= 260
+            slot_cached = detail["cached_tokens"] >= 250
+            if not (expected_cache and slot_cached):
+                raise AssertionError(
+                    f"growing-transcript reuse failed: cached_tokens={detail['cached_tokens']} usage={detail['usage']!r}")
+            return detail
+
+        probe("cache_growing_turn2_reuses_slot", result, cache_growing_turn2)
 
     if not args.skip_context:
         if args.tokenizer is None:

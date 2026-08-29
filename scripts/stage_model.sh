@@ -65,11 +65,21 @@ config = json.loads((root / "config.json").read_text())
 expected = config.get("safetensors", {}).get("total")
 shards = sorted(root.glob("model-*.safetensors"))
 actual = sum(p.stat().st_size for p in shards)
+# Unsharded checkpoints put the byte total in the index instead.
+if expected is None:
+    index = root / "model.safetensors.index.json"
+    if index.exists():
+        expected = json.loads(index.read_text()).get("total_size")
+        single = root / "model.safetensors"
+        if single.exists():
+            actual = single.stat().st_size
 if expected is not None:
     # total is byte count in the index; compare loosely (index vs file sizes
     # can differ by header bytes).
     if actual < expected - 16 * 1024 * 1024:
         sys.exit(f"FATAL: safetensors total {actual} < expected {expected}; model is incomplete")
-print(f"verified {len(shards)} shards, {actual/1e9:.1f}GB")
+if actual == 0:
+    sys.exit("FATAL: no model safetensors found; model is incomplete")
+print(f"verified {len(shards) or 1} shard(s), {actual/1e9:.1f}GB")
 PYEOF
 echo "Staged OK."

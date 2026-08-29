@@ -55,12 +55,10 @@ public actor Engine {
     public let config: ServerConfig
     private let logger = Logger(subsystem: "mei.engine", category: "engine")
 
-    // In-process prefix cache slot. The [KVCache] array mutates in place as
-    // generations append to it.
-    private var slotTokens: [Int] = []
-    private var slotCache: [KVCache]? = nil
-
-    /// Serializes all engine work onto one FIFO queue.
+    // In-process prefix reuse is owned by the container's CacheCoordinator
+    // (see Engine.load): hash-chained paged KV blocks plus hybrid companion
+    // state (Ornith GatedDelta), with the chat template's generation-prompt
+    // suffix stripped at store time so growing transcripts hit.
     private var queueTail: Task<Void, Never>?
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
@@ -89,11 +87,54 @@ public actor Engine {
         let container = try await loadModelContainer(
             from: directory,
             using: #huggingFaceTokenizerLoader(),
-            loadConfiguration: (try? LoadConfiguration()) ?? LoadConfiguration()
+            loadConfiguration: LoadConfiguration(useMmapSafetensors: config.useMmapSafetensors)
         )
+        // In-process multi-tier KV reuse (the benchmark's growing-transcript
+        // pattern): the coordinator owns prefix matching, block hashing, and
+        // hybrid companion-state (GatedDelta/SSM) restore across requests —
+        // the machinery the hand-rolled exact-extension slot could not
+        // provide for hybrid models. Paged (in-memory) tier on, disk tier
+        // off: this server is single-process and the plan explicitly defers
+        // cross-restart persistence. pagedBlockSize 16 follows upstream's
+        // hybrid guidance (short system-only prefixes still store blocks).
+        if config.cacheReuse {
+            let diskEnabled = !config.kvCacheDir.isEmpty
+            let diskCacheDir: URL? = diskEnabled
+                ? URL(fileURLWithPath: config.kvCacheDir, isDirectory: true)
+                : nil
+            if diskEnabled {
+                try? FileManager.default.createDirectory(
+                    at: diskCacheDir!, withIntermediateDirectories: true)
+            }
+            await container.enableCachingAsync(config: CacheCoordinatorConfig(
+                usePagedCache: true,
+                enableDiskCache: diskEnabled,
+                pagedBlockSize: 16,
+                maxCacheBlocks: 8192,
+                diskCacheDir: diskCacheDir,
+                enableSSMReDerive: config.enableSSMReDerive,
+                modelKey: config.servedModelID))
+            let topology = await container.cacheTopologySnapshot()
+            print("mei: prefix cache enabled (paged in-memory + \(diskEnabled ? "disk" : "no disk")); topology \(topology.topologyTags.joined(separator: " "))")
+        } else {
+            print("mei: prefix cache disabled (--cache-reuse false)")
+        }
+        fflush(stdout)
         // Peak memory is program-wide; reset it after weights are resident so
         // per-run peak numbers describe inference, not tokenizer/model init.
         Memory.peakMemory = 0
+        // loadModelContainer's LoadConfiguration applies its own memoryLimit
+        // (default .fraction(0.70) of physical RAM, ~22.4GB here) over any
+        // limit set before load. Re-assert the operator's explicit limit so
+        // an explicit --memory-limit-bytes >= working set actually governs
+        // inference (otherwise the 35B at 24GB active would hang alloca on
+        // the 22.4GB default).
+        if config.memoryLimitBytes > 0 {
+            Memory.memoryLimit = config.memoryLimitBytes
+            if config.cacheLimitBytes > 0 {
+                Memory.cacheLimit = config.cacheLimitBytes
+            }
+        }
         return Engine(container: container, config: config, loadMemory: Memory.snapshot())
     }
 
@@ -105,7 +146,10 @@ public actor Engine {
     /// Current allocator + device report for /v1/mei/status. Uses the MLX
     /// `Memory`/`GPU` APIs (the nonexistent `get_physical_memory` Cmlx entry
     /// is NOT used).
-    public func memoryReport() -> MeiMemoryReport {
+    /// Nonisolated: reads are cheap thread-safe globals, and routing this
+    /// through the actor would starve during a long generation (the actor
+    /// spends long synchronous stretches inside MLX eval calls).
+    public nonisolated static func liveMemoryReport() -> MeiMemoryReport {
         let snapshot = Memory.snapshot()
         let info = GPU.deviceInfo()
         return MeiMemoryReport(
@@ -135,6 +179,12 @@ public actor Engine {
                 }
             }
         }
+    }
+
+    /// Live coordinator counters for /v1/mei/status (nil when cache reuse is
+    /// disabled): paged hit/miss/eviction and SSM companion stats.
+    public func cacheStats() -> CacheCoordinatorStatsSnapshot? {
+        container.cacheCoordinator?.snapshotStats()
     }
 
     // MARK: - Chat completion
@@ -168,16 +218,14 @@ public actor Engine {
             toolChoice: request.toolChoice)
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count, context: context)
-        let slot = SlotDecision.make(
-            newTokens: tokens,
-            slotTokens: config.cacheReuse ? slotTokens : [],
-            maxSlotTokens: config.maxCacheSlotTokens)
+        if config.logRequests {
+            print("mei: chat request tokens \(tokens.count)")
+            fflush(stdout)
+        }
         let run = try await generateLocked(
             tokens: tokens,
-            reuseSlot: slot,
             parameters: parameters,
             tools: request.tools)
-        adoptSlot(tokens: tokens, cache: iterationCache!, reuseApplied: slot.reuseApplied)
         return run
     }
 
@@ -187,20 +235,6 @@ public actor Engine {
         }
         return config.enableThinking
     }
-
-    private func adoptSlot(tokens: [Int], cache: [KVCache], reuseApplied: Bool) {
-        guard tokens.count <= config.maxCacheSlotTokens else {
-            slotTokens = []
-            slotCache = nil
-            return
-        }
-        slotTokens = tokens
-        slotCache = cache
-    }
-
-    /// The cache used by the most recent generation, captured by
-    /// `generateLocked`/`runStreamingLocked` for slot adoption.
-    private var iterationCache: [KVCache]?
 
 
     /// Serialize a parsed vmlx ToolCall's arguments to a compact JSON string,
@@ -237,52 +271,42 @@ public actor Engine {
 
     private func generateLocked(
         tokens: [Int],
-        reuseSlot: SlotDecision.Result,
         parameters: GenerateParameters,
         tools: [MeiJSONValue]?
     ) async throws -> GenerationRun {
-        let tokenizer = await container.tokenizer
-        let modelConfiguration = await container.configuration
-
-        let inputTokens: [Int] = reuseSlot.reuseApplied
-            ? Array(tokens.suffix(tokens.count - reuseSlot.cachedTokenCount))
-            : tokens
         let input = LMInput(
-            tokens: MLXArray(inputTokens),
-            tokenIds: inputTokens,
+            tokens: MLXArray(tokens),
+            tokenIds: tokens,
             toolSchemas: MessageMapping.templateTools(tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
             MeiBox(context.model)
         }
         let model = modelBox.value
-
-        let reuseCache = reuseSlot.reuseApplied ? slotCache : nil
-        let cache: [KVCache]
-        if let reuseCache {
-            cache = reuseCache
-        } else {
-            cache = model.newCache(parameters: parameters)
-        }
-        iterationCache = cache
-
+        let restoreBox = RestoreBox()
+            let logProgress = self.config.logRequests
         let iterationStart = Date()
         let iterator = try TokenIterator(
             input: input,
             model: model,
-            cache: cache,
-            parameters: parameters)
-        let prefillWall = Date().timeIntervalSince(iterationStart)
-
+            cache: model.newCache(parameters: parameters),
+            parameters: parameters,
+            cacheCoordinator: container.cacheCoordinator,
+            prefillProgressHandler: { progress in
+            if logProgress {
+                print("mei: pp stage=\(progress.stage.rawValue) completed=\(progress.completedUnitCount) total=\(progress.totalUnitCount)")
+                fflush(stdout)
+            }
+            restoreBox.tracker.observe(progress) })
         let (stream, task) = MLXLMCommon.generateTask(
-            promptTokenCount: inputTokens.count,
-            modelConfiguration: modelConfiguration,
-            tokenizer: tokenizer,
+            promptTokenCount: tokens.count,
+            modelConfiguration: await container.configuration,
+            tokenizer: await container.tokenizer,
             iterator: iterator,
             toolSchemas: MessageMapping.templateTools(tools))
 
         var run = GenerationRun()
-        run.cachedTokenCount = reuseSlot.reuseApplied ? reuseSlot.cachedTokenCount : 0
+        var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
         for await item in stream {
             switch item {
@@ -316,15 +340,20 @@ public actor Engine {
             run.generateMilliseconds = info.generateTime * 1000
             run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
         } else {
-            run.promptTokenCount = inputTokens.count
+            run.promptTokenCount = tokens.count
             run.completionTokenCount = run.text.isEmpty ? 0 : 1
         }
-        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = prefillWall * 1000 }
+        run.cachedTokenCount = restoreTracker.restoredTokens
+        run.cacheHit = restoreTracker.isCacheHit
+        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        run.cacheHit = reuseSlot.reuseApplied
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
 
+        if config.logRequests {
+            print("mei: run tokens \(run.promptTokenCount) cached \(run.cachedTokenCount) decode \(String(format: "%.1f", run.decodeTokensPerSecond)) tok/s")
+            fflush(stdout)
+        }
         return run
     }
 
@@ -340,52 +369,39 @@ public actor Engine {
             toolChoice: request.toolChoice)
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count, context: context)
-        let slot = SlotDecision.make(
-            newTokens: tokens,
-            slotTokens: config.cacheReuse ? slotTokens : [],
-            maxSlotTokens: config.maxCacheSlotTokens)
-        let tokenizer = await container.tokenizer
-        let modelConfiguration = await container.configuration
-
-        let inputTokens: [Int] = slot.reuseApplied
-            ? Array(tokens.suffix(tokens.count - slot.cachedTokenCount))
-            : tokens
         let input = LMInput(
-            tokens: MLXArray(inputTokens),
-            tokenIds: inputTokens,
+            tokens: MLXArray(tokens),
+            tokenIds: tokens,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
             MeiBox(context.model)
         }
         let model = modelBox.value
-
-        let reuseCache = slot.reuseApplied ? slotCache : nil
-        let cache: [KVCache]
-        if let reuseCache {
-            cache = reuseCache
-        } else {
-            cache = model.newCache(parameters: parameters)
-        }
-        iterationCache = cache
-
+        let restoreBox = RestoreBox()
+            let logProgress = self.config.logRequests
         let iterationStart = Date()
         let iterator = try TokenIterator(
             input: input,
             model: model,
-            cache: cache,
-            parameters: parameters)
-        let prefillWall = Date().timeIntervalSince(iterationStart)
-
+            cache: model.newCache(parameters: parameters),
+            parameters: parameters,
+            cacheCoordinator: container.cacheCoordinator,
+            prefillProgressHandler: { progress in
+            if logProgress {
+                print("mei: pp stage=\(progress.stage.rawValue) completed=\(progress.completedUnitCount) total=\(progress.totalUnitCount)")
+                fflush(stdout)
+            }
+            restoreBox.tracker.observe(progress) })
         let (stream, task) = MLXLMCommon.generateTask(
-            promptTokenCount: inputTokens.count,
-            modelConfiguration: modelConfiguration,
-            tokenizer: tokenizer,
+            promptTokenCount: tokens.count,
+            modelConfiguration: await container.configuration,
+            tokenizer: await container.tokenizer,
             iterator: iterator,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         var run = GenerationRun()
-        run.cachedTokenCount = slot.reuseApplied ? slot.cachedTokenCount : 0
+        var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
         for await item in stream {
             switch item {
@@ -424,17 +440,17 @@ public actor Engine {
             run.generateMilliseconds = info.generateTime * 1000
             run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
         } else {
-            run.promptTokenCount = inputTokens.count
+            run.promptTokenCount = tokens.count
             run.completionTokenCount = run.text.isEmpty ? 0 : 1
         }
-        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = prefillWall * 1000 }
+        run.cachedTokenCount = restoreTracker.restoredTokens
+        run.cacheHit = restoreTracker.isCacheHit
+        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        run.cacheHit = slot.reuseApplied
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
 
         continuation.yield(.finish(run))
-        adoptSlot(tokens: tokens, cache: cache, reuseApplied: slot.reuseApplied)
         continuation.finish()
     }
 
@@ -452,26 +468,39 @@ public actor Engine {
         guard !tokens.isEmpty else { throw EngineError.emptyPrompt }
         let parameters = try await makeCompletionParameters(tokens: tokens, request: request)
 
-        // Raw completion: no slot reuse; a fresh cache per request.
+        // Raw completions participate in the same paged prefix cache as chat:
+        // any request whose token stream extends a stored prefix resumes from
+        // the coordinator's KV and only the new tokens are prefilled.
         let input = LMInput(tokens: MLXArray(tokens), tokenIds: tokens)
-        let modelConfiguration = await container.configuration
+
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
             MeiBox(context.model)
         }
         let model = modelBox.value
-        let cache = model.newCache(parameters: parameters)
-        iterationCache = cache
-
+        let restoreBox = RestoreBox()
+            let logProgress = self.config.logRequests
+        let iterationStart = Date()
         let iterator = try TokenIterator(
-            input: input, model: model, cache: cache, parameters: parameters)
+            input: input,
+            model: model,
+            cache: model.newCache(parameters: parameters),
+            parameters: parameters,
+            cacheCoordinator: container.cacheCoordinator,
+            prefillProgressHandler: { progress in
+            if logProgress {
+                print("mei: pp stage=\(progress.stage.rawValue) completed=\(progress.completedUnitCount) total=\(progress.totalUnitCount)")
+                fflush(stdout)
+            }
+            restoreBox.tracker.observe(progress) })
         let (stream, task) = MLXLMCommon.generateTask(
             promptTokenCount: tokens.count,
-            modelConfiguration: modelConfiguration,
-            tokenizer: tokenizer,
+            modelConfiguration: await container.configuration,
+            tokenizer: await container.tokenizer,
             iterator: iterator,
             toolSchemas: nil)
 
         var run = GenerationRun()
+        var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
         for await item in stream {
             switch item {
@@ -481,6 +510,10 @@ public actor Engine {
                     id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                     name: call.function.name,
                     argumentsJSON: Self.toolArgumentsJSON(call)))
+            case .prefillProgress(let progress):
+                if config.logRequests {
+                    logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+                }
             case .info(let completionInfo): info = completionInfo
             default: break
             }
@@ -496,7 +529,12 @@ public actor Engine {
             run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
         } else {
             run.promptTokenCount = tokens.count
+            run.completionTokenCount = run.text.isEmpty ? 0 : 1
         }
+        run.cachedTokenCount = restoreTracker.restoredTokens
+        run.cacheHit = restoreTracker.isCacheHit
+        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
+        run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
         return run
@@ -516,6 +554,7 @@ public actor Engine {
         var parameters = GenerateParameters()
         parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
+        parameters.enableCompiledDecode = config.enableCompiledDecode
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize
@@ -556,6 +595,7 @@ public actor Engine {
         var parameters = GenerateParameters()
         parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
+        parameters.enableCompiledDecode = config.enableCompiledDecode
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize
@@ -607,38 +647,58 @@ public actor Engine {
     }
 }
 
-/// Cache-reuse decision: whether the new rendered token sequence exactly
-/// extends the previous slot, and how many prefix tokens the cache already
-/// covers. Pure logic, kept out of the actor for direct unit testing.
-public enum SlotDecision {
-    public struct Result: Sendable, Equatable {
-        public var reuseApplied: Bool
-        public var cachedTokenCount: Int
+/// Thread-safe box for the per-request cache-restore tracker, driven by
+/// `TokenIterator`'s prefillProgressHandler (the solo generate path emits
+/// no `.prefillProgress` stream events; the handler receives them directly).
+final class RestoreBox: @unchecked Sendable {
+    var tracker = CacheRestoreTracker()
+}
 
-        public init(reuseApplied: Bool, cachedTokenCount: Int) {
-            self.reuseApplied = reuseApplied
-            self.cachedTokenCount = cachedTokenCount
+/// Tracks how many prompt tokens were restored from the coordinator's prefix
+/// cache during one generation, from the `.prefillProgress` event stream.
+/// Pure logic, kept out of the actor for direct unit testing.
+///
+/// The coordinator emits a `.cacheRestore`-stage frame carrying the matched
+/// prefix length, then `.prefill` frames, then `.complete`. On a full
+/// (uncached) prefill the first `.prefill` frame reports 0 completed tokens,
+/// so no hit is inferred.
+public struct CacheRestoreTracker: Sendable {
+    public private(set) var restoredTokens = 0
+    private var firstPrefillFrameSeen = false
+
+    public mutating func observe(_ progress: PrefillProgress) {
+        switch progress.stage {
+        case .cacheRestore:
+            restoredTokens = max(restoredTokens, progress.completedUnitCount)
+        case .prefill:
+            if !firstPrefillFrameSeen {
+                firstPrefillFrameSeen = true
+                if progress.completedUnitCount > 0 {
+                    restoredTokens = max(restoredTokens, progress.completedUnitCount)
+                }
+            }
+        default:
+            break
         }
     }
 
-    public static func make(
-        newTokens: [Int],
-        slotTokens: [Int],
-        maxSlotTokens: Int
-    ) -> Result {
-        // 1) The slot must exist and be non-empty.
-        // 2) The new render must strictly extend it (more tokens + identical
-        //    prefix). Exact extension only: any divergence at the seam means
-        //    the transcript changed and prefix KV is no longer positionally
-        //    valid, so fall back to a fresh prefill (always correct).
-        // 3) The result must stay inside the shared budget.
-        guard !slotTokens.isEmpty,
-            newTokens.count > slotTokens.count,
-            newTokens.count <= maxSlotTokens,
-            newTokens.prefix(slotTokens.count).elementsEqual(slotTokens)
-        else {
-            return Result(reuseApplied: false, cachedTokenCount: 0)
+    /// Drive the tracker from plain stage names (used by unit tests; the
+    /// server path calls `observe(_ progress: PrefillProgress)`).
+    public mutating func observe(stage: String, completed: Int) {
+        switch stage {
+        case "cacheRestore":
+            restoredTokens = max(restoredTokens, completed)
+        case "prefill":
+            if !firstPrefillFrameSeen {
+                firstPrefillFrameSeen = true
+                if completed > 0 {
+                    restoredTokens = max(restoredTokens, completed)
+                }
+            }
+        default:
+            break
         }
-        return Result(reuseApplied: true, cachedTokenCount: slotTokens.count)
     }
+
+    public var isCacheHit: Bool { restoredTokens > 0 }
 }

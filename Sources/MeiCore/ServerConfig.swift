@@ -37,6 +37,25 @@ public struct ServerConfig: Sendable {
     /// hang failure mode — so benchmark configs set these explicitly.
     public var memoryLimitBytes: Int = 0
     public var cacheLimitBytes: Int = 0
+    /// Directory for the coordinator's on-disk L2 KV tier (hybrid models
+    /// like Ornith's mamba/GatedDelta layers are disk-backed-restore only,
+    /// so in-process prefix reuse for them needs this tier; paged-in-memory
+    /// alone covers non-hybrid topologies). "" = disabled.
+    public var kvCacheDir: String = ""
+    /// After each chat generation the coordinator runs one extra prompt-only
+    /// pass to re-derive the hybrid SSM boundary state for reuse (upstream
+    /// default on; costs ~1x prefill at turn end). Off when a benchmark row
+    /// wants to A/B the fallback full-prefill path.
+    public var enableSSMReDerive: Bool = true
+    /// vmlx-swift compiled (graph-traced + replayed) decode. Trace once,
+    /// replay per token; an evidence-based decode lever for long-context
+    /// workloads. Ornith/qwen3_5 is not on the upstream deny list.
+    public var enableCompiledDecode: Bool = false
+    /// Use the mmap-backed safetensors loader (upstream default true). The
+    /// mmap loader realigns unaligned tensors into copies (the 35B gained
+    /// ~5GB active this way); stock file-backed loading uses less resident
+    /// memory at the cost of slower first touch.
+    public var useMmapSafetensors: Bool = true
 
     public init(modelDirectory: String, servedModelID: String) {
         self.modelDirectory = modelDirectory
@@ -128,6 +147,14 @@ public extension ServerConfig {
                 config.memoryLimitBytes = try parseInt(flag, value())
             case "--cache-limit-bytes":
                 config.cacheLimitBytes = try parseInt(flag, value())
+            case "--kv-cache-dir":
+                config.kvCacheDir = try value()
+            case "--ssm-rederive":
+                config.enableSSMReDerive = try parseBool(flag, value())
+            case "--compiled-decode":
+                config.enableCompiledDecode = try parseBool(flag, value())
+            case "--load-mmap":
+                config.useMmapSafetensors = try parseBool(flag, value())
             case "-h", "--help":
                 print(usage)
                 exit(0)
@@ -196,6 +223,8 @@ public extension ServerConfig {
                                 set this when the default limit is below the
                                 model working set, which otherwise hangs)
       --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
+      --kv-cache-dir DIR        On-disk KV cache dir for the prefix coordinator
+                                (hybrid models need the disk tier; default off)
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)

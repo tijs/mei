@@ -73,7 +73,17 @@ public final class Router: @unchecked Sendable {
     }
 
     private func status() async -> RouteResult {
-        let report = await engine.memoryReport()
+        let report = Engine.liveMemoryReport()
+        let cache = await engine.cacheStats().map { stats in
+            MeiCacheStatus(
+                pagedEnabled: stats.pagedEnabled,
+                pagedHits: stats.pagedStats?.cacheHits ?? 0,
+                pagedMisses: stats.pagedStats?.cacheMisses ?? 0,
+                pagedEvictions: stats.pagedStats?.evictions ?? 0,
+                ssmHits: stats.ssmStats.hits,
+                ssmMisses: stats.ssmStats.misses,
+                isHybrid: stats.isHybrid)
+        }
         let response = MeiStatusResponse(
             status: "ok",
             model: config.servedModelID,
@@ -83,7 +93,8 @@ public final class Router: @unchecked Sendable {
             kvBits: config.kvBits,
             cacheReuse: config.cacheReuse,
             uptimeSeconds: Int(Date().timeIntervalSince(startedAt)),
-            memory: report)
+            memory: report,
+            cache: cache)
         return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
     }
 
@@ -126,6 +137,24 @@ public final class Router: @unchecked Sendable {
         }
     }
 
+    /// Usage block shared by chat/completions, chat/completions streaming
+    /// finish, and /v1/completions — carries engine-reported tok/s and the
+    /// MLX allocator footprint so the benchmark never has to guess.
+    public static func usage(run: GenerationRun) -> ChatCompletionResponse.Usage {
+        ChatCompletionResponse.Usage(
+            promptTokens: run.promptTokenCount,
+            completionTokens: run.completionTokenCount,
+            totalTokens: run.promptTokenCount + run.completionTokenCount,
+            promptTokensDetails: .init(cachedTokens: run.cachedTokenCount),
+            tokensPerSecond: run.decodeTokensPerSecond > 0 ? run.decodeTokensPerSecond : nil,
+            promptTokensPerSecond: run.promptTokensPerSecond > 0 ? run.promptTokensPerSecond : nil,
+            prefillMilliseconds: run.prefillMilliseconds > 0 ? run.prefillMilliseconds : nil,
+            generateMilliseconds: run.generateMilliseconds > 0 ? run.generateMilliseconds : nil,
+            memoryActiveBytes: run.memoryActiveBytes > 0 ? run.memoryActiveBytes : nil,
+            memoryCacheBytes: run.memoryCacheBytes > 0 ? run.memoryCacheBytes : nil,
+            memoryPeakBytes: run.memoryPeakBytes > 0 ? run.memoryPeakBytes : nil)
+    }
+
     public static func completionResponse(run: GenerationRun, model: String, emitReasoning: Bool) -> ChatCompletionResponse {
         let message = ChatCompletionResponse.ResponseMessage(
             content: run.text.isEmpty && !run.toolCalls.isEmpty ? nil : run.text,
@@ -133,11 +162,7 @@ public final class Router: @unchecked Sendable {
                 .init(id: call.id ?? "call_unknown", function: .init(name: call.name, arguments: call.argumentsJSON))
             },
             reasoningContent: emitReasoning && !run.reasoning.isEmpty ? run.reasoning : nil)
-        let usage = ChatCompletionResponse.Usage(
-            promptTokens: run.promptTokenCount,
-            completionTokens: run.completionTokenCount,
-            totalTokens: run.promptTokenCount + run.completionTokenCount,
-            promptTokensDetails: .init(cachedTokens: run.cachedTokenCount))
+        let usage = Self.usage(run: run)
         let id = "chatcmpl-\(UUID().uuidString.lowercased().prefix(24))"
         return ChatCompletionResponse(
             id: id,
@@ -190,11 +215,7 @@ public final class Router: @unchecked Sendable {
                 choices: [.init(delta: .init(), finishReason: run.finishReason)],
                 usage: nil)
             lines.append("data: \(serializer.json(finishChunk))")
-            let usage = ChatCompletionResponse.Usage(
-                promptTokens: run.promptTokenCount,
-                completionTokens: run.completionTokenCount,
-                totalTokens: run.promptTokenCount + run.completionTokenCount,
-                promptTokensDetails: .init(cachedTokens: run.cachedTokenCount))
+            let usage = Self.usage(run: run)
             let usageChunk = SSEChatChunk(
                 id: id, created: Int(Date().timeIntervalSince1970), model: model,
                 choices: [], usage: usage)

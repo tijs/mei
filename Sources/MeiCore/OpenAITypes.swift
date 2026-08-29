@@ -414,9 +414,24 @@ public struct ChatCompletionResponse: Encodable, Sendable {
         public var completionTokens: Int
         public var totalTokens: Int
         public var promptTokensDetails: PromptTokensDetails?
+        // Mei engine extensions (optional; absent for streaming chunks when
+        // not finalized). These are how the benchmark harness reads the
+        // engine's own decode/prompt tok/s and allocator footprint — no
+        // proxy-side timing guesses.
+        public var tokensPerSecond: Double?
+        public var promptTokensPerSecond: Double?
+        public var prefillMilliseconds: Double?
+        public var generateMilliseconds: Double?
+        public var memoryActiveBytes: Int?
+        public var memoryCacheBytes: Int?
+        public var memoryPeakBytes: Int?
 
         public struct PromptTokensDetails: Encodable, Sendable {
             public var cachedTokens: Int
+
+            public enum CodingKeys: String, CodingKey {
+                case cachedTokens = "cached_tokens"
+            }
         }
 
         public enum CodingKeys: String, CodingKey {
@@ -424,6 +439,13 @@ public struct ChatCompletionResponse: Encodable, Sendable {
             case completionTokens = "completion_tokens"
             case totalTokens = "total_tokens"
             case promptTokensDetails = "prompt_tokens_details"
+            case tokensPerSecond = "tokens_per_second"
+            case promptTokensPerSecond = "prompt_tokens_per_second"
+            case prefillMilliseconds = "prefill_ms"
+            case generateMilliseconds = "generate_ms"
+            case memoryActiveBytes = "mei_memory_active_bytes"
+            case memoryCacheBytes = "mei_memory_cache_bytes"
+            case memoryPeakBytes = "mei_memory_peak_bytes"
         }
     }
 
@@ -572,4 +594,21 @@ public struct MeiStatusResponse: Sendable, Codable {
     public var cacheReuse: Bool
     public var uptimeSeconds: Int
     public var memory: MeiMemoryReport
+
+    /// Live prefix-cache counters when the coordinator is enabled (nil when
+    /// --cache-reuse false or before the first request).
+    public var cache: MeiCacheStatus?
+}
+
+/// Prefix-cache counters surfaced by /v1/mei/status (translated from the
+/// coordinator's stats snapshot so the JSON shape stays stable across
+/// vmlx-swift versions).
+public struct MeiCacheStatus: Sendable, Codable {
+    public var pagedEnabled: Bool
+    public var pagedHits: Int
+    public var pagedMisses: Int
+    public var pagedEvictions: Int
+    public var ssmHits: Int
+    public var ssmMisses: Int
+    public var isHybrid: Bool
 }

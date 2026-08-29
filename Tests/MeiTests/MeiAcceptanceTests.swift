@@ -23,9 +23,16 @@ final class MeiAcceptanceTests: XCTestCase {
 
     // MARK: - Helpers
 
+    /// Concatenate the base URL and a route, tolerating a leading slash on
+    /// the route (a naive "\(baseURL)/\(route)" would double the slash and
+    /// 404 against the router's exact-match URI table).
+    func resolve(_ route: String) -> URL {
+        let trimmed = route.hasPrefix("/") ? String(route.dropFirst()) : route
+        return URL(string: "\(baseURL)/\(trimmed)")!
+    }
+
     func post(_ route: String, json: [String: Any], timeout: TimeInterval? = nil) throws -> (Data, HTTPURLResponse) {
-        let url = URL(string: "\(baseURL)/\(route)")!
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: resolve(route))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: json)
@@ -33,8 +40,7 @@ final class MeiAcceptanceTests: XCTestCase {
     }
 
     func get(_ route: String, timeout: TimeInterval? = nil) throws -> (Data, HTTPURLResponse) {
-        let url = URL(string: "\(baseURL)/\(route)")!
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: resolve(route))
         request.httpMethod = "GET"
         return try send(request, timeout: timeout)
     }
@@ -70,7 +76,10 @@ final class MeiAcceptanceTests: XCTestCase {
             "model": modelID,
             "messages": [["role": "user", "content": "Reply with exactly: ready"]],
             "temperature": 0,
-            "max_tokens": 8,
+            // Thinking models (Ornith is Qwen3.5-lineage) spend their first
+            // 100+ tokens on the thinking preamble; a small budget truncates
+            // before any visible content. 1024 covers a full think+answer.
+            "max_tokens": 1024,
             "stream": false,
         ])
         XCTAssertEqual(response.statusCode, 200, String(data: data, encoding: .utf8) ?? "")
@@ -214,8 +223,14 @@ final class MeiAcceptanceTests: XCTestCase {
     }
 
     func testHealthEndpoint() throws {
-        let (data, response) = try get("/healthz", timeout: 30)
-        XCTAssertEqual(response.statusCode, 200)
+        // /healthz is a root-level route (not under /v1); derive the server
+        // root from the configured base URL.
+        let base = baseURL.hasSuffix("/v1") ? String(baseURL.dropLast(3)) : baseURL
+        let url = URL(string: "\(base)/healthz")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        let (data, response) = try send(request, timeout: 30)
+        XCTAssertEqual(response.statusCode, 200, String(data: data, encoding: .utf8) ?? "")
         let body = try dict(data)
         XCTAssertEqual(body["status"] as? String, "ok")
     }

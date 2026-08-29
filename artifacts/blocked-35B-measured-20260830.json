@@ -1,0 +1,28 @@
+{
+  "attempts": [
+    {
+      "active_bytes_after_load": 24278561174,
+      "first_inference": "HARD FAILURE: [METAL] Command buffer execution failed: Insufficient Memory (00000008:***) during 15-token prefill; process aborted",
+      "load_ok": true,
+      "variant": "default mmap loader (useMmapSafetensors=true)",
+      "verdict": "blocked (Metal working set exceeded)"
+    },
+    {
+      "active_bytes_after_load": 19528525068,
+      "first_inference": "started (15-token prefill complete, no OOM) but machine entered page thrash (free pages ~4.4K x 16KB = ~72MB); first 1024-token generation did not complete within ~15 minutes; server killed to restore the machine",
+      "load_ok": true,
+      "variant": "stock loader (useMmapSafetensors=false)",
+      "verdict": "blocked (first-touch weight page-in thrash under 28GB allocator cap; no usable decode)"
+    }
+  ],
+  "engine": "mei",
+  "implications": "40-50K loaded-context decode on the 35B needs weights (~19.5GB file-backed) + KV (~3.6GB fp16 at 45K) + activations; the 26.8GB Metal recommended working set cannot host it without thrash. The 35B is documented as the primary blocked artifact; the smallest exact official Ornith-1.5 MLX text-generation artifact that fits is Ornith-1.5-9B-MLX-4bit, which runs the identical Mei path.",
+  "machine": {
+    "arch": "applegpu_g13s",
+    "metal_recommended_working_set_bytes": 26800603136,
+    "physical_memory_bytes": 34359738368
+  },
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+  "recorded_at": "2026-08-29T22:31:34.018017+00:00",
+  "server_log_load_block": "mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\nmei: prefix cache enabled (paged in-memory + disk); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 19528525068 cache 0 peak 0 bytes; limit 30064771072 cache-limit 6442450944\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\nmei: chat request tokens 15\nmei: pp stage=prefill completed=0 total=15\nmei: pp stage=complete completed=15 total=15\n"
+}

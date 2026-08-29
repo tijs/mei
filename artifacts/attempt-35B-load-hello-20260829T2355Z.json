@@ -1,0 +1,54 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788041595.518614,
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+  "probes": {
+    "hello": {
+      "elapsed_seconds": 1.464,
+      "error": "RemoteDisconnected: Remote end closed connection without response",
+      "status": "failed"
+    },
+    "short_decode": {
+      "elapsed_seconds": 0.001,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "status": {
+      "elapsed_seconds": 0.028,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 24278561174,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 6442450944,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 30064771072,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 10
+      }
+    }
+  },
+  "server_log_tail": "eRestore completed=4096 total=16384\nmei: pp stage=prefill completed=4096 total=16384\nmei: pp stage=prefill completed=4608 total=16384\nmei: pp stage=prefill completed=5120 total=16384\nmei: pp stage=prefill completed=5632 total=16384\nmei: pp stage=prefill completed=6144 total=16384\nmei: pp stage=prefill completed=6656 total=16384\nmei: pp stage=prefill completed=7168 total=16384\nmei: pp stage=prefill completed=7680 total=16384\nmei: pp stage=prefill completed=8192 total=16384\nmei: pp stage=prefill completed=8704 total=16384\nmei: pp stage=prefill completed=9216 total=16384\nmei: pp stage=prefill completed=9728 total=16384\nmei: pp stage=prefill completed=10240 total=16384\nmei: pp stage=prefill completed=10752 total=16384\nmei: pp stage=prefill completed=11264 total=16384\nmei: pp stage=prefill completed=11776 total=16384\nmei: pp stage=prefill completed=12288 total=16384\nmei: pp stage=prefill completed=12800 total=16384\nmei: pp stage=prefill completed=13312 total=16384\nmei: pp stage=prefill completed=13824 total=16384\nmei: pp stage=prefill completed=14336 total=16384\nmei: pp stage=prefill completed=14848 total=16384\nmei: pp stage=prefill completed=15360 total=16384\nmei: pp stage=prefill completed=15872 total=16384\nmei: pp stage=complete completed=16384 total=16384\nmei: pp stage=cacheRestore completed=16384 total=33175\nmei: pp stage=prefill completed=16384 total=33175\nmei: pp stage=prefill completed=16896 total=33175\nmei: pp stage=prefill completed=17408 total=33175\nmei: pp stage=prefill completed=17920 total=33175\nmei: pp stage=prefill completed=18432 total=33175\nmei: pp stage=prefill completed=18944 total=33175\nmei: pp stage=prefill completed=19456 total=33175\nmei: pp stage=prefill completed=19968 total=33175\nmei: pp stage=prefill completed=20480 total=33175\nmei: pp stage=prefill completed=20992 total=33175\nmei: pp stage=prefill completed=21504 total=33175\nmei: pp stage=prefill completed=22016 total=33175\nmei: pp stage=prefill completed=22528 total=33175\nmei: pp stage=prefill completed=23040 total=33175\nmei: pp stage=prefill completed=23552 total=33175\nmei: pp stage=prefill completed=24064 total=33175\nmei: pp stage=prefill completed=24576 total=33175\nmei: pp stage=prefill completed=25088 total=33175\nmei: pp stage=prefill completed=25600 total=33175\nmei: pp stage=prefill completed=26112 total=33175\nmei: pp stage=prefill completed=26624 total=33175\nmei: pp stage=prefill completed=27136 total=33175\nmei: pp stage=prefill completed=27648 total=33175\nmei: pp stage=prefill completed=28160 total=33175\nmei: pp stage=prefill completed=28672 total=33175\nmei: pp stage=prefill completed=29184 total=33175\nmei: pp stage=prefill completed=29696 total=33175\nmei: pp stage=prefill completed=30208 total=33175\nmei: pp stage=prefill completed=30720 total=33175\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\n[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00004-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00001-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00003-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00002-of-00004.safetensors\nmei: prefix cache enabled (paged in-memory + disk); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 24278561174 cache 0 peak 0 bytes; limit 24051816857 cache-limit 6442450944\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\n[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00004-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00001-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00003-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00002-of-00004.safetensors\nmei: prefix cache enabled (paged in-memory + disk); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 24278561174 cache 0 peak 0 bytes; limit 30064771072 cache-limit 6442450944\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\nmei: chat request tokens 15\nmei: pp stage=prefill completed=0 total=15\nlibc++abi: terminating due to uncaught exception of type std::runtime_error: [METAL] Command buffer execution failed: Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)\n",
+  "started_epoch": 1788041594.0243042,
+  "status": "failed"
+}
