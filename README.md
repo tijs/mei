@@ -1,29 +1,85 @@
-# Mei
+# Mei (梅)
 
-Mei (梅, after Mei Long the sleeping dragon dinosaur) is a native Swift/MLX inference server for Apple Silicon, inspired by Osaurus's MLX stack and Dwarf Star.
+Mei — after Mei Long, the sleeping dragon dinosaur — is a narrow, native
+Swift/MLX OpenAI-compatible inference server for Apple Silicon, built directly
+on the pinned `osaurus-ai/vmlx-swift` engine (not the full Osaurus app).
 
-## Goal
+The project's scope is deliberately small: one model per server process, the
+OpenAI chat/completions surface this repo's benchmark needs, chunked prefill
+on for hybrid architectures, and in-process KV/prefix reuse across turns.
+The primary target is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`; the goal is
+>= 30 decode tokens/second with correct tool-calling and no long-context
+collapse on this 32GB Apple Silicon machine.
 
-Build a narrow, correct, OpenAI-compatible serving engine around `osaurus-ai/vmlx-swift` and its MLX backend. Use the existing `local-model-bench` harness to measure correctness, latency, memory, useful agent throughput, and decode speed. The first target is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`; the performance goal is at least 30 decode tokens/second, comparable to the current llama.cpp setup, without the long-context serving collapse seen in Python wrappers.
+## Layout
 
-## Source plan
+- `Sources/MeiCore/` — engine, router, HTTP server, OpenAI DTOs
+- `Sources/Mei/main.swift` — CLI entry point
+- `Tests/MeiTests/` — unit tests + black-box acceptance oracle
+  (`MeiAcceptanceTests`: run RED against a missing server, go green once the
+  server behaves; enabled via `MEI_ACCEPTANCE_BASE_URL`, default
+  `http://127.0.0.1:8024/v1`)
+- `tools/probe_mei.py` — standalone acceptance/perf probe (the authoritative
+  copy; `local-model-bench/runner/probe_mei.py` mirrors it)
+- `scripts/` — stage_model.sh / start_mei_server.sh / stop_mei_server.sh
+  (isolated runtime: dedicated port 8024, own logs/build/model staging under
+  `~/.local/share/local-model-bench/mei-*`)
 
-The implementation plan is maintained in Kiem under the `proj/local_model_bench` project:
-
-- `924ccddc-b4cb-438b-bccc-1cddd225e2b4` — native Swift MLX server on `vmlx-swift` (primary plan)
-- `ac214007-76b2-473f-8fb0-89041c6260f0` — Qwen/llama.cpp speed and agentic-efficiency investigation (supporting benchmark methodology)
-
-Retrieve the current plan with:
+## Build
 
 ```bash
-$HOME/bin/kiem show 924ccddc-b4cb-438b-bccc-1cddd225e2b4
+swift build            # debug
+swift test             # unit tests (acceptance tests need a live server)
+swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
 ```
 
-## Working principles
+`vmlx-swift` is pinned by revision (`aeb5e21c…`, the revision osaurus-ai's own
+`Package.resolved` pins) and `Package.resolved` is committed. Re-pinning is a
+deliberate decision that must re-run the whole acceptance suite.
 
-- Use test-first red/green development for the server and acceptance oracle.
-- Pin SwiftPM dependencies to exact revisions.
-- Keep Mei's runtime, ports, logs, model staging, and shutdown isolated from other local backends.
-- Preserve raw benchmark logs and historical `local-model-bench` results; never overwrite them.
-- Do not claim a speed win without repeated, comparable benchmark evidence.
-- Iterate through implementation, tests, review, fixes, and benchmark runs until the 30+ tok/s target is reached or a measured hardware/engine limit is documented.
+## Run
+
+```bash
+scripts/stage_model.sh   # downloads the model once (~20GB)
+scripts/start_mei_server.sh    # builds + serves on 127.0.0.1:8024
+scripts/stop_mei_server.sh
+```
+
+or directly:
+
+```bash
+swift run mei --model-dir ~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit \
+  --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit --port 8024 \
+  --context-cap 65536 --prefill-step-size 512
+```
+
+## Bench integration
+
+The `local-model-bench` harness drives Mei as a first-class
+`inference_engine`:
+
+- `configs/Ornith-1.5-35B-A3B/mei.yaml` — launch command, endpoint, settings
+- `runner/start_mei_server.sh` / `runner/stop_mei_server.sh` — isolated lifecycle
+- `runner/probe_mei.py` — acceptance/parity/tooling gate
+- `runner/run_mei_acceptance.py` — config-driven sequential acceptance runs
+
+## Design notes
+
+- **Chunked prefill**: `GenerateParameters.prefillStepSize` defaults to 512
+  and is always on — the long-context safeguard for hybrid (GatedDelta)
+  architectures; the Python serving wrappers this project replaces lacked it.
+- **KV/prefix reuse**: the engine keeps the rendered token sequence + live KV
+  of the last request; when the next request's rendered tokens exactly extend
+  that sequence (identical system prompt + growing transcript — the standard
+  agentic pattern), generation resumes from the cached KV and only the new
+  tokens are prefilled. `usage.prompt_tokens_details.cached_tokens` reports
+  the reused prefix. Any divergence falls back to a full prefill (always
+  correct).
+- **Tool calls**: vmlx-swift parses Qwen/Ornith-style `<tool_call>{json}`
+  envelopes inside its generate loop; Mei maps `.toolCall` events to OpenAI
+  `tool_calls` in both streaming and non-streaming shapes.
+- **Reasoning**: Ornith is a Qwen3.5-lineage thinking model; thought text is
+  exposed as `reasoning_content` (opt-out via `--emit-reasoning false`) and
+  the thinking/visible streams are kept separate.
+- **No MTP**: explicitly out of scope (the benchmark's own data shows no
+  MTP/speculative win on this hardware).
