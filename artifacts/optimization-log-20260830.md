@@ -172,3 +172,27 @@ status (weights ~19.5GB + 45K KV + activations vs 26.8GB recommended
 working set). kv quant WOULD shrink the 35B KV (~3.6GB fp16 -> ~0.9GB
 q4), which is a necessary (not sufficient) step toward a 35B resident
 run; only an independent 35B measurement may claim unblocking.
+
+## Probe-coverage honesty note (what survival/acceptance can and cannot
+## assert for window cells)
+- probe_long_context gates on: HTTP 200, exact prompt-token counts,
+  non-empty completion, decode >= 1.0 tok/s, full-prefix cache reuse.
+  It does NOT assert semantic coherence. A windowed cell (attention
+  truncated to 8K/16K) can PASS survival while being semantically blind
+  to pre-window context, because the filler prompt is repetitive and the
+  model continues it plausibly. Window cells are therefore bounded by
+  CONSTRUCTION (documented truncation), not by probe failure.
+- probe_mei's tool-call/parity checks run at ~300-token prompts — they
+  cannot detect long-context truncation either; their role is per-variant
+  correctness at the KV-quantization level (divergence would break
+  exact-arg tool calls), which is their intended gate here.
+- chat_40k rows in sweep_mei assert only decode >= 1.0; the bench_mei
+  driver additionally checks content_tail 'cache-ready' (long_chat
+  transcript check). Where content is compared across variants, raw
+  choice content is not stored in sweep rows — content-level divergence
+  across kv8/kv4/compiled cells is assessed via the acceptance and
+  survival artifacts + raw transcripts in the probe logs, not via sweep
+  rows.
+- The Level1Techs-derived rule stands: a tok/s win that regresses tool
+  calls, reasoning stability, or long-context survival is rolled back;
+  window cells are the documented exception (throughput probe only).
