@@ -119,6 +119,12 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
 - `tools/bench_mei.py` — full benchmark rows (short, tool, 45K-loaded
   fresh + reuse, 40K chat) with engine-reported tok/s, TTFT/prefill ms and
   allocator bytes; artifact-only output under `artifacts/`
+- `tools/gguf_meta.py` — GGUF header + tensor-name reader (`--check-mtp`
+  reports MTP/Next-N head presence via `nextn_predict_layers` and
+  `blk.*.nextn.*` tensors; `--tensors [filter]` lists names; handles the
+  GGUF v2 vs v3 layout difference — v3 dropped the tensor-info count field
+  and stores dims as u64). Used for llama.cpp-ceiling comparator hygiene:
+  never compare an MTP variant against Mei's no-MTP baseline.
 
 ## Design notes
 
