@@ -108,6 +108,54 @@ def unit_prompt(target: int) -> str:
     return " hello" * target
 
 
+# Verified on the Ornith-1.5-9B tokenizer: every entry encodes as exactly
+# ONE token (" hello" also counts as one). Any unit failing the runtime
+# verification is dropped and the driver refuses to run if fewer units
+# than context lengths remain.
+SALT_UNITS = [
+    " x", " ok", " go", " hi", " lol", " bye", " abc", " xyz",
+    " foo", " bar", " baz", " ham", " egg", " pie", " kot", " pes",
+    " aim", " bee", " ray", " mou", " moi", " dav", " sam", " far",
+    " nah", " yak", " zoo", " bit", " fat", " q", " i", " a", " mo",
+    " be", " to",
+]
+
+
+def salted_prompt(target: int, family_index: int, units: list[str]) -> str:
+    """'Fresh' prompts MUST NOT extend any other row's prompt: the
+    coordinator reuses any strict-prefix match, so a row would silently
+    not measure a clean fresh prefill (nested ' hello'*N families share
+    every prefix). Each context length gets its OWN leading unit token
+    (family), breaking all cross-row prefixes while keeping exact counts:
+    prompt = unit[family] + ' hello' * (target - 1)."""
+    unit = units[family_index % len(units)]
+    return unit + (" hello" * (target - 1))
+
+
+def verify_salt_units(python: str, tokenizer_dir: str) -> list[str]:
+    """Return the SALT_UNITS that encode as exactly one token each —
+    salted prompts keep their exact token count only if the leading unit
+    is a single token. Fails loudly (returns []) on any unit that is not
+    single-token: silently corrupting row counts is worse than stopping.
+    Also refuses to proceed when the tokenizer cannot be loaded."""
+    import json
+    code = (
+        "import json, os, sys\n"
+        "from transformers import AutoTokenizer\n"
+        "t = AutoTokenizer.from_pretrained(os.environ['TOK_DIR'])\n"
+        "cands = [" + ",".join(json.dumps(c) for c in SALT_UNITS) + "]\n"
+        "out = [c for c in cands if len(t.encode(c, add_special_tokens=False)) == 1]\n"
+        "print(json.dumps(out))\n"
+    )
+    r = subprocess.run(
+        [os.path.expanduser(python), "-c", code],
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, "TOK_DIR": tokenizer_dir})
+    if r.returncode != 0:
+        return []
+    return json.loads(r.stdout.strip() or "[]")
+
+
 class Server:
     """Owned Mei server process, one per configuration cell."""
 
@@ -307,7 +355,18 @@ def main() -> int:
     base = f"http://127.0.0.1:{args.port}/v1"
     chat_url = f"{base}/chat/completions"
     comp_url = f"{base}/completions"
-    prompts = {n: unit_prompt(n) for n in set(contexts + ([45001] if 45000 in contexts else []))}
+    # Fresh prompts are family-salted per context length so no row's
+    # prompt is a strict prefix of another (nested ' hello'*N families
+    # share every prefix; cross-row reuse would smear the fresh rows).
+    units = verify_salt_units(os.path.expanduser(args.transformers_python), str(tokenizer_dir))
+    if len(units) < len(contexts):
+        raise SystemExit(
+            f"FATAL: only {len(units)}/{len(contexts)} salt units verified as "
+            f"single-token ({units}); refusing to run rows with unverified "
+            "prompt counts")
+    prompts = {
+        n: salted_prompt(n, i, units) for i, n in enumerate(contexts)
+    }
 
     for cell in cells:
         cell_result: dict[str, Any] = {"config": cell, "rows": []}
@@ -381,7 +440,7 @@ def main() -> int:
                     n = 45001 + k
                     cell_result["rows"].append(row(
                         f"ctx_45000_reuse_r{k+1}",
-                        {**base_payload, "prompt": unit_prompt(n)},
+                        {**base_payload, "prompt": salted_prompt(n, contexts.index(45000), units)},
                         status_before=server.status(), expected_prompt=n,
                         min_decode=1.0))
             if args.chat_40k and chat_40k:
