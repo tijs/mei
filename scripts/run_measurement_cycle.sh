@@ -19,6 +19,15 @@ set -euo pipefail
 
 MEI_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$MEI_REPO"
+# Single-instance lock: refuse to start if another cycle is alive (the
+# gate can wait for hours; accidental double-launches would collide on
+# port 8024 when the window finally opens).
+LOCKDIR="/tmp/mei-cycle.lock"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+  echo "FATAL: another measurement cycle is running (lock $LOCKDIR)" >&2
+  exit 1
+fi
+trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
 BUILD_DIR="${MEI_BUILD_DIR:-$HOME/.local/share/local-model-bench/mei-build}"
 VENV_PY="${MEI_SWEEP_VENV:-$HOME/.local/share/local-model-bench/mei-runtime/venv/bin/python}"
 MODEL_DIR="${MEI_MODEL_DIR:-$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit}"
