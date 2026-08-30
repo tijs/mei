@@ -154,9 +154,12 @@ run_variant_cell() {
   "${VENV_PY}" tools/probe_mei.py --base-url http://127.0.0.1:8024/v1 \
     --model "$MODEL_ID" --tokenizer "$MODEL_DIR" --context-cap "$ctxcap" \
     --output "artifacts/acceptance-variant-$tag-$TS.json" || true
+  # 30K survival always; 80K survival when the cell's context cap allows.
+  local lengths="30000"
+  if (( ctxcap >= 131072 )); then lengths="30000 80000"; fi
   "${VENV_PY}" tools/probe_long_context.py --base-url http://127.0.0.1:8024/v1 \
     --model "$MODEL_ID" --tokenizer "$MODEL_DIR" \
-    --lengths 30000 --output "artifacts/survival30k-variant-$tag-$TS.json" || true
+    --lengths $lengths --output "artifacts/survival-variant-$tag-$TS.json" || true
   bash scripts/stop_mei_server.sh || true
   kill "$spid" 2>/dev/null || true
 }
