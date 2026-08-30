@@ -18,19 +18,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 from pathlib import Path
 from typing import Any
 
 
+_CTX_RE = re.compile(r"(?:ctx_|ctx)(\d+)|(\d+)k?_")
+
+
 def family(name: str) -> str:
+    # Group medians per context length, not across lengths: lumping
+    # ctx_512_fresh and ctx_45000_fresh into one "fresh" family hides the
+    # cliff between 16K and 33K.
+    m = _CTX_RE.search(name)
+    length = (m.group(1) or m.group(2)) if m else ""
     if "reuse" in name:
-        return "reuse"
+        return f"reuse@{length}" if length else "reuse"
     if "chat" in name:
         return "chat"
     if "fresh" in name or name.startswith("ctx_"):
-        return "fresh"
+        return f"fresh@{length}" if length else "fresh"
     return name
 
 
