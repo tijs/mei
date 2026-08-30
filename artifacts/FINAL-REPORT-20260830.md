@@ -1,6 +1,6 @@
 # Mei optimization session report — 2026-08-30
 
-Status: MEASUREMENTS PENDING. Machine contended through sessions B–F
+Status: MEASUREMENTS PENDING. Machine contended through sessions B–G
 (other agent's llama-server on 8017 + active run_bench/run_prompt_suite
 runners + cocore; reclaimable memory 1–4GB vs the 10GB floor). The
 bounded foreground cycle (scripts/run_measurement_cycle.sh --max-wait-min 5)
@@ -10,7 +10,34 @@ artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json,
 artifacts/probe-diverging-chat-*.json when a clean window opens. Session E
 made a bounded gate attempt at 17:11Z; session F made the second
 (2026-08-30T17:20-17:25Z, --phase B, exit 3; boundary in
-artifacts/cycle-gated-boundary-20260830T172015Z.txt).
+artifacts/cycle-gated-boundary-20260830T172015Z.txt); session G made the
+third (2026-08-30T17:29-17:35Z, --phase B, exit 3; boundary in
+artifacts/cycle-gated-boundary-20260830T172949Z.txt).
+
+## Session G (continuation) deliverables (all committed, ae11c0d)
+- Upstream bf8b31995 review COMPLETED with a source-level verdict:
+  NOT backportable as a minimal default-off patch (details in
+  artifacts/review-bf8b31995-compiled-regions-20260830.md). The commit's
+  compiled-region enablement is scoped to the MLXVLM vision `Qwen35`
+  class; Mei's 9B (qwen3_5_text -> Qwen35TextModel) and 35B (qwen3_5_moe
+  -> Qwen35MoEModel) resolve via LLMModelFactory.swift:51-57 to MLXLLM
+  text-path classes that share none of that machinery; the 9B is
+  dense-MLP (no experts) so the fused-affine-MoE kernel generalization
+  cannot engage either. Upstream main @ 33d1b6fa9 has zero text-path
+  compiled-region commits since the pin. A text-path compiled-GDN port
+  remains a NEW fork, gated on profiling evidence (workstream-5
+  discipline). Their ~25->94 tok/s claims are VLM-class; not copied.
+- Cycle orchestrator exec-bit fix: scripts/run_measurement_cycle.sh was
+  mode 600 (session-F write dropped +x) so the cycle could not launch;
+  chmod +x now committed (mode change in ae11c0d).
+- llama_ceiling.py --provenance-only now persists its verified provenance
+  block to --output (positive + negative branches both verified live;
+  negative exits 2 and still writes a verified:false artifact).
+- Verification re-run, all green: 34/34 non-Metal tests, patch series
+  0001-0005 byte-exact on both checkouts, GGUF provenance OK
+  (artifacts/llama-ceiling-provenance-20260830T173038Z.json),
+  run_bounded usage/rc semantics, Kiem note
+  86348808-2796-42bd-943e-e68c6b7388ae (proj/mei).
 
 ## Session F (continuation) deliverables (all committed)
 - probe_diverging_chat.py --ssm-anchor-boundaries K A/B label + self-test
@@ -92,6 +119,7 @@ artifacts/cycle-gated-boundary-20260830T172015Z.txt).
 | f0b018c | docs: patch-0005 design record, README, session-E log (session E) |
 | 798ed36 | tools: diverging-chat probe --ssm-anchor-boundaries A/B label + self-test gate (session F) |
 | 9100d43 | cycle: phase D diverging-chat A/B cells; MLXPRESS profile on all cell servers (session F) |
+| ae11c0d | session G: bf8b31995 compiled-region review (not backportable to text path), cycle-script exec-bit fix, provenance-only artifact persistence, gate boundary evidence |
 | (pending) | measurement results + optimization log + final numbers |
 
 ## Research sources / revisions
@@ -173,8 +201,11 @@ reclaimable 3GB, Muse-Glimmer-30B + hermes_ops suite active).
        artifacts/probe-diverging-chat-anchors-{default,4}-<ts>.json)
 3. First new-variable experiment when the window opens: llama-ceiling
    phase B to set the hardware ceiling before the fork variants.
-4. Candidate compiled-decode experiment (research-recorded, not yet
-   scheduled): backport upstream bf8b31995 (#346, model-side compiled
-   region enablement for the Ornith/Qwen3.5 topology) to the pinned tree
-   and A/B on the full matrix — only if phase-B/C rows point at
-   model-side compile regions as the binding cost.
+4. Candidate compiled-decode experiment (position updated by session-G
+   review): upstream bf8b31995 (#346) is NOT backportable as-is — its
+   enablement is VLM-class-scoped and Mei's 9B/35B text-path classes
+   share none of the machinery (see
+   artifacts/review-bf8b31995-compiled-regions-20260830.md). The
+   text-path compiled-GDN port is a NEW fork: schedule it only if
+   phase-B/C rows and MLXPRESS generation profiles point at GDN/dispatch
+   overhead as the binding cost on the 9B decode step.

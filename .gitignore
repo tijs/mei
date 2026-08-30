@@ -3,3 +3,5 @@
 .swiftpm/
 *.xcodeproj/xcuserdata/
 .mei/
+__pycache__/
+*.pyc
