@@ -183,6 +183,10 @@ phase_c() {
   # window; decode throughput is expected to become context-independent.
   run_variant_cell window8k "" "" "" "65536" "8192"
   run_variant_cell window16k "" "" "" "65536" "16384"
+  # THE gate candidate: window16k + compiled decode with NO threshold —
+  # the promote+trace is O(window)=16K cheap even at a 45K offset, so the
+  # compiled replay runs at 16K-width attention at 45K context.
+  run_variant_cell window16-compiled "" "true" "" "65536" "16384"
   # 80K survival probe at an extended context cap (separate cell)
   run_variant_cell kv8-80k "8" "" "" "131072"
   run_variant_cell survival80k "" "" "" "131072"
