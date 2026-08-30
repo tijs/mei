@@ -1,17 +1,23 @@
 # Mei optimization session report — 2026-08-30
 
-Status: MEASUREMENTS PENDING (machine contended all session; detached
-gated cycle alive, pid 29951, /tmp/mei-cycle.nohup.log). Numbers below
-are appended by the cycle (scripts/run_measurement_cycle.sh) as artifacts
-land: artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
-artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json.
-Raw evidence pointers and the digestion drill are in
+Status: MEASUREMENTS PENDING (machine contended all session, both B and C;
+see the session-end boundaries in artifacts/optimization-log-20260830.md).
+The old detached gate cycle died without producing artifacts; per the
+shared-GPU contention policy it is REPLACED by a bounded foreground cycle
+(scripts/run_measurement_cycle.sh --max-wait-min 5, exit 3 on gate
+expiry) that writes artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
+artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json when
+a clean window opens. Raw evidence pointers and the digestion drill are in
 artifacts/optimization-log-20260830.md and the Kiem notes from 2026-08-30.
 Two real methodology bugs were fixed pre-window (jinja2 missing in the
-sweep venv -> every chat_40k row would have been skipped; BatchEncoding
-is a Mapping not dict in sweep_mei.py, commit e674ef5) — the cycle will
-now produce complete rows.
-
+sweep venv -> every chat_40k row would have been silently skipped; fixed:
+uv-pip installed jinja2 into the Mei-owned mei-runtime venv; BatchEncoding
+is a Mapping not dict in sweep_mei.py, commit e674ef5). Session C added the
+bounded-foreground policy (commit 53742de), validated the fork's
+correctness properties at source + numeric level (temporal-order parity,
+dispatch safety, affine quant(dequant(quant(x)))==quant(x) exact), and
+refreshed upstream research (both mlx-swift-lm and vmlx-swift-lm still
+lack rotating-KV quantization on main; vmlx live head 4546a5d7).
 ## Commits (Mei, clean at c0a5152 -> HEAD)
 | hash | purpose |
 |---|---|
@@ -33,6 +39,7 @@ now produce complete rows.
 | ff33467 | log: session-B research record + MTP-head finding on the ceiling GGUF |
 | 6d9c8c5 | digest: group fresh/reuse medians per context length |
 | f9a432e | log: bandwidth model + per-variant expectations |
+| 53742de | tools: bounded foreground measurement policy (no detached gate waiters); fresh-KV-per-cell hygiene |
 | (pending) | measurement results + optimization log + final numbers |
 
 ## Research sources / revisions

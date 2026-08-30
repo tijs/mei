@@ -207,3 +207,124 @@ run; only an independent 35B measurement may claim unblocking.
   drivers were pre-flighted and validated this session (salt units 35/35,
   chat-40k transcript 44,002 tokens post-fix, digest + gate_report dry
   runs, GGUF provenance pinned, MTP comparator rule recorded).
+
+---
+
+# Session C (2026-08-30 evening, 16:40-17:30Z) — policy alignment + CPU-side validation
+
+## Contention state at session start
+- The session-B detached cycle pid 29951 was DEAD (lock /tmp/mei-cycle.lock
+  released; nohup log ends 16:39:30Z — it did not survive the new
+  fixture-suite launch). It produced no artifacts (correct per boundary).
+- Machine fully contended at 16:40Z and throughout: other agent's
+  llama-server unsloth/Devstral-Small-2507-GGUF:Q4_K_M on port 8017,
+  ~25GB RSS, plus run_fixture_suite.py --suite hearth_full (pid 45729) and
+  two run_bench.py wrappers (pids 24929/24930); free pages ~4000x16KB
+  (~67MB); reclaimable GB floor 0-1. No Mei GPU measurement ran; no
+  foreign backend was touched.
+- Policy change adopted (per the shared-GPU contention cap): NO detached
+  gate waiters anymore. Gate polls are foreground and bounded; see
+  commit 53742de below.
+
+## Commits (Mei)
+| hash | purpose |
+|---|---|
+| 53742de | tools: bounded foreground measurement policy + fresh-KV-per-cell hygiene |
+
+## Fork correctness review (source-level + numeric, no GPU)
+1. **temporal-order parity**: patch 0001's static `temporalOrder` mirrors
+   the fp16 ring's private reorder exactly (KVCache.swift:714 fp16:
+   `[..<keep, idx..., keep..<idx]` == 0001 static reorder) — the quantized
+   attention span equals the fp16 ring's temporal span by construction.
+2. **Dispatch safety**: AttentionUtils.swift:94 routes
+   `QuantizedKVCacheProtocol` caches through `updateQuantized` +
+   `quantizedScaledDotProductAttention`; `QuantizedRotatingKVCache.update`
+   stays a fatalError safety net that the hot path can never reach
+   (verified: no other caller in KVCache/Evaluate/AttentionUtils).
+3. **Quant determinism (numeric)**: affine quant(dequant(quant(x)))==quant(x)
+   verified exact (max |Δcode| 0) over bits {4,8} x groupSize {32,64,128}
+   x 20 random trials; min/max (quant grid) preserved by dequant. The
+   dequantize-at-store / requantize-on-restore disk design (patch 0002)
+   is deterministic. (numpy 2.5.2, mei-runtime venv; no Metal touched.)
+4. **Mamba/QSA isolation**: maybeQuantizeKVCache skips MambaCache,
+   CacheList, QSAKVCache and TurboQuant by construction; only
+   KVCacheSimple + RotatingKVCache are replaced.
+5. **Documented minor divergence (accepted)**: the quantized ring trims to
+   exactly maxCacheSize immediately after each append, while fp16
+   updateConcat transiently holds maxCacheSize+S-1 during multi-token
+   prefills (the "+S-1 context floor"). At prefill step 512 vs 65536 ring
+   the effect is <1% of a window edge and only concerns prefill-chunk
+   attention, never decode — fidelity-minus, not a correctness break.
+
+## Upstream research refresh (exact revisions)
+- osaurus-ai/vmlx-swift-lm LIVE main head = 4546a5d720e7
+  (2026-05-15, "fix(dsv4): render DSML tools in fallback template");
+  commits since the aeb5e21c pin that touch caches are all
+  disk-materialization/restore hardening (ad1d2319 sync-before-persist,
+  495ac32b restore disk prefix hits for growing prompts, 34a86398 store
+  growing chat answer boundaries, d8c2bb22 materialize token iterator
+  disk restores ...) — none touch KV quantization or compiled decode.
+  Mei's fork remains the only live implementation of hybrid rotating-KV
+  quant + thresholded compiled decode on this pin. Re-pinning is
+  deliberately NOT done (would re-run the whole acceptance suite).
+- ml-explore/mlx-swift-lm main KVCache.swift (fetched 2026-08-30):
+  RotatingKVCache.toQuantized now THROWS "RotatingKVCache quantization is
+  not implemented because its temporal ordering requires dedicated
+  handling" (line ~911) instead of fatalError; KVCacheSimple.toQuantized
+  (line ~503) and maybeAffineQuantizeKVCache (line ~2586) still handle
+  only simple leaves. Gap confirmed on BOTH upstreams.
+- llama.cpp brew build 10470 (commit 34af94cd9, AppleClang 21) supports
+  --cache-type-k/v (q8_0 KV), --spec-type none|...|draft-mtp,
+  --no-cache-prompt, --metrics, --parallel. The ceiling driver passes NO
+  --spec-type (default none) so MTP stays off vs Mei's no-MTP baseline;
+  expected single-token decode verified via timings predicted_n vs
+  evaluated_n at digest time.
+- Level1Techs forum.level1techs.com/t/253917 (thr3e, 2026-08-16) fetched
+  and claims verified by reading (CUDA/vLLM study on hybrid Qwen3.6-27B):
+  (1) attention-backend choice → top-1 logit divergence that GROWS with
+  context (bit-identical within a backend across runs); (2) KV-quant
+  ALONE (weights/activations fixed) accumulates divergence past ~40K —
+  directly motivating Mei's per-variant acceptance + 30K/80K survival
+  gates and the tool-call schema checks; (3) W8A16 > FP8 > FP4 on token
+  flips — weight-quant fidelity trades; (4) their baseline disables MTP
+  like Mei's comparator. All treated as hypotheses, already encoded in
+  the drivers (temp 0, family-salted fresh prompts, strict-extension
+  reuse, tool-call schema, survival probes).
+- FreeToken (github.com/FlashML-org/FreeToken, main @ 2026-08-30 fetch,
+  524 files) — architecture research with exact cites:
+  README.md:20-21 (bandwidth-adaptive CPU-GPU co-execution q* policy,
+  double-buffered prefill streaming, global LRU expert caching, semantic
+  anchor checkpoints for recurrent state + KV);
+  python/freetoken/checkpoint/convert.py (HF safetensors -> FTW with
+  offload-expert banks, self-contained checkpoints) -> maps to Mei's
+  kv-cache-dir tier + a candidate GatedDelta anchor checkpoint at chat-
+  template suffix boundaries so diverging agentic edits re-derive only
+  the suffix (currently full-prefill fallback, always correct);
+  python/freetoken/attention/dsv4_compress.py (paged compressed-KV pool,
+  per-window compress-state ring, radix resume by value) -> the disk-tier
+  reuse/restore design parallels; python/freetoken/daemon/ (lifecycle
+  receipts) -> not transferable (Metal/MLX native constraint).
+  arXiv:2608.16157 abstract verified: "continuously maps computation and
+  model state onto the resources actually available" — on Apple unified
+  memory this is allocator/cache-budget control (--memory-limit-bytes,
+  --cache-limit-bytes sweeps in phase A) and prefillStepSize chunk
+  scheduling, NOT PCIe-style offload. No port; no 9B gate changes.
+
+## Measurement status (unchanged — still zero artifacts)
+- No sweep/cliff/ceiling/acceptance/survival artifact exists yet. All
+  official numbers remain those of bench-9B-45000-20260829T2338Z.json
+  (eager fp16 baseline: short 28.1, fresh45 5.2, reuse45 13.2, chat40k
+  10.3 @33K) and the compiled-decode A/B rows in optimization-log-
+  20260829.md (47.2 short / 34.8 @16K, long-prefill tax).
+- The gate poll (1 minute, foreground, bounded) wrote
+  artifacts/cycle-gate-sample-20260830T164306Z.txt and
+  artifacts/cycle-gated-boundary-20260830T164306Z.txt and exited 3 —
+  the exact new-policy behavior. Machine remained contended at session
+  end (reclaimable ~1GB, hearth_full fixture suite active).
+
+## Session C end boundary (17:30Z)
+- No Mei GPU measurement ran this session; nothing was contaminated; no
+  foreign process was stopped, restarted, or reconfigured.
+- Next: run the bounded foreground cycle (scripts/run_measurement_cycle.sh
+  --max-wait-min 5 --phase A|B|C) in a clear window; digest with
+  summarize_rows.py + gate_report.py; fill FINAL-REPORT numbers.
