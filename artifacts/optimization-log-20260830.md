@@ -196,3 +196,14 @@ run; only an independent 35B measurement may claim unblocking.
 - The Level1Techs-derived rule stands: a tok/s win that regresses tool
   calls, reasoning stability, or long-context survival is rolled back;
   window cells are the documented exception (throughput probe only).
+## Session end boundary (16:40Z)
+- Watcher proc_2d028b62138b (8 samples, 16:04-16:39Z): foreign_runners=6
+  and reclaimable=1GB at every sample; the other agent's llama-server
+  (Devstral-Small, port 8017) plus its active suite runner held the
+  machine for the entire session. NO Mei artifact of any kind was
+  produced; no Mei measurement ran; nothing was contaminated.
+- The detached cycle (pid 29951, <24h gate) remains alive and owns the
+  window; phases A/B/C run automatically when the machine clears. All
+  drivers were pre-flighted and validated this session (salt units 35/35,
+  chat-40k transcript 44,002 tokens post-fix, digest + gate_report dry
+  runs, GGUF provenance pinned, MTP comparator rule recorded).
