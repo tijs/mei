@@ -196,7 +196,9 @@ def main() -> int:
     def row(name: str, payload: dict[str, Any], expected_prompt: int | None = None) -> dict[str, Any]:
         started = time.monotonic()
         r: dict[str, Any] = {"name": name, "started_epoch": time.time(),
-                             "mem_before": server.status()}
+                             "mem_before": server.status(),
+                             "contended_during_row": bool(
+                                 foreign_servers(exclude_self_pid=os.getpid()))}
         usage: dict[str, Any] = {}
         try:
             body, elapsed = post_json(

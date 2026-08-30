@@ -387,7 +387,13 @@ def main() -> int:
             def row(name: str, payload: dict[str, Any], status_before: dict[str, Any],
                     expected_prompt: int | None = None, min_decode: float = 0.0) -> dict[str, Any]:
                 started = time.monotonic()
-                r: dict[str, Any] = {"name": name, "started_epoch": time.time()}
+                r: dict[str, Any] = {
+                    "name": name, "started_epoch": time.time(),
+                    # Mid-run contention label: any foreign inference process
+                    # observed while this row was in flight invalidates the
+                    # row as an official number.
+                    "contended_during_row": bool(foreign_servers()),
+                }
                 try:
                     body, elapsed = request_json(comp_url if "prompt" in payload else chat_url,
                                                  payload, timeout=args.request_timeout)
