@@ -64,7 +64,7 @@ gate() {
     echo "[cycle] FORCE: running with co-resident workloads (rows labeled)"
     return 0
   fi
-  for _ in $(seq 1 360); do
+  for _ in $(seq 1 1440); do  # up to 24h of gated waiting
     if contended; then
       echo "[cycle] $(date -u +%H:%M:%SZ) machine contended; waiting for an uncontended window..."
       sleep 60
@@ -79,7 +79,7 @@ gate() {
     fi
     return 0
   done
-  echo "[cycle] FATAL: no uncontended window within 6h" >&2
+  echo "[cycle] FATAL: no uncontended window within 24h" >&2
   exit 1
 }
 
