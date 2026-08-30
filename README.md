@@ -110,16 +110,19 @@ mode).
   — the official dense Qwen3.5-family vision-language checkpoint (5,120-wide,
   64 text layers, hybrid linear/full attention, and an MTP head). It is added
   to Mei's test lineup for staging/loadability, short-context, tool-call,
-  long-context, KV-reuse, and compiled-GDN A/B checks. The lineup entry does
-  not download or silently convert the model: its MLX checkpoint availability
-  and loadability must be verified first. Ornith's exact-shape fused affine-MoE
-  kernel is not expected to apply because Qwen3.8 is dense; compiled-GDN support
-  remains an experimental hypothesis.
+  long-context, KV-reuse, and compiled-GDN A/B checks. The HF cache already
+  contains Q4_K_M and Q5_K_M GGUF comparator artifacts for it, but no MLX
+  checkpoint. The GGUFs contain an MTP/Next-N head, so llama.cpp comparisons
+  must run without `--spec-type`; they are not direct Mei inputs. Ornith's
+  exact-shape fused affine-MoE kernel is not expected to apply because Qwen3.8
+  is dense; compiled-GDN support remains an experimental hypothesis.
 
 The machine-readable lineup is `configs/model-lineup.json`. Keep model status
 and test phases there in sync with this section; `scripts/stage_model.sh` can
-stage an explicitly selected Hugging Face repository with `--model-id`, but it
-must not be run for Qwen3.8 until an MLX-compatible checkpoint is identified.
+stage an explicitly selected Hugging Face repository with `--model-id`; it must
+not be run for Qwen3.8's cached GGUF files, which require llama.cpp rather than
+Mei's MLX loader. The cached artifact paths and provenance are recorded in the
+lineup manifest.
 
 ## Bench integration
 

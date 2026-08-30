@@ -19,14 +19,35 @@
       "id": "Qwen/Qwen3.8-27B",
       "role": "experimental-comparator",
       "format": "huggingface-checkpoint",
-      "status": "pending-mlx-compatibility",
+      "status": "cached-gguf-only",
+      "mei_status": "pending-mlx-compatibility",
+      "llama_cpp_status": "ready-for-comparator",
       "architecture": "qwen3_5",
       "modality": "vision-language",
       "parameterization": "dense",
       "hidden_size": 5120,
       "num_hidden_layers": 64,
       "mtp_num_hidden_layers": 1,
+      "cached_artifacts": [
+        {
+          "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+          "revision": "b7ff25715ee2ae49c9ff32159bc73de864648aef",
+          "filename": "Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+          "quantization": "Q4_K_M",
+          "bytes": 16810714528,
+          "path": "~/.cache/huggingface/hub/models--JonathanColetti--Qwen3.8-27B-Uncensored-GGUF/snapshots/b7ff25715ee2ae49c9ff32159bc73de864648aef/Qwen3.8-27B-Uncensored-Q4_K_M.gguf"
+        },
+        {
+          "repository": "unsloth/Qwen3.8-27B-GGUF",
+          "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+          "filename": "Qwen3.8-27B-UD-Q5_K_M.gguf",
+          "quantization": "Q5_K_M",
+          "bytes": 19771509664,
+          "path": "~/.cache/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q5_K_M.gguf"
+        }
+      ],
       "test_phases": [
+        "llama-cpp-comparator",
         "staging-compatibility",
         "load",
         "short",
@@ -36,7 +57,8 @@
         "compiled-gdn-ab"
       ],
       "notes": [
-        "Use the official repository as the source target; do not download automatically as part of lineup registration.",
+        "The official Qwen/Qwen3.8-27B source is the model identity; cached GGUF files are comparator artifacts from the listed repositories and are not MLX checkpoints.",
+        "Both cached GGUFs contain an MTP/Next-N head; run llama.cpp without --spec-type so the comparator remains single-token and comparable to Mei.",
         "The Ornith exact-shape fused affine-MoE kernel is not expected to apply because this model is dense and has no expert routing.",
         "Compiled-GDN applicability is a hypothesis to verify on the MLXVLM Qwen35 path; no performance claim is implied."
       ]
