@@ -106,6 +106,20 @@ mode).
   (e.g. while other engines hold the machine's RAM). It is a fallback for
   exercising the identical Mei path, never a silent substitution for the
   primary artifact.
+- **Experimental comparator**: `Qwen/Qwen3.8-27B`
+  — the official dense Qwen3.5-family vision-language checkpoint (5,120-wide,
+  64 text layers, hybrid linear/full attention, and an MTP head). It is added
+  to Mei's test lineup for staging/loadability, short-context, tool-call,
+  long-context, KV-reuse, and compiled-GDN A/B checks. The lineup entry does
+  not download or silently convert the model: its MLX checkpoint availability
+  and loadability must be verified first. Ornith's exact-shape fused affine-MoE
+  kernel is not expected to apply because Qwen3.8 is dense; compiled-GDN support
+  remains an experimental hypothesis.
+
+The machine-readable lineup is `configs/model-lineup.json`. Keep model status
+and test phases there in sync with this section; `scripts/stage_model.sh` can
+stage an explicitly selected Hugging Face repository with `--model-id`, but it
+must not be run for Qwen3.8 until an MLX-compatible checkpoint is identified.
 
 ## Bench integration
 

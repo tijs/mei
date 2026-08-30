@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "models": [
+    {
+      "id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "role": "primary",
+      "format": "mlx",
+      "status": "blocked-on-memory",
+      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse"]
+    },
+    {
+      "id": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+      "role": "fallback",
+      "format": "mlx",
+      "status": "validated",
+      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse", "optimization"]
+    },
+    {
+      "id": "Qwen/Qwen3.8-27B",
+      "role": "experimental-comparator",
+      "format": "huggingface-checkpoint",
+      "status": "pending-mlx-compatibility",
+      "architecture": "qwen3_5",
+      "modality": "vision-language",
+      "parameterization": "dense",
+      "hidden_size": 5120,
+      "num_hidden_layers": 64,
+      "mtp_num_hidden_layers": 1,
+      "test_phases": [
+        "staging-compatibility",
+        "load",
+        "short",
+        "tool",
+        "long-context",
+        "kv-reuse",
+        "compiled-gdn-ab"
+      ],
+      "notes": [
+        "Use the official repository as the source target; do not download automatically as part of lineup registration.",
+        "The Ornith exact-shape fused affine-MoE kernel is not expected to apply because this model is dense and has no expert routing.",
+        "Compiled-GDN applicability is a hypothesis to verify on the MLXVLM Qwen35 path; no performance claim is implied."
+      ]
+    }
+  ]
+}
