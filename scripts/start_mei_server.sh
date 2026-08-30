@@ -34,6 +34,7 @@ KV_CACHE_DIR="${MEI_KV_CACHE_DIR:-}"
 LOG_REQUESTS="${MEI_LOG_REQUESTS:-false}"
 SSM_REDERIVE="${MEI_SSM_REDERIVE:-true}"
 COMPILED_DECODE="${MEI_COMPILED_DECODE:-false}"
+COMPILED_DECODE_THRESHOLD="${MEI_COMPILED_DECODE_THRESHOLD:-}"
 LOAD_MMAP="${MEI_LOAD_MMAP:-true}"
 
 usage() {
@@ -81,6 +82,7 @@ ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
   --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
   --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
   --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+[[ -n "$COMPILED_DECODE_THRESHOLD" ]] && ARGS+=(--compiled-decode-threshold "$COMPILED_DECODE_THRESHOLD")
 [[ -n "$KV_BITS" ]] && ARGS+=(--kv-bits "$KV_BITS")
 [[ -n "$KV_CACHE_DIR" ]] && ARGS+=(--kv-cache-dir "$KV_CACHE_DIR")
 

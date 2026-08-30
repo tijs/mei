@@ -1,0 +1,76 @@
+diff --git a/Libraries/MLXLMCommon/Evaluate.swift b/Libraries/MLXLMCommon/Evaluate.swift
+index 83c63abb..d374d6eb 100644
+--- a/Libraries/MLXLMCommon/Evaluate.swift
++++ b/Libraries/MLXLMCommon/Evaluate.swift
+@@ -123,6 +123,14 @@ public struct GenerateParameters: Sendable {
+     public var enableCompiledDecode: Bool = false
+     public var compiledMaxCacheLength: Int? = nil
+ 
++    /// Long-prompt guard for the promote+trace setup: when set, compiled
++    /// decode is skipped for prompts whose prefill offset already exceeds
++    /// this many tokens, and the eager path runs instead. Tracing a
++    /// fixed buffer sized `promptOffset + maxTokens` materializes the
++    /// whole prefill KV and records the full-length attention graph —
++    /// a multi-minute prefill tax at 45K (Mei cliff characterization).
++    public var compiledDecodeMaxPromptOffset: Int? = nil
++
+     /// Runtime accelerator selection for generation.
+     ///
+     /// Defaults to `VMLINUX_ACCELERATOR` when present, otherwise `.metal`.
+@@ -291,6 +299,7 @@ public struct GenerateParameters: Sendable {
+         kvMode: KVQuantizationMode = .none,
+         enableCompiledDecode: Bool = false,
+         compiledMaxCacheLength: Int? = nil,
++        compiledDecodeMaxPromptOffset: Int? = nil,
+         accelerationMode: AccelerationMode? = nil,
+         enableCompiledBatchDecode: Bool = false,
+         compiledBatchBuckets: [Int] = [1, 2, 4],
+@@ -317,6 +326,7 @@ public struct GenerateParameters: Sendable {
+         self.kvMode = kvMode
+         self.enableCompiledDecode = enableCompiledDecode
+         self.compiledMaxCacheLength = compiledMaxCacheLength
++        self.compiledDecodeMaxPromptOffset = compiledDecodeMaxPromptOffset
+         self.accelerationMode =
+             accelerationMode ?? AccelerationRuntime.requestedMode()
+         self.enableCompiledBatchDecode = enableCompiledBatchDecode
+@@ -2085,6 +2095,21 @@ public struct TokenIterator: TokenIteratorProtocol {
+             // The iterator knows the whole run's extent here, so size the
+             // buffer to fit it; an explicit compiledMaxCacheLength wins.
+             let promptOffset = self.cache.map(\.offset).max() ?? 0
++            if let maxPromptOffset = effectiveParameters.compiledDecodeMaxPromptOffset,
++                promptOffset > maxPromptOffset
++            {
++                // Long-prompt guard: the promote+trace setup materializes
++                // the whole prefill KV into fixed buffers and records the
++                // full-length attention graph (a multi-minute prefill tax
++                // at 45K on hybrid qwen3_5/Ornith). Stay on the eager
++                // path; the compiled path remains available for prompts
++                // within the threshold.
++                if MLXPressGenerationProfileState.shared.isEnabled {
++                    FileHandle.standardError.write(Data(
++                        "[compiled-decode] skipped promote+trace at offset \(promptOffset) > threshold \(maxPromptOffset); eager decode\n".utf8))
++                }
++                return
++            }
+             let neededLength = effectiveParameters.maxTokens.map { promptOffset + $0 + 8 }
+             try setupCompiledDecode(
+                 maxCacheLength: effectiveParameters.compiledMaxCacheLength
+@@ -3046,7 +3071,17 @@ public struct TokenIterator: TokenIteratorProtocol {
+             !isReusablePrefixWarmup,
+             includeGeneratedBoundary, !generatedTokenIds.isEmpty
+         else { return }
+-        guard !needsCacheQuantization else { return }
++        // The original blanket refusal was written for affine
++        // `QuantizedKVCache` (simple-KV paged blocks do not preserve
++        // quantized tuples). Hybrid qwen3_5/Ornith quantized *rotating*
++        // KV is different: rotating layers are disk-only (never paged)
++        // and TQDiskSerializer stores them as exact fp16 `.rotating`
++        // records, so storage is safe. Refuse only when simple-KV layers
++        // could be present.
++        if needsCacheQuantization {
++            let hasSimpleKV = cache.contains { $0 is KVCacheSimple || $0 is QuantizedKVCache }
++            guard !hasSimpleKV else { return }
++        }
+         guard !containsUnprovenZayaTurboQuantDiskState(cache) else { return }
+         // The async decode pipeline forwards the consumed stop token while
+         // computing the never-consumed next step, so at store time every

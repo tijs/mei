@@ -43,7 +43,11 @@ let package = Package(
         ),
         .testTarget(
             name: "MeiTests",
-            dependencies: ["MeiCore"]
+            dependencies: [
+                "MeiCore",
+                .product(name: "MLX", package: "vmlx-swift"),
+                .product(name: "MLXLMCommon", package: "vmlx-swift"),
+            ]
         ),
     ]
 )

@@ -1,0 +1,65 @@
+diff --git a/Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift b/Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift
+index 79f3dd22..8fa4cecc 100644
+--- a/Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift
++++ b/Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift
+@@ -286,6 +286,14 @@ public enum TQDiskSerializer {
+                 // if any, are ephemeral by default. (DSV4 is special-
+                 // cased above to round-trip its pool state in full.)
+                 serializeRotatingLayer(wrapper.rotating, index: i, into: &result)
++            } else if let qrot = layer as? QuantizedRotatingKVCache {
++                // Hybrid quantized rotating KV is stored as the standard
++                // fp16 `.rotating` record (dequantized once at store time):
++                // restore stays on the exact fp16 path and the next
++                // request's first decode step re-quantizes (deterministic
++                // because affine quantization maps group extrema to the
++                // min/max codes, so quant(dequant(quant(x))) == quant(x)).
++                serializeQuantizedRotatingLayer(qrot, index: i, into: &result)
+             } else if let rot = layer as? RotatingKVCache {
+                 serializeRotatingLayer(rot, index: i, into: &result)
+                 // serializeRotatingLayer sets the kind tag itself so it can
+@@ -479,6 +487,45 @@ public enum TQDiskSerializer {
+         result["__mamba_\(i)_offset__"] = metaInt32(Int32(mamba.offset))
+     }
+ 
++    /// Serialize a `QuantizedRotatingKVCache` layer by dequantizing it
++    /// into the standard fp16 `.rotating` disk record. Restore therefore
++    /// uses the exact fp16 path (`restoreRotatingLayer`) with no new kind
++    /// tag — the quantization is a per-request working-set trade, not a
++    /// persistent format change.
++    private static func serializeQuantizedRotatingLayer(
++        _ qrot: QuantizedRotatingKVCache,
++        index i: Int,
++        into result: inout [String: MLXArray]
++    ) {
++        guard let state = qrot.getQuantizedState() else {
++            // Pre-prefill — nothing useful to persist.
++            result[kindKey(for: i)] = kindArray(.skip)
++            return
++        }
++        let dk = dequantized(
++            state.0.0, scales: state.0.1, biases: state.0.2,
++            groupSize: qrot.groupSize, bits: qrot.bits, mode: qrot.mode)
++        let dv = dequantized(
++            state.1.0, scales: state.1.1, biases: state.1.2,
++            groupSize: qrot.groupSize, bits: qrot.bits, mode: qrot.mode)
++        result["rot_\(i)_keys"] = dk
++        result["rot_\(i)_values"] = dv
++        let meta = qrot.metaState
++        if meta.count == 5,
++            let keep = Int32(meta[0]),
++            let maxSize = Int32(meta[1]),
++            let step = Int32(meta[2]),
++            let offset = Int32(meta[3]),
++            let idx = Int32(meta[4])
++        {
++            result["__rot_\(i)_meta__"] = MLXArray([keep, maxSize, step, offset, idx])
++            result[kindKey(for: i)] = kindArray(.rotating)
++        } else {
++            // metaState shape changed unexpectedly — refuse to persist.
++            result[kindKey(for: i)] = kindArray(.skip)
++        }
++    }
++
+     /// Serialize a single RotatingKVCache layer (sliding-window attention).
+     /// Captures both the ring buffer (`state[0]=keys`, `state[1]=values`)
+     /// AND the metaState 5-tuple `(keep, maxSize, step, offset, idx)` so

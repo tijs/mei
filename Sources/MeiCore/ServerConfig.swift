@@ -51,6 +51,11 @@ public struct ServerConfig: Sendable {
     /// replay per token; an evidence-based decode lever for long-context
     /// workloads. Ornith/qwen3_5 is not on the upstream deny list.
     public var enableCompiledDecode: Bool = false
+    /// Skip the compiled promote+trace setup when the prefill offset already
+    /// exceeds this many tokens (nil = no threshold; the upstream default
+    /// traces a buffer sized promptOffset + maxTokens, a multi-minute
+    /// prefill tax at 45K on hybrid models). 0 = never compile.
+    public var compiledDecodeMaxPromptOffset: Int? = nil
     /// Use the mmap-backed safetensors loader (upstream default true). The
     /// mmap loader realigns unaligned tensors into copies (the 35B gained
     /// ~5GB active this way); stock file-backed loading uses less resident
@@ -153,6 +158,8 @@ public extension ServerConfig {
                 config.enableSSMReDerive = try parseBool(flag, value())
             case "--compiled-decode":
                 config.enableCompiledDecode = try parseBool(flag, value())
+            case "--compiled-decode-threshold":
+                config.compiledDecodeMaxPromptOffset = try parseInt(flag, value())
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
             case "-h", "--help":
@@ -228,6 +235,12 @@ public extension ServerConfig {
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)
+      --compiled-decode BOOL  Graph-traced compiled decode (default false)
+      --compiled-decode-threshold N  Skip compiled promote+trace when the
+                              prefill offset exceeds N tokens (nil = no
+                              threshold; 0 = never compile). The upstream
+                              default traces a promptOffset-sized buffer,
+                              which is a multi-minute prefill tax at 45K.
       -h, --help
     """
 

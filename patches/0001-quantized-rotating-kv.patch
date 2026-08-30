@@ -1,0 +1,303 @@
+diff --git a/Libraries/MLXLMCommon/KVCache.swift b/Libraries/MLXLMCommon/KVCache.swift
+index 567810f1..81fa385f 100644
+--- a/Libraries/MLXLMCommon/KVCache.swift
++++ b/Libraries/MLXLMCommon/KVCache.swift
+@@ -1012,20 +1012,234 @@ public class RotatingKVCache: BaseKVCache, CustomDebugStringConvertible {
+         return new
+     }
+ 
+-    /// Convert to quantized cache
+-    /// Note: This is complex due to the rotating nature and temporal ordering
+-    public func toQuantized(groupSize: Int = 64, bits: Int = 4) -> QuantizedKVCache {
+-        // For now, throw an error like the Python version does
+-        // A full implementation would need to handle the temporal ordering correctly
++    /// Convert to a quantized rotating cache (real 4/8-bit hybrid KV).
++    ///
++    /// The fp16 ring may sit in either layout: temporal (never wrapped,
++    /// `idx == dim(2)` — the chunked-prefill `updateConcat` path) or
++    /// physically wrapped (decode `updateInPlace`). The conversion first
++    /// rearranges into temporal order (sink `keep` tokens + recent tail),
++    /// then affine-quantizes each array and carries `keep`/`maxSize`/`step`/
++    /// `idx`/`offset` across, so attention sees exactly the same observable
++    /// span as the fp16 ring (lossy by design — quantization is a memory/
++    /// bandwidth trade, not an exact-preserving transform).
++    public func toQuantized(
++        groupSize: Int = 64, bits: Int = 8, mode: QuantizationMode = .affine
++    ) -> QuantizedRotatingKVCache {
++        let q = QuantizedRotatingKVCache(
++            maxSize: maxCacheSize, keep: keep, step: step,
++            groupSize: groupSize, bits: bits, mode: mode)
++        guard let k = keys, let v = values else { return q }
++        let (tk, tv) = Self.temporalOrder(of: k, v, keep: keep, idx: idx, offset: offset)
++        let qk = quantized(tk, groupSize: groupSize, bits: bits, mode: mode)
++        let qv = quantized(tv, groupSize: groupSize, bits: bits, mode: mode)
++        q.keys = (qk.wq, qk.scales, qk.biases)
++        q.values = (qv.wq, qv.scales, qv.biases)
++        q.idx = tk.dim(2)
++        q.offset = offset  // absolute position continuity after conversion
++        return q
++    }
++
++    /// Static mirror of the instance `temporalOrder(_:)` so the quantized
++    /// conversion can rearrange raw buffer arrays without mutating state.
++    static func temporalOrder(
++        of keys: MLXArray, _ values: MLXArray, keep: Int, idx: Int, offset: Int
++    ) -> (MLXArray, MLXArray) {
++        func reorder(_ array: MLXArray) -> MLXArray {
++            if idx == array.dim(2) { return array }
++            if idx < offset {
++                return concatenated([
++                    array[.ellipsis, ..<keep, 0...],
++                    array[.ellipsis, idx..., 0...],
++                    array[.ellipsis, keep ..< idx, 0...],
++                ], axis: 2)
++            }
++            return array[.ellipsis, ..<idx, 0...]
++        }
++        return (reorder(keys), reorder(values))
++    }
++}
++
++/// Quantized ring-buffer KV cache for rotating-attention layers (hybrid
++/// qwen3_5 / Ornith-family attention slots use `RotatingKVCache(maxSize:
++/// keep:)`). Conforms to `QuantizedKVCacheProtocol`, so
++/// `attentionWithCacheUpdate` routes attention through
++/// `quantizedScaledDotProductAttention` — real 4/8-bit KV for hybrid
++/// topologies that the legacy `maybeQuantizeKVCache` skips.
++///
++/// Storage contract (mirrors `RotatingKVCache` observably):
++/// the buffer always holds the ring contents in TEMPORAL order —
++/// `[sink (0..<keep), most recent (maxCacheSize - keep) tokens]` — with the
++/// sink block never rotated out. This is exactly the arrangement
++/// `RotatingKVCache.temporalOrder()` presents to attention, so the fp16→
++/// quantized conversion preserves the attention span. `metaState` keeps the
++/// rotating-family 5-tuple `(keep, maxSize, step, offset, idx)` so the
++/// on-disk tier serializes it through the same `.rotating` records.
++public class QuantizedRotatingKVCache: BaseKVCache, QuantizedKVCacheProtocol {
++    internal var keep: Int
++    internal var keys: (MLXArray, MLXArray, MLXArray?)?
++    internal var values: (MLXArray, MLXArray, MLXArray?)?
++    internal var maxCacheSize: Int
++    internal var step: Int
++    /// Physical length of the temporal buffer (always == dim(2)).
++    internal var idx: Int = 0
++
++    public let groupSize: Int
++    public let bits: Int
++    public let mode: QuantizationMode
++
++    public override var maxSize: Int? { maxCacheSize }
++
++    public init(
++        maxSize: Int, keep: Int = 0, step: Int = 256,
++        groupSize: Int = 64, bits: Int = 8, mode: QuantizationMode = .affine
++    ) {
++        self.maxCacheSize = maxSize
++        self.keep = keep
++        self.step = step
++        self.groupSize = groupSize
++        self.bits = bits
++        self.mode = mode
++        super.init()
++    }
++
++    private func treeMap<T>(
++        _ transform: (MLXArray) -> T, _ t: (MLXArray, MLXArray, MLXArray?)
++    ) -> (T, T, T?) {
++        if let b = t.2 { return (transform(t.0), transform(t.1), transform(b)) }
++        return (transform(t.0), transform(t.1), nil)
++    }
++
++    public override func innerState() -> [MLXArray] {
++        var out: [MLXArray] = []
++        if let keys, let values {
++            out += [keys.0, keys.1, keys.2].compactMap { $0 }
++            out += [values.0, values.1, values.2].compactMap { $0 }
++        }
++        return out
++    }
++
++    /// Current quantized state in temporal order — the exact attention
++    /// span (sink + most recent window). No trimming to `offset`: the ring
++    /// only holds the retained window by construction.
++    public func getQuantizedState() -> (
++        (MLXArray, MLXArray, MLXArray?), (MLXArray, MLXArray, MLXArray?)
++    )? {
++        guard let keys, let values else { return nil }
++        return (keys, values)
++    }
++
++    /// Quantize incoming K/V, slide the temporal window (drop the oldest
++    /// non-sink tokens past `maxCacheSize`), return the updated state.
++    public func updateQuantized(keys newKeys: MLXArray, values newValues: MLXArray) -> (
++        (MLXArray, MLXArray, MLXArray?), (MLXArray, MLXArray, MLXArray?)
++    ) {
++        let qk = quantized(newKeys, groupSize: groupSize, bits: bits, mode: mode)
++        let qv = quantized(newValues, groupSize: groupSize, bits: bits, mode: mode)
++
++        if let existingKeys = keys, let existingValues = values {
++            func cat(_ a: MLXArray?, _ b: MLXArray?) -> MLXArray? {
++                guard let a, let b else { return nil }
++                return concatenated([a, b], axis: -2)
++            }
++            func appendTuple(
++                _ cur: (MLXArray, MLXArray, MLXArray?), _ q: (MLXArray, MLXArray, MLXArray?)
++            ) -> (MLXArray, MLXArray, MLXArray?) {
++                var out = (cat(cur.0, q.0)!, cat(cur.1, q.1)!, cat(cur.2, q.2))
++                let total = out.0.dim(-2)
++                let trimLen = total - maxCacheSize
++                if trimLen > 0 {
++                    // Drop `trimLen` tokens right after the sink block: the
++                    // sink (0..<keep) survives, the newest
++                    // (maxCacheSize - keep) tokens remain — the fp16 ring
++                    // window. Single-slice concat keeps the array graph O(1).
++                    func slice(_ a: MLXArray?) -> MLXArray? {
++                        guard let a else { return nil }
++                        return concatenated([
++                            a[.ellipsis, ..<keep, 0...],
++                            a[.ellipsis, (keep + trimLen)..., 0...],
++                        ], axis: 2)
++                    }
++                    out = (slice(out.0)!, slice(out.1)!, slice(out.2))
++                }
++                return out
++            }
++            keys = appendTuple(existingKeys, (qk.wq, qk.scales, qk.biases))
++            values = appendTuple(existingValues, (qv.wq, qv.scales, qv.biases))
++        } else {
++            keys = (qk.wq, qk.scales, qk.biases)
++            values = (qv.wq, qv.scales, qv.biases)
++        }
++
++        idx = keys!.0.dim(-2)
++        offset += newKeys.dim(2)
++        return (keys!, values!)
++    }
++
++    /// Required by the KVCache protocol but not intended for the quantized
++    /// path — `attentionWithCacheUpdate` routes quantized caches through
++    /// `updateQuantized` (same contract as `QuantizedKVCache`).
++    public override func update(keys: MLXArray, values: MLXArray) -> (MLXArray, MLXArray) {
+         fatalError(
+-            "RotatingKVCache quantization not yet implemented - temporal ordering makes this complex"
++            "`update` was called on `QuantizedRotatingKVCache`. Use `updateQuantized` instead."
+         )
++    }
++
++    public override var state: [MLXArray] {
++        get {
++            guard let keys, let values else { return [] }
++            return [keys.0, keys.1, keys.2, values.0, values.1, values.2].compactMap { $0 }
++        }
++        set {
++            switch newValue.count {
++            case 4:
++                keys = (newValue[0], newValue[1], nil)
++                values = (newValue[2], newValue[3], nil)
++            case 6:
++                keys = (newValue[0], newValue[1], newValue[2])
++                values = (newValue[3], newValue[4], newValue[5])
++            default:
++                fatalError(
++                    "QuantizedRotatingKVCache state must have exactly 6 or 4 arrays")
++            }
++        }
++    }
+ 
+-        // Future implementation would need to:
+-        // 1. Put keys/values in temporal order using temporalOrder()
+-        // 2. Quantize the temporally ordered arrays
+-        // 3. Store metadata about rotation state
+-        // 4. Implement corresponding dequantization with rotation restoration
++    /// Rotating-family 5-tuple `(keep, maxSize, step, offset, idx)` — the
++    /// same shape the fp16 ring exposes, so the disk tier and coordinator
++    /// treat the quantized ring identically.
++    public override var metaState: [String] {
++        get {
++            [String(keep), String(maxCacheSize), String(step), String(offset), String(idx)]
++        }
++        set {
++            guard newValue.count == 5 else { return }
++            if let v = Int(newValue[0]) { keep = v }
++            if let v = Int(newValue[1]) { maxCacheSize = v }
++            if let v = Int(newValue[2]) { step = v }
++            if let v = Int(newValue[3]) { offset = v }
++            if let v = Int(newValue[4]) { idx = v }
++        }
++    }
++
++    public override var isTrimmable: Bool { true }
++
++    @discardableResult
++    public override func trim(_ n: Int) -> Int {
++        let trimmed = min(offset, n)
++        offset -= trimmed
++        return trimmed
++    }
++
++    public override func copy() -> any KVCache {
++        let new = QuantizedRotatingKVCache(
++            maxSize: maxCacheSize, keep: keep, step: step,
++            groupSize: groupSize, bits: bits, mode: mode)
++        let s = self.state
++        if !s.isEmpty {
++            new.state = s.map(ownedStateCopy)
++        }
++        new.metaState = self.metaState
++        return new
+     }
+ }
+ 
+@@ -2171,16 +2385,24 @@ public func maybeQuantizeKVCache(
+         return
+ 
+     case .affine(let bits, let groupSize):
+-        // Affine cache quantization remains limited to top-level simple KV.
+-        let firstSimple = cache.first { $0 is KVCacheSimple }
+-        guard !cache.contains(where: { $0 is QuantizedKVCache }),
+-              let ref = firstSimple, ref.offset > quantizedKVStart
++        // Affine cache quantization covers KVCacheSimple AND
++        // RotatingKVCache. Hybrid qwen3_5/Ornith attention slots are
++        // RotatingKVCache, so without this branch `kvBits` was a silent
++        // no-op for the entire model family. MambaCache / CacheList /
++        // TurboQuant layers are skipped by design (their state is not
++        // ordinary KV).
++        let firstKV = cache.first { $0 is KVCacheSimple || $0 is RotatingKVCache }
++        guard !cache.contains(where: { $0 is QuantizedKVCache || $0 is QuantizedRotatingKVCache }),
++            let ref = firstKV, ref.offset > quantizedKVStart
+         else { return }
+ 
+         for i in 0..<cache.count {
+             if cache[i] is QSAKVCache { continue }  // osaurus#2525: keep the indexer lane
+             if let simpleCache = cache[i] as? KVCacheSimple {
+                 cache[i] = simpleCache.toQuantized(groupSize: groupSize, bits: bits)
++            } else if let rotating = cache[i] as? RotatingKVCache {
++                cache[i] = rotating.toQuantized(
++                    groupSize: groupSize, bits: bits, mode: .affine)
+             }
+         }
+         return
+@@ -2190,10 +2412,10 @@ public func maybeQuantizeKVCache(
+     }
+ 
+     // Legacy path: use kvBits if set
+-    let firstSimple = cache.first { $0 is KVCacheSimple }
++    let firstKV = cache.first { $0 is KVCacheSimple || $0 is RotatingKVCache }
+     guard let kvBits = kvBits,
+-        !cache.contains(where: { $0 is QuantizedKVCache }),
+-        let ref = firstSimple, ref.offset > quantizedKVStart
++        !cache.contains(where: { $0 is QuantizedKVCache || $0 is QuantizedRotatingKVCache }),
++        let ref = firstKV, ref.offset > quantizedKVStart
+     else {
+         return
+     }
+@@ -2202,6 +2424,9 @@ public func maybeQuantizeKVCache(
+         if cache[i] is QSAKVCache { continue }  // osaurus#2525: keep the indexer lane
+         if let simpleCache = cache[i] as? KVCacheSimple {
+             cache[i] = simpleCache.toQuantized(groupSize: kvGroupSize, bits: kvBits)
++        } else if let rotating = cache[i] as? RotatingKVCache {
++            cache[i] = rotating.toQuantized(
++                groupSize: kvGroupSize, bits: kvBits, mode: .affine)
+         }
+     }
+ }

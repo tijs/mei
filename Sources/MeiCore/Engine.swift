@@ -555,6 +555,7 @@ public actor Engine {
         parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
         parameters.enableCompiledDecode = config.enableCompiledDecode
+        parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize
@@ -596,6 +597,7 @@ public actor Engine {
         parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
         parameters.enableCompiledDecode = config.enableCompiledDecode
+        parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize
