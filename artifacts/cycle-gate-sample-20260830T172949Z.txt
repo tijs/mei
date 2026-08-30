@@ -1,0 +1,22 @@
+sample 17:29:49Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:30:49Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:31:49Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:32:49Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+62738 /Users/tijs/projects/local-model-bench/.venv/bin/python3 /Users/tijs/projects/local-model-bench/runner/run_fixture_suite.py --suite kiem_mini --hermes-provider muse-gguf --hermes-model bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --log-model bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --inference-engine llama.cpp --config configs/Muse-Glimmer-30B/gguf.yaml --trials 1
+sample 17:33:50Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+62738 /Users/tijs/projects/local-model-bench/.venv/bin/python3 /Users/tijs/projects/local-model-bench/runner/run_fixture_suite.py --suite kiem_mini --hermes-provider muse-gguf --hermes-model bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --log-model bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --inference-engine llama.cpp --config configs/Muse-Glimmer-30B/gguf.yaml --trials 1

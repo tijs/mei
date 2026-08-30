@@ -613,3 +613,74 @@ unexecutable end-to-end. Added (commit 798ed36):
 - Next GPU work when a clean window opens: --phase B (llama.cpp ceiling,
   fp16 + q8 KV, provenance-gated, no --spec-type) BEFORE --phase A/C/D;
   digest with summarize_rows.py + gate_report.py.
+
+---
+
+# Session G (2026-08-30, 17:23-18:00Z) — bf8b31995 review, tooling fixes, bounded gate attempt
+
+## Contention state
+- Machine contended throughout: other agent's run_bench.py wrapper (pid 52245)
+  + run_prompt.py / run_prompt_suite.py (hermes_ops) + llama-server on port 8017
+  (pid 52627, ~22.5GB RSS) + cocore agent. One bounded foreground Phase-B gate
+  attempt (--phase B --max-wait-min 5): ran 17:29-17:35Z, machine never cleared,
+  exit 3 with boundary artifacts cycle-gate-sample-<ts>.txt and
+  cycle-gated-boundary-<ts>.txt. No Mei GPU measurement ran; no foreign backend
+  touched. No detached waiter left behind.
+
+## 1. Upstream bf8b31995 review (continuation-directive priority)
+- Fetched osaurus-ai/vmlx-swift bf8b31995195fffd833968658f14c707317eaa70
+  ("Optimize Ornith 35B compiled decode regions (#346)") into the pinned
+  checkout (read-only; checkout stays on aeb5e21c). Full diff read.
+- Functional delta: (a) MLXVLM/Models/Qwen35.swift — topology-scoped
+  shouldCompileDecodeRegions() (env VMLINUX_QWEN35_COMPILE_DECODE_REGIONS,
+  default ON only for the exact 35B shape: qwen3_5_moe_text/2048/40/4/256/8/512/
+  16/32/128/128) wiring GatedDeltaNet(fuseDecodeInputProjections:) +
+  SparseMoeBlock(compileDecodeRegions:) + compiledDecodeTail gate-mode
+  (sigmoidGate/silu) threading; (b) MLXLMCommon/Qwen4ExpFusedAffineMoE.swift —
+  ornith35Shape (2048x512 topk-8) + q5 packs + 64-bit masks, shape-parameterized.
+  The rest is formatting churn.
+- CLASS-RESOLUTION VERDICT: Mei's 9B (config model_type qwen3_5_text) resolves
+  via LLMModelFactory.swift:71 to Qwen35TextModel (MLXLLM text path); the 35B
+  (qwen3_5_moe) resolves via LLMModelFactory.swift:52 to Qwen35MoEModel:
+  Qwen35Model (text path). Neither is the MLXVLM vision Qwen35 class that the
+  commit modifies. The text path has its own Qwen35GatedDeltaNet/SparseMoeBlock
+  with NO compiled regions (only compiledSigmoidGate, MLXLLM Qwen35.swift:16-23).
+  The 9B is dense-MLP (config has no num_experts; MLXLLM Qwen35.swift:767-776),
+  so the fused-affine-MoE kernels cannot engage either; the 35B target shape is
+  the blocked artifact. Upstream main @ 33d1b6fa9 has ZERO text-path commits
+  since the pin; post-bf8 compiled work (d8fd7010, c1162b43) is VLM-scoped.
+- DECISION: not backportable as a minimal default-off patch — it would be a
+  no-op for the measurable matrix. A text-path compiled-GDN port would be a new
+  fork, gated on profiling evidence (workstream-5 discipline). Their ~94 tok/s
+  claims are VLM-class; not copied. Full rationale:
+  artifacts/review-bf8b31995-compiled-regions-20260830.md.
+
+## 2. Tooling fixes (committed)
+- scripts/run_measurement_cycle.sh had mode 600 (lost exec bit in session F's
+  write) — the cycle could not launch at all (zsh: permission denied).
+  chmod +x.
+- tools/llama_ceiling.py --provenance-only now writes the verified provenance
+  block to --output (was print-only; artifacts/llama-ceiling-provenance-*.json
+  now exists). Verified end-to-end: exit 0, artifact persisted.
+
+## 3. Verification (all green, CPU-side)
+- Non-Metal tests 34/34 (ServerConfigParsing 11, SSMAnchorBoundaries 9,
+  OpenAITypes 8, CacheRestoreTracker 6) via swift test --filter.
+- apply_vmlx_patches.sh --reset: 0001-0005 re-applied byte-exactly to BOTH
+  checkouts; exit 0.
+- GGUF provenance: sha256 70c11219…e8fab6 == pinned ornith-ai/Ornith-1.5-9B-GGUF@
+  abdd624b blob; PROVENANCE OK; MTP head recorded (--spec-type stays off).
+  Artifact: artifacts/llama-ceiling-provenance-20260830T173038Z.json.
+- Kiem note 86348808-2796-42bd-943e-e68c6b7388ae (proj/mei) records the
+  review + session state. (First add attempt resolved to proj/vmlx_swift via
+  stale cwd; corrected project added; stray note f923a63b left in place.)
+
+## Commits (session G)
+- (listed in the final report / git log; all Mei-only)
+
+## Session-G end boundary
+- GPU measurements remain PENDING (zero Mei sweep/ceiling rows exist). Official
+  numbers remain the 2026-08-29 baseline: short 28.1, fresh45 5.2, reuse45 13.2,
+  chat40k 10.3 @33K; compiled A/B 47.2 short / 34.8 @16K. Acceptance coordinator
+  green 10/10 (2026-08-29). Next: phase B in a clear window, then A/C/D; digest
+  with summarize_rows.py + gate_report.py.

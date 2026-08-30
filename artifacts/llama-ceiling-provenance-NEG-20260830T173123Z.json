@@ -1,0 +1,16 @@
+{
+  "digest_matches_pinned": false,
+  "expected_sha256": "70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6",
+  "llama_bin": "/opt/homebrew/bin/llama-server",
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "magic_ok": false,
+  "meta_error": "AssertionError: not a GGUF file: b'not '",
+  "mode": "provenance-only",
+  "path": "/tmp/fake.gguf",
+  "recorded_at": "2026-08-30T17:31:23Z",
+  "repo": "ornith-ai/Ornith-1.5-9B-GGUF",
+  "revision": "abdd624b12ebf020b767fff532ff44fe552b28c3",
+  "sha256": "5af7c3658b77b3bb2627aec90394c327ba5a28d82d4c3e23717687b3426a14c1",
+  "size_bytes": 11,
+  "verified": false
+}

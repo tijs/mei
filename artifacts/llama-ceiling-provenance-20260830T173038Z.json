@@ -1,0 +1,26 @@
+{
+  "digest_matches_pinned": true,
+  "expected_sha256": "70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6",
+  "llama_bin": "/opt/homebrew/bin/llama-server",
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "magic_ok": true,
+  "meta": {
+    "arch": "qwen35",
+    "block_count": 33,
+    "context_length": 262144,
+    "file_type": 15,
+    "full_attention_interval": 4,
+    "mtp_head_present": true,
+    "mtp_nextn_predict_layers": 1,
+    "mtp_note": "llama.cpp runs WITHOUT --spec-type draft-mtp; single-token decode, comparable to Mei's no-MTP baseline",
+    "quant_version": 2
+  },
+  "mode": "provenance-only",
+  "path": "/Users/tijs/.local/share/local-model-bench/mei-models/gguf/Ornith-1.5-9B-Q4_K_M.gguf",
+  "recorded_at": "2026-08-30T17:30:42Z",
+  "repo": "ornith-ai/Ornith-1.5-9B-GGUF",
+  "revision": "abdd624b12ebf020b767fff532ff44fe552b28c3",
+  "sha256": "70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6",
+  "size_bytes": 5780090816,
+  "verified": true
+}

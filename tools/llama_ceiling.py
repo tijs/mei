@@ -297,6 +297,17 @@ def main() -> int:
     verified, prov = verify_provenance(
         args.gguf, PINNED_GGUF_SHA256, compute_sha256=not args.no_verify_gguf)
     if args.provenance_only:
+        # Persist the provenance block as an artifact too (evidence
+        # preservation): the caller's --output must never be empty when a
+        # provenance check ran, and a digest mismatch keeps the artifact
+        # (with verified=False) so the failure is auditable.
+        record = {
+            "mode": "provenance-only",
+            "verified": verified,
+            "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        record.update(prov)
+        args.output.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
         print(json.dumps(prov, indent=2, sort_keys=True))
         print("PROVENANCE", "OK" if verified else "FAIL")
         return 0 if verified else 2
