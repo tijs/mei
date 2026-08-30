@@ -328,3 +328,14 @@ run; only an independent 35B measurement may claim unblocking.
 - Next: run the bounded foreground cycle (scripts/run_measurement_cycle.sh
   --max-wait-min 5 --phase A|B|C) in a clear window; digest with
   summarize_rows.py + gate_report.py; fill FINAL-REPORT numbers.
+
+## Addendum (17:45Z): next-experiment design committed
+- artifacts/design-anchor-ssm-0005.md records the FreeToken-derived
+  candidate: the pinned engine ALREADY has semantic anchors
+  (captureCleanSSMStateInline §440 + per-boundary re-derive with
+  ssmMaxEntries=50 LRU), but stores only the LARGEST boundaries (prompt
+  END); mid-transcript agentic edits therefore fall back to full prefill.
+  Patch 0005 would thread --ssm-anchor-boundaries K into the existing
+  additionalBoundaries param (SSMReDerive.swift:443). Gated on a new
+  diverging-chat probe (tools/probe_diverging_chat.py) + phase-A rows —
+  TTFT lever, not a decode tok/s lever.
