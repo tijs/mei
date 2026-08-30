@@ -19,9 +19,12 @@
 #   C  kv-bits 8 / kv-bits 4 / compiled-threshold 16K /
 #      combined compile+quant, each with acceptance + 30K/80K
 #      survival probes                                          [workstreams 1-2]
+#   D  patch-0005 diverging-chat A/B: probe runs against a server
+#      launched with --ssm-anchor-boundaries 4 and with the default 0
+#      (fresh KV dir + cell-scoped runtime log per cell)         [patch 0005]
 #
 # Usage:
-#   scripts/run_measurement_cycle.sh [--phase A|B|C|ALL]
+#   scripts/run_measurement_cycle.sh [--phase A|B|C|D|ALL]
 #       [--max-wait-min N=5] [--phase-timeout-min N=720] [--force]
 #   --force  run even with foreign processes resident (rows labeled).
 # Exit codes: 0 done, 1 phase failure, 2 usage, 3 gate expired.
@@ -212,7 +215,8 @@ run_variant_cell() {
   rm -rf "$cell_kv"   # cold acceptance cell: fresh disk tier per run
   local envs=(MEI_MODEL_DIR="$MODEL_DIR" MEI_SERVED_MODEL_ID="$MODEL_ID"
     MEI_KV_BITS="$kv" MEI_COMPILED_DECODE="$compiled"
-    MEI_CONTEXT_CAP="$ctxcap" MEI_SSM_REDERIVE=true MEI_KV_CACHE_DIR="$cell_kv")
+    MEI_CONTEXT_CAP="$ctxcap" MEI_SSM_REDERIVE=true MEI_KV_CACHE_DIR="$cell_kv"
+    MLXPRESS_GENERATION_PROFILE=1)
   if [[ -n "$threshold" ]]; then envs+=(MEI_COMPILED_DECODE_THRESHOLD="$threshold"); fi
   if [[ "$window" != "0" ]]; then envs+=(MEI_MAX_KV_WINDOW="$window"); fi
   # start_mei_server.sh runs the server in the foreground; background it and
@@ -254,11 +258,66 @@ phase_c() {
   run_variant_cell survival80k "" "" "" "131072"
 }
 
+# Phase D: patch-0005 diverging-chat A/B (--ssm-anchor-boundaries 4 vs
+# default 0). TTFT/latency lever evidence, NOT a decode tok/s lever: the
+# probe records cached_tokens / prefill_ms / TTFT per request on a 5-turn
+# tool-calling transcript whose run B diverges mid-transcript (turn 5).
+run_anchor_cell() {
+  # run_anchor_cell TAG ANCHORS  (server launch config: anchors K or 0)
+  local tag="$1" anchors="${2:-0}"
+  gate
+  echo "[cycle] anchor cell $tag: ssm-anchor-boundaries=$anchors"
+  local runtime="$HOME/.local/share/local-model-bench/mei-runtime-anchors-$tag-$TS"
+  local cell_kv="$HOME/.local/share/local-model-bench/mei-runtime/kv-cache-anchors-$tag-$TS"
+  local envs=(MEI_MODEL_DIR="$MODEL_DIR" MEI_SERVED_MODEL_ID="$MODEL_ID"
+    MEI_SSM_REDERIVE=true MEI_SSM_ANCHOR_BOUNDARIES="$anchors"
+    MEI_KV_CACHE_DIR="$cell_kv" MEI_RUNTIME_BASE="$runtime"
+    MLXPRESS_GENERATION_PROFILE=1)
+  rm -rf "$cell_kv" "$runtime"
+  env "${envs[@]}" bash scripts/start_mei_server.sh &
+  local spid=$!
+  local log="$runtime/logs/server.log"
+  local waited=0
+  # Bounded readiness poll: the probe is client-side and does not retry
+  # /v1/models itself, so the server must be listening before it runs.
+  while (( waited < 300 )); do
+    grep -q "mei: listening on" "$log" 2>/dev/null && break
+    sleep 5
+    waited=$((waited + 5))
+  done
+  if ! grep -q "mei: listening on" "$log" 2>/dev/null; then
+    echo "[cycle] anchor cell $tag: server not ready in ${waited}s; aborting cell" >&2
+    tail -40 "$log" >&2 || true
+    bash scripts/stop_mei_server.sh || true
+    kill "$spid" 2>/dev/null || true
+    return 1
+  fi
+  run_bounded "$PHASE_TIMEOUT_MIN" -- "${VENV_PY}" tools/probe_diverging_chat.py \
+    --base-url http://127.0.0.1:8024/v1 \
+    --model "$MODEL_ID" --ssm-anchor-boundaries "$anchors" \
+    --output "artifacts/probe-diverging-chat-$tag-$TS.json" || true
+  # Server-side engagement evidence (patch 0005): the engine prints the
+  # computed anchor offsets per request when enabled (Engine.swift
+  # ssmAnchorOffsets); record whether the cell's log shows them.
+  {
+    echo "--- server log: ssm anchor evidence (run $tag) ---"
+    grep -E "ssm anchor|ssm-anchor" "$log" || echo "(no ssm-anchor lines)"
+  } > "artifacts/anchor-cell-$tag-$TS.log"
+  bash scripts/stop_mei_server.sh || true
+  kill "$spid" 2>/dev/null || true
+}
+
+phase_d() {
+  run_anchor_cell anchors-default 0
+  run_anchor_cell anchors4 4
+}
+
 case "$PHASE" in
   A|a) phase_a ;;
   B|b) phase_b ;;
   C|c) phase_c ;;
-  ALL) phase_a; phase_b; phase_c ;;
+  D|d) phase_d ;;
+  ALL) phase_a; phase_b; phase_c; phase_d ;;
   *) echo "unknown phase $PHASE" >&2; exit 2 ;;
 esac
 echo "[cycle] done at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
