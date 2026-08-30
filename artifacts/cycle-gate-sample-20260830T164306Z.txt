@@ -1,0 +1,5 @@
+sample 16:43:06Z reclaimable=0GB
+24929 uv run --locked python runner/run_bench.py --config configs/Devstral-Small-2507/gguf.yaml
+24930 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Devstral-Small-2507/gguf.yaml
+25039 llama-server --hf-repo unsloth/Devstral-Small-2507-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 0.15 --top-p 1.0 --ctx-size 65536 --jinja --alias bench-ffa862c18cff
+45729 /Users/tijs/projects/local-model-bench/.venv/bin/python3 /Users/tijs/projects/local-model-bench/runner/run_fixture_suite.py --suite hearth_full --hermes-provider devstral-gguf --hermes-model unsloth/Devstral-Small-2507-GGUF:Q4_K_M --log-model unsloth/Devstral-Small-2507-GGUF:Q4_K_M --inference-engine llama.cpp --config configs/Devstral-Small-2507/gguf.yaml --trials 1

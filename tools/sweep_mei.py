@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -167,6 +168,13 @@ class Server:
             RUNTIME_BASE / "kv-cache-sweep" / cell["tag"] if args.kv_cache_dir else None
         )
         if self.kv_dir is not None:
+            # Fresh-KV-per-cell hygiene: a persisted dir from a previous
+            # run of the SAME cell would make this run's "fresh" rows
+            # warm disk-restores (45K prefill ~270s -> ~10s) and silently
+            # contaminate TTFT/prefill splits. Every cell is a cold,
+            # isolated run: the disk tier is rebuilt within the run (the
+            # reuse rows need the fresh row's entries, which still land).
+            shutil.rmtree(self.kv_dir, ignore_errors=True)
             self.kv_dir.mkdir(parents=True, exist_ok=True)
         argv = [
             str(bin_path),
@@ -219,10 +227,9 @@ class Server:
             except subprocess.TimeoutExpired:
                 self.proc.kill()
                 self.proc.wait(timeout=10)
-        if self.kv_dir is not None and self.args.fresh_kv:
-            # Fresh-KV requirement: each cell owns its runtime state; the
-            # caller can also clear per-row via --fresh-kv-per-cell below.
-            pass
+        # The disk tier is intentionally NOT cleared here: within a run the
+        # fresh rows populate it and the reuse rows consume it; the NEXT
+        # cell/run clears it at Server init (fresh-KV-per-cell hygiene).
 
 
 def summarize_profile(log_text: str) -> dict[str, Any]:

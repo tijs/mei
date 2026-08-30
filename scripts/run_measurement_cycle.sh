@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# Mei measurement cycle orchestrator (uncontended-window gated).
+# Mei measurement-cycle orchestrator (uncontended-window gated, FOREGROUND).
 #
 # Runs the five workstreams' measurement phases in order, each phase only
-# when the machine is uncontended (no foreign inference processes). Every
-# phase writes timestamped artifacts under artifacts/. The script records
-# a machine-state boundary at the START of each phase.
+# when the machine is uncontended (no foreign inference runners + memory
+# floor). Every phase writes timestamped artifacts under artifacts/. The
+# script records a machine-state boundary at the START of each phase.
+#
+# Policy (2026-08-30 session C): NO detached/nohup waiters behind a
+# contention gate. The gate is polled at most --max-wait-min minutes
+# (default 5, per the shared-GPU contention cap); if the window does not
+# open, the script writes a gated-boundary artifact and exits 3 so the
+# caller can move to CPU-side work. Phases run in the foreground, each
+# supervised by tools/run_bounded.py with a hard wall-cap.
 #
 # Phases:
 #   A  characterization sweep (baseline fp16 matrix)            [workstream 3]
@@ -13,15 +20,17 @@
 #      combined compile+quant, each with acceptance + 30K/80K
 #      survival probes                                          [workstreams 1-2]
 #
-# Usage: scripts/run_measurement_cycle.sh [--force] [--phase A|B|C]
+# Usage:
+#   scripts/run_measurement_cycle.sh [--phase A|B|C|ALL]
+#       [--max-wait-min N=5] [--phase-timeout-min N=720] [--force]
 #   --force  run even with foreign processes resident (rows labeled).
+# Exit codes: 0 done, 1 phase failure, 2 usage, 3 gate expired.
 set -euo pipefail
 
 MEI_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$MEI_REPO"
-# Single-instance lock: refuse to start if another cycle is alive (the
-# gate can wait for hours; accidental double-launches would collide on
-# port 8024 when the window finally opens).
+# Single-instance lock: refuse to start if another cycle is alive (gate
+# polls can outlive a session; double-launches would collide on port 8024).
 LOCKDIR="/tmp/mei-cycle.lock"
 if ! mkdir "$LOCKDIR" 2>/dev/null; then
   echo "FATAL: another measurement cycle is running (lock $LOCKDIR)" >&2
@@ -34,9 +43,22 @@ MODEL_DIR="${MEI_MODEL_DIR:-$HOME/.local/share/local-model-bench/mei-models/Orni
 MODEL_ID="ornith-ai/Ornith-1.5-9B-MLX-4bit"
 GGUF="$HOME/.local/share/local-model-bench/mei-models/gguf/Ornith-1.5-9B-Q4_K_M.gguf"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
+
 FORCE=""
 PHASE="ALL"
-if [[ "${1:-}" == "--force" ]]; then FORCE="--no-contention-gate"; PHASE="${2:-ALL}"; fi
+MAX_WAIT_MIN=5
+PHASE_TIMEOUT_MIN=720
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --force) FORCE="--no-contention-gate" ;;
+    --phase) PHASE="${2:-ALL}"; shift ;;
+    --max-wait-min) MAX_WAIT_MIN="${2:-5}"; shift ;;
+    --phase-timeout-min) PHASE_TIMEOUT_MIN="${2:-720}"; shift ;;
+    -h|--help) sed -n '1,40p' "$0"; exit 0 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+  shift
+done
 
 contended() {
   # Gate 1: another agent's SUITE RUNNER must not be active (its llama.cpp
@@ -64,10 +86,22 @@ gate() {
     echo "[cycle] FORCE: running with co-resident workloads (rows labeled)"
     return 0
   fi
-  for _ in $(seq 1 1440); do  # up to 24h of gated waiting
+  local waited=0 sample_file="artifacts/cycle-gate-sample-$TS.txt"
+  : > "$sample_file"   # one sample file per cycle run, appended per minute
+  while (( waited < MAX_WAIT_MIN )); do
     if contended; then
-      echo "[cycle] $(date -u +%H:%M:%SZ) machine contended; waiting for an uncontended window..."
+      local runners reclaimable_gb
+      runners=$(ps -axo pid=,command= | grep -E "run_fixture_suite|run_bench\.py|llama-server" | grep -v grep || true)
+      free_kb=$(vm_stat | awk '/Pages free/{print $3}' | tr -d '.')
+      inactive_kb=$(vm_stat | awk '/Pages inactive/{print $3}' | tr -d '.')
+      reclaimable_gb=$(( (free_kb + inactive_kb) * 16384 / 1024 / 1024 / 1024 ))
+      {
+        echo "sample $(date -u +%H:%M:%SZ) reclaimable=${reclaimable_gb}GB"
+        echo "$runners"
+      } >> "$sample_file"
+      echo "[cycle] $(date -u +%H:%M:%SZ) machine contended; waiting for an uncontended window (${waited}/${MAX_WAIT_MIN} min)..."
       sleep 60
+      waited=$((waited + 1))
       continue
     fi
     # Binary must contain the fork's full patch surface (0004 window flag).
@@ -75,12 +109,25 @@ gate() {
     if ! "$BIN" --help 2>/dev/null | grep -q "max-kv-window"; then
       echo "[cycle] $(date -u +%H:%M:%SZ) release binary missing the fork flags; waiting for rebuild..."
       sleep 60
+      waited=$((waited + 1))
       continue
     fi
     return 0
   done
-  echo "[cycle] FATAL: no uncontended window within 24h" >&2
-  exit 1
+  # Gate expired: record the boundary and exit 3 (caller moves to CPU-side
+  # work; never leave a detached waiter behind a contention gate).
+  {
+    echo "gated-boundary $(date -u +%Y-%m-%dT%H:%M:%SZ) max-wait-min=$MAX_WAIT_MIN"
+    echo "--- foreign runners/servers ---"
+    ps -axo pid=,command= | grep -E "llama-server|vllm|omlx|cocore|run_fixture_suite|run_bench" | grep -v grep || true
+    echo "--- memory ---"
+    memory_pressure 2>/dev/null | head -4 || true
+    free_kb=$(vm_stat | awk '/Pages free/{print $3}' | tr -d '.')
+    inactive_kb=$(vm_stat | awk '/Pages inactive/{print $3}' | tr -d '.')
+    echo "reclaimable_gb=$(( (free_kb + inactive_kb) * 16384 / 1024 / 1024 / 1024 ))"
+  } > "artifacts/cycle-gated-boundary-$TS.txt"
+  echo "[cycle] GATED: no uncontended window within ${MAX_WAIT_MIN}min; boundary -> artifacts/cycle-gated-boundary-$TS.txt" >&2
+  exit 3
 }
 
 boundary() {
@@ -88,29 +135,43 @@ boundary() {
     > "artifacts/cycle-$1-boundary-$TS.txt" || true
 }
 
+# run_bounded MINUTES -- cmd args...  (foreground, hard wall-cap, exit 124 on expiry)
+run_bounded() {
+  local minutes="$1"; shift
+  # "$1" is "--"
+  shift
+  echo "[cycle]   (bounded ${minutes}min) $*"
+  python3 tools/run_bounded.py "$minutes" -- "$@" || local rc=$?
+  local rc="${rc:-0}"
+  if (( rc == 124 )); then
+    echo "[cycle] PHASE BOUND EXCEEDED (${minutes}min) for: $*" >&2
+  fi
+  return "$rc"
+}
+
 phase_a() {
   gate
   echo "[cycle] PHASE A: baseline fp16 characterization sweep"
   boundary A
-  python3 tools/sweep_mei.py \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py \
     --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 512,4096,16384,33175,45000 \
     --prefill-steps 512 --ssm-rederive true --kv-bits none \
     --repeats-45k 3 --chat-40k --kv-cache-dir \
     --output "artifacts/sweep-cliff-baseline-$TS.json"
-  python3 tools/sweep_mei.py \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py \
     --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 16384,33175,45000 \
     --prefill-steps 512,2048,4096 --ssm-rederive true \
     --repeats-45k 1 --kv-cache-dir \
     --output "artifacts/sweep-cliff-prefillsteps-$TS.json"
-  python3 tools/sweep_mei.py \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py \
     --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 16384,33175,45000 \
     --prefill-steps 512 --ssm-rederive true,false \
     --repeats-45k 1 --kv-cache-dir \
     --output "artifacts/sweep-cliff-ssm-$TS.json"
-  python3 tools/sweep_mei.py \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py \
     --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 16384,33175,45000 \
     --prefill-steps 512 --cache-limit-gb 0,2,8 \
@@ -122,11 +183,11 @@ phase_b() {
   gate
   echo "[cycle] PHASE B: llama.cpp hardware ceiling"
   boundary B
-  python3 tools/llama_ceiling.py --gguf "$GGUF" \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/llama_ceiling.py --gguf "$GGUF" \
     --alias "ornith-ai/Ornith-1.5-9B-GGUF:Q4_K_M" \
     --repeats 3 --chat-40k \
     --output "artifacts/llama-ceiling-fp16kv-$TS.json"
-  python3 tools/llama_ceiling.py --gguf "$GGUF" \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/llama_ceiling.py --gguf "$GGUF" \
     --alias "ornith-ai/Ornith-1.5-9B-GGUF:Q4_K_M" \
     --repeats 3 --chat-40k --kv-cache-type-q8 \
     --output "artifacts/llama-ceiling-q8kv-$TS.json"
@@ -141,24 +202,25 @@ run_variant_cell() {
   [[ "$compiled" == "true" ]] && extra+=(--compiled true)
   [[ -n "$threshold" ]] && extra+=(--compiled-decode-threshold "$threshold")
   [[ "$window" != "0" ]] && extra+=(--max-kv-window "$window")
-  python3 tools/sweep_mei.py --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
+  run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 512,16384,33175,45000 --repeats-45k 3 --chat-40k --kv-cache-dir \
     --context-cap "$ctxcap" "${extra[@]}" \
     --output "artifacts/sweep-variant-$tag-$TS.json"
   gate
   boundary "C-$tag"
+  local cell_kv="$HOME/.local/share/local-model-bench/mei-runtime/kv-cache-cell-$tag-$TS"
+  rm -rf "$cell_kv"   # cold acceptance cell: fresh disk tier per run
   local envs=(MEI_MODEL_DIR="$MODEL_DIR" MEI_SERVED_MODEL_ID="$MODEL_ID"
     MEI_KV_BITS="$kv" MEI_COMPILED_DECODE="$compiled"
-    MEI_CONTEXT_CAP="$ctxcap" MEI_SSM_REDERIVE=true MEI_KV_CACHE_DIR="$HOME/.local/share/local-model-bench/mei-runtime/kv-cache-cell-$tag")
+    MEI_CONTEXT_CAP="$ctxcap" MEI_SSM_REDERIVE=true MEI_KV_CACHE_DIR="$cell_kv")
   if [[ -n "$threshold" ]]; then envs+=(MEI_COMPILED_DECODE_THRESHOLD="$threshold"); fi
   if [[ "$window" != "0" ]]; then envs+=(MEI_MAX_KV_WINDOW="$window"); fi
   # start_mei_server.sh runs the server in the foreground; background it and
   # wait for readiness through probe_mei's own health poll.
   env "${envs[@]}" bash scripts/start_mei_server.sh &
   local spid=$!
-  # Build may take a while on a fresh scratch; probe_mei --skip-server-check
-  # is not available, so rely on its built-in retry (it waits for /v1/models
-  # with a generous timeout). Give the build a head start.
+  # Give the (cached) build a head start; probe_mei retries /v1/models with
+  # a generous timeout of its own, so a slow build is tolerated.
   sleep 20
   "${VENV_PY}" tools/probe_mei.py --base-url http://127.0.0.1:8024/v1 \
     --model "$MODEL_ID" --tokenizer "$MODEL_DIR" --context-cap "$ctxcap" \
