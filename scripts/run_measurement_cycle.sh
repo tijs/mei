@@ -121,7 +121,7 @@ gate() {
     echo "--- foreign runners/servers ---"
     ps -axo pid=,command= | grep -E "llama-server|vllm|omlx|cocore|run_fixture_suite|run_bench" | grep -v grep || true
     echo "--- memory ---"
-    memory_pressure 2>/dev/null | head -4 || true
+    memory_pressure 2>/dev/null | sed 's/[[:space:]]*$//' | head -4 || true
     free_kb=$(vm_stat | awk '/Pages free/{print $3}' | tr -d '.')
     inactive_kb=$(vm_stat | awk '/Pages inactive/{print $3}' | tr -d '.')
     echo "reclaimable_gb=$(( (free_kb + inactive_kb) * 16384 / 1024 / 1024 / 1024 ))"
