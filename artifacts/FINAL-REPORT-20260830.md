@@ -1,15 +1,41 @@
 # Mei optimization session report — 2026-08-30
 
-Status: MEASUREMENTS PENDING. Machine contended through sessions B–E
+Status: MEASUREMENTS PENDING. Machine contended through sessions B–F
 (other agent's llama-server on 8017 + active run_bench/run_prompt_suite
 runners + cocore; reclaimable memory 1–4GB vs the 10GB floor). The
 bounded foreground cycle (scripts/run_measurement_cycle.sh --max-wait-min 5)
 is the only measurement path and exits 3 on gate expiry, writing
 artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
-artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json when
-a clean window opens. Session E made one bounded gate attempt
-(2026-08-30T17:11-17:16Z, exit 3; boundary in
-artifacts/cycle-gated-boundary-20260830T171126Z.txt).
+artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json,
+artifacts/probe-diverging-chat-*.json when a clean window opens. Session E
+made a bounded gate attempt at 17:11Z; session F made the second
+(2026-08-30T17:20-17:25Z, --phase B, exit 3; boundary in
+artifacts/cycle-gated-boundary-20260830T172015Z.txt).
+
+## Session F (continuation) deliverables (all committed)
+- probe_diverging_chat.py --ssm-anchor-boundaries K A/B label + self-test
+  gate (798ed36): the patch-0005 A/B is now complete, deterministic and
+  self-tested; artifacts record server_config.ssm_anchor_boundaries,
+  per-request cached_tokens / prefill_ms / TTFT, deterministic content
+  tails and tool names.
+- start_mei_server.sh MEI_SSM_ANCHOR_BOUNDARIES wiring + cycle phase D
+  (anchors=4 vs default cells, fresh KV per cell, bounded readiness poll,
+  server-log anchor evidence, MLXPRESS_GENERATION_PROFILE=1 on every cell
+  server incl. phase C's probe servers) (9100d43).
+- Independent verification, all green: patch-0005 default-off (source +
+  binary), apply_vmlx_patches --reset byte-exact + idempotent on both
+  checkouts at the pinned rev, 34/34 non-Metal tests, release binary
+  surface, sweep/ceiling CLI surfaces, llama-server 10470 flags, GGUF
+  provenance (PROVENANCE OK), digest fixture verdicts unchanged.
+- Upstream research refresh: vmlx-swift main = 33d1b6fa9 — NEW
+  bf8b31995 "Optimize Ornith 35B compiled decode regions (#346)"
+  (model-side compiled-region enablement; their ~25 -> ~94 tok/s 35B
+  claim on a 27.3GB-footprint machine; NOT vendored — re-pin-level change
+  against a memory-blocked target; recorded as the candidate next
+  compiled-decode experiment); mlx-swift-lm head = 37688d2c still throws
+  on RotatingKVCache.toQuantized (Mei's 0001-0002 remain the only live
+  hybrid rotating-KV quant); llama.cpp HEAD = 6d1479c1 (brew 10470);
+  FreeToken HEAD = 4b94bdc3.
 
 ## CPU-side deliverables (sessions B–E, all committed)
 - Measurement pipeline complete and pre-flight validated: sweep driver
@@ -64,6 +90,8 @@ artifacts/cycle-gated-boundary-20260830T171126Z.txt).
 | 066ae8c | tools: probe hardening, llama_ceiling provenance gate, digest fixes (session E) |
 | dec9c8f | FORK 0005: SSM anchor-boundary plumbing (default off) + Mei flag + unit tests (session E) |
 | f0b018c | docs: patch-0005 design record, README, session-E log (session E) |
+| 798ed36 | tools: diverging-chat probe --ssm-anchor-boundaries A/B label + self-test gate (session F) |
+| 9100d43 | cycle: phase D diverging-chat A/B cells; MLXPRESS profile on all cell servers (session F) |
 | (pending) | measurement results + optimization log + final numbers |
 
 ## Research sources / revisions
@@ -120,17 +148,33 @@ short-context (2026-08-29, disabled by default due to long-prefill tax)]
 no window, ssm anchors off (fork flags default = upstream behavior).
 
 ## >=40 at loaded context: met / disproven / blocked
-BLOCKED ON MEASUREMENT (machine fully contended through sessions B–E;
+BLOCKED ON MEASUREMENT (machine fully contended through sessions B–F;
 zero uncontended GPU windows). No claim either way until phase B/C rows
 land. Session-E gate attempt: exit 3 at 17:16:27Z (reclaimable 4GB vs
-10GB floor).
+10GB floor); session-F gate attempt: exit 3 at 17:25:16Z (--phase B,
+reclaimable 3GB, Muse-Glimmer-30B + hermes_ops suite active).
 
 ## Remaining work / next experiment
-1. In a clear window: scripts/run_measurement_cycle.sh --phase A,B,C
-   (bounded foreground, exit 3 if gated); digest with summarize_rows.py +
-   gate_report.py; fill the TBD sections.
-2. First new-variable experiment when the window opens: llama-ceiling
-   phase B (fp16 KV + q8 KV) to set the hardware ceiling before the fork
-   variants; then kv8 -> kv4 -> compiled16 -> combined -> window cells.
-3. Patch-0005 A/B: probe_diverging_chat.py --ssm-anchor-boundaries 4 vs
-   default on the first uncontended server; effect is TTFT, not decode.
+1. In a clear window: scripts/run_measurement_cycle.sh --phase B
+   (llama.cpp ceiling, fp16 KV + q8 KV, provenance-gated, no --spec-type)
+   FIRST per the session-F ordering, then --phase A,C,D
+   (A = cliff characterization, C = kv8/kv4/compiled16/combined/window
+   cells, D = patch-0005 diverging-chat A/B); digest with
+   summarize_rows.py + gate_report.py; fill the TBD sections.
+2. Precisely staged commands (all under the cycle; direct forms):
+   - ceiling fp16:  python3 tools/llama_ceiling.py --gguf
+       ~/.local/share/local-model-bench/mei-models/gguf/Ornith-1.5-9B-Q4_K_M.gguf
+       --alias ornith-ai/Ornith-1.5-9B-GGUF:Q4_K_M --repeats 3 --chat-40k
+       --output artifacts/llama-ceiling-fp16kv-<ts>.json
+   - ceiling q8 KV: same + --kv-cache-type-q8
+   - anchors A/B:   scripts/run_measurement_cycle.sh --phase D
+       (anchors-default cell then anchors4 cell; compare
+       divergence.gap_tokens / turn4_prefix_restored across
+       artifacts/probe-diverging-chat-anchors-{default,4}-<ts>.json)
+3. First new-variable experiment when the window opens: llama-ceiling
+   phase B to set the hardware ceiling before the fork variants.
+4. Candidate compiled-decode experiment (research-recorded, not yet
+   scheduled): backport upstream bf8b31995 (#346, model-side compiled
+   region enablement for the Ornith/Qwen3.5 topology) to the pinned tree
+   and A/B on the full matrix — only if phase-B/C rows point at
+   model-side compile regions as the binding cost.

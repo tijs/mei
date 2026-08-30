@@ -1,0 +1,12 @@
+gated-boundary 2026-08-30T17:25:16Z max-wait-min=5
+--- foreign runners/servers ---
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52492 /Users/tijs/.local/bin/cocore agent serve
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+--- memory ---
+The system has 34359738368 (2097152 pages with a page size of 16384).
+
+Stats:
+Pages free: 3981
+reclaimable_gb=3

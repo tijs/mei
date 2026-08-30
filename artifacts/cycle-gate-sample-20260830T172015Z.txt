@@ -1,0 +1,20 @@
+sample 17:20:15Z reclaimable=4GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:21:15Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:22:15Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:23:16Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281
+sample 17:24:16Z reclaimable=3GB
+52244 uv run --locked python runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52245 /Users/tijs/projects/local-model-bench/.venv/bin/python3 runner/run_bench.py --config configs/Muse-Glimmer-30B/gguf.yaml
+52627 llama-server --hf-repo bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 65536 --alias bench-38ccea45c281

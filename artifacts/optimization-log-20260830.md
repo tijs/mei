@@ -502,3 +502,114 @@ run; only an independent 35B measurement may claim unblocking.
 - Gate attempt for this session: see artifacts/cycle-gate-sample-<ts>.txt /
   cycle-gated-boundary-<ts>.txt (bounded foreground poll, exit 3 expected
   while Muse-Glimmer-30B holds the machine).
+
+---
+
+# Session F (2026-08-30 evening, 19:16-19:40Z) — probe A/B completion + verification + gate attempt
+
+## Contention state
+- Machine contended throughout: other agent's llama-server on port 8017
+  (Muse-Glimmer-30B Q4_K_M, ~21.8GB RSS), run_bench.py wrapper, active
+  run_prompt.py / run_prompt_suite.py (hermes_ops), cocore agent serve.
+  Reclaimable memory floor 3GB (free pages ~4K x 16KB). One bounded
+  foreground gate attempt (--phase B, --max-wait-min 5): exit 3 at
+  17:25:16Z; boundary artifacts
+  cycle-gated-boundary-20260830T172015Z.txt + cycle-gate-sample-*.txt.
+  No Mei GPU measurement ran; no foreign backend touched.
+
+## Session-F priority items (continuation directive)
+
+### 1. probe_diverging_chat.py --ssm-anchor-boundaries A/B path — completed
+Gap found: the probe had NO --ssm-anchor-boundaries surface, so an
+anchors=4 run and a default run produced indistinguishable artifacts, and
+the design-doc A/B (design-anchor-ssm-0005.md evidence item 2) was
+unexecutable end-to-end. Added (commit 798ed36):
+- `--ssm-anchor-boundaries K` (default 0): LABEL of the server-side launch
+  config under test, recorded verbatim in artifact
+  server_config.ssm_anchor_boundaries; usage block documents the
+  orchestrator-driven A/B contract (probe is client-side; server must have
+  been launched with the matching flag).
+- --self-test now gates `anchors_label_non_negative` (negative label
+  FAILS loudly). SELF-TEST PASS (default and anchors-4 label), negative
+  label -> SELF-TEST FAIL. Probe still records cached_tokens / prefill_ms
+  / TTFT (streaming first-delta) per request, deterministic per-request
+  content tails + tool names.
+
+### 2. Server launch env wiring (commit 9100d43)
+- start_mei_server.sh: MEI_SSM_ANCHOR_BOUNDARIES -> --ssm-anchor-boundaries
+  (previously IMPOSSIBLE to launch the server with anchors on; the A/B was
+  not expressible).
+- run_measurement_cycle.sh: NEW phase D = diverging-chat A/B cells:
+  anchors-default (anchors=0) + anchors4 (anchors=4), each with fresh KV
+  dir, cell-scoped runtime base/log, bounded 300s readiness poll before
+  the client-side probe, per-cell server-log ssm-anchor evidence artifact,
+  MLXPRESS_GENERATION_PROFILE=1.
+- MLXPRESS_GENERATION_PROFILE=1 also added to phase-C run_variant_cell
+  server envs (sweep_mei set it for its own cells; the cycle's
+  acceptance/survival probe servers had no profile capture).
+- Verified the engine's profile hook at pinned
+  Libraries/MLXLMCommon/Evaluate.swift:1307-1358: env-gated
+  ([MLXPressGenerationProfile] ... count/total/avg-ms rows to stderr),
+  no other MLXPRESS hook exists in the pinned tree.
+
+### 3. Independent verification (all green, CPU-side)
+- patch 0005 default-off: GenerateParameters.ssmAnchorBoundaries: [Int] = []
+  (patches/0005, line 33) and Mei CLI default 0 (ServerConfig.swift:69) —
+  default == upstream behavior exactly; release binary --help shows
+  --ssm-anchor-boundaries.
+- apply_vmlx_patches.sh --reset: both checkouts (in-repo .build +
+  mei-build scratch) repaired from pristine pinned tree aeb5e21c and
+  re-applied 0001-0005 byte-exactly; second run idempotent (sentinel
+  check "already applied" both).
+- Non-Metal tests: 34/34 (ServerConfigParsing 11, SSMAnchorBoundaries 9,
+  OpenAITypes 8, CacheRestoreTracker 6).
+- Release binary surface (19:10Z build): kv-bits, compiled-decode,
+  compiled-decode-threshold, max-kv-window, ssm-anchor-boundaries all
+  present.
+- Phase CLI surfaces parse exactly as staged: sweep_mei.py
+  (--contexts --prefill-steps --ssm-rederive --cache-limit-gb --kv-bits
+  --compiled --compiled-decode-threshold --repeats-45k --chat-40k),
+  llama_ceiling.py (--kv-cache-type-q8 --chat-40k --provenance-only).
+- llama-server build 10470 (commit 34af94cd9, AppleClang 21) confirmed:
+  --cache-type-k/v (q8_0 available), --spec-type none|...|draft-mtp —
+  ceiling keeps spec off.
+- GGUF provenance re-verified: sha256 70c11219…e8fab6 == pinned repo
+  blob (ornith-ai/Ornith-1.5-9B-GGUF@abdd624b); PROVENANCE OK exit 0.
+- Digest pipeline regression: gate_report verdicts PIVOT (baseline-shaped
+  13.2) / MET (41.5-shaped window16-compiled) on the schema fixture —
+  unchanged.
+
+### 4. Upstream research refresh (exact heads, 2026-08-30)
+- osaurus-ai/vmlx-swift main = 33d1b6fa9 (37 commits past pin aeb5e21c).
+  NEW relevant commit since sessions B/C: bf8b31995 "Optimize Ornith 35B
+  compiled decode regions (#346)" — model-side compiled-region enablement
+  for the Qwen3.5-VL architecture (their doc: enabling the topology-scoped
+  compiled GDN + MoE decode regions was the causal change behind ~25 ->
+  ~94 tok/s on their 35B rows, env opt-out, footprint 27.3GB peak). NOT
+  vendored: it patches model classes/tests on a main 37 commits past the
+  pin (re-pin-level change) and targets the memory-blocked 35B; recorded
+  as the candidate next compiled-decode experiment (backport region
+  enablement to the pinned tree, A/B on the full matrix) if measurement
+  points at model-side compile regions. All other new commits (MTP/spec
+  draft, batch-position #331, batch-capacity #335, Qwen3.8 parser #330)
+  are out of Mei scope. No upstream RotatingKVCache-quant commit exists.
+- ml-explore/mlx-swift-lm head = 37688d2c: KVCache.swift:911-914
+  RotatingKVCache.toQuantized STILL throws ("temporal ordering requires
+  dedicated handling") — Mei's QuantizedRotatingKVCache (patch 0001-0002)
+  remains the only live implementation of hybrid rotating-KV quant.
+- ggml-org/llama.cpp HEAD = 6d1479c1 (brew build 10470 = 34af94cd9).
+- FlashML-org/FreeToken HEAD = 4b94bdc3 (README:20-21 semantic-anchor /
+  bandwidth-adaptive cites unchanged; patch 0005 mapping stands).
+
+## Session-F outcome
+- Measurements remain PENDING (zero Mei sweep/ceiling artifacts — machine
+  fully held by the other agent through the entire session). Official
+  numbers remain the 2026-08-29 baseline; nothing was contaminated.
+- The patch-0005 A/B path is now COMPLETE end-to-end (probe label +
+  self-test gate + server env wiring + cycle phase D + profile capture +
+  per-cell evidence artifacts) and executable in the first uncontended
+  window with:
+    scripts/run_measurement_cycle.sh --phase D
+- Next GPU work when a clean window opens: --phase B (llama.cpp ceiling,
+  fp16 + q8 KV, provenance-gated, no --spec-type) BEFORE --phase A/C/D;
+  digest with summarize_rows.py + gate_report.py.
