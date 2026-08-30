@@ -29,7 +29,24 @@ PHASE="ALL"
 if [[ "${1:-}" == "--force" ]]; then FORCE="--no-contention-gate"; PHASE="${2:-ALL}"; fi
 
 contended() {
-  ps -axo command= | grep -E "llama-server|vllm|omlx|cocore" | grep -vE "sweep_mei|llama_ceiling|run_measurement" >/dev/null
+  # Gate 1: another agent's SUITE RUNNER must not be active (its llama.cpp
+  # backend may stay resident between tasks — that is fine as long as it is
+  # idle and the machine has memory headroom; an idle-but-resident server
+  # never gets a CPU/GPU cycle stolen from it).
+  if ps -axo command= | grep -E "run_fixture_suite|run_bench\.py" >/dev/null; then
+    return 0
+  fi
+  # Gate 2: enough reclaimable memory for an uncontended 9B row (idle
+  # llama-server with ~24GB resident will keep this below the floor).
+  local free_kb inactive_kb
+  free_kb=$(vm_stat | awk '/Pages free/{print $3}' | tr -d '.')
+  inactive_kb=$(vm_stat | awk '/Pages inactive/{print $3}' | tr -d '.')
+  local reclaimable_gb=$(( (free_kb + inactive_kb) * 16384 / 1024 / 1024 / 1024 ))
+  if (( reclaimable_gb < 10 )); then
+    echo "[cycle] only ${reclaimable_gb}GB reclaimable; deferring until memory clears"
+    return 0
+  fi
+  return 1
 }
 
 gate() {
