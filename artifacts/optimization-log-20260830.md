@@ -409,3 +409,96 @@ run; only an independent 35B measurement may claim unblocking.
   additionalBoundaries param (SSMReDerive.swift:443). Gated on a new
   diverging-chat probe (tools/probe_diverging_chat.py) + phase-A rows —
   TTFT lever, not a decode tok/s lever.
+
+---
+
+# Session E (2026-08-30 evening, 18:12-19:30Z) — CPU-side: probe hardening + provenance gate + patch-0005 plumbing + gate attempt
+
+## Contention state
+- Machine contended at session start and end: other agent's llama-server on
+  port 8017 (Muse-Glimmer-30B Q4_K_M, ~22GB RSS), run_bench.py and
+  run_prompt_suite.py active, cocore agent serve resident; ~65MB free pages.
+  No Mei GPU measurement ran; no foreign backend touched.
+
+## CPU-side deliverables (per the continuation directive)
+
+### 1. probe_diverging_chat.py — independently reviewed, hardened, self-tested
+- `--self-test` PASS (exit 0), and a NEGATIVE test pass: the validator
+  catches a broken tool_call_id cross-reference, missing required argument
+  keys, non-JSON tool results, and a broken growth chain.
+- NEW deterministic checks: `validate_messages` per transcript (role
+  sequencing user->assistant(tool_calls)->tool->assistant(closing);
+  tool_call_id must reference a pending assistant tool_call; exactly one
+  call per assistant message; arguments JSON-parses and matches the
+  per-tool key schema exactly; tool-result JSON), `build_deterministic`
+  (two builds byte-identical), `turn5_user_contents_differ`,
+  `all_transcripts_schema_valid` (all ten transcripts).
+- Artifact now records: sampler settings (temperature 0, max_tokens), exact
+  tool schema, system prompt, per-request content tails and called tool
+  names (deterministic output controls per Level1Techs-derived rule),
+  per-run sizes.
+- Status gate strengthened: ANY errored request now fails the probe (a hole
+  in run B previously read as "gap confirmed" via b_r5 cached=0).
+
+### 2. llama_ceiling.py — same-model official 9B GGUF command/provenance/digest path
+- `--provenance-only` mode validates WITHOUT launching llama-server:
+  sha256 of the staged GGUF == pinned official blob
+  (ornith-ai/Ornith-1.5-9B-GGUF@abdd624b,
+  70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6),
+  header facts via gguf_meta (arch qwen35, context 262144, file_type 15,
+  MTP head PRESENT nextn_predict_layers=1 — recorded, --spec-type stays
+  off), llama-server binary present (build 10470, commit 34af94cd9).
+  Result: PROVENANCE OK exit 0.
+- Negative tests pass: wrong pinned digest rejected; missing file rejected;
+  meta-only path OK. A digest mismatch is FATAL (exit 2, no measurement).
+- Full runs now embed the provenance block in the artifact header.
+
+### 3. patch 0005 — SSM anchor-boundary plumbing, default OFF, unit-covered
+- patches/0005-ssm-anchor-boundaries.patch (delta over 0001-0004, generated
+  via the checkout's git index; full-stack tree byte-identical after
+  `apply_vmlx_patches.sh --reset` on BOTH checkouts).
+- Engine: `GenerateParameters.ssmAnchorBoundaries: [Int] = []`; both SSM
+  store paths union it (Evaluate.swift storeCacheAfterGeneration via
+  cacheInitParameters; BatchEngine.swift finishSlot via slot.parameters);
+  engine-side validation unchanged (0 < b <= prompt len, Set-deduped;
+  anchor at any offset is the exact state for that prefix — misplaced
+  anchors can only be suboptimal, never incorrect).
+- Mei: `--ssm-anchor-boundaries K` (default 0); SSMAnchorBoundaries.compute
+  derives the first K user-message start offsets from the request's OWN
+  rendering path (same tokenizer/tools/context) with an additivity
+  self-check -> non-additive transcripts fall back to [] with a logged
+  warning, never a wrong offset.
+- Tests: SSMAnchorBoundariesTests 9/9 + ServerConfigParsingTests 11/11
+  (incl. new parse test + default-off guard) — 34/34 non-Metal total.
+- NO performance claim: TTFT lever only; measurement gated on the probe +
+  an uncontended window (design-anchor-ssm-0005.md updated to PLUMBING
+  LANDED).
+
+### 4. Patch-series hygiene
+- apply_vmlx_patches.sh updated to 0001-0005 (patch list + sentinels);
+  `--reset` re-applies the full series byte-exactly to both checkouts
+  (verified: re-applied trees match the reference diff).
+
+### 5. Tool fixes / gate tooling
+- gate_report.py: fixed statistics.median([]) crash when no row reports
+  prefill_ms (+ regression fixture test; verdicts unchanged: PIVOT 13.2 /
+  MET 41.5 on the session-D schema fixture).
+- sweep_mei.py: removed a dead ternary that always produced `ctx_N_fresh`.
+- run_bounded.py: verified documented behavior (125 usage/help, propagates
+  child rc; 0/124).
+
+### 6. Release binary
+- Rebuilt (scratch mei-build) with the full 0001-0005 fork surface; --help
+  now shows --ssm-anchor-boundaries.
+
+## Commits (session E)
+- (listed in the final report / git log; all Mei-only)
+
+## Session-E end boundary
+- GPU measurements remain PENDING (zero Mei sweep/ceiling artifacts exist).
+  Official numbers remain the 2026-08-29 baseline: short 28.1, fresh45 5.21
+  (prefill 273.3s), reuse45 13.24 (cached 45000, prefill 10.2s), chat40k
+  10.3 @33K; acceptance-9B-coordinator green (10/10).
+- Gate attempt for this session: see artifacts/cycle-gate-sample-<ts>.txt /
+  cycle-gated-boundary-<ts>.txt (bounded foreground poll, exit 3 expected
+  while Muse-Glimmer-30B holds the machine).

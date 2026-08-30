@@ -115,6 +115,13 @@ config; the boundary preserves that repo read-only — Mei's own copy of the
 probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
 
 - `tools/probe_mei.py` — acceptance/parity/tooling gate (authoritative copy)
+- `tools/probe_diverging_chat.py` — patch-0005 evidence probe: 5-turn
+  tool-calling transcript, run A = strict growth, run B diverges at turn 5
+  (place_order -> cancel_order); records cached_tokens/prefill_ms/TTFT per
+  request plus deterministic transcript/schema/output checks (`--self-test`
+  validates everything without a server; a `tool` result whose id has no
+  pending assistant tool_call, missing argument keys, or non-additive
+  transcripts fail loudly)
 - `tools/probe_long_context.py` — chunked-prefill survival at 30K/80K
 - `tools/bench_mei.py` — full benchmark rows (short, tool, 45K-loaded
   fresh + reuse, 40K chat) with engine-reported tok/s, TTFT/prefill ms and
@@ -125,6 +132,14 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   GGUF v2 vs v3 layout difference — v3 dropped the tensor-info count field
   and stores dims as u64). Used for llama.cpp-ceiling comparator hygiene:
   never compare an MTP variant against Mei's no-MTP baseline.
+- `tools/llama_ceiling.py` — llama.cpp hardware-ceiling driver on Mei-owned
+  port 8074. `--provenance-only` verifies the llama-server binary, the GGUF
+  header (arch qwen35, context >= 64K, MTP-head presence) and the sha256
+  against the pinned official blob digest
+  (`ornith-ai/Ornith-1.5-9B-GGUF@abdd624b` = local
+  `70c11219…e8fab6`) WITHOUT launching the server — safe under contention;
+  a digest mismatch is FATAL and refuses to measure. The full run records
+  the provenance block in its artifact before any row.
 
 ## Design notes
 
@@ -145,7 +160,13 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   Any divergence or missing companion state falls back to a full prefill
   (always correct). The SSM re-derive pass after each chat turn costs ~1x
   prefill at turn end (upstream default on; `--ssm-rederive false` turns it
-  off for A/B rows).
+  off for A/B rows). `--ssm-anchor-boundaries K` (patch 0005, default off)
+  stores additional SSM companion anchors at the first K chat role-turn
+  boundaries (exact token offsets from the request's own rendering path,
+  with an additivity self-check) so a mid-transcript diverging agentic
+  edit restores from a retained boundary instead of full-prefilling —
+  a TTFT/latency lever, not a decode tok/s lever; see
+  `artifacts/design-anchor-ssm-0005.md`.
 - **Tool calls**: vmlx-swift parses Qwen/Ornith-style `<tool_call>{json}`
   envelopes inside its generate loop; Mei maps `.toolCall` events to OpenAI
   `tool_calls` in both streaming and non-streaming shapes.
