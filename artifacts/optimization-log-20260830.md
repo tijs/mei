@@ -63,8 +63,15 @@ Engine: mei on vmlx-swift pinned aeb5e21c + Mei patch series 0001-0004.
 - tokenizer.chat_template present (Qwen-style tool-call XML envelope
   format); tokenizer.ggml.add_bos_token false; eos 248046.
 - Fallback recorded: bartowski/Ornith-1.5-9B-GGUF NOT needed (official
-  conversion appears to be the staged artifact; provenance: license link
-  and imatrix dataset path point to ornith-ai).
+  conversion is the staged artifact; provenance: license link and imatrix
+  dataset path point to ornith-ai).
+- **Exact provenance pin (verified 16:10Z)**: local sha256
+  70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6
+  == blob sha256 of Ornith-1.5-9B-Q4_K_M.gguf in
+  huggingface.co/ornith-ai/Ornith-1.5-9B-GGUF default revision
+  abdd624b12ebf020b767fff532ff44fe552b28c3 (repo lastModified
+  2026-08-24T02:45:24Z). The staged GGUF is the OFFICIAL artifact, pinned
+  by content hash regardless of download-date drift.
 
 ### Level1Techs article (hypotheses, not facts)
 https://forum.level1techs.com/t/why-your-local-llm-feels-dumber-than-it-is/253917
