@@ -122,3 +122,46 @@ mapped to Apple/MLX:
   MLXPRESS_GENERATION_PROFILE dumps under mei-runtime/logs/.
 - At session end: NO measurement artifacts had landed yet (cycle still
   gated). Contention blocker recorded above.
+
+## Pre-analysis: bandwidth model and per-variant expectations (16:45Z)
+
+M1 Max unified bandwidth ~400GB/s. Per decode step the engine streams
+weights (~5.0GB Q4 for the 9B) + attention KV reads:
+  fp16 KV at 45K: 8 attn layers x 45K pos x 4 kv-heads x 256 dim x 2B x 2
+  (K+V) = ~1.47GB  -> total ~6.5GB/step -> ~62 tok/s BW bound (eager
+  measured 5.2-6.4 -> eager is LATENCY/dispatch-bound, not BW-bound).
+  q8 KV at 45K: ~0.74GB; q4 KV: ~0.37GB (minor BW lever unless eager
+  overhead is reduced).
+  16K window: KV reads ~0.52GB (fp16) -> ~5.5GB/step -> ~73 tok/s bound;
+  compiled decode at 16K measured 34.8 tok/s (2026-08-29) = ~48% of BW
+  bound (plausible real-world Metal efficiency).
+
+Variant expectations (to be checked against measured rows):
+- kv8/kv4 (eager): small decode gain unless attention share dominates;
+  the real value is memory (KV 1.47GB -> 0.74/0.37GB) and enabling the
+  disk tier + 80K survival at a fixed memory envelope. Acceptance must
+  stay green; 30K/80K survival is the long-context divergence gate.
+- compiled16 (thresholded): short/16K win kept (~34.8-47.2 band),
+  no long-prefill tax; 33K/45K rows expected to fall back to eager.
+- combined kv8+compiled16: kv quant reduces the traced-graph KV size;
+  expected <= compiled16 alone unless attention dominates within 16K.
+- window8k/window16k (eager): attention bounded -> decode nearly
+  context-independent BUT full-attention model loses old context: 30K/80K
+  survival + 40K chat are expected to FAIL coherence checks; throughput
+  probe only, never a production config.
+- window16-compiled (THE >=40 gate candidate): promote+trace O(16K), so a
+  45K offset traces cheaply; compiled replay at 16K width. Bandwidth model
+  says 30-45 tok/s achievable if Metal efficiency holds; MUST be reported
+  with its correctness caveat (window truncation), and does NOT satisfy
+  the gate unless acceptance + 30K/80K survival stay green.
+- llama.cpp ceiling (fp16kv and q8kv): same 45K prompt, no --spec-type
+  draft-mtp (MTP head present in the GGUF but unused); timings
+  predicted_n vs evaluated_n must show single-token decode to confirm no
+  auto spec engage. 25-39 tok/s => hardware ceiling band; >=40 => fork
+  justified.
+
+35B generalization: nothing in this session changes the 35B blocked
+status (weights ~19.5GB + 45K KV + activations vs 26.8GB recommended
+working set). kv quant WOULD shrink the 35B KV (~3.6GB fp16 -> ~0.9GB
+q4), which is a necessary (not sufficient) step toward a 35B resident
+run; only an independent 35B measurement may claim unblocking.
