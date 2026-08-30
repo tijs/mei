@@ -102,6 +102,12 @@ def summarize_sweep(path: Path) -> dict:
 
 def summarize_ceiling(path: Path) -> dict:
     data = json.loads(path.read_text())
+    # Provenance-only records (llama_ceiling --provenance-only) carry no
+    # "rows" key; they are evidence, not measurements — skip them instead of
+    # printing an empty family.
+    if "rows" not in data:
+        return {"file": path.name, "mode": "provenance-only",
+                "alias": data.get("alias"), "families": {}}
     rows = {}
     for r in data.get("rows", []):
         d = r.get("decode_tps_engine")
@@ -150,6 +156,9 @@ def main() -> int:
     for path in args.ceiling:
         c = summarize_ceiling(path)
         print(f"\n== ceiling {c['file']}  ({c['alias']}) ==")
+        if not c["families"]:
+            print(f"    ({c.get('mode', 'no rows')}; no measurement rows)")
+            continue
         for f, st in c["families"].items():
             print(f"    {f:10s} n={st['n']} median={st['median']:6.2f} min={st['min']:6.2f} max={st['max']:6.2f}")
     for path in args.acceptance + args.survival:
