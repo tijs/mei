@@ -258,7 +258,7 @@ def main() -> int:
         "built without transformers via the unit-token invariant from bench_mei",
     )
     parser.add_argument("--server-timeout", type=float, default=900)
-    parser.add_argument("--request-timeout", type=float, default=5400)
+    parser.add_argument("--request-timeout", type=float, default=2400)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
         "--no-contention-gate", action="store_true",
