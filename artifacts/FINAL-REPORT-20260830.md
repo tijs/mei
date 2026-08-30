@@ -1,7 +1,8 @@
 # Mei optimization session report — 2026-08-30
 
 Status: IN PROGRESS — numbers appended as the gated measurement cycle
-(scripts/run_measurement_cycle.sh) produces artifacts. Raw evidence:
+(scripts/run_measurement_cycle.sh, detached pid recorded in
+/tmp/mei-cycle.pid) produces artifacts. Raw evidence:
 artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
 artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json.
 
@@ -18,24 +19,44 @@ artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json.
 | 0c4ea67 | sweep: family-salted fresh prompts (no cross-row prefix reuse) |
 | c65cafb | artifacts digest tool summarize_rows.py |
 | fb37a23 | per-row contention labels in both drivers |
-| (pending) | measurement results + optimization log |
+| 897bc0e | final-report template |
+| 0eb76c8 | sweep: request timeout 5400->2400s |
+| c1a7ac7 | cycle: single-instance lockfile |
+| e37daa5 | cycle: window16-compiled gate candidate cell |
+| de7dc03 | cycle: gate wait cap 6h -> 24h |
+| ff33467 | log: session-B research record + MTP-head finding on the ceiling GGUF |
+| 6d9c8c5 | digest: group fresh/reuse medians per context length |
+| f9a432e | log: bandwidth model + per-variant expectations |
+| (pending) | measurement results + optimization log + final numbers |
 
 ## Research sources / revisions
 - vmlx-swift pinned aeb5e21c195d8519609488ef75a25ce7e48d8f88
   (osaurus-ai/vmlx-swift; origin/main 8 commits newer: batch capacity/
-  position fixes #331/#335, tool parser pin #330 — none touch KV quant or
-  compiled decode).
+  position fixes #331/#335, tool parser pin #330, #329/#328 — none touch
+  KV quant or compiled decode).
 - KVCache.swift:2070 maybeQuantizeKVCache (affine skips rotating);
   KVCache.swift:1017 RotatingKVCache.toQuantized fatalError;
   AttentionUtils.swift:77 attentionWithCacheUpdate dispatch;
-  KVCache.swift:228 QuantizedKVCacheProtocol;
   Evaluate.swift:2063+ setupCompiledDecode (promote+trace after prefill,
   buffer = promptOffset + maxTokens + 8); Evaluate.swift:3049 store guard;
-  TQDiskSerializer serialize/restore (.rotating records);
-  CompilableRotatingKVCache (BatchEngine) — compile-needs-mask + fixed
-  buffers, quantized attention lacks mask integration (deep-merge gap).
-- llama.cpp build 10470 (brew), arch qwen35 GGUF v3 (verified via
-  tools/gguf_meta.py: Ornith-1.5-9B-Q4_K_M, 442 tensors).
+  TQDiskSerializer serialize/restore (.rotating records). Same upstream
+  gap confirmed in lmstudio-ai/mlx-engine#31 and ml-explore/mlx-swift-lm
+  main (both still refuse rotating-KV quantization).
+- llama.cpp build 10470 (brew, commit 34af94cd9), arch qwen35 GGUF v3
+  verified with gguf lib: Ornith-1.5-9B-Q4_K_M, 442 tensors, quant mix
+  Q4_K 223 / Q6_K 35 / F32 184, imatrix-calibrated official conversion.
+  **MTP head PRESENT (qwen35.nextn_predict_layers=1, blk.32.nextn.* 4
+  tensors, 33rd block)** — ceiling runs without --spec-type draft-mtp so
+  llama.cpp decode is single-token like Mei's no-MTP baseline; spec-engage
+  verified via timings predicted_n vs evaluated_n.
+- Level1Techs article (forum.level1techs.com/t/253917; HN 49402232)
+  treated as hypothesis source; controls already in drivers (temp 0
+  everywhere, parity identical-content checks, tool-call schema per
+  variant, family-salted fresh prompts, strict-extension reuse chains).
+- FreeToken (github.com/FlashML-org/FreeToken; arXiv:2608.16157):
+  architecture research only; semantic-anchor checkpoints + double-buffered
+  prefill + expert residency map onto Mei's SSM re-derive/disk tier,
+  prefillStepSize sweep, and 35B KV-budget experiments — no port.
 
 ## Hypotheses -> outcomes
 - H-1 cliff shape: [TBD sweep artifacts]
