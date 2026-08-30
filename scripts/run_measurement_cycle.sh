@@ -19,6 +19,7 @@ set -euo pipefail
 
 MEI_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$MEI_REPO"
+BUILD_DIR="${MEI_BUILD_DIR:-$HOME/.local/share/local-model-bench/mei-build}"
 VENV_PY="${MEI_SWEEP_VENV:-$HOME/.local/share/local-model-bench/mei-runtime/venv/bin/python}"
 MODEL_DIR="${MEI_MODEL_DIR:-$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit}"
 MODEL_ID="ornith-ai/Ornith-1.5-9B-MLX-4bit"
@@ -55,9 +56,19 @@ gate() {
     return 0
   fi
   for _ in $(seq 1 360); do
-    if ! contended; then return 0; fi
-    echo "[cycle] $(date -u +%H:%M:%SZ) machine contended; waiting for an uncontended window..."
-    sleep 60
+    if contended; then
+      echo "[cycle] $(date -u +%H:%M:%SZ) machine contended; waiting for an uncontended window..."
+      sleep 60
+      continue
+    fi
+    # Binary must contain the fork's full patch surface (0004 window flag).
+    local BIN="$BUILD_DIR/arm64-apple-macosx/release/mei"
+    if ! "$BIN" --help 2>/dev/null | grep -q "max-kv-window"; then
+      echo "[cycle] $(date -u +%H:%M:%SZ) release binary missing the fork flags; waiting for rebuild..."
+      sleep 60
+      continue
+    fi
+    return 0
   done
   echo "[cycle] FATAL: no uncontended window within 6h" >&2
   exit 1
@@ -113,13 +124,14 @@ phase_b() {
 }
 
 run_variant_cell() {
-  # run_variant_cell TAG KV COMPILED COMPILED_THRESHOLD CONTEXT_CAP
-  local tag="$1" kv="${2:-}" compiled="${3:-false}" threshold="${4:-}" ctxcap="${5:-65536}"
-  echo "[cycle] variant $tag: kv=$kv compiled=$compiled threshold=${threshold:-none} ctx=$ctxcap"
+  # run_variant_cell TAG KV COMPILED COMPILED_THRESHOLD CONTEXT_CAP [KV_WINDOW]
+  local tag="$1" kv="${2:-}" compiled="${3:-false}" threshold="${4:-}" ctxcap="${5:-65536}" window="${6:-0}"
+  echo "[cycle] variant $tag: kv=$kv compiled=$compiled threshold=${threshold:-none} ctx=$ctxcap window=${window:-default}"
   local extra=()
   [[ -n "$kv" ]] && extra+=(--kv-bits "$kv")
   [[ "$compiled" == "true" ]] && extra+=(--compiled true)
   [[ -n "$threshold" ]] && extra+=(--compiled-decode-threshold "$threshold")
+  [[ "$window" != "0" ]] && extra+=(--max-kv-window "$window")
   python3 tools/sweep_mei.py --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 512,16384,33175,45000 --repeats-45k 3 --chat-40k --kv-cache-dir \
     --context-cap "$ctxcap" "${extra[@]}" \
@@ -130,6 +142,7 @@ run_variant_cell() {
     MEI_KV_BITS="$kv" MEI_COMPILED_DECODE="$compiled"
     MEI_CONTEXT_CAP="$ctxcap" MEI_SSM_REDERIVE=true MEI_KV_CACHE_DIR="$HOME/.local/share/local-model-bench/mei-runtime/kv-cache-cell-$tag")
   if [[ -n "$threshold" ]]; then envs+=(MEI_COMPILED_DECODE_THRESHOLD="$threshold"); fi
+  if [[ "$window" != "0" ]]; then envs+=(MEI_MAX_KV_WINDOW="$window"); fi
   # start_mei_server.sh runs the server in the foreground; background it and
   # wait for readiness through probe_mei's own health poll.
   env "${envs[@]}" bash scripts/start_mei_server.sh &
@@ -153,6 +166,11 @@ phase_c() {
   run_variant_cell kv4 "4"
   run_variant_cell compiled16 "" "true" "16384"
   run_variant_cell combined-kv8-compiled16 "8" "true" "16384"
+  # Experimental bounded-window probes (attention scans at most the ring).
+  # Correctness-bounded: a full-attention model drops context beyond the
+  # window; decode throughput is expected to become context-independent.
+  run_variant_cell window8k "" "" "" "65536" "8192"
+  run_variant_cell window16k "" "" "" "65536" "16384"
   # 80K survival probe at an extended context cap (separate cell)
   run_variant_cell kv8-80k "8" "" "" "131072"
   run_variant_cell survival80k "" "" "" "131072"

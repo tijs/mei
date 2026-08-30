@@ -5,15 +5,16 @@
 #   - Every patched checkout must be vmlx-swift at the exact pinned revision
 #     aeb5e21c195d8519609488ef75a25ce7e48d8f88 (the revision Mei's
 #     Package.resolved pins); the script refuses to patch anything else.
-#   - patches/0001..0003 are generated from this checkout's git diff, so
-#     they apply byte-exactly to the pristine pinned tree.
-#   - SwiftPM keeps a dependency copy under BOTH the in-repo default
-#     build dir (.build/checkouts) and any --scratch-path build dir
+#   - patches/0001..0004 are generated from this checkout's git diff, so
+#     they apply byte-exactly to the pristine pinned tree, in order.
+#   - SwiftPM keeps a dependency copy under BOTH the in-repo default build
+#     dir (.build/checkouts) and any --scratch-path build dir
 #     (e.g. ~/.local/share/local-model-bench/mei-build/checkouts); the
 #     release binary is built from the scratch copy, so both must be
 #     patched. The script patches every copy it can find.
-#   - Idempotent: per checkout, if the marker exists AND the patches
-#     reverse-apply cleanly, it does nothing.
+#   - Idempotence is sentinel-based (each patch has a distinctive line the
+#     working tree must contain; partial stacks are repaired by reseting
+#     that checkout and re-applying the whole series).
 #
 # Usage: scripts/apply_vmlx_patches.sh [--reset]
 #   --reset   revert every checkout to the pristine pinned revision first.
@@ -26,6 +27,20 @@ PATCHES=(
   "$MEI_REPO/patches/0001-quantized-rotating-kv.patch"
   "$MEI_REPO/patches/0002-quantized-rotating-diskstore.patch"
   "$MEI_REPO/patches/0003-compiled-decode-threshold.patch"
+  "$MEI_REPO/patches/0004-max-kv-window-probe.patch"
+)
+
+# Distinctive sentinel strings per patch, checked in the working tree.
+SENTINELS=(
+  "Libraries/MLXLMCommon/KVCache.swift:class QuantizedRotatingKVCache"
+  "Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift:serializeQuantizedRotatingLayer"
+  "Libraries/MLXLMCommon/Evaluate.swift:compiledDecodeMaxPromptOffset"
+  "Libraries/MLXLLM/Models/Qwen35.swift:maxKVWindowSize"
+)
+# The Evaluate sentinel is in two patches (0003+0004); keep an extra check
+# so a half-applied stack is caught.
+EXTRA_SENTINELS=(
+  "Libraries/MLXLLM/Models/Qwen35.swift:Experimental bounded-window probe"
 )
 
 CHECKOUT_CANDIDATES=(
@@ -36,11 +51,9 @@ CHECKOUT_CANDIDATES=(
 RESET="${1:-}"
 for CHECKOUT in "${CHECKOUT_CANDIDATES[@]}"; do
   [[ -d "$CHECKOUT/.git" ]] || { echo "skip (no checkout at $CHECKOUT)"; continue; }
-  MARKER="$CHECKOUT/.mei-patches-applied"
 
   if [[ "$RESET" == "--reset" ]]; then
     git -C "$CHECKOUT" checkout -- . 2>/dev/null || true
-    rm -f "$MARKER"
     echo "reset $CHECKOUT to pristine pinned tree"
   fi
 
@@ -50,43 +63,36 @@ for CHECKOUT in "${CHECKOUT_CANDIDATES[@]}"; do
     exit 1
   fi
 
-  if [[ -f "$MARKER" ]]; then
-    all_applied=true
-    for p in "${PATCHES[@]}"; do
-      if ! git -C "$CHECKOUT" apply --reverse --check "$p" >/dev/null 2>&1; then
-        all_applied=false
-        break
-      fi
-    done
-    if $all_applied; then
-      echo "patches already applied at $CHECKOUT (marker $MARKER)"
-      continue
-    fi
-  fi
-
-  for p in "${PATCHES[@]}"; do
-    [[ -f "$p" ]] || { echo "FATAL: missing patch $p" >&2; exit 1; }
-    if git -C "$CHECKOUT" apply --reverse --check "$p" >/dev/null 2>&1; then
-      # Already in the working tree (marker may be stale/missing) — fine.
-      continue
-    fi
-    if ! git -C "$CHECKOUT" apply --check "$p" >/dev/null 2>&1; then
-      echo "FATAL: patch $p does not apply cleanly at $CHECKOUT (checkout modified?)" >&2
-      exit 1
+  applied=true
+  for sentinel in "${SENTINELS[@]}" "${EXTRA_SENTINELS[@]}"; do
+    file="${sentinel%%:*}"
+    needle="${sentinel#*:}"
+    if ! grep -qF "$needle" "$CHECKOUT/$file" 2>/dev/null; then
+      applied=false
+      break
     fi
   done
 
+  if $applied; then
+    echo "patch series already applied at $CHECKOUT (sentinel check)"
+    continue
+  fi
+
+  # Not applied (or partial): repair from the pristine tree, then apply.
+  echo "repairing $CHECKOUT (partial or missing patch state)"
+  git -C "$CHECKOUT" checkout -- . 2>/dev/null || true
+  # 0004 touches Qwen35.swift which needs to exist at the pinned revision.
   for p in "${PATCHES[@]}"; do
-    if git -C "$CHECKOUT" apply --reverse --check "$p" >/dev/null 2>&1; then
-      echo "already present: $(basename "$p")"
-      continue
+    [[ -f "$p" ]] || { echo "FATAL: missing patch $p" >&2; exit 1; }
+    if ! git -C "$CHECKOUT" apply --check "$p" >/dev/null 2>&1; then
+      echo "FATAL: patch $p does not apply cleanly at $CHECKOUT" >&2
+      exit 1
     fi
     git -C "$CHECKOUT" apply "$p"
     echo "applied $(basename "$p") at $CHECKOUT"
   done
 
   find "$CHECKOUT" -name '*.swift' -exec chmod u+w {} + 2>/dev/null || true
-  touch "$MARKER"
-  echo "vmlx patch series applied at $CHECKOUT (marker $MARKER)"
+  echo "vmlx patch series applied at $CHECKOUT"
 done
 echo "done"

@@ -135,6 +135,8 @@ class Server:
             "--ssm-rederive", str(cell["ssm_rederive"]).lower(),
             "--compiled-decode", str(cell["compiled"]).lower(),
         ]
+        if args.max_kv_window > 0:
+            argv += ["--max-kv-window", str(args.max_kv_window)]
         if args.memory_limit_bytes:
             argv += ["--memory-limit-bytes", str(args.memory_limit_bytes)]
         if cell["cache_limit_bytes"]:
@@ -193,6 +195,9 @@ def main() -> int:
     parser.add_argument("--cache-limit-gb", default="0")
     parser.add_argument("--kv-bits", default="none")
     parser.add_argument("--compiled", default="false")
+    parser.add_argument(
+        "--max-kv-window", type=int, default=0,
+        help="experimental rotating-KV ring cap (0 = default ring via maxKVSize)")
     parser.add_argument("--repeats-45k", type=int, default=1)
     parser.add_argument("--chat-40k", action="store_true", help="include 40K chat row per cell")
     parser.add_argument("--memory-limit-bytes", type=int, default=0)

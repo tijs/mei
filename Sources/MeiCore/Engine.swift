@@ -556,6 +556,9 @@ public actor Engine {
         parameters.maxKVSize = config.maxKVSize
         parameters.enableCompiledDecode = config.enableCompiledDecode
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
+        if config.maxKVWindowSize > 0 {
+            parameters.maxKVWindowSize = config.maxKVWindowSize
+        }
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize
@@ -598,6 +601,9 @@ public actor Engine {
         parameters.maxKVSize = config.maxKVSize
         parameters.enableCompiledDecode = config.enableCompiledDecode
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
+        if config.maxKVWindowSize > 0 {
+            parameters.maxKVWindowSize = config.maxKVWindowSize
+        }
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits
             parameters.kvGroupSize = config.kvGroupSize

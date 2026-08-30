@@ -56,6 +56,11 @@ public struct ServerConfig: Sendable {
     /// traces a buffer sized promptOffset + maxTokens, a multi-minute
     /// prefill tax at 45K on hybrid models). 0 = never compile.
     public var compiledDecodeMaxPromptOffset: Int? = nil
+    /// EXPERIMENTAL bounded-window probe: caps the rotating-KV ring size;
+    /// decode attention scans at most the ring (sink + recent window).
+    /// Correctness-bounded only (a full-attention model loses context
+    /// beyond the window). 0/nil = ring sized to maxKVSize (default).
+    public var maxKVWindowSize: Int = 0
     /// Use the mmap-backed safetensors loader (upstream default true). The
     /// mmap loader realigns unaligned tensors into copies (the 35B gained
     /// ~5GB active this way); stock file-backed loading uses less resident
@@ -160,6 +165,8 @@ public extension ServerConfig {
                 config.enableCompiledDecode = try parseBool(flag, value())
             case "--compiled-decode-threshold":
                 config.compiledDecodeMaxPromptOffset = try parseInt(flag, value())
+            case "--max-kv-window":
+                config.maxKVWindowSize = try parseInt(flag, value())
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
             case "-h", "--help":
@@ -241,6 +248,9 @@ public extension ServerConfig {
                               threshold; 0 = never compile). The upstream
                               default traces a promptOffset-sized buffer,
                               which is a multi-minute prefill tax at 45K.
+      --max-kv-window N          EXPERIMENTAL: cap the rotating-KV ring at
+                              N tokens (attention scans at most the ring).
+                              Correctness-bounded only; 0 = default ring.
       -h, --help
     """
 
