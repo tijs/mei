@@ -120,6 +120,8 @@ artifacts/cycle-gated-boundary-20260830T172949Z.txt).
 | 798ed36 | tools: diverging-chat probe --ssm-anchor-boundaries A/B label + self-test gate (session F) |
 | 9100d43 | cycle: phase D diverging-chat A/B cells; MLXPRESS profile on all cell servers (session F) |
 | ae11c0d | session G: bf8b31995 compiled-region review (not backportable to text path), cycle-script exec-bit fix, provenance-only artifact persistence, gate boundary evidence |
+| 59b599a | artifacts: final-report session-G refresh (bf8 verdict, third gate boundary) + gitignore pycache |
+| b033631 | tools: gate_report skips provenance-only ceiling files (no rows) — digest regression fixture verdicts unchanged |
 | (pending) | measurement results + optimization log + final numbers |
 
 ## Research sources / revisions
