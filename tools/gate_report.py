@@ -44,6 +44,10 @@ def family(name: str) -> str:
     return name
 
 
+def _median(values: list[float]) -> float | None:
+    return statistics.median(values) if values else None
+
+
 def summarize_sweep(path: Path) -> dict:
     data = json.loads(path.read_text())
     out = {"file": path.name, "model": data.get("model"), "cells": []}
@@ -75,8 +79,8 @@ def summarize_sweep(path: Path) -> dict:
                 "median": statistics.median(vals),
                 "min": min(vals),
                 "max": max(vals),
-                "prefill_ms_median": statistics.median(
-                    [x["prefill_ms"] for x in rows if x["prefill_ms"] is not None]) or None,
+                "prefill_ms_median": _median(
+                    [x["prefill_ms"] for x in rows if x["prefill_ms"] is not None]),
                 "cached_median": statistics.median(x["cached"] for x in rows),
                 "contaminated": contaminated,
             }

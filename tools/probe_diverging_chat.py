@@ -162,6 +162,95 @@ def _order_turn_b(seq: int) -> list[dict[str, Any]]:
 
 SKUS = [("SKU-1001", "42"), ("SKU-1002", "17"), ("SKU-1003", "93"), ("SKU-1004", "8")]
 
+# Tool-name -> required argument keys (the schema every tool_call payload
+# in this probe must satisfy exactly: no missing, no extra keys).
+TOOL_ARG_SCHEMA: dict[str, set[str]] = {
+    "lookup_item": {"sku"},
+    "place_order": {"sku", "quantity"},
+    "cancel_order": {"sku"},
+}
+
+
+def validate_messages(messages: list[dict[str, Any]]) -> list[str]:
+    """Deterministic structural/schema validation of one transcript.
+
+    Checks the OpenAI message invariants this probe depends on, so a
+    transcript edit can never silently change the measured pattern:
+      - per-turn role sequence: user -> assistant(tool_calls) ->
+        tool -> assistant(closing content);
+      - every tool message's tool_call_id references a tool_call id of a
+        preceding assistant message (and none are left unresolved);
+      - exactly one tool call per assistant message;
+      - every tool-call arguments payload JSON-parses and matches
+        TOOL_ARG_SCHEMA for its tool name (no missing/extra keys);
+      - every tool result content JSON-parses.
+    Returns a list of human-readable violations (empty == valid).
+    """
+    issues: list[str] = []
+    open_calls: dict[str, str] = {}  # tool_call_id -> tool name, awaiting result
+    awaiting_closing = False
+    for idx, msg in enumerate(messages):
+        role = msg.get("role")
+        if role == "system":
+            continue  # neutral setup block; legal at any position
+        if role == "user":
+            if open_calls:
+                issues.append(
+                    f"msg{idx}: user turn starts with {len(open_calls)} tool result(s) "
+                    f"unresolved: {sorted(open_calls)}")
+            awaiting_closing = False
+        elif role == "assistant":
+            calls = msg.get("tool_calls")
+            if calls is not None:
+                if awaiting_closing:
+                    issues.append(f"msg{idx}: assistant tool_call while a closing reply is pending")
+                if len(calls) != 1:
+                    issues.append(f"msg{idx}: expected exactly 1 tool call, got {len(calls)}")
+                for call in calls:
+                    call_id = call.get("id")
+                    name = (call.get("function") or {}).get("name")
+                    if name not in TOOL_ARG_SCHEMA:
+                        issues.append(f"msg{idx}: tool name {name!r} not in probe schema")
+                        continue
+                    try:
+                        args = json.loads((call.get("function") or {}).get("arguments") or "{}")
+                    except ValueError as exc:
+                        issues.append(f"msg{idx}: tool {name!r} arguments not JSON: {exc}")
+                        continue
+                    if not isinstance(args, dict):
+                        issues.append(f"msg{idx}: tool {name!r} arguments not an object: {args!r}")
+                        continue
+                    expected = TOOL_ARG_SCHEMA[name]
+                    if set(args) != expected:
+                        issues.append(f"msg{idx}: tool {name!r} args keys {sorted(args)} != {sorted(expected)}")
+                    if name == "place_order" and not isinstance(args.get("quantity"), int):
+                        issues.append(f"msg{idx}: place_order quantity not int: {args.get('quantity')!r}")
+                    if call_id:
+                        open_calls[call_id] = name
+                awaiting_closing = False
+            else:
+                if open_calls:
+                    issues.append(
+                        f"msg{idx}: assistant closing reply while tool result(s) still "
+                        f"pending: {sorted(open_calls)}")
+                awaiting_closing = False
+        elif role == "tool":
+            call_id = msg.get("tool_call_id")
+            if not call_id or call_id not in open_calls:
+                issues.append(f"msg{idx}: tool result {call_id!r} has no pending assistant tool_call")
+            else:
+                del open_calls[call_id]
+            try:
+                json.loads(msg.get("content") or "{}")
+            except ValueError as exc:
+                issues.append(f"msg{idx}: tool result content not JSON: {exc}")
+            awaiting_closing = True
+        else:
+            issues.append(f"msg{idx}: unexpected role {role!r}")
+    if open_calls:
+        issues.append(f"unresolved tool_call ids at end: {sorted(open_calls)}")
+    return issues
+
 
 def build_transcripts() -> dict[str, list[list[dict[str, Any]]]]:
     """Five turn-suffix transcripts for each run.
@@ -206,6 +295,24 @@ def _check_transcripts(transcripts: dict[str, list[list[dict[str, Any]]]]) -> di
                for m in turns_b[4] if m.get("tool_calls")][-1:]
     checks["runA_final_tool_is_place_order"] = names_a == ["place_order"]
     checks["runB_final_tool_is_cancel_order"] = names_b == ["cancel_order"]
+    # Per-turn role sequencing + tool_call_id cross-references + argument
+    # schema + result JSON (see validate_messages) on ALL ten transcripts.
+    violations = {
+        f"{run}_r{i+1}": validate_messages(msgs)
+        for run, set_ in transcripts.items()
+        for i, msgs in enumerate(set_)
+    }
+    checks["all_transcripts_schema_valid"] = not any(violations.values())
+    checks["schema_violations"] = {k: v for k, v in violations.items() if v}
+    # Determinism: building the transcripts twice yields identical bytes.
+    rebuilt = build_transcripts()
+    checks["build_deterministic"] = rebuilt == transcripts
+    # The divergent user turn 5 must itself differ (different tool request).
+    user_a = turns_a[4][len(turns_a[4]) - 4]["content"]
+    user_b = turns_b[4][len(turns_b[4]) - 4]["content"]
+    checks["turn5_user_contents_differ"] = (
+        user_a != user_b and "place" in str(user_a) and "cancel" in str(user_b)
+    )
     return checks
 
 
@@ -227,6 +334,12 @@ def run_requests(
                     timeout=args.timeout)
                 usage = body.get("usage") or {}
                 finish = ((body.get("choices") or [{}])[0]).get("finish_reason")
+                message = ((body.get("choices") or [{}])[0]).get("message") or {}
+                content = message.get("content") or ""
+                tools_called = [
+                    (c.get("function") or {}).get("name")
+                    for c in (message.get("tool_calls") or [])
+                ]
                 row = {
                     "status": "passed",
                     "prompt_tokens": usage.get("prompt_tokens"),
@@ -237,6 +350,12 @@ def run_requests(
                     "ttft_ms": round(first_delta * 1000.0, 1) if first_delta is not None else None,
                     "wall_seconds": round(time.monotonic() - started, 3),
                     "finish_reason": finish,
+                    # Deterministic output controls (per Level1Techs-derived
+                    # rule): the artifact records what the model actually
+                    # emitted so a variant change that shifts behavior is
+                    # visible next to the tok/s number.
+                    "content_tail": content.strip()[-120:] or None,
+                    "tool_names": tools_called or None,
                     "error": None,
                 }
             except BaseException as exc:  # noqa: BLE001
@@ -295,7 +414,22 @@ def summarize(runs: dict[str, Any], prompt_tokens: dict[str, list[int]]) -> dict
             else "anchors_sufficient_for_turn_boundary"
         ),
     }
-    return {"growth": growth, "divergence": divergence}
+    # Deterministic output checks on the two decisive rows: run A must have
+    # called place_order and run B cancel_order, and their closing contents
+    # must differ (the divergence is real, not a cache miss artifact).
+    out_a = a_r5.get("tool_names")
+    out_b = b_r5.get("tool_names")
+    output_checks = {
+        "run_a_r5_called_place_order": a_r5.get("status") == "passed" and out_a == ["place_order"],
+        "run_b_r5_called_cancel_order": b_r5.get("status") == "passed" and out_b == ["cancel_order"],
+        "turns_1_4_content_identical": (
+            (runs["a"][3]["a_r4"].get("content_tail") or "")
+            == (runs["b"][3]["b_r4"].get("content_tail") or "")
+        ),
+        "run_a_r5_content_tail": a_r5.get("content_tail"),
+        "run_b_r5_content_tail": b_r5.get("content_tail"),
+    }
+    return {"growth": growth, "divergence": divergence, "output_checks": output_checks}
 
 
 def main() -> int:
@@ -311,7 +445,9 @@ def main() -> int:
     if args.self_test:
         transcripts = build_transcripts()
         checks = _check_transcripts(transcripts)
-        ok = all(checks.values())
+        # schema_violations is a DIAGNOSTIC dict (empty == valid), not a
+        # boolean; exclude it from the all() gate.
+        ok = all(v for k, v in checks.items() if k != "schema_violations")
         print(json.dumps(checks, indent=2, sort_keys=True))
         print("SELF-TEST", "PASS" if ok else "FAIL")
         return 0 if ok else 1
@@ -322,7 +458,7 @@ def main() -> int:
 
     transcripts = build_transcripts()
     checks = _check_transcripts(transcripts)
-    if not all(checks.values()):
+    if not all(v for k, v in checks.items() if k != "schema_violations"):
         print(f"FATAL: transcript invariants broken: {checks}", file=sys.stderr)
         return 1
 
@@ -331,6 +467,17 @@ def main() -> int:
         "model": args.model,
         "base_url": args.base_url,
         "probe": "diverging-chat (patch-0005 evidence: mid-transcript agentic edit)",
+        # Exact sampler/schema settings (Level1Techs-derived recording rule):
+        # temperature 0 with no nucleus drift, fixed max_tokens, the exact
+        # tool schema (json.dumps of TOOLS), the fixed system prompt, and
+        # per-run transcript sizes in messages.
+        "sampler": {"temperature": 0, "max_tokens": args.max_tokens},
+        "tool_schema": TOOLS,
+        "system_prompt": SYS_PROMPT,
+        "transcript_sizes": {
+            run: [len(msgs) for msgs in set_]
+            for run, set_ in transcripts.items()
+        },
         "transcript_checks": checks,
         "started_epoch": time.time(),
     }
@@ -346,9 +493,15 @@ def main() -> int:
         runs, result["prompt_tokens_by_request"])
     result["finished_epoch"] = time.time()
     a_r5 = runs["a"][4]["a_r5"]
+    # Any errored request invalidates the whole probe: a hole in run B's
+    # sequence would otherwise read as "gap confirmed" (b_r5 cached=0).
+    any_error = any(
+        next(iter(r.values())).get("status") == "error"
+        for run in ("a", "b") for r in runs[run]
+    )
     result["status"] = (
         "passed"
-        if a_r5.get("status") == "passed" and a_r5.get("cached_tokens")
+        if not any_error and a_r5.get("status") == "passed" and a_r5.get("cached_tokens")
         else "failed"
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)

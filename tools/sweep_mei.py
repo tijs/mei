@@ -455,7 +455,7 @@ def main() -> int:
 
             for n in contexts:
                 cell_result["rows"].append(row(
-                    f"ctx_{n}_fresh" if n != 45000 or args.repeats_45k == 1 else f"ctx_{n}_fresh",
+                    f"ctx_{n}_fresh",
                     {"model": args.model_id, "prompt": prompts[n], "temperature": 0,
                      "max_tokens": args.max_tokens, "stream": False},
                     status_before=server.status(), expected_prompt=n, min_decode=1.0))
