@@ -38,7 +38,22 @@ measurement artifact. It never modifies local-model-bench.
 Usage:
   probe_diverging_chat.py --base-url http://127.0.0.1:8024/v1 \\
       --model ID --output artifacts/probe-diverging-chat-<ts>.json
+  probe_diverging_chat.py --base-url http://127.0.0.1:8024/v1 \\
+      --model ID --ssm-anchor-boundaries 4 \\
+      --output artifacts/probe-diverging-chat-anchors4-<ts>.json
   probe_diverging_chat.py --self-test
+
+Patch-0005 A/B: the anchors flag is a SERVER-side launch setting
+(--ssm-anchor-boundaries K on the mei binary; default 0 = off). The
+probe is client-side and cannot reconfigure a running server, so the A/B
+is orchestrator-driven: start the server with anchors on, run this probe
+with --ssm-anchor-boundaries K (labels the artifact with the exact server
+config under test), stop; then start the default server and run the probe
+again with --ssm-anchor-boundaries 0. Compare the divergence summary
+between the two artifacts (gap_tokens / turn4_prefix_restored). The label
+is recorded verbatim in server_config.ssm_anchor_boundaries and validated
+by --self-test, so mislabeled A/B artifacts fail loudly instead of being
+compared.
 """
 from __future__ import annotations
 
@@ -439,12 +454,22 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--max-tokens", type=int, default=64)
     parser.add_argument("--timeout", type=float, default=900)
+    parser.add_argument("--ssm-anchor-boundaries", type=int, default=0,
+                        help="server-side --ssm-anchor-boundaries K under test "
+                             "(patch 0005; 0 = default off). LABEL ONLY: the probe "
+                             "is client-side, the server must have been launched "
+                             "with the matching flag. Recorded verbatim in the "
+                             "artifact and validated by --self-test so a "
+                             "mislabeled A/B fails loudly.")
     parser.add_argument("--self-test", action="store_true",
                         help="validate transcript + comparison logic only; no server, no inference")
     args = parser.parse_args()
     if args.self_test:
         transcripts = build_transcripts()
         checks = _check_transcripts(transcripts)
+        # The anchors label must be a non-negative integer (it mirrors a
+        # server launch flag; negative values would be a caller bug).
+        checks["anchors_label_non_negative"] = args.ssm_anchor_boundaries >= 0
         # schema_violations is a DIAGNOSTIC dict (empty == valid), not a
         # boolean; exclude it from the all() gate.
         ok = all(v for k, v in checks.items() if k != "schema_violations")
@@ -467,6 +492,11 @@ def main() -> int:
         "model": args.model,
         "base_url": args.base_url,
         "probe": "diverging-chat (patch-0005 evidence: mid-transcript agentic edit)",
+        # The server config under test (patch-0005 A/B label). This probe is
+        # client-side: the value mirrors the launch flag the orchestrator
+        # used for the server this run measured against, so the A/B pair of
+        # artifacts (anchors=4 vs default) is traceable and comparable.
+        "server_config": {"ssm_anchor_boundaries": args.ssm_anchor_boundaries},
         # Exact sampler/schema settings (Level1Techs-derived recording rule):
         # temperature 0 with no nucleus drift, fixed max_tokens, the exact
         # tool schema (json.dumps of TOOLS), the fixed system prompt, and
