@@ -365,15 +365,19 @@ def main() -> int:
                      "max_tokens": args.max_tokens, "stream": False},
                     status_before=server.status(), expected_prompt=n, min_decode=1.0))
             if 45000 in contexts:
-                ext = prompts[45001] if 45001 in prompts else unit_prompt(45001)
                 base_payload = {"model": args.model_id, "temperature": 0,
                                 "max_tokens": args.max_tokens, "stream": False}
                 for k in range(args.repeats_45k):
-                    p = unit_prompt(45000 + (1 if k == 0 else 0))
+                    # Strict extension chain (45001, 45002, ...): Mei's
+                    # coordinator reuses only on exact sequence extension
+                    # (equal-length repeats are positionally unsafe for the
+                    # GatedDelta recurrent state), so each repeat extends
+                    # the previous request's prompt by one token.
+                    n = 45001 + k
                     cell_result["rows"].append(row(
                         f"ctx_45000_reuse_r{k+1}",
-                        {**base_payload, "prompt": p if k == 0 else unit_prompt(45000 + 1)},
-                        status_before=server.status(), expected_prompt=45000 + (1 if k == 0 else 0),
+                        {**base_payload, "prompt": unit_prompt(n)},
+                        status_before=server.status(), expected_prompt=n,
                         min_decode=1.0))
             if args.chat_40k and chat_40k:
                 cell_result["rows"].append(row(
