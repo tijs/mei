@@ -48,7 +48,9 @@ def summarize_sweep(path: Path) -> None:
     print(f"\n== {path.name}  (model {data.get('model')}) ==")
     print(f"   contention: {data.get('contention_boundary')}")
     for cell in data.get("cells", []):
-        cfg = cell.get("config", {})
+        # Sweep cells carry their configuration at the top level (no
+        # nested "config" dict); tolerate either shape.
+        cfg = cell.get("config", cell)
         print(f"  cell {cfg.get('tag', '?')}: ps={cfg.get('prefill_step')} "
               f"ssm={cfg.get('ssm_rederive')} cl={cfg.get('cache_limit_bytes', 0) // 1_000_000_000}g "
               f"kv={cfg.get('kv_bits')} compiled={cfg.get('compiled')}")

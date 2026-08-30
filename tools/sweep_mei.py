@@ -191,6 +191,8 @@ class Server:
             "--ssm-rederive", str(cell["ssm_rederive"]).lower(),
             "--compiled-decode", str(cell["compiled"]).lower(),
         ]
+        if args.compiled_decode_threshold > 0:
+            argv += ["--compiled-decode-threshold", str(args.compiled_decode_threshold)]
         if args.max_kv_window > 0:
             argv += ["--max-kv-window", str(args.max_kv_window)]
         if args.memory_limit_bytes:
@@ -251,6 +253,11 @@ def main() -> int:
     parser.add_argument("--kv-bits", default="none")
     parser.add_argument("--compiled", default="false")
     parser.add_argument(
+        "--compiled-decode-threshold", type=int, default=0,
+        help="vmlx compiled promote+trace prompt-offset cap in tokens "
+        "(0 = no threshold = upstream default; server flag semantics: "
+        "nil = always trace, 0 = never compile)")
+    parser.add_argument(
         "--max-kv-window", type=int, default=0,
         help="experimental rotating-KV ring cap (0 = default ring via maxKVSize)")
     parser.add_argument("--repeats-45k", type=int, default=1)
@@ -292,6 +299,12 @@ def main() -> int:
                             "tag": f"ps{ps}-ssm{str(ssm).lower()}-cl{int(cl/1e9) if cl else 0}g-kv{('none' if kv is None else kv)}-compiled{str(cd).lower()}",
                             "prefill_step": ps, "ssm_rederive": ssm,
                             "cache_limit_bytes": cl, "kv_bits": kv, "compiled": cd,
+                            # Variant-cell parameterization the cycle script
+                            # passes through (digest/gate_report read these).
+                            "compiled_threshold": (
+                                None if args.compiled_decode_threshold == 0
+                                else args.compiled_decode_threshold),
+                            "max_kv_window": args.max_kv_window,
                         })
 
     foreign = foreign_servers()

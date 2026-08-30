@@ -210,6 +210,76 @@ run; only an independent 35B measurement may claim unblocking.
 
 ---
 
+# Session D (2026-08-30 evening, 18:47-19:10Z) — CPU-side deliverables + pipeline fixes
+
+## Contention state
+- Machine contended throughout: other agent's llama-server on port 8017
+  (Devstral-Small Q4_K_M, then Muse-Glimmer-30B Q4_K_M), cocore agent
+  serve, run_bench.py wrappers, run_fixture_suite hearth_full. Reclaimable
+  memory 1-3GB (floor is 10GB). Gate sample written to
+  artifacts/cycle-gate-sample-20260830T164750Z.txt. No Mei GPU
+  measurement ran; no foreign backend touched.
+
+## CPU-side deliverables (per the continuation directive)
+1. NEW tools/probe_diverging_chat.py — the patch-0005 evidence generator:
+   5-turn tool-calling transcript; run A = strict growth (requests 1..5
+   extend), run B = identical turns 1..4, turn 5 diverges (place_order ->
+   cancel_order). Records cached_tokens / prefill_ms / TTFT (streaming
+   first-delta) per request; summary decides growth-anchors-work vs
+   gap_confirmed. `--self-test` validates transcript invariants WITHOUT a
+   server (no Metal): SELF-TEST PASS exit 0. Measurement run is client-
+   side and gated on an uncontended server window.
+2. NEW Tests/MeiTests/ServerConfigParsingTests.swift — 10/10 passed
+   (swift test --filter ServerConfigParsingTests, non-Metal): fork-flag
+   plumbing incl. rollback-default guard. Covers patches 0001 (kv-bits),
+   0003 (compiled-decode-threshold), 0004 (max-kv-window), ssm-rederive,
+   kv-cache-dir, memory limits, error paths.
+3. Patch-0005 source anchors re-verified: additionalBoundaries param
+   exists at SSMReDerive.swift:443; derived boundaries come from
+   iterator-internal sharedPromptAdditionalBoundaries (Evaluate.swift:2760,
+   BatchEngine.swift:3174) = cachePrefixTokenCounts + [hybridStripBoundary]
+   — NOT operator-configurable; a fork patch must thread a new knob into
+   both call sites. Kept DESIGN-ONLY: design note gates implementation on
+   probe evidence + phase-A ssm-rederive rows. No speculative runtime
+   change landed.
+4. Found + fixed a real pre-window pipeline bug: phase C's
+   run_variant_cell passed --compiled-decode-threshold to sweep_mei.py
+   which had no such argument (would abort the first clean window). Also
+   sweep cells did not record compiled_threshold/max_kv_window, and both
+   digest tools read cell config via cell.get("config", {}) which sweep
+   cells do not have. All fixed; digest pipeline validated end-to-end on
+   a clearly-labeled schema fixture (artifacts/digest-schema-test-
+   fixture-20260830T1650Z.json): correct family medians + verdicts
+   (PIVOT for 13.2-shaped baseline, MET for 41.5-shaped window16-compiled).
+5. llama_ceiling.py gate validated: with foreign processes resident it
+   prints FATAL and exits 2 WITHOUT launching (run attempted with
+   --gguf /dev/null; no llama-server on 8074 was ever started).
+6. GGUF provenance re-verified: sha256
+   70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6 of
+   Ornith-1.5-9B-Q4_K_M.gguf == pinned official blob
+   (ornith-ai/Ornith-1.5-9B-GGUF@abdd624b); gguf_meta confirms arch
+   qwen35, file_type 15, context 262144, MTP head PRESENT
+   (nextn_predict_layers=1) — comparator keeps --spec-type off.
+7. Patch series re-verified end-to-end: scripts/apply_vmlx_patches.sh
+   --reset re-applied 0001-0004 byte-exactly to BOTH checkouts (the
+   scratch mei-build checkout had partially drifted and was repaired);
+   release binary still exposes the full fork flag surface.
+
+## Commits (session D)
+- (listed in the final report table)
+
+## Session-D end boundary
+- GPU measurements remain PENDING (zero Mei sweep/ceiling artifacts
+  exist). Official numbers remain the 2026-08-29 baseline: short 28.1,
+  fresh45 5.21 (prefill 273.3s), reuse45 13.24 (cached 45000, prefill
+  10.2s), chat40k @33,175 tokens (prefill 210s); acceptance-9B-coordinator
+  green (10/10 probes).
+- Next: bounded foreground gate attempt (--phase A,B,C) in a clear
+  window; digest with summarize_rows.py + gate_report.py; fill the
+  FINAL-REPORT numbers.
+
+---
+
 # Session C (2026-08-30 evening, 16:40-17:30Z) — policy alignment + CPU-side validation
 
 ## Contention state at session start

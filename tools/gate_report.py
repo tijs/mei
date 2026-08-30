@@ -48,7 +48,9 @@ def summarize_sweep(path: Path) -> dict:
     data = json.loads(path.read_text())
     out = {"file": path.name, "model": data.get("model"), "cells": []}
     for cell in data.get("cells", []):
-        cfg = cell.get("config", {})
+        # Sweep cells carry their configuration at the top level (no
+        # nested "config" dict); tolerate either shape.
+        cfg = cell.get("config", cell)
         fam: dict[str, list] = {}
         contaminated = False
         for r in cell.get("rows", []):
