@@ -21,6 +21,7 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertFalse(config.enableCompiledDecode)
         XCTAssertNil(config.compiledDecodeMaxPromptOffset)
         XCTAssertEqual(config.maxKVWindowSize, 0)
+        XCTAssertEqual(config.ssmAnchorBoundaryCount, 0)
         XCTAssertTrue(config.enableSSMReDerive)
         XCTAssertEqual(config.prefillStepSize, 512)
         XCTAssertEqual(config.contextCap, 65_536)
@@ -46,6 +47,14 @@ final class ServerConfigParsingTests: XCTestCase {
     func testMaxKVWindowParses() throws {
         XCTAssertEqual(try parse(["--max-kv-window", "16384"]).maxKVWindowSize, 16_384)
         XCTAssertEqual(try parse(["--max-kv-window", "0"]).maxKVWindowSize, 0)
+    }
+
+    func testSSMAnchorBoundariesParses() throws {
+        XCTAssertEqual(try parse(["--ssm-anchor-boundaries", "8"]).ssmAnchorBoundaryCount, 8)
+        XCTAssertEqual(try parse(["--ssm-anchor-boundaries", "0"]).ssmAnchorBoundaryCount, 0)
+        XCTAssertThrowsError(try parse(["--ssm-anchor-boundaries", "abc"])) { error in
+            XCTAssertTrue(error is ConfigError)
+        }
     }
 
     func testSSMReDeriveAndCacheFlags() throws {

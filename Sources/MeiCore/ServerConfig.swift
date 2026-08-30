@@ -61,6 +61,12 @@ public struct ServerConfig: Sendable {
     /// Correctness-bounded only (a full-attention model loses context
     /// beyond the window). 0/nil = ring sized to maxKVSize (default).
     public var maxKVWindowSize: Int = 0
+    /// Mei patch 0005 (default OFF): store SSM companion anchors at the
+    /// first K chat role-turn boundaries (early structural offsets), so a
+    /// mid-transcript diverging agentic edit can restore from a retained
+    /// boundary instead of full-prefilling. 0 = upstream behavior exactly.
+    /// TTFT/latency lever only; never a decode tok/s lever.
+    public var ssmAnchorBoundaryCount: Int = 0
     /// Use the mmap-backed safetensors loader (upstream default true). The
     /// mmap loader realigns unaligned tensors into copies (the 35B gained
     /// ~5GB active this way); stock file-backed loading uses less resident
@@ -167,6 +173,8 @@ public extension ServerConfig {
                 config.compiledDecodeMaxPromptOffset = try parseInt(flag, value())
             case "--max-kv-window":
                 config.maxKVWindowSize = try parseInt(flag, value())
+            case "--ssm-anchor-boundaries":
+                config.ssmAnchorBoundaryCount = try parseInt(flag, value())
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
             case "-h", "--help":
@@ -251,6 +259,11 @@ public extension ServerConfig {
       --max-kv-window N          EXPERIMENTAL: cap the rotating-KV ring at
                               N tokens (attention scans at most the ring).
                               Correctness-bounded only; 0 = default ring.
+      --ssm-anchor-boundaries K  EXPERIMENTAL (patch 0005, default off):
+                              store SSM companion anchors at the first K
+                              chat role-turn boundaries so a diverging
+                              agentic edit restores from a boundary instead
+                              of full-prefilling (TTFT lever; 0 = upstream).
       -h, --help
     """
 

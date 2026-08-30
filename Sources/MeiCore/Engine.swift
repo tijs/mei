@@ -216,8 +216,12 @@ public actor Engine {
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
             toolChoice: request.toolChoice)
+        let anchors = try await ssmAnchorOffsets(
+            template: template, tools: request.tools,
+            context: context, fullTokenCount: tokens.count)
         let parameters = try await makeParameters(
-            tokens: tokens, request: request, templateCount: template.count, context: context)
+            tokens: tokens, request: request, templateCount: template.count,
+            context: context, anchorOffsets: anchors)
         if config.logRequests {
             print("mei: chat request tokens \(tokens.count)")
             fflush(stdout)
@@ -367,8 +371,12 @@ public actor Engine {
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
             toolChoice: request.toolChoice)
+        let anchors = try await ssmAnchorOffsets(
+            template: template, tools: request.tools,
+            context: context, fullTokenCount: tokens.count)
         let parameters = try await makeParameters(
-            tokens: tokens, request: request, templateCount: template.count, context: context)
+            tokens: tokens, request: request, templateCount: template.count,
+            context: context, anchorOffsets: anchors)
         let input = LMInput(
             tokens: MLXArray(tokens),
             tokenIds: tokens,
@@ -542,11 +550,48 @@ public actor Engine {
 
     // MARK: - Parameters
 
+    /// Deterministic early role-turn anchor offsets for the SSM companion
+    /// store (patch 0005; default [] = upstream behavior). Computed from
+    /// the request's OWN rendering path: same tokenizer, same tool schema,
+    /// same additional context — so the additivity self-check inside
+    /// `SSMAnchorBoundaries.compute` reproduces the request tokens
+    /// exactly. Non-additive transcripts fall back to [] (always correct).
+    private func ssmAnchorOffsets(
+        template: [[String: any Sendable]],
+        tools: [MeiJSONValue]?,
+        context: [String: any Sendable]?,
+        fullTokenCount: Int
+    ) async throws -> [Int] {
+        let k = config.ssmAnchorBoundaryCount
+        guard k > 0 else { return [] }
+        let tokenizer = await container.tokenizer
+        let templateTools = MessageMapping.templateTools(tools)
+        let result = try SSMAnchorBoundaries.compute(
+            template: template,
+            fullTokenCount: fullTokenCount,
+            k: k
+        ) { prefixCount in
+            try tokenizer.applyChatTemplate(
+                messages: Array(template.prefix(prefixCount)),
+                tools: templateTools,
+                additionalContext: context
+            ).count
+        }
+        if let warning = result.warning {
+            print("mei: ssm-anchor-boundaries disabled for this transcript: \(warning)")
+        } else if !result.offsets.isEmpty {
+            print("mei: ssm anchor boundaries (k=\(k)): \(result.offsets)")
+        }
+        fflush(stdout)
+        return result.offsets
+    }
+
     private func makeParameters(
         tokens: [Int],
         request: ChatRequest,
         templateCount: Int,
-        context: [String: any Sendable]?
+        context: [String: any Sendable]?,
+        anchorOffsets: [Int] = []
     ) async throws -> GenerateParameters {
         guard tokens.count <= config.contextCap else {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
@@ -558,6 +603,9 @@ public actor Engine {
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
         if config.maxKVWindowSize > 0 {
             parameters.maxKVWindowSize = config.maxKVWindowSize
+        }
+        if !anchorOffsets.isEmpty {
+            parameters.ssmAnchorBoundaries = anchorOffsets
         }
         if let kvBits = config.kvBits {
             parameters.kvBits = kvBits

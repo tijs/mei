@@ -5,7 +5,7 @@
 #   - Every patched checkout must be vmlx-swift at the exact pinned revision
 #     aeb5e21c195d8519609488ef75a25ce7e48d8f88 (the revision Mei's
 #     Package.resolved pins); the script refuses to patch anything else.
-#   - patches/0001..0004 are generated from this checkout's git diff, so
+#   - patches/0001..0005 are generated from this checkout's git diff, so
 #     they apply byte-exactly to the pristine pinned tree, in order.
 #   - SwiftPM keeps a dependency copy under BOTH the in-repo default build
 #     dir (.build/checkouts) and any --scratch-path build dir
@@ -28,6 +28,7 @@ PATCHES=(
   "$MEI_REPO/patches/0002-quantized-rotating-diskstore.patch"
   "$MEI_REPO/patches/0003-compiled-decode-threshold.patch"
   "$MEI_REPO/patches/0004-max-kv-window-probe.patch"
+  "$MEI_REPO/patches/0005-ssm-anchor-boundaries.patch"
 )
 
 # Distinctive sentinel strings per patch, checked in the working tree.
@@ -36,6 +37,7 @@ SENTINELS=(
   "Libraries/MLXLMCommon/Cache/TQDiskSerializer.swift:serializeQuantizedRotatingLayer"
   "Libraries/MLXLMCommon/Evaluate.swift:compiledDecodeMaxPromptOffset"
   "Libraries/MLXLLM/Models/Qwen35.swift:maxKVWindowSize"
+  "Libraries/MLXLMCommon/Evaluate.swift:ssmAnchorBoundaries"
 )
 # The Evaluate sentinel is in two patches (0003+0004); keep an extra check
 # so a half-applied stack is caught.
