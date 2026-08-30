@@ -1,10 +1,16 @@
 # Mei optimization session report — 2026-08-30
 
-Status: IN PROGRESS — numbers appended as the gated measurement cycle
-(scripts/run_measurement_cycle.sh, detached pid recorded in
-/tmp/mei-cycle.pid) produces artifacts. Raw evidence:
-artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
+Status: MEASUREMENTS PENDING (machine contended all session; detached
+gated cycle alive, pid 29951, /tmp/mei-cycle.nohup.log). Numbers below
+are appended by the cycle (scripts/run_measurement_cycle.sh) as artifacts
+land: artifacts/sweep-*.json, artifacts/llama-ceiling-*.json,
 artifacts/acceptance-variant-*.json, artifacts/survival-variant-*.json.
+Raw evidence pointers and the digestion drill are in
+artifacts/optimization-log-20260830.md and the Kiem notes from 2026-08-30.
+Two real methodology bugs were fixed pre-window (jinja2 missing in the
+sweep venv -> every chat_40k row would have been skipped; BatchEncoding
+is a Mapping not dict in sweep_mei.py, commit e674ef5) — the cycle will
+now produce complete rows.
 
 ## Commits (Mei, clean at c0a5152 -> HEAD)
 | hash | purpose |
