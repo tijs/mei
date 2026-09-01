@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788281023.966944,
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 133.738,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 33,
+        "generate_ms": 9550.912022590637,
+        "mei_memory_active_bytes": 36622097880,
+        "mei_memory_cache_bytes": 128778404,
+        "mei_memory_peak_bytes": 36750876284,
+        "prefill_ms": 78083.59503746033,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 0.19210181079398053,
+        "tokens_per_second": 3.455167414582562,
+        "total_tokens": 48
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 1.2251358164815889,
+      "elapsed_seconds": 125.827,
+      "prompt_tokens": 23,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 26119.553089141846,
+        "mei_memory_active_bytes": 36687162872,
+        "mei_memory_cache_bytes": 324,
+        "mei_memory_peak_bytes": 36751552156,
+        "prefill_ms": 99513.35895061493,
+        "prompt_tokens": 23,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 0.23112474789856216,
+        "tokens_per_second": 1.2251358164815889,
+        "total_tokens": 55
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.105,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": false,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 36494265984,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 36497334284,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 71
+      }
+    }
+  },
+  "server_log_tail": "mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\n[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00004-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00001-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00003-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit/model-00002-of-00004.safetensors\nmei: prefix cache enabled (paged in-memory + no disk); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 24278561174 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\n",
+  "started_epoch": 1788280764.288695,
+  "status": "passed"
+}

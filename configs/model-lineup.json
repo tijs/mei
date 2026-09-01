@@ -12,7 +12,7 @@
       "role": "primary",
       "format": "mlx",
       "architecture": "qwen3_5_moe",
-      "status": "blocked-on-memory",
+      "status": "loadable-accept-passed-perf-memory-bound",
       "quantization": { "bits": 4, "group_size": 64, "mode": "affine", "exceptions": "mlp gate + shared_expert_gate held at 8-bit (affine g64)" },
       "weight_bytes": 19509024201,
       "pinned_revision_hf_cache": "19504d912fa8fc7622bf6b1de3db5d5d890b1f02",
@@ -31,7 +31,7 @@
       "test_phases": ["load", "short", "tool", "long-context", "kv-reuse"],
       "notes": [
         "Official first-party plain 4-bit MLX quant for the MoE qwen3_5_moe architecture (~19.5 GB weights). Staged complete under mei-models; HF-cache copy under ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-MLX-4bit contains only a partial/re-incomplete download (4 .incomplete weight shards) and MUST NOT be deleted or mistaken for the usable copy.",
-        "Unified-memory working set on the 32 GB M1 Max keeps this blocked-on-memory in practice while other engines are resident; the 9B proxy exercises the identical Mei text path in that case.",
+        "Unified-memory working set keeps this perf-memory-bound: clean load + acceptance passed 2026-09-01 (active rose to ~36.7 GB > 32 GB physical during generation; prefill ~0.2 tok/s); no clean-decode perf rows claimable on this machine. See artifacts/ornith-35B-load-acceptance-20260901.md.",
         "Ornith compiled decode, KV quantization, window and semantic-anchor optimizations remain default-off until per-model gates pass on the actual 35B MoE shape."
       ]
     },
