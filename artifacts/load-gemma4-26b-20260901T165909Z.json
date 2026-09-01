@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788281957.88399,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 6.244,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 64.63897228240967,
+        "mei_memory_active_bytes": 25781515146,
+        "mei_memory_cache_bytes": 5407488,
+        "mei_memory_peak_bytes": 25788397158,
+        "prefill_ms": 6153.439164161682,
+        "prompt_tokens": 19,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 3.0877042078612114,
+        "tokens_per_second": 15.470542997357215,
+        "total_tokens": 20
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 20,
+      "decode_tokens_per_second_engine": 14.84577082378588,
+      "elapsed_seconds": 2.001,
+      "prompt_tokens": 27,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 20,
+        "generate_ms": 1347.1850156784058,
+        "mei_memory_active_bytes": 25786921898,
+        "mei_memory_cache_bytes": 10814208,
+        "mei_memory_peak_bytes": 25797736106,
+        "prefill_ms": 625.6999969482422,
+        "prompt_tokens": 27,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 43.151670339920805,
+        "tokens_per_second": 14.84577082378588,
+        "total_tokens": 47
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.007,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": false,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 17145836346,
+          "cacheBytes": 3900,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 6
+      }
+    }
+  },
+  "server_log_tail": "mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit (served id: mlx-community/gemma-4-26b-a4b-it-4bit)...\n[mlx.safetensors.mmap] realigned 54 unaligned tensor(s) (1798365184 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit/model-00002-of-00003.safetensors\n[mlx.safetensors.mmap] realigned 679 unaligned tensor(s) (4657568624 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit/model-00003-of-00003.safetensors\n[mlx.safetensors.mmap] realigned 488 unaligned tensor(s) (5320154388 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit/model-00001-of-00003.safetensors\nmei: prefix cache enabled (paged in-memory + disk); topology layers=30 kvLayers=5 rotatingLayers=25 restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 17145836346 cache 3900 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\n",
+  "started_epoch": 1788281949.631744,
+  "status": "passed"
+}

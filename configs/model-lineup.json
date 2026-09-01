@@ -136,7 +136,7 @@
       "format": "mlx",
       "source_checkpoint": "google/gemma-4-26B-A4B-it",
       "architecture": "gemma4",
-      "status": "staged-complete-loadability-pending",
+      "status": "loadable-accept-passed-tool-string-args",
       "quantization": {
         "bits": 4,
         "group_size": 64,
