@@ -1,0 +1,14 @@
+gated-boundary 2026-09-01T16:27:30Z max-wait-min=5
+reason: resident foreign Ornith-1.5-35B-A3B GGUF Q4_K_M llama-server (PID 3968, :8017) owns Metal working set; reclaimable held 9 GB (free+inactive pages) across a 3-sample bounded poll, below the 10 GB uncontended-Mei floor -> no Mei row (incl. 9B proxy) loadable without an invalid contended row.
+--- foreign runners/servers (unchanged, NOT stopped) ---
+ 3873 /Users/tijs/.local/bin/cocore agent serve
+ 3968 llama-server --hf-repo ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 0.6 --top-p 0.95 --top-k 20 --ctx-size 65536 --jinja --chat-template-file configs/Qwen3.8-27B/chat_template.jinja --alias bench-f51c7e72e2ad
+--- memory (bounded poll samples) ---
+sample 2026-09-01T16:25:43Z reclaimable=9GB free_pages=139390 inactive_pages=489814
+sample 2026-09-01T16:26:23Z reclaimable=9GB free_pages=138478 inactive_pages=489569
+sample 2026-09-01T16:27:03Z reclaimable=9GB free_pages=134615 inactive_pages=489574
+--- gate checks ---
+ gate1 (run_fixture_suite/run_bench active): CLEAR (none active)
+ gate2 (reclaimable >= 10 GB): BLOCKED (steady 9 GB)
+--- session: CPU-side re-verify (bounded, no Metal) ---
+ per task gate, did not launch any server and produced no GPU rows.
