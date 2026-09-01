@@ -1,0 +1,239 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "baselines": {
+    "llamacpp_ornith35b_apex_compact": {
+      "context_tokens": null,
+      "decode_tps": 28.6,
+      "engine": "llama.cpp",
+      "note": "APEX-Compact GGUF best row (local-model-bench)"
+    },
+    "mei_milestone": {
+      "decode_tps": 30.0,
+      "engine": "mei",
+      "note": "minimum milestone already observed on the 9B path"
+    },
+    "mei_target": {
+      "decode_tps": 40.0,
+      "engine": "mei",
+      "note": "primary repeatable target at ~40-50K loaded"
+    },
+    "mlx_lm_generate_80k": {
+      "context_tokens": 80000,
+      "decode_tps": 15.7,
+      "engine": "bare mlx-lm",
+      "note": "direct library call, no serving layer (local-model-bench measurement)"
+    },
+    "omlx_ornith9b_oq4e": {
+      "context_tokens": null,
+      "decode_tps": 0.75,
+      "engine": "oMLX",
+      "note": "0.75 tok/s average on real hermes_ops trials"
+    },
+    "vllm_mlx_ornith35b_mlx4bit": {
+      "context_tokens": 43000,
+      "decode_tps": 0.18,
+      "engine": "vllm-mlx",
+      "note": "collapse band measured by local-model-bench; mean rows 2.1-2.4 tok/s"
+    }
+  },
+  "engine": "mei",
+  "finished_epoch": 1788281409.145438,
+  "length": 45000,
+  "methodology": "local-model-bench protocol, artifact-only (no writes to local-model-bench)",
+  "min_decode_tps": 10.0,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "rows": [
+    {
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "decode_tokens_per_second_engine": 46.4329802053575,
+      "elapsed_seconds": 1.071,
+      "name": "short_context",
+      "prompt_tokens": 16,
+      "request_seconds": 1.0709735830314457,
+      "started_epoch": 1788281126.062339,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 36,
+        "generate_ms": 775.3109931945801,
+        "mei_memory_active_bytes": 5358031954,
+        "mei_memory_cache_bytes": 223949204,
+        "mei_memory_peak_bytes": 5409544012,
+        "prefill_ms": 116.8830394744873,
+        "prompt_tokens": 16,
+        "prompt_tokens_details": {
+          "cached_tokens": 11
+        },
+        "prompt_tokens_per_second": 136.88897954687778,
+        "tokens_per_second": 46.4329802053575,
+        "total_tokens": 52
+      }
+    },
+    {
+      "checks": {
+        "schema": true
+      },
+      "elapsed_seconds": 1.465,
+      "name": "tool_nonstreaming",
+      "request_seconds": 1.4651913749985397,
+      "started_epoch": 1788281127.133543,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 59,
+        "generate_ms": 1277.8019905090332,
+        "mei_memory_active_bytes": 5436643602,
+        "mei_memory_cache_bytes": 261811412,
+        "mei_memory_peak_bytes": 5488155842,
+        "prefill_ms": 81.10594749450684,
+        "prompt_tokens": 293,
+        "prompt_tokens_details": {
+          "cached_tokens": 288
+        },
+        "prompt_tokens_per_second": 3612.5587463218326,
+        "tokens_per_second": 46.17303810623772,
+        "total_tokens": 352
+      },
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    {
+      "checks": {
+        "schema": true
+      },
+      "client_ttft_seconds": 1.4203908327035606,
+      "elapsed_seconds": 1.437,
+      "name": "tool_streaming",
+      "request_seconds": 1.4364933748729527,
+      "started_epoch": 1788281128.598895,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 59,
+        "generate_ms": 1276.0319709777832,
+        "mei_memory_active_bytes": 5436643602,
+        "mei_memory_cache_bytes": 313322708,
+        "mei_memory_peak_bytes": 5539667138,
+        "prefill_ms": 76.29597187042236,
+        "prompt_tokens": 293,
+        "prompt_tokens_details": {
+          "cached_tokens": 288
+        },
+        "prompt_tokens_per_second": 3840.307591829592,
+        "tokens_per_second": 46.23708601500804,
+        "total_tokens": 352
+      },
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    {
+      "checks": {
+        "decode_above_floor": true,
+        "nonempty_completion": true,
+        "not_collapsed": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 64,
+      "decode_tokens_per_second_engine": 35.848235094899806,
+      "elapsed_seconds": 63.404,
+      "finish_reason": "length",
+      "name": "long_loaded_fresh",
+      "prefill_ms": 60338.08505535126,
+      "prompt_tokens": 45000,
+      "prompt_tokens_per_second": 745.7976161941361,
+      "request_seconds": 63.4032789580524,
+      "started_epoch": 1788281131.339332,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 64,
+        "generate_ms": 1785.304069519043,
+        "mei_memory_active_bytes": 8356713490,
+        "mei_memory_cache_bytes": 4176436136,
+        "mei_memory_peak_bytes": 9891176386,
+        "prefill_ms": 60338.08505535126,
+        "prompt_tokens": 45000,
+        "prompt_tokens_details": {
+          "cached_tokens": 33175
+        },
+        "prompt_tokens_per_second": 745.7976161941361,
+        "tokens_per_second": 35.848235094899806,
+        "total_tokens": 45064
+      }
+    },
+    {
+      "cached_tokens": 45000,
+      "checks": {
+        "decode_above_floor": true,
+        "prefix_reused": true
+      },
+      "completion_tokens": 64,
+      "decode_tokens_per_second_engine": 35.88598480447997,
+      "elapsed_seconds": 3.646,
+      "name": "long_loaded_reuse",
+      "prefill_ms": 120.30792236328125,
+      "prompt_tokens": 45001,
+      "prompt_tokens_per_second": 374048.5174709874,
+      "request_seconds": 3.083105542231351,
+      "started_epoch": 1788281194.743692,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 64,
+        "generate_ms": 1783.42604637146,
+        "mei_memory_active_bytes": 8408486930,
+        "mei_memory_cache_bytes": 7126178728,
+        "mei_memory_peak_bytes": 9934968466,
+        "prefill_ms": 120.30792236328125,
+        "prompt_tokens": 45001,
+        "prompt_tokens_details": {
+          "cached_tokens": 45000
+        },
+        "prompt_tokens_per_second": 374048.5174709874,
+        "tokens_per_second": 35.88598480447997,
+        "total_tokens": 45065
+      }
+    },
+    {
+      "checks": {
+        "decode_above_floor": true,
+        "long_chat_transcript": true,
+        "nonempty_completion": true
+      },
+      "content_tail": "cache-ready",
+      "elapsed_seconds": 210.753,
+      "name": "long_chat_40k",
+      "prompt_tokens": 44002,
+      "request_seconds": 209.3436484998092,
+      "started_epoch": 1788281198.39043,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 71,
+        "generate_ms": 1996.379017829895,
+        "mei_memory_active_bytes": 9888650258,
+        "mei_memory_cache_bytes": 7883591636,
+        "mei_memory_peak_bytes": 11381954194,
+        "prefill_ms": 206235.89503765106,
+        "prompt_tokens": 44002,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 213.35762133922836,
+        "tokens_per_second": 35.56438900924658,
+        "total_tokens": 44073
+      }
+    }
+  ],
+  "started_epoch": 1788281126.062316,
+  "status": "passed"
+}

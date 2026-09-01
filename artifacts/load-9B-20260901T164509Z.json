@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788281112.082657,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 1.182,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 33,
+        "generate_ms": 711.9189500808716,
+        "mei_memory_active_bytes": 5255156814,
+        "mei_memory_cache_bytes": 130569860,
+        "mei_memory_peak_bytes": 5307193038,
+        "prefill_ms": 351.66609287261963,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 42.65409803222995,
+        "tokens_per_second": 46.35359122868033,
+        "total_tokens": 48
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 47.74238170292581,
+      "elapsed_seconds": 1.045,
+      "prompt_tokens": 23,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 670.2640056610107,
+        "mei_memory_active_bytes": 5307143286,
+        "mei_memory_cache_bytes": 223801500,
+        "mei_memory_peak_bytes": 5359441654,
+        "prefill_ms": 265.81692695617676,
+        "prompt_tokens": 23,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 86.52571626408064,
+        "tokens_per_second": 47.74238170292581,
+        "total_tokens": 55
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.009,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 5038040076,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 4
+      }
+    }
+  },
+  "server_log_tail": "mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit (served id: ornith-ai/Ornith-1.5-9B-MLX-4bit)...\n[mlx.safetensors.mmap] realigned 927 unaligned tensor(s) (5038040064 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit/model.safetensors\nmei: prefix cache enabled (paged in-memory + disk); topology layers=32 kvLayers=8 mambaLayers=24 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 5038040076 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\n",
+  "started_epoch": 1788281109.846431,
+  "status": "passed"
+}
