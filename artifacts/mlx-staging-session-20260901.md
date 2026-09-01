@@ -43,9 +43,15 @@ byte-completeness against the model's own index, records a
 
 | MLX checkpoint | pinned revision | target (mei-models/) | quant (config) | status |
 |---|---|---|---|---|
-| `mlx-community/Qwen3.8-27B-4bit` | 3e6447f082e89cc7f0bc6e5441afd38dfce760ff | Qwen3.8-27B-4bit | 4-bit affine g64 (`qwen3_5`) | staging-in-progress |
-| `mlx-community/gemma-4-26b-a4b-it-4bit` | 0d77464eeb233a2da68ebf9d7dc4edaac7db956d | gemma-4-26b-a4b-it-4bit | 4-bit affine g64 (`gemma4`) | staging-in-progress |
+| `mlx-community/Qwen3.8-27B-4bit` | 3e6447f082e89cc7f0bc6e5441afd38dfce760ff | Qwen3.8-27B-4bit | 4-bit affine g64 (`qwen3_5`) | staged-complete (loadability GPU-pending) |
+| `mlx-community/gemma-4-26b-a4b-it-4bit` | 0d77464eeb233a2da68ebf9d7dc4edaac7db956d | gemma-4-26b-a4b-it-4bit | 4-bit affine g64 (`gemma4`) | staged-complete (loadability GPU-pending) |
 | `orcarouter/Qwen3.8-27B-Uncensored-MLX` → 4-bit/ | 14963e70f886455cf93090ac95bdbf4c8730cbe1 | Qwen3.8-27B-Uncensored-MLX-4bit | 4-bit affine g64 (`qwen3_5`) | staging-in-progress |
+
+Verified on-disk: Qwen3.8-27B-4bit = 16,054,541,349 B (config_sha
+`14b65a0e…`); gemma-4-26b-a4b-it-4bit = 15,341,205,776 B (config_sha
+`419e13a2…`). orcarouter 4-bit (target 16,054,541,599 B) download continues in
+background and will be verified on completion. Provenance files:
+`<target>.provenance.json` next to each staged directory.
 
 Provenance corrections:
 - Manifest `weight_bytes: 4,665,462,000` for `mlx-community/Qwen3.8-27B-4bit`

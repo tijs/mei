@@ -65,13 +65,14 @@
       "format": "mlx",
       "source_checkpoint": "Qwen/Qwen3.8-27B",
       "architecture": "qwen3_5",
-      "status": "staging-in-progress",
+      "status": "staged-complete-loadability-pending",
       "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
       "weight_bytes": 16054541349,
       "pinned_revision": "3e6447f082e89cc7f0bc6e5441afd38dfce760ff",
       "local_staged_path": "~/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
       "modality": "vision-language (preprocessor/processor present)",
-      "weight_bytes_note": "Corrected 2026-09-01: 3 shards model-00001..00003-of-00003 sum to 16,054,541,349 B (API tree), NOT the stale 4,665,462,000 B figure. Full 27B 4-bit scale, not 4.7 GB. Measured verify pending download completion.",
+      "weight_bytes_note": "Corrected 2026-09-01: 3 shards sum to 16,054,541,349 B, NOT the stale 4,665,462,000 B figure. On-disk verified 2026-09-01 (ok=true); staged-complete, loadability still GPU-gated.",
+      "config_sha256": "14b65a0ee06517060a6bbd979bb1a8ff54e7b304b1a1f01d54344b88b8285e85",
       "gguf_reference": {
         "repository": "unsloth/Qwen3.8-27B-GGUF",
         "snapshot_revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
@@ -85,7 +86,7 @@
       "test_phases": ["llama-cpp-comparator", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse", "compiled-gdn-ab"],
       "notes": [
         "mlx-community is the established Apple/MLX regular 4-bit quant of the dense qwen35 lineage (source Qwen/Qwen3.8-27B). It is NOT UD-Q5 and MUST NOT be claimed as GGUF-UD equivalence; it is a regular 4-bit MLX comparator against the UD-Q5_K_M llama.cpp reference.",
-        "Download in progress to mei-models/Qwen3.8-27B-4bit at pinned revision 3e6447f. Loadability is NOT yet verified (GPU-gated); verify then mark staged-complete and run load/short/tool/long-context/kv-reuse.",
+        "Downloaded + integrity-verified 2026-09-01 (3 shards 16,054,541,349 B). Marked staged-complete. RUNNABLE-ONLY-AFTER GPU loadability check; then run the loadability-gated test phases.",
         "MTP caveat from the GGUF reference applies only to the llama.cpp comparator; Mei's MLX loader has no MTP path."
       ]
     },
@@ -95,13 +96,14 @@
       "format": "mlx",
       "source_checkpoint": "google/gemma-4-26B-A4B-it",
       "architecture": "gemma4",
-      "status": "staging-in-progress",
+      "status": "staged-complete-loadability-pending",
       "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
       "weight_bytes": 15341205776,
       "pinned_revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
       "local_staged_path": "~/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit",
       "modality": "vision-language (preprocessor/processor present)",
-      "weight_bytes_note": "Corrected 2026-09-01: 3 shards sum to 15,341,205,776 B (API tree), NOT the stale 4,514,678,350 B figure. Full 26B-A4B 4-bit scale. Measured verify pending download completion.",
+      "weight_bytes_note": "Corrected 2026-09-01: 3 shards sum to 15,341,205,776 B, NOT the stale 4,514,678,350 B figure. On-disk verified 2026-09-01 (ok=true); staged-complete, loadability still GPU-gated.",
+      "config_sha256": "419e13a27ec359654c1ce7dd06d1a87149fd07d0c8af9f770494185e62e1b2ba",
       "gguf_reference": {
         "repository": "mudler/gemma-4-26B-A4B-it-APEX-GGUF",
         "snapshot_revision": "e79ec24ceca5060b55b9a267c565b0b0843f3678",
@@ -117,7 +119,7 @@
       "notes": [
         "gemma4 is a separate architecture from qwen3_5/qwen3_5_moe. The architecture-specific VLM load/template/tool-call path is added only when required by loadability/tool evidence.",
         "4-bit is the memory-safe default for this 26B-A4B MoE-family model on 32 GB; mlx-community also ships 5/6/8-bit/bf16 variants to test only if the memory gate leaves headroom.",
-        "Download in progress to mei-models/gemma-4-26b-a4b-it-4bit at pinned revision 0d77464. Loadability NOT yet verified (GPU-gated); verify then mark staged-complete.",
+        "Downloaded + integrity-verified 2026-09-01 (3 shards 15,341,205,776 B). Marked staged-complete. RUNNABLE-ONLY-AFTER GPU loadability check; then run the loadability-gated test phases.",
         "Do not equate this MLX 4-bit with the APEX GGUF quantization; they are separate recipes and comparisons are behavioral, not bit-equivalent."
       ]
     },
