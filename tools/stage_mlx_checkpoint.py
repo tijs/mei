@@ -56,12 +56,22 @@ def verify(root: Path) -> dict:
         return {"ok": False, "reason": "no model-*.safetensors shards"}
 
     actual_bytes = sum(p.stat().st_size for p in shards)
-    # Compare against expected index total (loose: header bytes may differ).
     ok = True
     reasons = []
-    if total is not None and actual_bytes < total - 16 * 1024 * 1024:
-        ok = False
-        reasons.append(f"shard_bytes {actual_bytes} < index_total {total}")
+    shard_names = {p.name for p in shards}
+
+    index = root / "model.safetensors.index.json"
+    if index.exists():
+        wm = json.loads(index.read_text()).get("weight_map", {})
+        expected_shards = set(wm.values())
+        missing = expected_shards - shard_names
+        if missing:
+            ok = False
+            reasons += [f"missing shard {x}" for x in sorted(missing)]
+        if total is not None and actual_bytes != total:
+            ok = False
+            reasons.append(f"shard_bytes {actual_bytes} != index_total {total}")
+
     for p in shards:
         if p.stat().st_size == 0:
             ok = False
