@@ -105,29 +105,40 @@ def main() -> int:
     ap.add_argument("--subdir", default=None, help="allow-pattern subdir, e.g. 4-bit")
     ap.add_argument("--target", required=True, help="absolute target dir under mei-models")
     ap.add_argument("--expect-bytes", type=int, default=None)
+    ap.add_argument("--verify-only", action="store_true",
+                    help="skip download; only relocate subdir (if any) + verify")
     args = ap.parse_args()
 
     target = Path(args.target).expanduser()
     target.mkdir(parents=True, exist_ok=True)
-    if (target / "config.json").exists():
-        print(f"config.json already present at {target}; running verify anyway")
 
-    allow = [f"{args.subdir}/*"] if args.subdir else None
-    allow = [a for a in allow] if allow else None
+    if not args.verify_only:
+        allow = [f"{args.subdir}/*"] if args.subdir else None
+        snapshot_download(
+            repo_id=args.repo,
+            revision=args.revision,
+            allow_patterns=allow,
+            local_dir=str(target),
+            local_dir_use_symlinks=False,
+        )
 
-    # snapshot_download into target as real files (no cache symlinks).
-    snapshot_download(
-        repo_id=args.repo,
-        revision=args.revision,
-        allow_patterns=allow,
-        local_dir=str(target),
-        local_dir_use_symlinks=False,
-    )
+    # allow_patterns=["4-bit/*"] preserves structure -> files land under
+    # target/4-bit/. Relocate a self-contained subdir up to target/ so the
+    # staged model is a normal model dir with config.json at the root.
+    if args.subdir:
+        sub = target / args.subdir
+        if sub.is_dir() and (sub / "config.json").exists() and not (target / "config.json").exists():
+            for child in sub.iterdir():
+                dest = target / child.name
+                if dest.exists():
+                    dest.unlink()
+                child.rename(dest)
+            sub.rmdir()
 
     result = verify(target)
     prov = write_provenance(target, args.repo, args.revision, args.subdir or "(root)", result, args.revision)
     print(json.dumps(result, indent=2))
-    if args.expect_bytes is not None:
+    if args.expect_bytes is not None and "shard_bytes" in result:
         if result["shard_bytes"] != args.expect_bytes:
             print(f"WARN: shard_bytes {result['shard_bytes']} != expected {args.expect_bytes}")
     print(f"provenance: {prov}")

@@ -130,13 +130,14 @@
       "source_checkpoint": "orcarouter/Qwen3.8-27B-Uncensored",
       "source_revision": "404ea47aaa5d8a8b00049c9e9750089aca011ab2",
       "architecture": "qwen3_5",
-      "status": "staging-in-progress",
-      "quantization": { "bits": 4, "group_size": 64, "mode": "affine", "note": "4-bit/ subdirectory at pinned revision 14963e70 (repo also ships 2/6/8-bit + mtp subdirs); staged with allow_patterns=['4-bit/*']. NOT the 2-bit default." },
+      "status": "staged-complete-loadability-pending",
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine", "note": "4-bit/ subdirectory at pinned revision 14963e70 (repo also ships 2/6/8-bit + mtp subdirs); staged with allow_patterns=['4-bit/*'], subdir relocated to model root. NOT the 2-bit default." },
       "weight_bytes": 16054541599,
       "pinned_revision": "14963e70f886455cf93090ac95bdbf4c8730cbe1",
       "local_staged_path": "~/.local/share/local-model-bench/mei-models/Qwen3.8-27B-Uncensored-MLX-4bit",
       "modality": "vision-language",
-      "weight_bytes_note": "4-bit/ subdir 3 shards sum 16,054,541,599 B (API tree). Same-author Uncensored lineage (identical chat_template.jinja/tokenizer/vocab bytes to gated source orcarouter/Qwen3.8-27B-Uncensored).",
+      "weight_bytes_note": "4-bit/ subdir 3 shards sum 16,054,541,599 B. On-disk verified 2026-09-01 (ok=true); staged-complete, loadability still GPU-gated. Same-author Uncensored lineage (identical chat_template.jinja/tokenizer/vocab bytes to gated source orcarouter/Qwen3.8-27B-Uncensored).",
+      "config_sha256": "f238d3a11e8d96b4f688fd09c627879b9b87a067835c83cb7c1c102df7aa4fb0",
       "gguf_reference": {
         "repository": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5",
         "snapshot_revision": "26f9b116cb7522faa3989b584cb37b4d41cd0191",
@@ -151,7 +152,7 @@
       "notes": [
         "KEEP DISTINCT FROM BASE Qwen3.8. This candidate is the Uncensored/Heretic lineage, not Qwen/Qwen3.8-27B. The orcarouter/Qwen3.8-27B-Uncensored-MLX repo is the first-party MLX artifact in this lineage (single commit 14963e70, 2026-08-27) and it DOES provide a native 4-bit affine/group-64 quant under 4-bit/ — NOT only a 2-bit dir (prior 2026-09-01 audit claim corrected).",
         "No source conversion is required: the 4-bit MLX is in the correct Uncensored lineage (same chat_template/tokenizer/vocab byte sizes as the gated source orcarouter/Qwen3.8-27B-Uncensored; source repo is gated/auth-required so raw conversion is impractical anyway). It stays separate from base Qwen3.8 and is NOT a silent substitution.",
-        "Loadability NOT yet asserted (GPU-gated). Verify staged 4-bit loads/generates/tool-calls, then mark staged-complete; compare behaviorally against the trohrbaugh Heretic Q5_K_M GGUF (never bit-equivalent claim, never GGUF conversion)."
+        "Downloaded + integrity-verified 2026-09-01 (3 shards 16,054,541,599 B, config_sha f238d3a1; 4-bit subdir relocated to model root). Marked staged-complete-loadability-pending. RUNNABLE-ONLY-AFTER GPU loadability check; then compare behaviorally against the trohrbaugh Heretic Q5_K_M GGUF (never bit-equivalent claim, never GGUF conversion)."
       ]
     }
   ]
