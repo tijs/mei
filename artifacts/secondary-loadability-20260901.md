@@ -37,4 +37,23 @@ Tool call = forced `add_numbers` via probe_mei's `validate_add_call` (non-stream
 - Status: `loadable-accept-passed-tool-string-args`.
 
 ## 3. Qwen3.8-27B-Uncensored-MLX-4bit (orcarouter, Heretic lineage, reg 4-bit, separate source)
-- PLACEHOLDER — tested next.
+- **LOADABLE: yes.** `artifacts/load-Heretic-27B-20260901T170027Z.json`, probe exit 0.
+  Topology layers=64 kvLayers=16 mambaLayers=48 companion ssm restore=disk-backed
+  (same qwen3_5 hybrid shape as base Qwen3.8). Served id
+  `orcarouter/Qwen3.8-27B-Uncensored-MLX-4bit`.
+- Memory after load: active 16,054,709,288 B (~8.5 GB under limit); during decode active
+  ~16.9 GB. Distinct source lineage vs base Qwen3.8 (not a silent substitution).
+- Decode: hello 13.64 tok/s, short_decode 14.12 tok/s, prefill hello 1.46 s.
+  Loadable + correct; ~14 tok/s usable.
+- Tool call: **passed**, `add_numbers(15,27)` with **numeric** args `{"a":15,"b":27}`
+  (dict) — Qwen XML parser path, consistent with base Qwen3.8.
+- Status: `loadable-accept-passed`.
+
+## Summary
+All three staged secondary MLX candidates are **loadable** under Mei's pinned vmlx
+path on a clean window (compat matrix `loadability-pending` → confirmed). Only one Mei
+server at a time; no foreign process touched; no two Mei servers were run concurrently.
+All preserved `compiled-decode false / kv-bits none / max-kv-window 0 /
+ssm-anchor-boundaries 0` defaults. Measured decode tok/s are engine-reported from the
+same load-probe path; these are loadability/acceptance figures, not the ≥3-repeat perf
+rows reserved for the primary optimization claim.

@@ -187,7 +187,7 @@
       "source_checkpoint": "orcarouter/Qwen3.8-27B-Uncensored",
       "source_revision": "404ea47aaa5d8a8b00049c9e9750089aca011ab2",
       "architecture": "qwen3_5",
-      "status": "staged-complete-loadability-pending",
+      "status": "loadable-accept-passed",
       "quantization": {
         "bits": 4,
         "group_size": 64,
