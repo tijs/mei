@@ -1,0 +1,12 @@
+gated-boundary 2026-09-01T16:14:51Z max-wait-min=5
+reason: resident foreign Ornith-1.5-35B-A3B GGUF Q4_K_M llama-server (PID 3968, :8017) owns Metal; reclaimable 8GB < 10GB floor
+--- foreign runners/servers ---
+ 3873 /Users/tijs/.local/bin/cocore agent serve
+ 3968 llama-server --hf-repo ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 0.6 --top-p 0.95 --top-k 20 --ctx-size 65536 --jinja --chat-template-file configs/Qwen3.8-27B/chat_template.jinja --alias bench-f51c7e72e2ad
+--- memory ---
+The system has 34359738368 (2097152 pages with a page size of 16384).
+
+Stats:
+Pages free: 70006
+reclaimable_gb=8
+--- session: all-5 staged MLX roots pass stage_mlx_checkpoint verifier; 34/34 non-Metal tests; release binary ready ---
