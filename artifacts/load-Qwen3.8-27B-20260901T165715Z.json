@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788281852.669985,
+  "model": "mlx-community/Qwen3.8-27B-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 10.331,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 37,
+        "generate_ms": 6235.621929168701,
+        "mei_memory_active_bytes": 25387822126,
+        "mei_memory_cache_bytes": 157811608,
+        "mei_memory_peak_bytes": 25545633734,
+        "prefill_ms": 3931.7030906677246,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 14.49753419460767,
+        "tokens_per_second": 5.933650311113817,
+        "total_tokens": 94
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 6.148376505887015,
+      "elapsed_seconds": 7.209,
+      "prompt_tokens": 65,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 5204.625964164734,
+        "mei_memory_active_bytes": 25543535694,
+        "mei_memory_cache_bytes": 158335896,
+        "mei_memory_peak_bytes": 25701871590,
+        "prefill_ms": 1837.5660181045532,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 35.37287877528744,
+        "tokens_per_second": 6.148376505887015,
+        "total_tokens": 97
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.008,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 24741637100,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "mlx-community/Qwen3.8-27B-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 4
+      }
+    }
+  },
+  "server_log_tail": "mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...\n[mlx.safetensors.mmap] realigned 194 unaligned tensor(s) (4757340160 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00002-of-00003.safetensors\n[mlx.safetensors.mmap] realigned 613 unaligned tensor(s) (5357007424 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00003-of-00003.safetensors\n[mlx.safetensors.mmap] realigned 138 unaligned tensor(s) (3929047040 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00001-of-00003.safetensors\nmei: prefix cache enabled (paged in-memory + disk); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 24741637100 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n",
+  "started_epoch": 1788281835.119105,
+  "status": "passed"
+}
