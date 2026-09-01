@@ -65,11 +65,13 @@
       "format": "mlx",
       "source_checkpoint": "Qwen/Qwen3.8-27B",
       "architecture": "qwen3_5",
-      "status": "selected-not-downloaded",
+      "status": "staging-in-progress",
       "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
-      "weight_bytes": 4665462000,
+      "weight_bytes": 16054541349,
       "pinned_revision": "3e6447f082e89cc7f0bc6e5441afd38dfce760ff",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
       "modality": "vision-language (preprocessor/processor present)",
+      "weight_bytes_note": "Corrected 2026-09-01: 3 shards model-00001..00003-of-00003 sum to 16,054,541,349 B (API tree), NOT the stale 4,665,462,000 B figure. Full 27B 4-bit scale, not 4.7 GB. Measured verify pending download completion.",
       "gguf_reference": {
         "repository": "unsloth/Qwen3.8-27B-GGUF",
         "snapshot_revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
@@ -83,7 +85,7 @@
       "test_phases": ["llama-cpp-comparator", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse", "compiled-gdn-ab"],
       "notes": [
         "mlx-community is the established Apple/MLX regular 4-bit quant of the dense qwen35 lineage (source Qwen/Qwen3.8-27B). It is NOT UD-Q5 and MUST NOT be claimed as GGUF-UD equivalence; it is a regular 4-bit MLX comparator against the UD-Q5_K_M llama.cpp reference.",
-        "Not yet downloaded (inventory-only selection to avoid a multi-GB fetch for documentation). Resolve pinned_revision at stage time.",
+        "Download in progress to mei-models/Qwen3.8-27B-4bit at pinned revision 3e6447f. Loadability is NOT yet verified (GPU-gated); verify then mark staged-complete and run load/short/tool/long-context/kv-reuse.",
         "MTP caveat from the GGUF reference applies only to the llama.cpp comparator; Mei's MLX loader has no MTP path."
       ]
     },
@@ -93,11 +95,13 @@
       "format": "mlx",
       "source_checkpoint": "google/gemma-4-26B-A4B-it",
       "architecture": "gemma4",
-      "status": "selected-not-downloaded",
+      "status": "staging-in-progress",
       "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
-      "weight_bytes": 4514678350,
+      "weight_bytes": 15341205776,
       "pinned_revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit",
       "modality": "vision-language (preprocessor/processor present)",
+      "weight_bytes_note": "Corrected 2026-09-01: 3 shards sum to 15,341,205,776 B (API tree), NOT the stale 4,514,678,350 B figure. Full 26B-A4B 4-bit scale. Measured verify pending download completion.",
       "gguf_reference": {
         "repository": "mudler/gemma-4-26B-A4B-it-APEX-GGUF",
         "snapshot_revision": "e79ec24ceca5060b55b9a267c565b0b0843f3678",
@@ -113,6 +117,7 @@
       "notes": [
         "gemma4 is a separate architecture from qwen3_5/qwen3_5_moe. The architecture-specific VLM load/template/tool-call path is added only when required by loadability/tool evidence.",
         "4-bit is the memory-safe default for this 26B-A4B MoE-family model on 32 GB; mlx-community also ships 5/6/8-bit/bf16 variants to test only if the memory gate leaves headroom.",
+        "Download in progress to mei-models/gemma-4-26b-a4b-it-4bit at pinned revision 0d77464. Loadability NOT yet verified (GPU-gated); verify then mark staged-complete.",
         "Do not equate this MLX 4-bit with the APEX GGUF quantization; they are separate recipes and comparisons are behavioral, not bit-equivalent."
       ]
     },
@@ -123,10 +128,13 @@
       "source_checkpoint": "orcarouter/Qwen3.8-27B-Uncensored",
       "source_revision": "404ea47aaa5d8a8b00049c9e9750089aca011ab2",
       "architecture": "qwen3_5",
-      "status": "provenance-pending",
-      "quantization": { "bits": 2, "group_size": null, "mode": "unknown", "note": "Repository currently ships only a 2-bit subdirectory (unsuitable default)." },
+      "status": "staging-in-progress",
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine", "note": "4-bit/ subdirectory at pinned revision 14963e70 (repo also ships 2/6/8-bit + mtp subdirs); staged with allow_patterns=['4-bit/*']. NOT the 2-bit default." },
+      "weight_bytes": 16054541599,
       "pinned_revision": "14963e70f886455cf93090ac95bdbf4c8730cbe1",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Qwen3.8-27B-Uncensored-MLX-4bit",
       "modality": "vision-language",
+      "weight_bytes_note": "4-bit/ subdir 3 shards sum 16,054,541,599 B (API tree). Same-author Uncensored lineage (identical chat_template.jinja/tokenizer/vocab bytes to gated source orcarouter/Qwen3.8-27B-Uncensored).",
       "gguf_reference": {
         "repository": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5",
         "snapshot_revision": "26f9b116cb7522faa3989b584cb37b4d41cd0191",
@@ -139,9 +147,9 @@
       },
       "test_phases": ["llama-cpp-comparator", "provenance", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse"],
       "notes": [
-        "KEEP DISTINCT FROM BASE Qwen3.8. This candidate is the Uncensored/Heretic lineage, not Qwen/Qwen3.8-27B. The orcarouter uncensored/abliterated MLX repo is the only MLX artifact in this lineage, and it currently exposes only a 2-bit directory (too lossy for tool reliability).",
-        "No reliable Mac-suitable MLX quant is confirmed for this lineage yet. A memory-safe provider would be a reproducible 4-bit conversion from the orcarouter/Qwen3.8-27B-Uncensored source (abliterated, distinct from base Qwen3.8), with the source's own revision and ancestry recorded.",
-        "Blocker recorded: conversion from source is required; do not convert from the trohrbaugh GGUF, and do not silently substitute base Qwen3.8 MLX."
+        "KEEP DISTINCT FROM BASE Qwen3.8. This candidate is the Uncensored/Heretic lineage, not Qwen/Qwen3.8-27B. The orcarouter/Qwen3.8-27B-Uncensored-MLX repo is the first-party MLX artifact in this lineage (single commit 14963e70, 2026-08-27) and it DOES provide a native 4-bit affine/group-64 quant under 4-bit/ — NOT only a 2-bit dir (prior 2026-09-01 audit claim corrected).",
+        "No source conversion is required: the 4-bit MLX is in the correct Uncensored lineage (same chat_template/tokenizer/vocab byte sizes as the gated source orcarouter/Qwen3.8-27B-Uncensored; source repo is gated/auth-required so raw conversion is impractical anyway). It stays separate from base Qwen3.8 and is NOT a silent substitution.",
+        "Loadability NOT yet asserted (GPU-gated). Verify staged 4-bit loads/generates/tool-calls, then mark staged-complete; compare behaviorally against the trohrbaugh Heretic Q5_K_M GGUF (never bit-equivalent claim, never GGUF conversion)."
       ]
     }
   ]

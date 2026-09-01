@@ -111,26 +111,33 @@ mode).
   never a silent substitution for the primary artifact.
 - **Secondary comparator — Qwen3.8 (dense qwen35)**: MLX candidate
   `mlx-community/Qwen3.8-27B-4bit` (regular 4-bit, `qwen3_5`,
-  source `Qwen/Qwen3.8-27B`; selector only — not yet downloaded). GGUF
+  source `Qwen/Qwen3.8-27B`; staged at `mei-models/Qwen3.8-27B-4bit`, pinned
+  `3e6447f`; **loadability pending GPU**). GGUF
   reference `unsloth/Qwen3.8-27B-GGUF` `UD-Q5_K_M` is cached complete and
   carries an MTP/Next-N head (compare without `--spec-type`). The MLX 4-bit
   is **not** UD-Q5 and must not be claimed as GGUF-UD equivalence; it is a
   regular 4-bit MLX comparator.
 - **Secondary comparator — Gemma 4 26B-A4B (APEX-I-Quality)**: MLX candidate
   `mlx-community/gemma-4-26b-a4b-it-4bit` (regular 4-bit, `gemma4`, source
-  `google/gemma-4-26B-A4B-it`; selector only — not yet downloaded). GGUF
+  `google/gemma-4-26B-A4B-it`; staged at
+  `mei-models/gemma-4-26b-a4b-it-4bit`, pinned `0d77464`; **loadability
+  pending GPU**). GGUF
   reference `mudler/gemma-4-26B-A4B-it-APEX-GGUF` `APEX-I-Quality`
   (arch `gemma4`, no MTP) is cached complete. Separate architecture from
   qwen3_5; the VLM load/template/tool-call path is added only when required
   by evidence.
 - **Secondary comparator — Qwen3.8 Uncensored/Heretic (separate provenance)**:
   cached GGUF reference `trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5`
-  `Q5_K_M` (qwen35, MTP present). The only MLX artifact in this lineage
-  today is `orcarouter/Qwen3.8-27B-Uncensored-MLX`, which ships only a 2-bit
-  directory (too lossy for tool reliability) — a memory-safe 4-bit MLX would
-  require a reproducible conversion from the `orcarouter/Qwen3.8-27B-Uncensored`
-  abliterated source, distinct from base Qwen3.8. **Blocker recorded**; do not
-  silently substitute base Qwen3.8.
+  `Q5_K_M` (qwen35, MTP present). The first-party MLX artifact in this
+  lineage is `orcarouter/Qwen3.8-27B-Uncensored-MLX` (single commit
+  `14963e70`), which provides a **native 4-bit affine/group-64 quant under
+  `4-bit/`** (3 shards, 16.05 GB) of the Uncensored lineage — same
+  chat-template/tokenizer/vocab bytes as the gated source
+  `orcarouter/Qwen3.8-27B-Uncensored`, distinct from base Qwen3.8. No source
+  conversion is required; it is staged at
+  `mei-models/Qwen3.8-27B-Uncensored-MLX-4bit` pinned `14963e70`
+  (**loadability pending GPU**). This supersedes the earlier "2-bit only"
+  claim.
 
 The machine-readable lineup is `configs/model-lineup.json` and is the source
 of truth for exactly pinned revisions, GGUF blob SHA-256 digests, quant
