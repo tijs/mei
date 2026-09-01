@@ -1,0 +1,26 @@
+gated-boundary 2026-09-01T18:23:00Z max-wait-min=5
+reason: resident foreign Ornith-1.5-35B-A3B GGUF Q4_K_M llama-server (PID 3968, :8017) owns Metal working set; reclaimable stayed 7.5-9.7 GB across the whole 5-min poll, always below the 10 GB uncontended-Mei floor -> no Mei row (incl. 9B proxy) loadable without an invalid contended row.
+--- foreign runners/servers (unchanged, NOT stopped) ---
+ 3873 /Users/tijs/.local/bin/cocore agent serve
+ 3968 llama-server --hf-repo ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M --host 127.0.0.1 --port 8017 --temp 0.6 --top-p 0.95 --top-k 20 --ctx-size 65536 --jinja --chat-template-file configs/Qwen3.8-27B/chat_template.jinja --alias bench-f51c7e72e2ad
+--- gate checks ---
+ gate1 (run_fixture_suite/run_bench active): CLEAR (none active)
+ gate2 (reclaimable >= 10 GB): BLOCKED (peaked 9.7 GB; lows 7.5 GB)
+--- memory ---
+The system has 34359738368 (2097152 pages with a page size of 16384).
+reclaimable over samples (GB): 8.4 8.4 7.5 7.5 7.5 8.8 8.6 9.7 9.6 9.6 9.6
+--- session: CPU-side re-verify clean HEAD (1b8fe57) ---
+ stage_mlx_checkpoint --self-test: 13/13 PASS (incl. single-file + sharded index, payload vs file bytes)
+ verify-only all 5 staged MLX roots: reasons=[] (all OK)
+ non-Metal Swift tests: 34/34 PASS (CacheRestoreTracker/OpenAITypes/SSMAnchorBoundaries/ServerConfigParsing)
+ release build (scratch mei-build): Build complete, all fork flags present (kv-bits, max-kv-window, compiled*, ssm-anchor, memory/cache limits)
+ byte-level staging verify (JSON sum of model-*.safetensors + model.safetensors):
+   35B 4 shards 19,509,024,201 OK | 9B 1 file 5,038,161,163 OK
+   Qwen3.8-27B 3 shards 16,054,541,349 OK | gemma-4-26b 3 shards 15,341,205,776 OK
+   Heretic 3 shards 16,054,541,599 OK   (all match configs/model-lineup.json exactly)
+--- blocker for next clean window ---
+ 35B (19.5 GB weights, blocked-on-memory per model-lineup) and all three ~16GB secondary
+ models need a dedicated clean Metal window (no resident llama-server / cocore). Even the
+ 9B proxy requires >= 10 GB reclaimable to produce an uncontended row; none of these can
+ run now without contaminating the resident foreign benchmark/GGUF reference. No GPU numbers
+ were produced this session (as in sessions G/H). Do not fabricate performance rows.
