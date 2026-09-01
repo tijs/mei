@@ -92,37 +92,73 @@ above the model's working set — the MLX default limit can otherwise sit
 below it and make allocation wait on scheduled tasks (the hang failure
 mode).
 
-### Models
+### Models (four-candidate MLX lineup)
 
 - **Primary (MVP)**: `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` — the model
-  author's official plain 4-bit text-generation MLX quant (19.5 GB). The 30
-  decode tok/s goal is defined against this artifact on the 32 GB Sulaco
-  machine.
+  author's official plain 4-bit text-generation MLX quant of the MoE
+  `qwen3_5_moe` architecture (4-bit affine / group-64; mlp gates and
+  shared-expert gates held at 8-bit; ~19.5 GB weights, staged complete
+  under `mei-models/`). The >= 30 decode tok/s goal is defined against this
+  artifact on the 32 GB Sulaco machine. Its working set keeps it
+  blocked-on-memory while other engines are resident, so the 9B proxy below
+  exercises the identical Mei text path in that case.
 - **Documented fallback (same family, smaller)**: `ornith-ai/Ornith-1.5-9B-MLX-4bit`
-  — the official 9B plain 4-bit quant (5.0 GB), same `qwen3_5` architecture,
-  same 4-bit-affine/group-64 quant scheme, same chat template and
-  qwen3_coder-style tool-call format. Used to validate server correctness and
-  tool-call behavior on hardware where the 35B cannot be resident
-  (e.g. while other engines hold the machine's RAM). It is a fallback for
-  exercising the identical Mei path, never a silent substitution for the
-  primary artifact.
-- **Experimental comparator**: `Qwen/Qwen3.8-27B`
-  — the official dense Qwen3.5-family vision-language checkpoint (5,120-wide,
-  64 text layers, hybrid linear/full attention, and an MTP head). It is added
-  to Mei's test lineup for staging/loadability, short-context, tool-call,
-  long-context, KV-reuse, and compiled-GDN A/B checks. The HF cache already
-  contains Q4_K_M and Q5_K_M GGUF comparator artifacts for it, but no MLX
-  checkpoint. The GGUFs contain an MTP/Next-N head, so llama.cpp comparisons
-  must run without `--spec-type`; they are not direct Mei inputs. Ornith's
-  exact-shape fused affine-MoE kernel is not expected to apply because Qwen3.8
-  is dense; compiled-GDN support remains an experimental hypothesis.
+  — the official 9B dense `qwen3_5` 4-bit quant (5.0 GB, staged complete),
+  same 4-bit-affine/group-64 scheme, same chat template and
+  qwen3_coder-style tool-call format. Used to validate server correctness,
+  tool-call behavior, and the optimization matrix on hardware where the 35B
+  cannot be resident (e.g. while other engines hold Metal). It is a fallback,
+  never a silent substitution for the primary artifact.
+- **Secondary comparator — Qwen3.8 (dense qwen35)**: MLX candidate
+  `mlx-community/Qwen3.8-27B-4bit` (regular 4-bit, `qwen3_5`,
+  source `Qwen/Qwen3.8-27B`; selector only — not yet downloaded). GGUF
+  reference `unsloth/Qwen3.8-27B-GGUF` `UD-Q5_K_M` is cached complete and
+  carries an MTP/Next-N head (compare without `--spec-type`). The MLX 4-bit
+  is **not** UD-Q5 and must not be claimed as GGUF-UD equivalence; it is a
+  regular 4-bit MLX comparator.
+- **Secondary comparator — Gemma 4 26B-A4B (APEX-I-Quality)**: MLX candidate
+  `mlx-community/gemma-4-26b-a4b-it-4bit` (regular 4-bit, `gemma4`, source
+  `google/gemma-4-26B-A4B-it`; selector only — not yet downloaded). GGUF
+  reference `mudler/gemma-4-26B-A4B-it-APEX-GGUF` `APEX-I-Quality`
+  (arch `gemma4`, no MTP) is cached complete. Separate architecture from
+  qwen3_5; the VLM load/template/tool-call path is added only when required
+  by evidence.
+- **Secondary comparator — Qwen3.8 Uncensored/Heretic (separate provenance)**:
+  cached GGUF reference `trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5`
+  `Q5_K_M` (qwen35, MTP present). The only MLX artifact in this lineage
+  today is `orcarouter/Qwen3.8-27B-Uncensored-MLX`, which ships only a 2-bit
+  directory (too lossy for tool reliability) — a memory-safe 4-bit MLX would
+  require a reproducible conversion from the `orcarouter/Qwen3.8-27B-Uncensored`
+  abliterated source, distinct from base Qwen3.8. **Blocker recorded**; do not
+  silently substitute base Qwen3.8.
 
-The machine-readable lineup is `configs/model-lineup.json`. Keep model status
-and test phases there in sync with this section; `scripts/stage_model.sh` can
-stage an explicitly selected Hugging Face repository with `--model-id`; it must
-not be run for Qwen3.8's cached GGUF files, which require llama.cpp rather than
-Mei's MLX loader. The cached artifact paths and provenance are recorded in the
-lineup manifest.
+The machine-readable lineup is `configs/model-lineup.json` and is the source
+of truth for exactly pinned revisions, GGUF blob SHA-256 digests, quant
+settings, local staged paths, status, and test phases. Keep model status and
+test phases there in sync with this section. `scripts/stage_model.sh` can
+stage an explicitly selected Hugging Face repository with `--model-id`; it
+must not be run for the cached GGUF files, which require llama.cpp rather than
+Mei's MLX loader.
+
+### MLX quantization strategy
+
+- Prefer **first-party or established `mlx-community` checkpoints** already
+  optimized for Apple/MLX, pinned by immutable revision. Where no suitable MLX
+  checkpoint exists, convert from the **original model source** (never from
+  GGUF) with a reproducible, Mei-owned conversion command that records bits,
+  group size, calibration/data choices, and revision.
+- Choose per-model bit depth by **weight size, long-context/KV-cache
+  headroom, tool reliability, and measured speed**; start memory-safe at
+  4-bit (affine / group-64) for 26–35B models and test 5-bit or higher only
+  when the memory gate leaves headroom. Do not force one bit depth or recipe
+  across architectures.
+- Secondary VLM checkpoints carry preprocessor/processor files; architecture-
+  specific load/template/tool-call handling is added only when required by
+  evidence.
+- A model is not Mei-ready until it loads, generates, passes the
+  acceptance/tool-call checks, survives the long-context checks, and has
+  reproducible provenance.
+
 
 ## Bench integration
 

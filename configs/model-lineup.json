@@ -1,66 +1,147 @@
 {
   "schema_version": 1,
+  "quant_strategy": {
+    "default_bits": 4,
+    "default_group_size": 64,
+    "mode": "affine",
+    "policy": "Prefer first-party or established mlx-community checkpoints already optimized for Apple/MLX, pinned by immutable revision. Where no suitable MLX checkpoint exists, convert from the original model source (never from GGUF) with a reproducible, Mei-owned conversion command that records bits, group size, calibration/data choices, and revision. Choose per-model bit depth by weight size, long-context/KV-cache headroom, tool reliability, and measured speed; start memory-safe at 4-bit for 26-35B models and test 5-bit or higher only when the memory gate leaves headroom. Do not force the same bit depth or recipe across architectures. Gemma and Qwen3.5/Qwen3.8 image-text-to-text (VLM) checkpoints carry preprocessor/processor files; the architecture-specific load/template/tool-call path is added only when required by evidence."
+  },
   "models": [
     {
       "id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
       "role": "primary",
       "format": "mlx",
+      "architecture": "qwen3_5_moe",
       "status": "blocked-on-memory",
-      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse"]
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine", "exceptions": "mlp gate + shared_expert_gate held at 8-bit (affine g64)" },
+      "weight_bytes": 19509024201,
+      "pinned_revision_hf_cache": "19504d912fa8fc7622bf6b1de3db5d5d890b1f02",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit",
+      "staged_complete": true,
+      "gguf_reference": {
+        "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+        "snapshot_revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+        "filename": "Ornith-1.5-35B-Q4_K_M.gguf",
+        "quantization": "Q4_K_M",
+        "blob_sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+        "bytes": 21713463040,
+        "reference_server_port": 8017,
+        "note": "Currently loaded as the foreign llama-server reference (--hf-repo ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M, alias bench-f51c7e72e2ad). Never stopped; holds Metal working set."
+      },
+      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse"],
+      "notes": [
+        "Official first-party plain 4-bit MLX quant for the MoE qwen3_5_moe architecture (~19.5 GB weights). Staged complete under mei-models; HF-cache copy under ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-MLX-4bit contains only a partial/re-incomplete download (4 .incomplete weight shards) and MUST NOT be deleted or mistaken for the usable copy.",
+        "Unified-memory working set on the 32 GB M1 Max keeps this blocked-on-memory in practice while other engines are resident; the 9B proxy exercises the identical Mei text path in that case.",
+        "Ornith compiled decode, KV quantization, window and semantic-anchor optimizations remain default-off until per-model gates pass on the actual 35B MoE shape."
+      ]
     },
     {
       "id": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
       "role": "fallback",
       "format": "mlx",
+      "architecture": "qwen3_5",
       "status": "validated",
-      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse", "optimization"]
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
+      "weight_bytes": 5038161163,
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit",
+      "staged_complete": true,
+      "gguf_reference": {
+        "repository": "ornith-ai/Ornith-1.5-9B-GGUF",
+        "pinned_digest": "abdd624b",
+        "local_path": "~/.local/share/local-model-bench/mei-models/gguf/Ornith-1.5-9B-Q4_K_M.gguf",
+        "quantization": "Q4_K_M",
+        "blob_sha256": "70c112196e0b7023803c9762752e46d29e612a92c83f995bc3ba1ceb07e8fab6",
+        "note": "Locally staged GGUF (bytes 5780090816); sha256 computes to 70c11219...e8fab6, matching the pinned official blob abdd624b (verified session G + re-measured this session)."
+      },
+      "test_phases": ["load", "short", "tool", "long-context", "kv-reuse", "optimization"],
+      "notes": [
+        "Official first-party dense qwen3_5 4-bit MLX quant (5.0 GB), staged complete. Used as the practical optimization proxy when the 35B is memory-blocked; never a silent substitution for the primary artifact.",
+        "Same 4-bit-affine/group-64 scheme, chat template, and qwen3_coder-style tool-call format as the 35B."
+      ]
     },
     {
-      "id": "Qwen/Qwen3.8-27B",
-      "role": "experimental-comparator",
-      "format": "huggingface-checkpoint",
-      "status": "cached-gguf-only",
-      "mei_status": "pending-mlx-compatibility",
-      "llama_cpp_status": "ready-for-comparator",
+      "id": "mlx-community/Qwen3.8-27B-4bit",
+      "role": "secondary-comparator",
+      "format": "mlx",
+      "source_checkpoint": "Qwen/Qwen3.8-27B",
       "architecture": "qwen3_5",
-      "modality": "vision-language",
-      "parameterization": "dense",
-      "hidden_size": 5120,
-      "num_hidden_layers": 64,
-      "mtp_num_hidden_layers": 1,
-      "cached_artifacts": [
-        {
-          "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
-          "revision": "b7ff25715ee2ae49c9ff32159bc73de864648aef",
-          "filename": "Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
-          "quantization": "Q4_K_M",
-          "bytes": 16810714528,
-          "path": "~/.cache/huggingface/hub/models--JonathanColetti--Qwen3.8-27B-Uncensored-GGUF/snapshots/b7ff25715ee2ae49c9ff32159bc73de864648aef/Qwen3.8-27B-Uncensored-Q4_K_M.gguf"
-        },
-        {
-          "repository": "unsloth/Qwen3.8-27B-GGUF",
-          "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
-          "filename": "Qwen3.8-27B-UD-Q5_K_M.gguf",
-          "quantization": "Q5_K_M",
-          "bytes": 19771509664,
-          "path": "~/.cache/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q5_K_M.gguf"
-        }
-      ],
-      "test_phases": [
-        "llama-cpp-comparator",
-        "staging-compatibility",
-        "load",
-        "short",
-        "tool",
-        "long-context",
-        "kv-reuse",
-        "compiled-gdn-ab"
-      ],
+      "status": "selected-not-downloaded",
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
+      "weight_bytes": 4665462000,
+      "pinned_revision": "3e6447f082e89cc7f0bc6e5441afd38dfce760ff",
+      "modality": "vision-language (preprocessor/processor present)",
+      "gguf_reference": {
+        "repository": "unsloth/Qwen3.8-27B-GGUF",
+        "snapshot_revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+        "filename": "Qwen3.8-27B-UD-Q5_K_M.gguf",
+        "quantization": "Q5_K_M",
+        "blob_sha256": "2de73110cb254cbf09b54b717578dadff12ef1194e7271527e68202f39ba4bfd",
+        "bytes": 19771509664,
+        "header": { "arch": "qwen35", "size_label": "27B", "block_count": 65, "mtp_head": true },
+        "note": "Cached complete. Contains an MTP/Next-N head (nextn_predict_layers=1); run llama.cpp WITHOUT --spec-type for a single-token decode comparison."
+      },
+      "test_phases": ["llama-cpp-comparator", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse", "compiled-gdn-ab"],
       "notes": [
-        "The official Qwen/Qwen3.8-27B source is the model identity; cached GGUF files are comparator artifacts from the listed repositories and are not MLX checkpoints.",
-        "Both cached GGUFs contain an MTP/Next-N head; run llama.cpp without --spec-type so the comparator remains single-token and comparable to Mei.",
-        "The Ornith exact-shape fused affine-MoE kernel is not expected to apply because this model is dense and has no expert routing.",
-        "Compiled-GDN applicability is a hypothesis to verify on the MLXVLM Qwen35 path; no performance claim is implied."
+        "mlx-community is the established Apple/MLX regular 4-bit quant of the dense qwen35 lineage (source Qwen/Qwen3.8-27B). It is NOT UD-Q5 and MUST NOT be claimed as GGUF-UD equivalence; it is a regular 4-bit MLX comparator against the UD-Q5_K_M llama.cpp reference.",
+        "Not yet downloaded (inventory-only selection to avoid a multi-GB fetch for documentation). Resolve pinned_revision at stage time.",
+        "MTP caveat from the GGUF reference applies only to the llama.cpp comparator; Mei's MLX loader has no MTP path."
+      ]
+    },
+    {
+      "id": "mlx-community/gemma-4-26b-a4b-it-4bit",
+      "role": "secondary-comparator",
+      "format": "mlx",
+      "source_checkpoint": "google/gemma-4-26B-A4B-it",
+      "architecture": "gemma4",
+      "status": "selected-not-downloaded",
+      "quantization": { "bits": 4, "group_size": 64, "mode": "affine" },
+      "weight_bytes": 4514678350,
+      "pinned_revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
+      "modality": "vision-language (preprocessor/processor present)",
+      "gguf_reference": {
+        "repository": "mudler/gemma-4-26B-A4B-it-APEX-GGUF",
+        "snapshot_revision": "e79ec24ceca5060b55b9a267c565b0b0843f3678",
+        "source_base": "google/gemma-4-26B-A4B-it",
+        "filename": "gemma-4-26B-A4B-APEX-I-Quality.gguf",
+        "quantization": "APEX-I-Quality (GGUF)",
+        "blob_sha256": "472828ccd00bcf52d6ca72e97d49526fd254371a90ae6a77505409e6e2bf3304",
+        "bytes": 20576637248,
+        "header": { "arch": "gemma4", "size_label": "26B-A4B", "block_count": 30, "mtp_head": false },
+        "note": "Cached complete. Only the APEX-I-Quality GGUF is cached of the mudler variants; Compact/mmproj blobs are not present. arch gemma4 may require a recent llama.cpp (>=10470)."
+      },
+      "test_phases": ["llama-cpp-comparator", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse"],
+      "notes": [
+        "gemma4 is a separate architecture from qwen3_5/qwen3_5_moe. The architecture-specific VLM load/template/tool-call path is added only when required by loadability/tool evidence.",
+        "4-bit is the memory-safe default for this 26B-A4B MoE-family model on 32 GB; mlx-community also ships 5/6/8-bit/bf16 variants to test only if the memory gate leaves headroom.",
+        "Do not equate this MLX 4-bit with the APEX GGUF quantization; they are separate recipes and comparisons are behavioral, not bit-equivalent."
+      ]
+    },
+    {
+      "id": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+      "role": "secondary-comparator",
+      "format": "mlx",
+      "source_checkpoint": "orcarouter/Qwen3.8-27B-Uncensored",
+      "source_revision": "404ea47aaa5d8a8b00049c9e9750089aca011ab2",
+      "architecture": "qwen3_5",
+      "status": "provenance-pending",
+      "quantization": { "bits": 2, "group_size": null, "mode": "unknown", "note": "Repository currently ships only a 2-bit subdirectory (unsuitable default)." },
+      "pinned_revision": "14963e70f886455cf93090ac95bdbf4c8730cbe1",
+      "modality": "vision-language",
+      "gguf_reference": {
+        "repository": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5",
+        "snapshot_revision": "26f9b116cb7522faa3989b584cb37b4d41cd0191",
+        "filename": "Qwen3.8-27B-heretic-ara-Q5_K_M.gguf",
+        "quantization": "Q5_K_M",
+        "blob_sha256": "e79fdc96668747e3d629568582209b3bfab3c3a8496f8b90f7098a47238556a4",
+        "bytes": 19704559264,
+        "header": { "arch": "qwen35", "size_label": "27B", "block_count": 65, "mtp_head": true },
+        "note": "Cached complete. Heretic/uncensored derivative of the qwen35 lineage; the trohrbaugh card declares no upstream base_model, so its exact ancestry requires a source-provenance pass before any conversion. MTP head present -> llama.cpp comparator must run WITHOUT --spec-type."
+      },
+      "test_phases": ["llama-cpp-comparator", "provenance", "staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse"],
+      "notes": [
+        "KEEP DISTINCT FROM BASE Qwen3.8. This candidate is the Uncensored/Heretic lineage, not Qwen/Qwen3.8-27B. The orcarouter uncensored/abliterated MLX repo is the only MLX artifact in this lineage, and it currently exposes only a 2-bit directory (too lossy for tool reliability).",
+        "No reliable Mac-suitable MLX quant is confirmed for this lineage yet. A memory-safe provider would be a reproducible 4-bit conversion from the orcarouter/Qwen3.8-27B-Uncensored source (abliterated, distinct from base Qwen3.8), with the source's own revision and ancestry recorded.",
+        "Blocker recorded: conversion from source is required; do not convert from the trohrbaugh GGUF, and do not silently substitute base Qwen3.8 MLX."
       ]
     }
   ]
