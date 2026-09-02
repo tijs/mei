@@ -266,7 +266,10 @@ class ConvertWrapperTests(unittest.TestCase):
         src = self.make_source()
         out = self.out_dir()
         original_free = cq.free_bytes
-        cq.free_bytes = staticmethod(lambda path: 1)  # 1 byte free
+        # free_bytes is a plain module-level function; the mock must be a
+        # plain callable (a staticmethod object is not callable at module scope
+        # in Python 3.11: 'staticmethod' object is not callable).
+        cq.free_bytes = lambda path: 1  # 1 byte free
         try:
             rc = cq.run([
                 "--source", str(src), "--revision", REV,
@@ -278,6 +281,7 @@ class ConvertWrapperTests(unittest.TestCase):
         self.assertEqual(rc, 3)
         self.assertFalse(Path(out).exists())
         self.assertFalse(cq.provenance_path(Path(out)).exists())
+        self.assertTrue((src / "config.json").exists(), "refusal must not delete source")
 
     def test_hub_plan_requires_byte_estimates_for_guard(self):
         rc = cq.run([
