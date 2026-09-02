@@ -1,0 +1,23 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "endpoint": "completions",
+  "engine": "mei",
+  "finished_epoch": 1788389958.4945788,
+  "lengths": [
+    60,
+    4096,
+    16384,
+    24576
+  ],
+  "model": "mlx-community/Qwen3.8-27B-4bit",
+  "probes": {
+    "fill_60": {
+      "elapsed_seconds": 0.0063567087054252625,
+      "error": "RemoteDisconnected: Remote end closed connection without response",
+      "length_tokens": 60,
+      "status": "server_died"
+    }
+  },
+  "server_alive_final": false,
+  "started_epoch": 1788389957.928133
+}

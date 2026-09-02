@@ -1,0 +1,25 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788388712.362359,
+  "lengths": [
+    24000
+  ],
+  "model": "mlx-community/Qwen3.8-27B-4bit",
+  "probes": {
+    "fill_24000": {
+      "completion_tokens": 16,
+      "decode_tokens_per_second": 12.891416075239812,
+      "elapsed_seconds": 424.07372987503186,
+      "length_tokens": 24000,
+      "mem_active_GB": 23.54,
+      "mem_cache_GB": 1.98,
+      "mem_peak_GB": 25.52,
+      "prompt_tokens": 24052,
+      "prompt_tokens_per_second": 57.01413192979299,
+      "status": "passed"
+    }
+  },
+  "server_alive_final": true,
+  "started_epoch": 1788388287.5987499
+}

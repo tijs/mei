@@ -1,0 +1,24 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788389920.964364,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "mlx-community/Qwen3.8-27B-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "elapsed_seconds": 0.001,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "error"
+    },
+    "fill_30000_fresh": {
+      "elapsed_seconds": 0.323,
+      "error": "RemoteDisconnected: Remote end closed connection without response",
+      "status": "error"
+    }
+  },
+  "started_epoch": 1788389917.066664,
+  "status": "failed"
+}
