@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 @testable import MeiCore
 
@@ -23,7 +24,9 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.maxKVWindowSize, 0)
         XCTAssertEqual(config.ssmAnchorBoundaryCount, 0)
         XCTAssertTrue(config.enableSSMReDerive)
-        XCTAssertEqual(config.prefillStepSize, 512)
+        XCTAssertEqual(config.prefillStepSize, 64)
+        XCTAssertEqual(config.requestedOptimizationProfile, .auto)
+        XCTAssertEqual(config.optimizationProfile, .generic)
         XCTAssertEqual(config.contextCap, 65_536)
         XCTAssertTrue(config.useMmapSafetensors)
     }
@@ -78,6 +81,76 @@ final class ServerConfigParsingTests: XCTestCase {
         }
         XCTAssertThrowsError(try parse(["--context-cap", "0"])) { error in
             XCTAssertTrue(error is ConfigError)
+        }
+    }
+
+    func testAutoDetectsNestedOrnithModelAndUses512Prefill() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-ornith-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let metadata = "{\"model_type\":\"qwen3_5_moe\",\"text_config\":{\"model_type\":\"qwen3_5_moe_text\"}}"
+        try Data(metadata.utf8).write(to: directory.appendingPathComponent("config.json"))
+
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", directory.path, "--served-model-id", "ornith/test"
+        ])
+        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.prefillStepSize, 512)
+    }
+
+    func testMalformedOrUnknownMetadataFallsBackToGeneric() throws {
+        let malformed = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-malformed-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: malformed, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: malformed) }
+        try Data("not-json".utf8).write(to: malformed.appendingPathComponent("config.json"))
+        XCTAssertEqual(ModelOptimizationProfile.detect(modelDirectory: malformed.path), .generic)
+
+        let unknown = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-unknown-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: unknown, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: unknown) }
+        try Data("{\"model_type\":\"gemma4\"}".utf8)
+            .write(to: unknown.appendingPathComponent("config.json"))
+        XCTAssertEqual(ModelOptimizationProfile.detect(modelDirectory: unknown.path), .generic)
+    }
+
+    func testExplicitProfilesOverrideAutoDetection() throws {
+        let ornith = try parse(["--optimization-profile", "ornith"])
+        XCTAssertEqual(ornith.requestedOptimizationProfile, .ornith)
+        XCTAssertEqual(ornith.optimizationProfile, .ornith)
+        XCTAssertEqual(ornith.prefillStepSize, 512)
+
+        let generic = try parse([
+            "--optimization-profile", "generic", "--prefill-step-size", "128"
+        ])
+        XCTAssertEqual(generic.requestedOptimizationProfile, .generic)
+        XCTAssertEqual(generic.optimizationProfile, .generic)
+        XCTAssertEqual(generic.prefillStepSize, 128)
+    }
+
+    func testExplicitPrefillWinsOverOrnithProfile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-explicit-step-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("{\"model_type\":\"qwen3_5_moe\"}".utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", directory.path, "--served-model-id", "ornith/test",
+            "--prefill-step-size", "256"
+        ])
+        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.prefillStepSize, 256)
+    }
+
+    func testUnknownOptimizationProfileRejected() {
+        XCTAssertThrowsError(try parse(["--optimization-profile", "qwen"])) { error in
+            guard case ConfigError.invalidValue(let message) = error else {
+                return XCTFail("expected invalidValue, got \(error)")
+            }
+            XCTAssertTrue(message.contains("optimization-profile"))
         }
     }
 

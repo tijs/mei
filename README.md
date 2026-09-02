@@ -11,6 +11,21 @@ The primary target is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`; the goal is
 >= 30 decode tokens/second with correct tool-calling and no long-context
 collapse on this 32GB Apple Silicon machine.
 
+**Initial public release:** `0.1.0` (source-first, macOS/Apple Silicon).
+Mei's source is MIT-licensed; model weights are not included. See
+[`NOTICE.md`](NOTICE.md) and [`docs/RELEASE-0.1.0.md`](docs/RELEASE-0.1.0.md)
+for dependency, patch-queue, checkpoint, and benchmark provenance.
+
+## Optimization profiles
+
+Mei supports `auto`, `generic`, and `ornith` profiles. `auto` reads the local
+model's `config.json` and recognizes the validated `qwen3_5_moe`/
+`qwen3_5_moe_text` shape; unknown or malformed metadata stays generic.
+Ornith uses prefill step 512 and disables the fused gate/up cache before model
+loading. Generic uses prefill step 64 and leaves that cache unchanged.
+Compiled decode, rotating-KV quantization, bounded windows, and SSM anchors
+remain default-off.
+
 ## Layout
 
 - `Sources/MeiCore/` — engine, router, HTTP server, OpenAI DTOs
@@ -28,9 +43,13 @@ collapse on this 32GB Apple Silicon machine.
 ## Build
 
 ```bash
+swift package resolve
+bash scripts/apply_vmlx_patches.sh --reset
 swift build            # debug
 swift test             # unit tests (acceptance tests need a live server)
 swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
+# The release launcher resolves and applies the patch queue automatically:
+scripts/start_mei_server.sh
 ```
 
 `vmlx-swift` is pinned by revision (`aeb5e21c…`, the revision osaurus-ai's own
@@ -79,8 +98,8 @@ scripts/stop_mei_server.sh
 or directly:
 
 ```bash
-swift run mei --model-dir ~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit \
-  --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit --port 8024 \
+swift run mei --model-dir ~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned \
+  --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit --optimization-profile auto --port 8024 \
   --context-cap 65536 --prefill-step-size 512 \
   --kv-cache-dir ~/.local/share/local-model-bench/mei-runtime/kv-cache
 ```

@@ -3,13 +3,18 @@ import Foundation
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
+    public static let version = "0.1.0"
     public var modelDirectory: String
     public var servedModelID: String
+    /// Requested profile from the operator. `auto` is resolved from config.json.
+    public var requestedOptimizationProfile: ModelOptimizationProfile = .auto
+    /// Effective profile used by this process after model metadata detection.
+    public private(set) var optimizationProfile: ModelOptimizationProfile = .generic
     public var host: String = "127.0.0.1"
     public var port: Int = 8024
     public var contextCap: Int = 65_536
     public var maxTokensDefault: Int = 32_768
-    public var prefillStepSize: Int = 512
+    public var prefillStepSize: Int = 64
     /// KV cache quantization: nil = fp16, else bits (4 or 8).
     public var kvBits: Int? = nil
     public var kvGroupSize: Int = 64
@@ -103,6 +108,8 @@ public extension ServerConfig {
     static func parse(arguments: [String] = Array(CommandLine.arguments.dropFirst())) throws -> ServerConfig {
         var modelDirectory: String?
         var servedModelID: String?
+        var requestedOptimizationProfile: ModelOptimizationProfile = .auto
+        var prefillStepSizeExplicit = false
         var config = ServerConfig(modelDirectory: "", servedModelID: "")
 
         var index = 0
@@ -118,6 +125,13 @@ public extension ServerConfig {
             switch flag {
             case "--model-dir": modelDirectory = try value()
             case "--served-model-id": servedModelID = try value()
+            case "--optimization-profile":
+                let raw = try value().lowercased()
+                guard let profile = ModelOptimizationProfile(rawValue: raw) else {
+                    throw ConfigError.invalidValue(
+                        "--optimization-profile expects auto, generic, or ornith, got '\(raw)'")
+                }
+                requestedOptimizationProfile = profile
             case "--host": config.host = try value()
             case "--port":
                 config.port = try parseInt(flag, value())
@@ -127,6 +141,7 @@ public extension ServerConfig {
                 config.maxTokensDefault = try parseInt(flag, value())
             case "--prefill-step-size":
                 config.prefillStepSize = try parseInt(flag, value())
+                prefillStepSizeExplicit = true
             case "--kv-bits":
                 config.kvBits = try parseInt(flag, value())
             case "--kv-group-size":
@@ -194,6 +209,13 @@ public extension ServerConfig {
         }
         config.modelDirectory = modelDirectory
         config.servedModelID = servedModelID
+        config.requestedOptimizationProfile = requestedOptimizationProfile
+        config.optimizationProfile = ModelOptimizationProfile.resolve(
+            requested: requestedOptimizationProfile,
+            modelDirectory: modelDirectory)
+        if !prefillStepSizeExplicit {
+            config.prefillStepSize = config.optimizationProfile.defaultPrefillStepSize
+        }
 
         guard config.prefillStepSize > 0 else {
             throw ConfigError.invalidValue("--prefill-step-size must be > 0")
@@ -212,6 +234,10 @@ public extension ServerConfig {
     Required:
       --model-dir DIR        Local directory with model config + safetensors
       --served-model-id ID   Exact model ID served by GET /v1/models
+      --optimization-profile auto|generic|ornith
+                              auto detects validated qwen3_5_moe metadata;
+                              unknown/malformed metadata stays generic
+      --version               Print the Mei release version
 
     Network:
       --host HOST            (default 127.0.0.1)
@@ -220,8 +246,8 @@ public extension ServerConfig {
     Context / capacity:
       --context-cap TOKENS   Reject prompts beyond this many tokens (default 65536)
       --max-tokens TOKENS    Server-side per-request generation cap (default 32768)
-      --prefill-step-size N  Chunked prefill window (default 512; the key
-                             long-context safeguard for hybrid architectures)
+      --prefill-step-size N  Chunked prefill window (default 64 for generic;
+                             auto Ornith profile uses validated 512)
       --kv-bits N            Quantized KV cache bits (4 or 8; nil = fp16)
       --kv-group-size N      KV quantization group size (default 64)
       --quantized-kv-start N First layer index to quantize (default 0)

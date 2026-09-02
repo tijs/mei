@@ -1,6 +1,8 @@
 .DS_Store
 .build/
 .swiftpm/
+dist/
+*.swiftpm/
 *.xcodeproj/xcuserdata/
 .mei/
 __pycache__/

@@ -47,7 +47,7 @@ EXTRA_SENTINELS=(
 
 CHECKOUT_CANDIDATES=(
   "$MEI_REPO/.build/checkouts/vmlx-swift"
-  "$HOME/.local/share/local-model-bench/mei-build/checkouts/vmlx-swift"
+  "${MEI_BUILD_DIR:-$HOME/.local/share/local-model-bench/mei-build}/checkouts/vmlx-swift"
 )
 
 RESET="${1:-}"

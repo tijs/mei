@@ -5,6 +5,10 @@ import MLX
 @main
 struct MeiMain {
     static func main() async {
+        if CommandLine.arguments.dropFirst().contains("--version") {
+            print("mei \(ServerConfig.version)")
+            return
+        }
         let config: ServerConfig
         do {
             config = try ServerConfig.parse()
@@ -13,6 +17,10 @@ struct MeiMain {
             exit(2)
         }
 
+        config.optimizationProfile.applyRuntimeEnvironment(
+            force: config.requestedOptimizationProfile == .ornith)
+        print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
+        fflush(stdout)
         print("mei: loading model from \(config.modelDirectory) (served id: \(config.servedModelID))...")
         fflush(stdout)
         let engine: Engine

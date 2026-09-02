@@ -21,11 +21,15 @@ PID_FILE="$RUNTIME_BASE/server.pid"
 SWIFT_BIN="${MEI_SWIFT:-swift}"
 
 MODEL_DIR="${MEI_MODEL_DIR:-$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit}"
+if [[ -z "${MEI_MODEL_DIR:-}" && -d "$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned" ]]; then
+  MODEL_DIR="$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+fi
 SERVED_MODEL_ID="${MEI_SERVED_MODEL_ID:-ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit}"
+OPTIMIZATION_PROFILE="${MEI_OPTIMIZATION_PROFILE:-auto}"
 PORT="${MEI_PORT:-8024}"
 CONTEXT_CAP="${MEI_CONTEXT_CAP:-65536}"
 MAX_TOKENS="${MEI_MAX_TOKENS:-32768}"
-PREFILL_STEP_SIZE="${MEI_PREFILL_STEP_SIZE:-512}"
+PREFILL_STEP_SIZE="${MEI_PREFILL_STEP_SIZE:-}"
 KV_BITS="${MEI_KV_BITS:-}"
 TEMPERATURE="${MEI_TEMPERATURE:-0.6}"
 TOP_P="${MEI_TOP_P:-0.95}"
@@ -49,6 +53,11 @@ Usage: start_mei_server.sh [options]
 
 The full launch configuration is expressed through MEI_* environment
 variables (see the script); the bench config yaml sets them explicitly.
+
+Optimization profiles:
+  MEI_OPTIMIZATION_PROFILE=auto    detect qwen3_5_moe as Ornith, else generic
+  MEI_OPTIMIZATION_PROFILE=generic force conservative non-Ornith defaults
+  MEI_OPTIMIZATION_PROFILE=ornith  force the validated Ornith profile
 
 Disk safety:
   MEI_MIN_FREE_GIB=20          refuse launch below this free-space floor
@@ -85,6 +94,18 @@ if ! python3 "$DISK_GUARD" check --runtime-root "$CACHE_ROOT" --min-free-gib "$M
   exit 1
 fi
 
+echo "mei: resolving pinned vmlx dependency ..." | tee -a "$LOG_DIR/start.log"
+"$SWIFT_BIN" package resolve --scratch-path "$BUILD_DIR" --package-path "$MEI_REPO" \
+  > "$LOG_DIR/resolve.log" 2>&1 || {
+  echo "FATAL: SwiftPM dependency resolution failed — see $LOG_DIR/resolve.log" >&2
+  exit 1
+}
+bash "$MEI_REPO/scripts/apply_vmlx_patches.sh" --reset \
+  > "$LOG_DIR/vmlx-patches.log" 2>&1 || {
+  echo "FATAL: pinned vmlx patch series failed — see $LOG_DIR/vmlx-patches.log" >&2
+  exit 1
+}
+
 echo "mei: building (release, scratch: $BUILD_DIR) ..." | tee -a "$LOG_DIR/start.log"
 "$SWIFT_BIN" build -c release --scratch-path "$BUILD_DIR" --package-path "$MEI_REPO" \
   > "$LOG_DIR/build.log" 2>&1 || {
@@ -96,13 +117,14 @@ BIN="$BUILD_DIR/release/mei"
 bash "$MEI_REPO/scripts/prepare_metallib.sh" "$BUILD_DIR/release" || { echo "FATAL: missing Metal kernel library" >&2; exit 1; }
 
 ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
+  --optimization-profile "$OPTIMIZATION_PROFILE"
   --host 127.0.0.1 --port "$PORT"
   --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
-  --prefill-step-size "$PREFILL_STEP_SIZE"
   --temperature "$TEMPERATURE" --top-p "$TOP_P" --top-k "$TOP_K"
   --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
   --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
   --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+[[ -n "$PREFILL_STEP_SIZE" ]] && ARGS+=(--prefill-step-size "$PREFILL_STEP_SIZE")
 [[ -n "$COMPILED_DECODE_THRESHOLD" ]] && ARGS+=(--compiled-decode-threshold "$COMPILED_DECODE_THRESHOLD")
 [[ "$MAX_KV_WINDOW" != "0" && -n "$MAX_KV_WINDOW" ]] && ARGS+=(--max-kv-window "$MAX_KV_WINDOW")
 [[ "$SSM_ANCHOR_BOUNDARIES" != "0" && -n "$SSM_ANCHOR_BOUNDARIES" ]] && ARGS+=(--ssm-anchor-boundaries "$SSM_ANCHOR_BOUNDARIES")
