@@ -233,6 +233,19 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   `70c11219…e8fab6`) WITHOUT launching the server — safe under contention;
   a digest mismatch is FATAL and refuses to measure. The full run records
   the provenance block in its artifact before any row.
+- `tools/convert_mlx_quant.py` — Mei-owned reproducible source→MLX quant
+  conversion wrapper (`mlx_lm.convert` 0.31.3). Validates the pinned source
+  revision/identity, the quant recipe (bits/group/mode/dtype), enforces the
+  20 GiB free-disk floor against the estimated source+output requirement
+  (refuses to start when it cannot fit; hub plans need `--source-bytes` +
+  `--expect-output-bytes`), builds the exact converter command, and writes a
+  provenance JSON (`<name>.provenance.json`, schema v1) ONLY after a
+  successful conversion. Never claims UD (Unsloth Dynamic) equivalence and
+  never labels GGUF-derived; every provenance records claims.ud_equivalence
+  = false. `--dry-run` plans without downloading/converting/deleting;
+  source cache is never auto-deleted (`--delete-source-cache` is an
+  explicit post-provenance opt-in). Non-Metal unit tests:
+  `tools/test_convert_mlx_quant.py` (22 focused tests, fake-converter based).
 
 ## Design notes
 
