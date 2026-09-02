@@ -10,9 +10,11 @@ Osaurus app).
 The project's scope is deliberately small: one model per server process, the
 OpenAI chat/completions surface this repo's benchmark needs, chunked prefill
 on for hybrid architectures, and in-process KV/prefix reuse across turns.
-The primary target is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`; the goal is
->= 30 decode tokens/second with correct tool-calling and no long-context
-collapse on this 32GB Apple Silicon machine.
+Inspired by [DwarfStar](https://github.com/antirez/ds4)'s compact native
+local-inference approach, Mei targets an even smaller machine: an M1 Mac with
+32 GB of unified memory. The primary model is
+`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`; the goal is >= 30 decode tokens/second
+with correct tool-calling and no long-context collapse on that target.
 
 **Initial public release:** `0.1.0` (source-first, macOS/Apple Silicon).
 Mei's source is MIT-licensed; model weights are not included. See
