@@ -1,6 +1,6 @@
-# Mei (梅)
+# Mei (寐)
 
-Mei — after Mei Long, the sleeping dragon dinosaur — is a narrow, native
+Mei — after *Mei long* (`寐龙`), the sleeping-dragon dinosaur — is a narrow, native
 Swift/MLX OpenAI-compatible inference server for Apple Silicon, built directly
 on the pinned `tijs/vmlx-swift` fork of `osaurus-ai/vmlx-swift` (not the full
 Osaurus app).
