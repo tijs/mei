@@ -119,6 +119,12 @@ above the model's working set — the MLX default limit can otherwise sit
 below it and make allocation wait on scheduled tasks (the hang failure
 mode).
 
+Dense qwen3_5/qwen3_8 checkpoints (e.g. Qwen3.8-27B-4bit) crash the
+in-memory-only paged tier (`SmallVector out of range`, vmlx
+`mlx/c/array.cpp:335`), so with cache reuse on and no `--kv-cache-dir`
+given they default to a disposable cache under the OS temp directory; an
+explicit `--kv-cache-dir` always wins.
+
 ### Models (four-candidate MLX lineup)
 
 - **Primary (MVP)**: `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` — the model

@@ -45,8 +45,13 @@ public struct ServerConfig: Sendable {
     /// Directory for the coordinator's on-disk L2 KV tier (hybrid models
     /// like Ornith's mamba/GatedDelta layers are disk-backed-restore only,
     /// so in-process prefix reuse for them needs this tier; paged-in-memory
-    /// alone covers non-hybrid topologies). "" = disabled.
+    /// alone covers non-hybrid topologies). "" = disabled. Dense
+    /// qwen3_5/qwen3_8 checkpoints get a disposable default when the flag is
+    /// omitted and cache reuse is on (see parse below).
     public var kvCacheDir: String = ""
+    /// True when the operator passed `--kv-cache-dir` (even an empty value):
+    /// an explicit choice always wins over the model-aware safe default.
+    public private(set) var kvCacheDirExplicit = false
     /// After each chat generation the coordinator runs one extra prompt-only
     /// pass to re-derive the hybrid SSM boundary state for reuse (upstream
     /// default on; costs ~1x prefill at turn end). Off when a benchmark row
@@ -86,6 +91,28 @@ public struct ServerConfig: Sendable {
     /// KV capacity bound: the cache must hold the full context plus a
     /// generation headroom window.
     public var maxKVSize: Int { contextCap + 4096 }
+
+    /// Deterministic disposable KV cache location for the model-aware safe
+    /// default. Lives under the OS temp directory: OS-reclaimed, never
+    /// pollutes the benchmark runtime, and consistent with this server's
+    /// single-process in-process-only reuse (no cross-restart persistence
+    /// claim). Sanitized per served model ID so concurrent servers never
+    /// share a cache.
+    public static func defaultDisposableKVCacheDir(servedModelID: String) -> String {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-kv-cache", isDirectory: true)
+        return root
+            .appendingPathComponent(sanitizedModelKey(servedModelID), isDirectory: true)
+            .path
+    }
+
+    /// Model IDs contain '/' (org/repo) and often spaces (quant labels);
+    /// collapse everything non-safe into a single path component.
+    private static func sanitizedModelKey(_ servedModelID: String) -> String {
+        String(servedModelID.map { ch in
+            ch.isLetter || ch.isNumber || ch == "-" || ch == "_" || ch == "." ? ch : "-"
+        })
+    }
 }
 
 public enum ConfigError: LocalizedError, CustomStringConvertible {
@@ -180,6 +207,7 @@ public extension ServerConfig {
                 config.cacheLimitBytes = try parseInt(flag, value())
             case "--kv-cache-dir":
                 config.kvCacheDir = try value()
+                config.kvCacheDirExplicit = true
             case "--ssm-rederive":
                 config.enableSSMReDerive = try parseBool(flag, value())
             case "--compiled-decode":
@@ -215,6 +243,20 @@ public extension ServerConfig {
             modelDirectory: modelDirectory)
         if !prefillStepSizeExplicit {
             config.prefillStepSize = config.optimizationProfile.defaultPrefillStepSize
+        }
+
+        // Model-aware safe default (0.1.0): dense qwen3_5/qwen3_8-style
+        // checkpoints crash the in-memory-only paged KV tier (vmlx
+        // array.cpp:335 'SmallVector out of range', trigger isolated by the
+        // 2026-09-02 2x2 evidence), so with cache reuse on and no explicit
+        // --kv-cache-dir they land on a disposable on-disk cache under the
+        // OS temp directory. Explicit --kv-cache-dir always wins;
+        // --cache-reuse false keeps caching fully disabled (no dir created).
+        if !config.kvCacheDirExplicit, config.cacheReuse,
+           ModelOptimizationProfile.denseQwen35NeedsDiskKVTier(
+               modelDirectory: config.modelDirectory) {
+            config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
+                servedModelID: config.servedModelID)
         }
 
         guard config.prefillStepSize > 0 else {
@@ -272,7 +314,13 @@ public extension ServerConfig {
                                 model working set, which otherwise hangs)
       --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
       --kv-cache-dir DIR        On-disk KV cache dir for the prefix coordinator
-                                (hybrid models need the disk tier; default off)
+                                (hybrid models and dense qwen3_5/qwen3_8
+                                checkpoints need the disk tier). With cache
+                                reuse on and this flag omitted, dense
+                                qwen3_5/qwen3_8 models default to a disposable
+                                cache under the OS temp dir (the in-memory-only
+                                tier crashes them, vmlx array.cpp:335);
+                                explicit values always win
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)

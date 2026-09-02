@@ -180,4 +180,112 @@ final class ServerConfigParsingTests: XCTestCase {
             XCTAssertTrue(message.contains("kv-bits"))
         }
     }
+
+    // MARK: - Dense Qwen3.5/Qwen3.8 disk-KV safety default (0.1.0 release
+    // fix for the in-memory-only paged KV SmallVector crash; trigger
+    // isolated 2026-09-02 by the 2x2 evidence: cells A/C (in-memory) crash
+    // at vmlx array.cpp:335, cells B/D (disk) pass — the disk tier is the
+    // load-bearing element for dense qwen3_5, so cache-reuse on without an
+    // explicit --kv-cache-dir must default to a disposable on-disk cache).
+    //
+    // Fan-out: qwen3_5 / qwen3_5_text are the dense Qwen3.5/Qwen3.8 MLX
+    // model_type values (verified on Qwen3.8-27B-4bit and the Heretic
+    // variant); the MoE/hybrid qwen3_5_moe family keeps operator-controlled
+    // cache configuration (Ornith behavior preserved).
+
+    private func makeModelDir(modelType: String) throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-kv-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONSerialization.data(withJSONObject: ["model_type": modelType])
+            .write(to: directory.appendingPathComponent("config.json"))
+        return directory
+    }
+
+    func testDenseQwen35DefaultsDisposableDiskKVWhenReuseOnAndNoExplicitDir() throws {
+        let dir = try makeModelDir(modelType: "qwen3_5")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertTrue(config.cacheReuse)
+        XCTAssertFalse(config.kvCacheDirExplicit)
+        XCTAssertEqual(
+            config.kvCacheDir,
+            ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
+        XCTAssertTrue(config.kvCacheDir.contains("Qwen3.8-27B-4bit"))
+    }
+
+    func testExplicitGenericProfileWithDenseQwen35StillGetsDiskDefault() throws {
+        let dir = try makeModelDir(modelType: "qwen3_5_text")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
+            "--optimization-profile", "generic",
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertEqual(
+            config.kvCacheDir,
+            ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
+    }
+
+    func testExplicitKVCacheDirWinsOverDenseQwen35Default() throws {
+        let dir = try makeModelDir(modelType: "qwen3_5")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
+            "--kv-cache-dir", "/custom/kv",
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertTrue(config.kvCacheDirExplicit)
+        XCTAssertEqual(config.kvCacheDir, "/custom/kv")
+    }
+
+    func testCacheReuseFalseKeepsKVCacheDirEmptyForDenseQwen35() throws {
+        let dir = try makeModelDir(modelType: "qwen3_5")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
+            "--cache-reuse", "false",
+        ])
+        XCTAssertFalse(config.cacheReuse)
+        XCTAssertEqual(config.kvCacheDir, "")
+        XCTAssertFalse(config.kvCacheDirExplicit)
+    }
+
+    func testOrnithMoeModelKeepsKVCacheDirEmptyDefault() throws {
+        let dir = try makeModelDir(modelType: "qwen3_5_moe")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        ])
+        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.prefillStepSize, 512)
+        // Ornith behavior preserved: no implicit disk-KV default.
+        XCTAssertEqual(config.kvCacheDir, "")
+    }
+
+    func testNonQwenGenericModelKeepsKVCacheDirEmptyDefault() throws {
+        let dir = try makeModelDir(modelType: "gemma4")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", dir.path,
+            "--served-model-id", "mlx-community/gemma-4-26b-a4b-it-4bit",
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertEqual(config.kvCacheDir, "")
+    }
+
+    func testMissingModelDirNeverDefaulted() throws {
+        let config = try parse([])
+        XCTAssertEqual(config.modelDirectory, "/tmp/model")
+        XCTAssertFalse(ModelOptimizationProfile.denseQwen35NeedsDiskKVTier(modelDirectory: "/tmp/model"))
+        XCTAssertEqual(config.kvCacheDir, "")
+    }
 }

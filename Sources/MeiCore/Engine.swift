@@ -115,7 +115,8 @@ public actor Engine {
                 enableSSMReDerive: config.enableSSMReDerive,
                 modelKey: config.servedModelID))
             let topology = await container.cacheTopologySnapshot()
-            print("mei: prefix cache enabled (paged in-memory + \(diskEnabled ? "disk" : "no disk")); topology \(topology.topologyTags.joined(separator: " "))")
+            let tier = diskEnabled ? "disk at \(config.kvCacheDir)" : "no disk"
+            print("mei: prefix cache enabled (paged in-memory + \(tier)); topology \(topology.topologyTags.joined(separator: " "))")
         } else {
             print("mei: prefix cache disabled (--cache-reuse false)")
         }

@@ -19,6 +19,17 @@ Initial public release for Apple Silicon.
 - Local vMLX patch queue pinned to an immutable upstream revision.
 - Focused unit tests and release provenance.
 
+### Changed
+
+- Generic-profile safety default: dense Qwen3.5/Qwen3.8-lineage checkpoints
+  (`model_type` `qwen3_5`/`qwen3_5_text`) crash the in-memory-only paged KV
+  cache tier (vmlx `array.cpp:335`, crash trigger isolated by a bounded 2x2
+  on 2026-09-02), so with `--cache-reuse` on and no explicit `--kv-cache-dir`
+  they now default to a disposable on-disk cache under the OS temp
+  directory. Explicit `--kv-cache-dir` always wins; `--cache-reuse false`
+  keeps caching fully disabled; the MoE/Ornith `qwen3_5_moe` family is
+  untouched.
+
 ### Release status
 
 This is an initial public, source-first release. The validated runtime target

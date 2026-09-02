@@ -35,19 +35,46 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// Detect only from valid model metadata; model names and paths are not
     /// enough to activate the memory-sensitive Ornith profile.
     public static func detect(modelDirectory: String) -> ModelOptimizationProfile {
+        let ornithTypes: Set<String> = ["qwen3_5_moe", "qwen3_5_moe_text"]
+        return collectedModelTypes(in: modelDirectory).intersection(ornithTypes).isEmpty
+            ? .generic
+            : .ornith
+    }
+
+    /// Dense Qwen3.5/Qwen3.8-lineage MLX checkpoints (`qwen3_5` /
+    /// `qwen3_5_text`) crash with the in-memory-only paged KV cache tier
+    /// (`Fatal error: SmallVector out of range`, vmlx mlx/c/array.cpp:335;
+    /// trigger isolated by the 2026-09-02 bounded 2x2 — prefill step
+    /// excluded, KV tier implicated). Whenever prefix reuse is enabled these
+    /// models must land on the disk-backed tier, so cache-reuse on without an
+    /// explicit `--kv-cache-dir` defaults them to a disposable on-disk cache.
+    /// The MoE/hybrid qwen3_5_moe family is intentionally NOT in the set:
+    /// Ornith runs keep their operator-controlled cache configuration.
+    public static let denseQwen35KVUnsafeModelTypes: Set<String> = ["qwen3_5", "qwen3_5_text"]
+
+    /// True when the bundle's metadata contains any dense qwen3_5 family
+    /// model_type. Missing/malformed metadata returns false (the safe
+    /// default must not fire on unreadable state — it only needs to fire on
+    /// the empirically verified crashing family).
+    public static func denseQwen35NeedsDiskKVTier(modelDirectory: String) -> Bool {
+        !collectedModelTypes(in: modelDirectory)
+            .isDisjoint(with: denseQwen35KVUnsafeModelTypes)
+    }
+
+    /// All `model_type` values reachable in config.json (root + nested
+    /// text_config etc.), lowercased; empty on unreadable metadata.
+    private static func collectedModelTypes(in modelDirectory: String) -> Set<String> {
         let url = URL(fileURLWithPath: modelDirectory, isDirectory: true)
             .appendingPathComponent("config.json")
         guard let data = try? Data(contentsOf: url),
               let object = try? JSONSerialization.jsonObject(with: data),
               let root = object as? [String: Any]
         else {
-            return .generic
+            return []
         }
-
         var modelTypes = Set<String>()
         collectModelTypes(in: root, into: &modelTypes)
-        let ornithTypes: Set<String> = ["qwen3_5_moe", "qwen3_5_moe_text"]
-        return modelTypes.intersection(ornithTypes).isEmpty ? .generic : .ornith
+        return modelTypes
     }
 
     /// Apply only the validated Ornith memory safeguard. Automatic detection
