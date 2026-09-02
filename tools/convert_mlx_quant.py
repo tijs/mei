@@ -180,10 +180,24 @@ def estimate_output_bytes(source_bytes: int, q_bits: int) -> int:
     return int(source_bytes * q_bits / 16) + OUTPUT_OVERHEAD_BYTES
 
 
-def fits_requirement(source_bytes: int, output_bytes: int, free_bytes: int, min_free_gib: int) -> bool:
+def fits_requirement(
+    source_bytes: int,
+    output_bytes: int,
+    free_bytes: int,
+    min_free_gib: int,
+    *,
+    source_present: bool = False,
+) -> bool:
     if min_free_gib < 0:
         raise ValueError("minimum free space cannot be negative")
-    return free_bytes >= source_bytes + output_bytes + min_free_gib * 1024**3
+    needed = output_bytes + min_free_gib * 1024**3
+    if not source_present:
+        # Hub plan: the source is downloaded inside the run, so the whole
+        # source+output+floor must be able to coexist. Local plan: the source
+        # already occupies its bytes on disk (sunk cost), so only
+        # output+floor must fit on top of the current free space.
+        needed += source_bytes
+    return free_bytes >= needed
 
 
 def free_bytes(path) -> int:
@@ -218,15 +232,43 @@ def resolve_converter(converter: str | None) -> str:
     )
 
 
-def converter_versions() -> dict:
-    """mlx_lm / mlx versions from the interpreter running the converter."""
-    out = {}
-    for name, key in (("mlx-lm", "mlx_lm"), ("mlx", "mlx")):
+def converter_versions(converter: str) -> dict:
+    """mlx_lm / mlx versions from the interpreter running the converter.
+
+    The converter binary is a script whose shebang names its venv python; the
+    wrapper's own interpreter may differ (e.g. system python3 wrapping a
+    local-model-bench venv converter). Resolve the shebang interpreter and
+    query ITS package metadata; fall back to the wrapper interpreter, then to
+    "unknown" if neither has the packages.
+    """
+    probe = None
+    try:
+        script = Path(converter).resolve()
+        if script.is_file():
+            first = script.read_text(encoding="utf-8", errors="replace").splitlines()
+            if first and first[0].startswith("#!"):
+                shebang = first[0][2:].strip()
+                candidate = shebang.split()[0].strip()
+                if candidate and Path(candidate).exists():
+                    probe = candidate
+    except OSError:
+        probe = None
+    candidates = ([probe] if probe else []) + [sys.executable]
+    for interp in candidates:
         try:
-            out[key] = importlib.metadata.version(name)
-        except importlib.metadata.PackageNotFoundError:
-            out[key] = "unknown"
-    return out
+            out = subprocess.run(
+                [interp, "-c",
+                 "import importlib.metadata as m;"
+                 "print(m.version('mlx_lm'));print(m.version('mlx'))"],
+                check=False, capture_output=True, text=True, timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if out.returncode == 0:
+            lines = out.stdout.strip().splitlines()
+            if len(lines) == 2:
+                return {"mlx_lm": lines[0].strip(), "mlx": lines[1].strip()}
+    return {"mlx_lm": "unknown", "mlx": "unknown"}
 
 
 def provenance_path(output: Path) -> Path:
@@ -387,11 +429,22 @@ def run(argv: list[str] | None = None, env: dict | None = None) -> int:
             return 3
 
         available = free_bytes(output_path.parent)
-        if not fits_requirement(source_bytes, output_bytes, available, args.min_free_gib):
+        # A local source is already on disk: its bytes are a sunk cost, so the
+        # guard requires output + floor fit on top of the current free space.
+        # A hub source is downloaded during the run: source + output + floor
+        # must all be able to coexist.
+        source_present = plan["kind"] == "local"
+        if not fits_requirement(
+            source_bytes, output_bytes, available, args.min_free_gib,
+            source_present=source_present,
+        ):
+            needed = output_bytes + args.min_free_gib * 1024**3 + (
+                0 if source_present else source_bytes
+            )
             print(
                 f"REFUSE: disk guard not safe: free={available} B, "
-                f"need >= source {source_bytes} + output {output_bytes} + "
-                f"{args.min_free_gib} GiB floor. Free the disk "
+                f"need >= {needed} B ({'output + floor (local source already on disk)' if source_present else 'source + output + floor (hub source will be downloaded)'}). "
+                "Free the disk "
                 "(mei_disk_guard cleanup, note 9beee290) or pass "
                 "--delete-source-cache after the disk is freed, then retry.",
                 file=sys.stderr,
@@ -431,7 +484,7 @@ def run(argv: list[str] | None = None, env: dict | None = None) -> int:
 
         payload = provenance_payload(
             plan,
-            versions=converter_versions(),
+            versions=converter_versions(converter),
             converter=converter,
             output_path=str(output_path.resolve()) if output_path.exists() else str(output_path),
             command=command,

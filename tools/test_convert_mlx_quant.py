@@ -247,6 +247,36 @@ class ConvertWrapperTests(unittest.TestCase):
             Path("/m/Qwen3.8-27B-5bit-affine-g64.provenance.json"),
         )
 
+    # ---- converter version resolution ----------------------------------
+
+    def make_fake_converter_with_venv(self, mlx_lm_version, mlx_version):
+        """A venv whose bin/python prints canned versions, + a converter
+        script shebang-bound to it. Models mlx_lm 0.31.3 in a venv wrapped
+        by a different interpreter."""
+        venv = self.root / "fake-venv"
+        (venv / "bin").mkdir(parents=True)
+        (venv / "lib").mkdir()
+        py = venv / "bin" / "python3.12"
+        py.write_text(
+            "#!/bin/sh\n"
+            f'echo "{mlx_lm_version}"\n'
+            f'echo "{mlx_version}"\n'
+        )
+        py.chmod(py.stat().st_mode | stat.S_IEXEC)
+        converter = self.root / "fake-venv-convert"
+        converter.write_text(f"#!{py}\n")
+        converter.chmod(converter.stat().st_mode | stat.S_IEXEC)
+        return str(converter)
+
+    def test_converter_versions_uses_shebang_interpreter(self):
+        converter = self.make_fake_converter_with_venv("9.9.1", "8.8.2")
+        versions = cq.converter_versions(converter)
+        self.assertEqual(versions, {"mlx_lm": "9.9.1", "mlx": "8.8.2"})
+
+    def test_converter_versions_tolerates_missing_packages(self):
+        versions = cq.converter_versions("/nonexistent/converter")
+        self.assertEqual(versions, {"mlx_lm": "unknown", "mlx": "unknown"})
+
     # ---- dry-run / planning mode --------------------------------------
 
     def test_dry_run_plans_without_side_effects(self):
@@ -283,21 +313,97 @@ class ConvertWrapperTests(unittest.TestCase):
         self.assertFalse(cq.provenance_path(Path(out)).exists())
         self.assertTrue((src / "config.json").exists(), "refusal must not delete source")
 
+    def test_local_plan_guard_counts_source_as_sunk_cost(self):
+        # A local source already occupies its bytes on disk (sunk cost); the
+        # guard must require output + floor, NOT source + output + floor.
+        # (Real-world case: the 55.6 GB source is staged in the HF cache, so
+        # free space can never again satisfy source+output+20GiB, even though
+        # output+20GiB fits and the end-state floor holds.)
+        src = self.make_source()
+        out = self.out_dir()
+        src_bytes = cq.dir_digest(src)[1]
+        output_bytes = cq.estimate_output_bytes(src_bytes, 5)
+        original_free = cq.free_bytes
+        cq.free_bytes = lambda path: output_bytes + 20 * GIB + 1  # >= O+F, < S+O+F
+        try:
+            rc = cq.run([
+                "--source", str(src), "--revision", REV,
+                "--output", out, "--converter", "/any/mlx_lm.convert",
+                "--dry-run", "--min-free-gib", "20",
+            ])
+        finally:
+            cq.free_bytes = original_free
+        self.assertEqual(rc, 0, "local plan with output+floor free must pass the guard")
+        self.assertFalse(Path(out).exists())
+        self.assertTrue((src / "config.json").exists(), "dry-run must not delete source")
+
+    def test_local_plan_guard_still_refuses_below_output_plus_floor(self):
+        src = self.make_source()
+        out = self.out_dir()
+        src_bytes = cq.dir_digest(src)[1]
+        output_bytes = cq.estimate_output_bytes(src_bytes, 5)
+        original_free = cq.free_bytes
+        cq.free_bytes = lambda path: output_bytes + 20 * GIB - 1
+        try:
+            rc = cq.run([
+                "--source", str(src), "--revision", REV,
+                "--output", out, "--converter", "/any/mlx_lm.convert",
+                "--dry-run", "--min-free-gib", "20",
+            ])
+        finally:
+            cq.free_bytes = original_free
+        self.assertEqual(rc, 3, "local plan below output+floor must still refuse")
+        self.assertFalse(Path(out).exists())
+
+    def test_hub_plan_guard_still_counts_source(self):
+        # Regression: a hub plan (source downloaded inside the run) must keep
+        # the strict source+output+floor requirement even when output+floor fits.
+        src_bytes = SOURCE_BYTES
+        output_bytes = cq.estimate_output_bytes(src_bytes, 5)
+        original_free = cq.free_bytes
+        cq.free_bytes = lambda path: output_bytes + 20 * GIB + 1  # plenty for local, NOT hub
+        try:
+            rc = cq.run([
+                "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
+                "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
+                "--dry-run", "--source-bytes", str(src_bytes),
+                "--expect-output-bytes", str(output_bytes),
+                "--min-free-gib", "20",
+            ])
+        finally:
+            cq.free_bytes = original_free
+        self.assertEqual(rc, 3, "hub plan must still require source+output+floor")
+
     def test_hub_plan_requires_byte_estimates_for_guard(self):
-        rc = cq.run([
-            "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
-            "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
-            "--dry-run",
-        ])
-        self.assertEqual(rc, 3)  # cannot prove the disk requirement
-        rc = cq.run([
-            "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
-            "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
-            "--dry-run", "--source-bytes", str(SOURCE_BYTES),
-            "--expect-output-bytes", str(cq.estimate_output_bytes(SOURCE_BYTES, 5)),
-            "--min-free-gib", "0",
-        ])
-        self.assertEqual(rc, 0)
+        # Mock free space so the test is deterministic and independent of the
+        # machine's current free bytes (the hub requirement is ~73+ GB).
+        original_free = cq.free_bytes
+        cq.free_bytes = lambda path: 10**12  # 1 TB free
+        try:
+            rc = cq.run([
+                "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
+                "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
+                "--dry-run",
+            ])
+            self.assertEqual(rc, 3)  # cannot prove the disk requirement
+            rc = cq.run([
+                "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
+                "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
+                "--dry-run", "--source-bytes", str(SOURCE_BYTES),
+                "--expect-output-bytes", str(cq.estimate_output_bytes(SOURCE_BYTES, 5)),
+                "--min-free-gib", "0",
+            ])
+            self.assertEqual(rc, 0)
+            rc = cq.run([
+                "--source", "Qwen/Qwen3.8-27B", "--revision", REV,
+                "--output", self.out_dir(), "--converter", "/any/mlx_lm.convert",
+                "--dry-run", "--source-bytes", str(SOURCE_BYTES),
+                "--expect-output-bytes", str(cq.estimate_output_bytes(SOURCE_BYTES, 5)),
+                "--min-free-gib", "20",
+            ])
+            self.assertEqual(rc, 0, "hub plan with source+output+floor free must pass")
+        finally:
+            cq.free_bytes = original_free
 
     # ---- real (fake-converter) run ------------------------------------
 
