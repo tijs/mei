@@ -1,5 +1,7 @@
 # Mei
 
+![Mei sleeping-dinosaur logo](assets/mei-logo.jpg)
+
 Mei — after *Mei long*, the sleeping-dragon dinosaur — is a narrow, native
 Swift/MLX OpenAI-compatible inference server for Apple Silicon, built directly
 on the pinned `tijs/vmlx-swift` fork of `osaurus-ai/vmlx-swift` (not the full
