@@ -1,0 +1,8 @@
+mei: optimization profile generic (requested generic, prefill 512, compiled-decode false, kv-window 0, ssm-anchors 0)
+mei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...
+mei: prefix cache enabled (paged in-memory + no disk); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed
+mei: model loaded
+mei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes
+mei: memory after load: active 16054544548 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449
+mei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 512, kv-bits none)
+MLX/ErrorHandler.swift:343: Fatal error: SmallVector out of range. at /Users/tijs/.local/share/local-model-bench/mei-build/checkouts/vmlx-swift/Source/Cmlx/mlx-c/mlx/c/array.cpp:335
