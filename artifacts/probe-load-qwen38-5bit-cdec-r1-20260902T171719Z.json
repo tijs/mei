@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788369449.623504,
+  "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 5.061,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 31,
+        "generate_ms": 2990.760922431946,
+        "mei_memory_active_bytes": 23529787577,
+        "mei_memory_cache_bytes": 499314652,
+        "mei_memory_peak_bytes": 24107962352,
+        "prefill_ms": 1476.8719673156738,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 38.59508560082009,
+        "tokens_per_second": 10.365255132059255,
+        "total_tokens": 88
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 11.840323016395843,
+      "elapsed_seconds": 4.51,
+      "prompt_tokens": 65,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 2702.628970146179,
+        "mei_memory_active_bytes": 23530819810,
+        "mei_memory_cache_bytes": 500346844,
+        "mei_memory_peak_bytes": 24109486105,
+        "prefill_ms": 1415.7930612564087,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 45.910664332764455,
+        "tokens_per_second": 11.840323016395843,
+        "total_tokens": 97
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.006,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 18494713276,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+        "prefillStepSize": 64,
+        "status": "ok",
+        "uptimeSeconds": 30
+      }
+    }
+  },
+  "server_log_tail": "mei: optimization profile generic (requested generic, prefill 64, compiled-decode true, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 (served id: Qwen/Qwen3.8-27B-5bit-affine-g64)...\nmei: prefix cache enabled (paged in-memory + disk at /Users/tijs/.local/share/local-model-bench/mei-runtime-q38-cdec-20260902T171635Z/kv-cache); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 18494713276 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[MLXPressGenerationProfile] generation-end tokens=31 total=4757.6ms decode.async_eval_submit count=32 total=3043.3ms avg=95.102ms | prompt.prepare_total count=1 total=1368.3ms avg=1368.274ms | prompt.async_eval_submit count=1 total=225.9ms avg=225.857ms | decode.step_build count=32 total=53.3ms avg=1.667ms | decode.compiled_forward count=32 total=52.9ms avg=1.654ms | decode.model_forward count=1 total=13.2ms avg=13.249ms | decode.token_item_sync count=32 total=0.3ms avg=0.010ms | decode.sample count=33 total=0.3ms avg=0.009ms | prompt.model_prepare count=2 total=0.0ms avg=0.005ms\n[MLXPressGenerationProfile] generation-end tokens=32 total=4405.5ms decode.async_eval_submit count=32 total=2749.1ms avg=85.908ms | prompt.prepare_total count=1 total=1315.3ms avg=1315.332ms | prompt.async_eval_submit count=1 total=225.0ms avg=224.972ms | decode.step_build count=32 total=51.6ms avg=1.614ms | decode.compiled_forward count=32 total=51.2ms avg=1.602ms | decode.model_forward count=1 total=12.7ms avg=12.653ms | decode.token_item_sync count=32 total=0.3ms avg=0.010ms | decode.sample count=33 total=0.3ms avg=0.009ms | prompt.model_prepare count=2 total=0.0ms avg=0.006ms\n",
+  "started_epoch": 1788369440.046308,
+  "status": "passed"
+}

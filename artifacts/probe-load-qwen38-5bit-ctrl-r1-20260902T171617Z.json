@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788369386.396759,
+  "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 4.27,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 31,
+        "generate_ms": 2457.329034805298,
+        "mei_memory_active_bytes": 21771767662,
+        "mei_memory_cache_bytes": 594606272,
+        "mei_memory_peak_bytes": 21931414138,
+        "prefill_ms": 1603.2401323318481,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 35.55300222998772,
+        "tokens_per_second": 12.615323206994228,
+        "total_tokens": 88
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 13.066088395015313,
+      "elapsed_seconds": 4.09,
+      "prompt_tokens": 65,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 2449.087977409363,
+        "mei_memory_active_bytes": 21773111402,
+        "mei_memory_cache_bytes": 1049821476,
+        "mei_memory_peak_bytes": 21933544310,
+        "prefill_ms": 1442.742109298706,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 45.05309686399565,
+        "tokens_per_second": 13.066088395015313,
+        "total_tokens": 97
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.022,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 18494713276,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+        "prefillStepSize": 64,
+        "status": "ok",
+        "uptimeSeconds": 22
+      }
+    }
+  },
+  "server_log_tail": "mei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 (served id: Qwen/Qwen3.8-27B-5bit-affine-g64)...\nmei: prefix cache enabled (paged in-memory + disk at /Users/tijs/.local/share/local-model-bench/mei-runtime-q38-ctrl-20260902T171528Z/kv-cache); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 18494713276 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[Qwen35] fused_gdn_decode_input_projections=active groups=[4]\n",
+  "started_epoch": 1788369378.0134761,
+  "status": "passed"
+}
