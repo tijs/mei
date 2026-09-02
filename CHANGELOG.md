@@ -17,7 +17,7 @@ Initial public release for Apple Silicon.
 - In-process and optional disk-tier KV/prefix reuse.
 - Scoped disposable-cache cleanup and a 20 GiB free-space launch guard.
 - Local vMLX patch queue pinned to an immutable upstream revision.
-- Focused unit tests, release provenance, and macOS CI checks.
+- Focused unit tests and release provenance.
 
 ### Release status
 
