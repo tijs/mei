@@ -90,14 +90,18 @@ acceptance + a repeatable long-context guard.
 
 ## Acceptance evidence
 
-probe_mei on the unsafe-eager server (variant C): first invocation skipped
-the two context rows only because `--tokenizer` was omitted (probe-side, not
-config); all 10 functional rows PASSED (mei_status, models_identity, plain,
-parity stream/non-stream, tool non-streaming a=15 b=27, tool streaming, cache
-repeat 1/2, cache growing turn1+turn2). Full re-run with tokenizer + cap
-65536 was in flight at summary time (artifact name prefix
-`probe-mei-qwen38-5bit-unsafe-full-`); see that artifact for the completed
-context rows.
+probe_mei on the unsafe-eager server (variant C): the first invocation
+skipped the two context rows only because `--tokenizer` was omitted
+(probe-side, not config); all 10 functional rows PASSED. The full re-run with
+`--tokenizer <model-dir> --context-cap 65536`
+(`artifacts/probe-mei-qwen38-5bit-unsafe-full-20260902T172517Z.json`)
+**PASSED 12/12**: mei_status, models_identity, plain, parity
+stream/non-stream, tool non-streaming (a=15 b=27), tool streaming, cache
+repeat 1/2, cache growing turn1+turn2, context_exact_cap @65536, over-cap
+rejected. Cap-row memory profile is identical to the parity config
+(peak 34.64 GB @ 65k fill, active 30.2 GB — the known constrained-at-cap
+profile), i.e. the unsafe env introduced NO memory or correctness regression
+and the documented Metal JIT crash did not manifest on either server run.
 
 ## Verdict
 
