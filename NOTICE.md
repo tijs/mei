@@ -7,22 +7,25 @@ licensed under the MIT License. See `LICENSE`.
 
 ## vmlx-swift
 
-Mei depends on [`osaurus-ai/vmlx-swift`](https://github.com/osaurus-ai/vmlx-swift),
-which is fetched at the immutable revision:
+Mei depends on the public Mei-maintained fork
+[`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift), whose parent is
+[`osaurus-ai/vmlx-swift`](https://github.com/osaurus-ai/vmlx-swift). Mei pins
+fork revision:
 
 ```text
-aeb5e21c195d8519609488ef75a25ce7e48d8f88
+91fed8be21319f92ce5220622c6dcde0b851bdae
 ```
 
-The upstream vmlx-swift project is MIT-licensed. Mei's `patches/` directory
-contains local diff files applied to that exact upstream revision by
-`scripts/apply_vmlx_patches.sh`; those files are not claims of upstream
-ownership or upstream acceptance. The patch queue is maintained and reviewed
-in this repository.
+The fork's `main` contains five separate Mei-maintained commits ported from
+the former local patch queue. They remain clearly attributable to Mei and
+have not been represented as upstream-accepted changes. See
+[`docs/VMLX-FORK.md`](docs/VMLX-FORK.md) for the commit mapping and upstream
+PR workflow.
 
-Mei also depends on Apple's MLX components and SwiftNIO. Their respective
-licenses and notices are obtained with their Swift package checkouts and are
-not replaced by Mei's license.
+The upstream vmlx-swift project is MIT-licensed; the fork retains that license
+and provenance. Mei also depends on Apple's MLX components and SwiftNIO. Their
+respective licenses and notices are obtained with their Swift package
+checkouts and are not replaced by Mei's license.
 
 ## Model checkpoints
 

@@ -94,15 +94,10 @@ if ! python3 "$DISK_GUARD" check --runtime-root "$CACHE_ROOT" --min-free-gib "$M
   exit 1
 fi
 
-echo "mei: resolving pinned vmlx dependency ..." | tee -a "$LOG_DIR/start.log"
+echo "mei: resolving fork-pinned vmlx dependency ..." | tee -a "$LOG_DIR/start.log"
 "$SWIFT_BIN" package resolve --scratch-path "$BUILD_DIR" --package-path "$MEI_REPO" \
   > "$LOG_DIR/resolve.log" 2>&1 || {
   echo "FATAL: SwiftPM dependency resolution failed — see $LOG_DIR/resolve.log" >&2
-  exit 1
-}
-bash "$MEI_REPO/scripts/apply_vmlx_patches.sh" --reset \
-  > "$LOG_DIR/vmlx-patches.log" 2>&1 || {
-  echo "FATAL: pinned vmlx patch series failed — see $LOG_DIR/vmlx-patches.log" >&2
   exit 1
 }
 

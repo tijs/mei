@@ -82,20 +82,21 @@ prefill are reported separately.
 | Component | Location | Ownership/status |
 |---|---|---|
 | Server, API, profile resolver, cache policy, launch scripts | Mei source and `scripts/` | Mei code in this repository |
-| Rotating-KV quantization and disk serialization | `patches/0001` and `0002` | Mei-maintained local diffs against vMLX; not upstream claims |
-| Compiled-decode threshold | `patches/0003` | Mei-maintained local diff; experimental/default-off |
-| Bounded KV window | `patches/0004` | Mei-maintained Qwen35-specific experiment/default-off |
-| SSM anchor boundaries | `patches/0005` | Mei-maintained experiment/default-off |
-| Fused gate/up cache control | pinned vMLX plus runtime environment | Existing upstream capability, enabled only by the Ornith profile |
+| Rotating-KV quantization and disk serialization | `tijs/vmlx-swift` commits `ae1783be` and `1326d803` | Mei-maintained commits in the public fork; not upstream claims |
+| Compiled-decode threshold | `tijs/vmlx-swift` commit `ab09d363` | Mei-maintained commit; experimental/default-off |
+| Bounded KV window | `tijs/vmlx-swift` commit `9b8e93b1` | Mei-maintained Qwen35-specific experiment/default-off |
+| SSM anchor boundaries | `tijs/vmlx-swift` commit `91fed8be` | Mei-maintained experiment/default-off |
+| Fused gate/up cache control | forked vMLX plus runtime environment | Existing vMLX capability, enabled only by the Ornith profile |
 | Aligned Ornith safetensors | separate model directory | Model/checkpoint preparation artifact; not bundled |
 
-The vMLX dependency is fetched from
-[`osaurus-ai/vmlx-swift`](https://github.com/osaurus-ai/vmlx-swift) at
-`aeb5e21c195d8519609488ef75a25ce7e48d8f88`. A fresh build must run
-`scripts/apply_vmlx_patches.sh --reset` after SwiftPM resolves dependencies.
-This release does not require a forked vMLX repository, but it does require
-the local patch queue. A future upstreamed patch series or maintained fork may
-replace it.
+The vMLX dependency is fetched from the Mei-maintained fork
+[`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift) at
+`91fed8be21319f92ce5220622c6dcde0b851bdae`. A fresh build retrieves the fork
+through SwiftPM; no local patch application is required. The fork's `main`
+contains the five separate Mei-maintained commits documented in
+[`docs/VMLX-FORK.md`](VMLX-FORK.md). The parent upstream remains visible as
+`upstream` in the local fork checkout so each commit can be evaluated for a
+future upstream PR.
 
 ## Rollback
 
@@ -110,11 +111,10 @@ MEI_SSM_ANCHOR_BOUNDARIES=0 \
 scripts/start_mei_server.sh
 ```
 
-For source rollback, keep the vMLX revision pinned and use
-`scripts/apply_vmlx_patches.sh --reset` only in the generated SwiftPM checkout;
-do not reset the Mei repository or delete model/artifact evidence. The disk
-cleanup tool supports `MEI_RETAIN_KV_CACHE=true` when a test needs cache state
-preserved across runs.
+For source rollback, update `Package.swift` and `Package.resolved` to a
+previous verified commit from `tijs/vmlx-swift`; do not reset the Mei repository
+or delete model/artifact evidence. The disk cleanup tool supports
+`MEI_RETAIN_KV_CACHE=true` when a test needs cache state preserved across runs.
 
 ## Publication status
 

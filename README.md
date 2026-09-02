@@ -2,7 +2,8 @@
 
 Mei — after Mei Long, the sleeping dragon dinosaur — is a narrow, native
 Swift/MLX OpenAI-compatible inference server for Apple Silicon, built directly
-on the pinned `osaurus-ai/vmlx-swift` engine (not the full Osaurus app).
+on the pinned `tijs/vmlx-swift` fork of `osaurus-ai/vmlx-swift` (not the full
+Osaurus app).
 
 The project's scope is deliberately small: one model per server process, the
 OpenAI chat/completions surface this repo's benchmark needs, chunked prefill
@@ -44,17 +45,20 @@ remain default-off.
 
 ```bash
 swift package resolve
-bash scripts/apply_vmlx_patches.sh --reset
 swift build            # debug
 swift test             # unit tests (acceptance tests need a live server)
 swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
-# The release launcher resolves and applies the patch queue automatically:
+# The release launcher resolves the fork-pinned dependency automatically:
 scripts/start_mei_server.sh
 ```
 
-`vmlx-swift` is pinned by revision (`aeb5e21c…`, the revision osaurus-ai's own
-`Package.resolved` pins) and `Package.resolved` is committed. Re-pinning is a
-deliberate decision that must re-run the whole acceptance suite.
+`vmlx-swift` is pinned to the Mei-maintained fork
+([`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift)) at revision
+`91fed8be…`. The fork's `main` contains five separate, documented commits
+ported from the former Mei patch queue; see [`docs/VMLX-FORK.md`](docs/VMLX-FORK.md)
+for the mapping and upstream-PR workflow. `Package.resolved` is committed.
+Re-pinning or changing the fork revision is a deliberate decision that must
+re-run the whole acceptance suite.
 
 ### Metal kernel library (mlx.metallib)
 
@@ -239,7 +243,7 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   Any divergence or missing companion state falls back to a full prefill
   (always correct). The SSM re-derive pass after each chat turn costs ~1x
   prefill at turn end (upstream default on; `--ssm-rederive false` turns it
-  off for A/B rows). `--ssm-anchor-boundaries K` (patch 0005, default off)
+  off for A/B rows). `--ssm-anchor-boundaries K` (vMLX fork commit `91fed8be`, default off)
   stores additional SSM companion anchors at the first K chat role-turn
   boundaries (exact token offsets from the request's own rendering path,
   with an additivity self-check) so a mid-transcript diverging agentic

@@ -8,16 +8,17 @@ reason for changes that cannot be unit-tested.
 
 ```bash
 swift package resolve
-bash scripts/apply_vmlx_patches.sh --reset
 swift test --filter ServerConfigParsingTests
 swift test --filter CacheRestoreTrackerTests
 python3 -m py_compile tools/mei_disk_guard.py tools/test_mei_disk_guard.py
 bash -n scripts/*.sh
 ```
 
-The local vMLX patch queue must be applied to the exact revision declared in
-`Package.swift`. Re-pinning vMLX requires rerunning the focused tests and the
-model acceptance/performance gates before changing `Package.resolved`.
+The vMLX dependency is fetched from the pinned revision in the public
+`tijs/vmlx-swift` fork. See [`docs/VMLX-FORK.md`](docs/VMLX-FORK.md) for the
+fork/upstream remotes, commit mapping, and upstream PR workflow. Re-pinning
+vMLX requires rerunning the focused tests and the model acceptance/performance
+gates before changing `Package.resolved`.
 
 Do not commit model weights, runtime KV caches, credentials, or benchmark
 scratch data. Keep experimental optimizations default-off until correctness,

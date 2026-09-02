@@ -1,11 +1,10 @@
 // swift-tools-version: 6.1
 // Mei — a narrow, native Swift/MLX OpenAI-compatible inference server.
 //
-// vmlx-swift is pinned to the exact revision the osaurus-ai/osaurus core
-// package builds against (aeb5e21c, "Emit .info before cache persistence...",
-// 2026-08-29-era upstream). Treat re-pinning as a deliberate, tested decision:
-// every re-pin must re-run the acceptance suite and the long-context
-// regression probes.
+// vmlx-swift is pinned to the Mei-maintained fork revision that contains
+// the five reviewed cache/generation commits originally developed in Mei.
+// The fork keeps upstream as its parent and each Mei change is a separate
+// cherry-pickable commit suitable for a later upstream PR.
 import PackageDescription
 
 let package = Package(
@@ -17,8 +16,8 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/osaurus-ai/vmlx-swift.git",
-            revision: "aeb5e21c195d8519609488ef75a25ce7e48d8f88"
+            url: "https://github.com/tijs/vmlx-swift.git",
+            revision: "91fed8be21319f92ce5220622c6dcde0b851bdae"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],

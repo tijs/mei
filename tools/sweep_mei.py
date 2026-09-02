@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mei cliff-characterization sweep driver (Mei-contained, artifact-only).
 
-Measures the CURRENT pinned engine (vmlx-swift aeb5e21c + Mei) with a
+Measures the CURRENT fork-pinned engine (tijs/vmlx-swift 91fed8be + Mei) with a
 controlled matrix of server configurations and prompt lengths, restarting
 the server per configuration cell so every row is a cold, isolated run.
 Captures engine usage (prefill ms, generate ms, tok/s, cached_tokens),
@@ -330,7 +330,7 @@ def main() -> int:
 
     result: dict[str, Any] = {
         "engine": "mei", "model": args.model_id,
-        "pin": "vmlx-swift aeb5e21c195d8519609488ef75a25ce7e48d8f88",
+        "pin": "tijs/vmlx-swift 91fed8be21319f92ce5220622c6dcde0b851bdae",
         "machine": {"note": "M1 Max g13s 32GB"},
         "contention_boundary": {"foreign_servers": foreign},
         "started_epoch": time.time(),
