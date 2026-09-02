@@ -227,6 +227,14 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   edit restores from a retained boundary instead of full-prefilling —
   a TTFT/latency lever, not a decode tok/s lever; see
   `artifacts/design-anchor-ssm-0005.md`.
+- **Disk safety**: `tools/mei_disk_guard.py` enforces a 20 GiB free-space
+  floor before a server or measurement cycle starts. Disposable per-experiment
+  caches (`kv-cache-sweep`, `kv-cache-cell-*`, `kv-cache-anchors-*`, and
+  `kv-cache-exp-*`) are removed on completion or interruption; pass
+  `MEI_RETAIN_KV_CACHE=true` only for a named reuse experiment. Model weights,
+  repository artifacts, historical evidence, and protected recent-model caches
+  are never selected by automatic cleanup. Decisions are appended to
+  `mei-disk-guard.log` under the runtime root.
 - **Tool calls**: vmlx-swift parses Qwen/Ornith-style `<tool_call>{json}`
   envelopes inside its generate loop; Mei maps `.toolCall` events to OpenAI
   `tool_calls` in both streaming and non-streaming shapes.

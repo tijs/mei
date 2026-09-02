@@ -11,7 +11,11 @@ set -euo pipefail
 
 MEI_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_BASE="${MEI_RUNTIME_BASE:-$HOME/.local/share/local-model-bench/mei-runtime}"
+CACHE_ROOT="${MEI_CACHE_ROOT:-$HOME/.local/share/local-model-bench/mei-runtime}"
 BUILD_DIR="${MEI_BUILD_DIR:-$HOME/.local/share/local-model-bench/mei-build}"
+DISK_GUARD="$MEI_REPO/tools/mei_disk_guard.py"
+MIN_FREE_GIB="${MEI_MIN_FREE_GIB:-20}"
+RETAIN_KV_CACHE="${MEI_RETAIN_KV_CACHE:-false}"
 LOG_DIR="$RUNTIME_BASE/logs"
 PID_FILE="$RUNTIME_BASE/server.pid"
 SWIFT_BIN="${MEI_SWIFT:-swift}"
@@ -45,6 +49,11 @@ Usage: start_mei_server.sh [options]
 
 The full launch configuration is expressed through MEI_* environment
 variables (see the script); the bench config yaml sets them explicitly.
+
+Disk safety:
+  MEI_MIN_FREE_GIB=20          refuse launch below this free-space floor
+  MEI_RETAIN_KV_CACHE=true     retain an explicitly named disposable KV cache
+                                for a reuse experiment; default is cleanup
 EOF
 }
 
@@ -64,7 +73,17 @@ if /usr/sbin/lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$RUNTIME_BASE" "$LOG_DIR" "$BUILD_DIR"
+mkdir -p "$RUNTIME_BASE" "$CACHE_ROOT" "$LOG_DIR" "$BUILD_DIR"
+
+# Remove only stale, disposable experiment caches before checking the floor.
+# Protected model/recent-35B caches are never selected by --all-disposable.
+python3 "$DISK_GUARD" cleanup --runtime-root "$CACHE_ROOT" --all-disposable \
+  >> "$LOG_DIR/start.log" 2>&1 || true
+if ! python3 "$DISK_GUARD" check --runtime-root "$CACHE_ROOT" --min-free-gib "$MIN_FREE_GIB" \
+  >> "$LOG_DIR/start.log" 2>&1; then
+  echo "FATAL: refusing Mei launch because the disk free-space floor is not met" >&2
+  exit 1
+fi
 
 echo "mei: building (release, scratch: $BUILD_DIR) ..." | tee -a "$LOG_DIR/start.log"
 "$SWIFT_BIN" build -c release --scratch-path "$BUILD_DIR" --package-path "$MEI_REPO" \
@@ -96,5 +115,18 @@ printf '\n'
 "$BIN" "${ARGS[@]}" >> "$LOG_DIR/server.log" 2>&1 &
 SERVER_PID=$!
 printf '%s\n' "$SERVER_PID" > "$PID_FILE"
-trap 'rm -f "$PID_FILE"' EXIT INT TERM
+on_exit() {
+  local rc=$?
+  rm -f "$PID_FILE"
+  if [[ -n "$KV_CACHE_DIR" ]]; then
+    local cleanup_args=(cleanup --runtime-root "$CACHE_ROOT" --cache-dir "$KV_CACHE_DIR")
+    [[ "$RETAIN_KV_CACHE" == "1" || "$RETAIN_KV_CACHE" == "true" || "$RETAIN_KV_CACHE" == "yes" ]] && cleanup_args+=(--retain)
+    python3 "$DISK_GUARD" "${cleanup_args[@]}" >> "$LOG_DIR/start.log" 2>&1 || \
+      echo "mei: cache cleanup skipped/refused for $KV_CACHE_DIR" >> "$LOG_DIR/start.log"
+  fi
+  exit "$rc"
+}
+trap on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 wait "$SERVER_PID"

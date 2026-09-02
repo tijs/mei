@@ -39,9 +39,23 @@ if ! mkdir "$LOCKDIR" 2>/dev/null; then
   echo "FATAL: another measurement cycle is running (lock $LOCKDIR)" >&2
   exit 1
 fi
-trap 'rmdir "$LOCKDIR" 2>/dev/null || true' EXIT
+cleanup_disposable_caches() {
+  python3 "$DISK_GUARD" cleanup --runtime-root "$CACHE_ROOT" --all-disposable || true
+}
+
+cycle_exit() {
+  local rc=$?
+  cleanup_disposable_caches
+  rmdir "$LOCKDIR" 2>/dev/null || true
+  exit "$rc"
+}
+trap cycle_exit EXIT
+
 BUILD_DIR="${MEI_BUILD_DIR:-$HOME/.local/share/local-model-bench/mei-build}"
 VENV_PY="${MEI_SWEEP_VENV:-$HOME/.local/share/local-model-bench/mei-runtime/venv/bin/python}"
+DISK_GUARD="$MEI_REPO/tools/mei_disk_guard.py"
+CACHE_ROOT="${MEI_CACHE_ROOT:-$HOME/.local/share/local-model-bench/mei-runtime}"
+MIN_FREE_GIB="${MEI_MIN_FREE_GIB:-20}"
 MODEL_DIR="${MEI_MODEL_DIR:-$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-9B-MLX-4bit}"
 MODEL_ID="ornith-ai/Ornith-1.5-9B-MLX-4bit"
 GGUF="$HOME/.local/share/local-model-bench/mei-models/gguf/Ornith-1.5-9B-Q4_K_M.gguf"
@@ -63,12 +77,18 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+disk_preflight() {
+  cleanup_disposable_caches
+  python3 "$DISK_GUARD" check --runtime-root "$CACHE_ROOT" --min-free-gib "$MIN_FREE_GIB" \
+    || { echo "[cycle] refusing experiment: less than ${MIN_FREE_GIB} GiB free after disposable-cache cleanup" >&2; exit 1; }
+}
+
 contended() {
   # Gate 1: another agent's SUITE RUNNER must not be active (its llama.cpp
   # backend may stay resident between tasks — that is fine as long as it is
   # idle and the machine has memory headroom; an idle-but-resident server
   # never gets a CPU/GPU cycle stolen from it).
-  if ps -axo command= | grep -E "run_fixture_suite|run_bench\.py" >/dev/null; then
+  if ps -axo command= | grep -E "run_fixture_suite|run_bench\.py" | grep -v grep >/dev/null; then
     return 0
   fi
   # Gate 2: enough reclaimable memory for an uncontended 9B row (idle
@@ -85,6 +105,7 @@ contended() {
 }
 
 gate() {
+  disk_preflight
   if [[ -n "$FORCE" ]]; then
     echo "[cycle] FORCE: running with co-resident workloads (rows labeled)"
     return 0
@@ -146,6 +167,7 @@ run_bounded() {
   echo "[cycle]   (bounded ${minutes}min) $*"
   python3 tools/run_bounded.py "$minutes" -- "$@" || local rc=$?
   local rc="${rc:-0}"
+  cleanup_disposable_caches
   if (( rc == 124 )); then
     echo "[cycle] PHASE BOUND EXCEEDED (${minutes}min) for: $*" >&2
   fi
@@ -207,7 +229,7 @@ run_variant_cell() {
   [[ "$window" != "0" ]] && extra+=(--max-kv-window "$window")
   run_bounded "$PHASE_TIMEOUT_MIN" -- python3 tools/sweep_mei.py --model-dir "$MODEL_DIR" --model-id "$MODEL_ID" \
     --contexts 512,16384,33175,45000 --repeats-45k 3 --chat-40k --kv-cache-dir \
-    --context-cap "$ctxcap" "${extra[@]}" \
+    --context-cap "$ctxcap" ${extra[@]+"${extra[@]}"} \
     --output "artifacts/sweep-variant-$tag-$TS.json"
   gate
   boundary "C-$tag"
@@ -220,12 +242,24 @@ run_variant_cell() {
   if [[ -n "$threshold" ]]; then envs+=(MEI_COMPILED_DECODE_THRESHOLD="$threshold"); fi
   if [[ "$window" != "0" ]]; then envs+=(MEI_MAX_KV_WINDOW="$window"); fi
   # start_mei_server.sh runs the server in the foreground; background it and
-  # wait for readiness through probe_mei's own health poll.
+  # wait for readiness BEFORE the acceptance probe (probe_mei has NO health
+  # poll of its own — it issues requests immediately, so a server that is
+  # still building/loading would false-fail every probe with Connection
+  # refused). Mirrors the run_anchor_cell readiness poll.
   env "${envs[@]}" bash scripts/start_mei_server.sh &
   local spid=$!
-  # Give the (cached) build a head start; probe_mei retries /v1/models with
-  # a generous timeout of its own, so a slow build is tolerated.
-  sleep 20
+  local cell_log="$HOME/.local/share/local-model-bench/mei-runtime/logs/server.log"
+  : > "$cell_log" 2>/dev/null || true   # truncate so stale "listening on" lines can't mask a not-ready server
+  local waited=0
+  while (( waited < 300 )); do
+    grep -q "mei: listening on" "$cell_log" 2>/dev/null && break
+    sleep 5
+    waited=$((waited + 5))
+  done
+  if ! grep -q "mei: listening on" "$cell_log" 2>/dev/null; then
+    echo "[cycle] variant $tag: acceptance server not ready in ${waited}s; probing anyway (may false-fail)" >&2
+    tail -40 "$cell_log" >&2 || true
+  fi
   "${VENV_PY}" tools/probe_mei.py --base-url http://127.0.0.1:8024/v1 \
     --model "$MODEL_ID" --tokenizer "$MODEL_DIR" --context-cap "$ctxcap" \
     --output "artifacts/acceptance-variant-$tag-$TS.json" || true
@@ -237,6 +271,7 @@ run_variant_cell() {
     --lengths $lengths --output "artifacts/survival-variant-$tag-$TS.json" || true
   bash scripts/stop_mei_server.sh || true
   kill "$spid" 2>/dev/null || true
+  cleanup_disposable_caches
 }
 
 phase_c() {
@@ -290,6 +325,7 @@ run_anchor_cell() {
     tail -40 "$log" >&2 || true
     bash scripts/stop_mei_server.sh || true
     kill "$spid" 2>/dev/null || true
+    cleanup_disposable_caches
     return 1
   fi
   run_bounded "$PHASE_TIMEOUT_MIN" -- "${VENV_PY}" tools/probe_diverging_chat.py \
@@ -305,6 +341,7 @@ run_anchor_cell() {
   } > "artifacts/anchor-cell-$tag-$TS.log"
   bash scripts/stop_mei_server.sh || true
   kill "$spid" 2>/dev/null || true
+  cleanup_disposable_caches
 }
 
 phase_d() {
