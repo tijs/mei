@@ -131,7 +131,8 @@
       "notes": [
         "mlx-community is the established Apple/MLX regular 4-bit quant of the dense qwen35 lineage (source Qwen/Qwen3.8-27B). It is NOT UD-Q5 and MUST NOT be claimed as GGUF-UD equivalence; it is a regular 4-bit MLX comparator against the UD-Q5_K_M llama.cpp reference.",
         "Downloaded + integrity-verified 2026-09-01 (3 shards 16,054,541,349 B). Marked staged-complete. RUNNABLE-ONLY-AFTER GPU loadability check; then run the loadability-gated test phases.",
-        "MTP caveat from the GGUF reference applies only to the llama.cpp comparator; Mei's MLX loader has no MTP path."
+        "MTP caveat from the GGUF reference applies only to the llama.cpp comparator; Mei's MLX loader has no MTP path.",
+        "2026-09-02 (session H worker): bounded loadability re-gate in clean window (ports 8017/8024 free, 89 GiB free). PASSED on the proven config (MEI_PREFILL_STEP_SIZE=512 + MEI_KV_CACHE_DIR=kv-cache-qwen38-20260902): hello 15.68 t/s, short_decode 15.89 t/s, peak 18.99 GB, post-load active 16.05 GB, ctx 65536 (artifacts/load-Qwen3.8-27B-20260902T092922Z.json). CRASH under current-binary generic-profile defaults (prefill step 64, in-memory-only paged cache): 'Fatal error: SmallVector out of range' (vmlx mlx/c/array.cpp:335) during first generation, server aborted (artifacts/load-Qwen3.8-27B-20260902T092846Z.json); both config dimensions changed together so the exact trigger is not isolated. RELEASE RISK: auto-detection routes this model to the generic profile whose current defaults crash it — 0.1.0 needs dense-qwen35 launch guidance (prefill >= 512 + disk cache dir) or trigger isolation first. Single gate measurement (not the 3-repeat perf claim): ~2.6x decode and ~6.7 GB lower peak vs the 2026-09-01 gate on fork 91fed8be (Qwen4Exp fused GDN input projections + bf16 affine dispatch active)."
       ]
     },
     {
