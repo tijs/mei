@@ -49,7 +49,7 @@ GGUF_REVISION = "abdd624b12ebf020b767fff532ff44fe552b28c3"
 GGUF_REPO = "ornith-ai/Ornith-1.5-9B-GGUF"
 
 
-def foreign_servers(exclude_self_pid: int) -> list[str]:
+def foreign_servers(exclude_self_pid: int, extra_exclude_pids: set[int] | None = None) -> list[str]:
     try:
         out = subprocess.run(
             ["ps", "-axo", "pid=,command="], capture_output=True, text=True, timeout=10
@@ -59,7 +59,7 @@ def foreign_servers(exclude_self_pid: int) -> list[str]:
     found = []
     for line in out.splitlines():
         pid = int(line.split(None, 1)[0]) if line.split(None, 1)[0].isdigit() else -1
-        if pid == exclude_self_pid:
+        if pid == exclude_self_pid or (extra_exclude_pids and pid in extra_exclude_pids):
             continue
         if any(tok in line for tok in ("sweep_mei.py", "llama_ceiling.py", "mei-build", "mei-runtime")):
             continue
@@ -150,20 +150,21 @@ def gguf_meta_summary(path: Path) -> dict[str, Any]:
 
 def verify_provenance(
     gguf: Path, expected_sha256: str | None, compute_sha256: bool,
+    arch: str = "qwen35", repo: str = GGUF_REPO, revision: str = GGUF_REVISION,
 ) -> tuple[bool, dict[str, Any]]:
     """Independent pre-launch provenance gate for the ceiling GGUF.
 
     Checks (each recorded, mismatch/absence is FATAL):
       1. GGUF file exists, is non-empty, and starts with the GGUF magic.
       2. sha256 matches the pinned official blob digest (content pin).
-      3. GGUF header is a same-family qwen35 model with context >= 65536
+      3. GGUF header is a same-family model with context >= 65536
          and records MTP-head presence (comparator hygiene; no --spec-type
          is ever passed so the decode path stays single-token).
       4. llama-server binary exists and reports a version.
     """
     prov: dict[str, Any] = {
-        "repo": GGUF_REPO,
-        "revision": GGUF_REVISION,
+        "repo": repo,
+        "revision": revision,
         "expected_sha256": expected_sha256,
         "path": str(gguf),
     }
@@ -178,7 +179,7 @@ def verify_provenance(
     try:
         meta = gguf_meta_summary(gguf)
         prov["meta"] = meta
-        ok = ok and meta["arch"] == "qwen35"  # same family as Mei's baseline
+        ok = ok and meta["arch"] == arch
         ok = ok and int(meta.get("context_length") or 0) >= 65536
     except Exception as exc:  # noqa: BLE001
         prov["meta_error"] = f"{type(exc).__name__}: {exc}"
@@ -281,6 +282,18 @@ def main() -> int:
                         help="run attention KV as q8_0 (llama.cpp-native quantized KV variant)")
     parser.add_argument("--cache-reuse-disable", action="store_true")
     parser.add_argument("--chat-40k", action="store_true")
+    parser.add_argument("--mode", choices=["45k", "short"], default="45k",
+                        help="45k: Ornith 45K/40K row set (default, unchanged). "
+                             "short: Mei probe_load-style short decode rows "
+                             "(3x /completion + 1 chat row) with timings.")
+    parser.add_argument("--gguf-sha256", default=PINNED_GGUF_SHA256,
+                        help="expected blob sha256 (default: Ornith-9B pin)")
+    parser.add_argument("--gguf-repo", default=GGUF_REPO,
+                        help="pinned source repo (default: Ornith-9B)")
+    parser.add_argument("--gguf-revision", default=GGUF_REVISION,
+                        help="pinned source revision (default: Ornith-9B)")
+    parser.add_argument("--arch", default="qwen35",
+                        help="expected GGUF architecture (default: qwen35)")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--no-contention-gate", action="store_true")
     parser.add_argument("--no-verify-gguf", action="store_true",
@@ -295,7 +308,8 @@ def main() -> int:
     # Independent provenance gate (binary, GGUF header, content digest)
     # runs BEFORE any server launch; provenance-only mode stops here.
     verified, prov = verify_provenance(
-        args.gguf, PINNED_GGUF_SHA256, compute_sha256=not args.no_verify_gguf)
+        args.gguf, args.gguf_sha256, compute_sha256=not args.no_verify_gguf,
+        arch=args.arch, repo=args.gguf_repo, revision=args.gguf_revision)
     if args.provenance_only:
         # Persist the provenance block as an artifact too (evidence
         # preservation): the caller's --output must never be empty when a
@@ -332,7 +346,10 @@ def main() -> int:
         "alias": args.alias,
         "gguf_provenance": prov,
         "llama_version": prov.get("llama_version", "unknown"),
-        "methodology": "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; same 45K exact-token prompt + 40K chat pattern as the Mei bench",
+        "methodology": (
+            "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; "
+            "mode=" + args.mode + " (45k = same exact 45K-token prompt + 40K chat pattern "
+            "as the Mei bench; short = Mei probe_load-style short decode rows)"),
         "contention_boundary": {"foreign_servers": foreign},
         "started_epoch": time.time(),
         "rows": [],
@@ -350,15 +367,30 @@ def main() -> int:
         r: dict[str, Any] = {"name": name, "started_epoch": time.time(),
                              "mem_before": server.status(),
                              "contended_during_row": bool(
-                                 foreign_servers(exclude_self_pid=os.getpid()))}
+                                 foreign_servers(exclude_self_pid=os.getpid(),
+                                                 extra_exclude_pids={server.proc.pid}))}
         usage: dict[str, Any] = {}
         try:
             body, elapsed = post_json(
                 chat_url if "messages" in payload else comp_url, payload, timeout=args.request_timeout)
             usage = body.get("usage") or {}
             td = (body.get("choices") or [{}])[0]
-            text = (td.get("message") or td).get("content") or ""
+            msg = td.get("message") or {}
+            text = (
+                msg.get("content") or msg.get("reasoning_content")
+                or td.get("content") or td.get("text")
+                or body.get("content") or body.get("text") or ""
+            )
+            text_source = (
+                "message.content" if msg.get("content")
+                else "message.reasoning_content" if msg.get("reasoning_content")
+                else "choice.content" if td.get("content")
+                else "choice.text" if td.get("text")
+                else "body.content" if body.get("content")
+                else "body.text" if body.get("text")
+                else "none")
             checks: dict[str, Any] = {"http_200": True, "nonempty": bool(text)}
+            r["text_source"] = text_source
             if expected_prompt is not None:
                 checks["prompt_tokens_match"] = int(usage.get("prompt_tokens", -1)) == expected_prompt
             r.update({
@@ -397,38 +429,57 @@ def main() -> int:
     # Warmup short request
     row("warmup_short", {"model": args.alias, "prompt": "hi", "temperature": 0, "max_tokens": 8, "stream": False})
 
-    p45000 = unit_prompt(45000)
-    for k in range(args.repeats):
-        # fresh: identical exact 45K prompt each repeat (llama.cpp slot KV
-        # makes repeats 2+ prefix-cache hits — recorded as cached_tokens)
+    if args.mode == "short":
+        # Mei probe_load-style short decode ceiling: same short prompt and
+        # token budget as Mei's short_decode probe ("Count from 1 to 10, one
+        # per line.", max_tokens 32, temp 0), raw /completion so
+        # timings.predicted_per_second is the decode rate (prefill excluded),
+        # three repeats. One chat-format row confirms the template path works
+        # end-to-end and records wall-clock t/s (usage only, no timings).
+        short_prompt = "Count from 1 to 10, one per line."
+        for k in range(args.repeats):
+            result["rows"].append(row(
+                f"short_fresh_r{k+1}",
+                {"model": args.alias, "prompt": short_prompt, "temperature": 0,
+                 "max_tokens": args.max_tokens, "stream": False}))
         result["rows"].append(row(
-            f"45k_fresh_r{k+1}",
-            {"model": args.alias, "prompt": p45000, "temperature": 0,
+            "short_chat",
+            {"model": args.alias,
+             "messages": [{"role": "user", "content": short_prompt}],
+             "temperature": 0, "max_tokens": args.max_tokens, "stream": False}))
+    else:
+        p45000 = unit_prompt(45000)
+        for k in range(args.repeats):
+            # fresh: identical exact 45K prompt each repeat (llama.cpp slot KV
+            # makes repeats 2+ prefix-cache hits — recorded as cached_tokens)
+            result["rows"].append(row(
+                f"45k_fresh_r{k+1}",
+                {"model": args.alias, "prompt": p45000, "temperature": 0,
+                 "max_tokens": args.max_tokens, "stream": False},
+                expected_prompt=45000))
+        # extension reuse row: prompt = 45001 tokens; slot cache from previous
+        # request should cover 45000 of them.
+        result["rows"].append(row(
+            "45k_extension_reuse",
+            {"model": args.alias, "prompt": unit_prompt(45001), "temperature": 0,
              "max_tokens": args.max_tokens, "stream": False},
-            expected_prompt=45000))
-    # extension reuse row: prompt = 45001 tokens; slot cache from previous
-    # request should cover 45000 of them.
-    result["rows"].append(row(
-        "45k_extension_reuse",
-        {"model": args.alias, "prompt": unit_prompt(45001), "temperature": 0,
-         "max_tokens": args.max_tokens, "stream": False},
-        expected_prompt=45001))
+            expected_prompt=45001))
 
-    if args.chat_40k:
-        # Same 40K chat transcript shape as the Mei bench (transcript token
-        # count is server-reported; exactness vs the model template is not
-        # required for a decode-throughput row).
-        filler = "system stability marker " * 30000
-        messages = (
-            [{"role": "system", "content": filler + " Final system line."}]
-            + [{"role": "user", "content": f"Instruction batch {i}: answer nothing yet."} for i in range(6)]
-            + [{"role": "assistant", "content": "Understood."} for _ in range(5)]
-            + [{"role": "user", "content": "Final instruction: reply with exactly the word cache-ready."}]
-        )
-        result["rows"].append(row(
-            "chat_40k",
-            {"model": args.alias, "messages": messages, "temperature": 0,
-             "max_tokens": 256, "stream": False}))
+        if args.chat_40k:
+            # Same 40K chat transcript shape as the Mei bench (transcript token
+            # count is server-reported; exactness vs the model template is not
+            # required for a decode-throughput row).
+            filler = "system stability marker " * 30000
+            messages = (
+                [{"role": "system", "content": filler + " Final system line."}]
+                + [{"role": "user", "content": f"Instruction batch {i}: answer nothing yet."} for i in range(6)]
+                + [{"role": "assistant", "content": "Understood."} for _ in range(5)]
+                + [{"role": "user", "content": "Final instruction: reply with exactly the word cache-ready."}]
+            )
+            result["rows"].append(row(
+                "chat_40k",
+                {"model": args.alias, "messages": messages, "temperature": 0,
+                 "max_tokens": 256, "stream": False}))
 
     result["server_log"] = str(log_path)
     result["finished_epoch"] = time.time()

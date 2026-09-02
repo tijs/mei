@@ -1,0 +1,26 @@
+{
+  "digest_matches_pinned": true,
+  "expected_sha256": "2de73110cb254cbf09b54b717578dadff12ef1194e7271527e68202f39ba4bfd",
+  "llama_bin": "/opt/homebrew/bin/llama-server",
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "magic_ok": true,
+  "meta": {
+    "arch": "qwen35",
+    "block_count": 65,
+    "context_length": 262144,
+    "file_type": 17,
+    "full_attention_interval": 4,
+    "mtp_head_present": true,
+    "mtp_nextn_predict_layers": 1,
+    "mtp_note": "llama.cpp runs WITHOUT --spec-type draft-mtp; single-token decode, comparable to Mei's no-MTP baseline",
+    "quant_version": 2
+  },
+  "mode": "provenance-only",
+  "path": "/Users/tijs/.cache/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q5_K_M.gguf",
+  "recorded_at": "2026-09-02T18:57:58Z",
+  "repo": "unsloth/Qwen3.8-27B-GGUF",
+  "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+  "sha256": "2de73110cb254cbf09b54b717578dadff12ef1194e7271527e68202f39ba4bfd",
+  "size_bytes": 19771509664,
+  "verified": true
+}

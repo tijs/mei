@@ -1,0 +1,215 @@
+{
+  "alias": "qwen38-27B-UD-Q5_K_M",
+  "contention_boundary": {
+    "foreign_servers": []
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788375590.819896,
+  "gguf": "/Users/tijs/.cache/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q5_K_M.gguf",
+  "gguf_provenance": {
+    "digest_matches_pinned": true,
+    "expected_sha256": "2de73110cb254cbf09b54b717578dadff12ef1194e7271527e68202f39ba4bfd",
+    "llama_bin": "/opt/homebrew/bin/llama-server",
+    "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+    "magic_ok": true,
+    "meta": {
+      "arch": "qwen35",
+      "block_count": 65,
+      "context_length": 262144,
+      "file_type": 17,
+      "full_attention_interval": 4,
+      "mtp_head_present": true,
+      "mtp_nextn_predict_layers": 1,
+      "mtp_note": "llama.cpp runs WITHOUT --spec-type draft-mtp; single-token decode, comparable to Mei's no-MTP baseline",
+      "quant_version": 2
+    },
+    "path": "/Users/tijs/.cache/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q5_K_M.gguf",
+    "repo": "unsloth/Qwen3.8-27B-GGUF",
+    "revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+    "sha256": "2de73110cb254cbf09b54b717578dadff12ef1194e7271527e68202f39ba4bfd",
+    "size_bytes": 19771509664
+  },
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "methodology": "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; mode=short (45k = same exact 45K-token prompt + 40K chat pattern as the Mei bench; short = Mei probe_load-style short decode rows)",
+  "rows": [
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 9.285420563227081,
+      "elapsed_seconds": 2.964,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24355389440
+      },
+      "mem_before": {
+        "rss_bytes": 24039899136
+      },
+      "name": "short_fresh_r1",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 19.929022021569335,
+      "request_seconds": 2.929,
+      "started_epoch": 1788375578.015796,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 2261.61,
+        "predicted_n": 22,
+        "predicted_per_second": 9.285420563227081,
+        "predicted_per_token_ms": 107.69571428571429,
+        "prompt_ms": 652.315,
+        "prompt_n": 13,
+        "prompt_per_second": 19.929022021569335,
+        "prompt_per_token_ms": 50.17807692307693
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 9.286102154198822,
+      "elapsed_seconds": 2.572,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24828493824
+      },
+      "mem_before": {
+        "rss_bytes": 24355422208
+      },
+      "name": "short_fresh_r2",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 16.558347476921803,
+      "request_seconds": 2.533,
+      "started_epoch": 1788375580.980211,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 2261.444,
+        "predicted_n": 22,
+        "predicted_per_second": 9.286102154198822,
+        "predicted_per_token_ms": 107.68780952380952,
+        "prompt_ms": 241.57,
+        "prompt_n": 4,
+        "prompt_per_second": 16.558347476921803,
+        "prompt_per_token_ms": 60.3925
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 9.287346521070557,
+      "elapsed_seconds": 2.525,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24828510208
+      },
+      "mem_before": {
+        "rss_bytes": 24828493824
+      },
+      "name": "short_fresh_r3",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 17.43382772763131,
+      "request_seconds": 2.492,
+      "started_epoch": 1788375583.552015,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 2261.141,
+        "predicted_n": 22,
+        "predicted_per_second": 9.287346521070557,
+        "predicted_per_token_ms": 107.67338095238095,
+        "prompt_ms": 229.439,
+        "prompt_n": 4,
+        "prompt_per_second": 17.43382772763131,
+        "prompt_per_token_ms": 57.35975
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 9.293892054142018,
+      "elapsed_seconds": 4.743,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 24830197760
+      },
+      "mem_before": {
+        "rss_bytes": 24828510208
+      },
+      "name": "short_chat",
+      "prompt_tokens": 65,
+      "prompt_tokens_per_second": 47.39433251280376,
+      "request_seconds": 4.71,
+      "started_epoch": 1788375586.07665,
+      "status": "passed",
+      "text_source": "message.reasoning_content",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 3335.524,
+        "predicted_n": 32,
+        "predicted_per_second": 9.293892054142018,
+        "predicted_per_token_ms": 107.59754838709677,
+        "prompt_ms": 1371.472,
+        "prompt_n": 65,
+        "prompt_per_second": 47.39433251280376,
+        "prompt_per_token_ms": 21.09956923076923
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 97
+      }
+    }
+  ],
+  "server_log": "/Users/tijs/.local/share/local-model-bench/mei-runtime-q38-ceiling/logs/llama-ceiling.log",
+  "started_epoch": 1788375572.763839,
+  "status": "passed"
+}
