@@ -269,7 +269,13 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
 
 ## Name origin
 
-Mei is named after *Mei long*, a small Early Cretaceous troodontid dinosaur
-whose fossil was found preserved in a sleeping posture. The name is commonly
-translated as “sleeping dragon.” It felt apt for a small server project built
-to wake a sleeping model on Apple Silicon.
+Mei is named after [*Mei long*](https://en.wikipedia.org/wiki/Mei_long), a small
+Early Cretaceous troodontid dinosaur whose fossil was found preserved in a
+sleeping posture. The name is commonly translated as “sleeping dragon.” The
+dinosaur reference is also a nod to [Osaurus](https://github.com/osaurus-ai/osaurus),
+whose components inspired and are reused by this project.
+
+The idea of a *small* dragon echoes [DwarfStar](https://github.com/antirez/ds4),
+another inspiration for Mei. DwarfStar is named after a small star; Mei follows
+the same pattern of giving a compact local-inference project a modest cosmic
+name.
