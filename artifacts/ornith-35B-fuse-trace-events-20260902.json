@@ -1,0 +1,28 @@
+{
+ "experiment": "ornith-35B-allocator-trace-events",
+ "server_log": "~/.local/share/local-model-bench/mei-runtime/logs/server.log (cumulative across legs)",
+ "threshold_bytes": 16777216,
+ "events_total": 120,
+ "events_by_size": {
+  "16777216": 80,
+  "268435456": 40
+ },
+ "sum_gib": 11.25,
+ "top_callers": {
+  "_ZN3mlx4core3gpu4evalERNS0_5arrayE ": 120
+ },
+ "example_256mib_frames_demangled": [
+  "mlx::core::gpu::eval(mlx::core::array&) + 204",
+  "mlx::core::eval_impl(std::__1::vector<mlx::core::array, std::__1::allocator<mlx::core::array>>, bool) + 4120",
+  "mlx::core::eval(std::__1::vector<mlx::core::array, std::__1::allocator<mlx::core::array>>) + 120",
+  "mlx_eval + 140",
+  "$s3MLX4evalyyxSlRzAA8MLXArrayC7ElementRtzlFTm + 256",
+  "$s11MLXLMCommon9SwitchGLUC17ensureFusedGateUp33_0D5C0DB061C9A31E77EBBC80EDE4E7E0LLyyF + 1908",
+  "$s11MLXLMCommon9SwitchGLUC14callAsFunction__13preDownScores3MLX8MLXArrayCAH_A2HSgtF + 52",
+  "$s6MLXLLM20Qwen35SparseMoeBlockC14callAsFunctiony3MLX8MLXArrayCAGF + 704",
+  "$s6MLXLLM18Qwen35DecoderLayerC14callAsFunction_13attentionMask03ssmI05cache24recordPrefixCommitStates3MLX8MLXArrayCAK_AI7MLXFastO025ScaledDotProductAttentionI4ModeOAKSg11MLXLMCommon7KVCache_pSgSbtF + 1700",
+  "$s6MLXLLM20Qwen35TextModelInnerC23callAsFunctionCapturing_5cache15captureLayerIDs24recordPrefixCommitStates3MLX8MLXArrayC_SDySiAJGtAJ_Say11MLXLMCommon7KVCache_pSgGSgShySiGSbtF + 964",
+  "$s6MLXLLM15Qwen35TextModelC14callAsFunction_5cache3MLX8MLXArrayCAH_Say11MLXLMCommon7KVCache_pGSgtF + 116",
+  "$s6MLXLLM11Qwen35ModelC11MLXLMCommon08LanguageC0AadEP14callAsFunction_5cache3MLX8MLXArrayCAK_SayAD7KVCache_pGSgtFTW + 80"
+ ]
+}

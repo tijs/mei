@@ -1,0 +1,36 @@
+{
+ "experiment": "ornith-35B-fuseoff-original-r1",
+ "runs": [
+  {
+   "wall_seconds": 15.03,
+   "tokens_per_second": 48.36,
+   "generate_ms": 723.7,
+   "prefill_ms": 8763.9,
+   "completion_tokens": 35,
+   "content": "ready",
+   "active_bytes": 24543199832,
+   "peak_bytes": 24607590128
+  },
+  {
+   "wall_seconds": 0.82,
+   "tokens_per_second": 50.37,
+   "generate_ms": 694.9,
+   "prefill_ms": 71.9,
+   "completion_tokens": 35,
+   "content": "ready",
+   "active_bytes": 24543199832,
+   "peak_bytes": 24671979074
+  },
+  {
+   "wall_seconds": 0.81,
+   "tokens_per_second": 50.53,
+   "generate_ms": 692.7,
+   "prefill_ms": 71.8,
+   "completion_tokens": 35,
+   "content": "ready",
+   "active_bytes": 24543199832,
+   "peak_bytes": 24671979248
+  }
+ ],
+ "tps_mean": 49.75
+}

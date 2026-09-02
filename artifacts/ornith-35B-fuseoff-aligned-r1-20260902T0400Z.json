@@ -1,0 +1,81 @@
+{
+ "experiment": "ornith-35B-allocator-trace",
+ "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+ "started_utc": "2026-09-02T00:29:06Z",
+ "probes": {
+  "s0_post_load": {
+   "memory": {
+    "activeBytes": 19551131108,
+    "cacheBytes": 0,
+    "cacheLimitBytes": 32641751449,
+    "device": {
+     "architecture": "applegpu_g13s",
+     "memoryBytes": 34359738368
+    },
+    "memoryLimitBytes": 30000000000,
+    "peakBytes": 0,
+    "recommendedWorkingSetBytes": 26800603136
+   }
+  },
+  "r1": {
+   "ok": true,
+   "fault": null,
+   "request_seconds": 1.07,
+   "usage": {
+    "completion_tokens": 35,
+    "generate_ms": 634.7939968109131,
+    "mei_memory_active_bytes": 19816065638,
+    "mei_memory_cache_bytes": 124988296,
+    "mei_memory_peak_bytes": 19880618936,
+    "prefill_ms": 341.3069248199463,
+    "prompt_tokens": 15,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_tokens_per_second": 43.94871275440171,
+    "tokens_per_second": 55.135997151569626,
+    "total_tokens": 50
+   },
+   "content_tail": "ready",
+   "samples": [
+    {
+     "t": 0.0,
+     "active": 19551131108,
+     "peak": 0,
+     "cache": 0
+    }
+   ],
+   "max_active_during": 19551131108,
+   "max_reported_peak_during": null
+  },
+  "release_timing": {
+   "memory": {
+    "t+10s": {
+     "activeBytes": 19680311846,
+     "cacheBytes": 260742088,
+     "cacheLimitBytes": 32641751449,
+     "device": {
+      "architecture": "applegpu_g13s",
+      "memoryBytes": 34359738368
+     },
+     "memoryLimitBytes": 30000000000,
+     "peakBytes": 19880618936,
+     "recommendedWorkingSetBytes": 26800603136
+    },
+    "t+30s": {
+     "activeBytes": 19680311846,
+     "cacheBytes": 260742088,
+     "cacheLimitBytes": 32641751449,
+     "device": {
+      "architecture": "applegpu_g13s",
+      "memoryBytes": 34359738368
+     },
+     "memoryLimitBytes": 30000000000,
+     "peakBytes": 19880618936,
+     "recommendedWorkingSetBytes": 26800603136
+    }
+   }
+  }
+ },
+ "finished_utc": "2026-09-02T00:29:47Z"
+}

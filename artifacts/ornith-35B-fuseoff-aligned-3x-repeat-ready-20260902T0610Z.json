@@ -1,0 +1,36 @@
+{
+ "experiment": "ornith-35B-fuseoff-aligned-3x-repeat-ready",
+ "runs": [
+  {
+   "wall_seconds": 1.08,
+   "tokens_per_second": 54.99,
+   "generate_ms": 636.5,
+   "prefill_ms": 313.5,
+   "completion_tokens": 35,
+   "content": "ready",
+   "reasoning_tail": "on. I should just reply with the word \"ready\" as requested.\n",
+   "active_bytes": 20266818986
+  },
+  {
+   "wall_seconds": 1.09,
+   "tokens_per_second": 55.0,
+   "generate_ms": 636.4,
+   "prefill_ms": 302.4,
+   "completion_tokens": 35,
+   "content": "ready",
+   "reasoning_tail": "on. I should just reply with the word \"ready\" as requested.\n",
+   "active_bytes": 20266818986
+  },
+  {
+   "wall_seconds": 1.1,
+   "tokens_per_second": 55.12,
+   "generate_ms": 635.0,
+   "prefill_ms": 306.9,
+   "completion_tokens": 35,
+   "content": "ready",
+   "reasoning_tail": "on. I should just reply with the word \"ready\" as requested.\n",
+   "active_bytes": 20266818986
+  }
+ ],
+ "tps_mean": 55.04
+}

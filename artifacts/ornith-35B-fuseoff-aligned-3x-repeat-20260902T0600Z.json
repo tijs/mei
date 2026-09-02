@@ -1,0 +1,48 @@
+{
+ "experiment": "ornith-35B-fuseoff-aligned-3x-repeat",
+ "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+ "prompt": "Write two sentences about the number 42 in the style of a limerick.",
+ "started_utc": "2026-09-02T00:49:00Z",
+ "runs": [
+  {
+   "wall_seconds": 1.69,
+   "completion_tokens": 64,
+   "generate_ms": 1134.1,
+   "tokens_per_second": 56.43,
+   "prefill_ms": 473.7,
+   "prompt_tokens_per_second": 59.11,
+   "active_bytes": 20267408874,
+   "peak_bytes": 25730964054,
+   "cache_bytes": 4899382329,
+   "content_tail": ""
+  },
+  {
+   "wall_seconds": 1.6,
+   "completion_tokens": 64,
+   "generate_ms": 1133.8,
+   "tokens_per_second": 56.45,
+   "prefill_ms": 311.6,
+   "prompt_tokens_per_second": 89.84,
+   "active_bytes": 20267507178,
+   "peak_bytes": 25730964054,
+   "cache_bytes": 4963903413,
+   "content_tail": ""
+  },
+  {
+   "wall_seconds": 1.6,
+   "completion_tokens": 64,
+   "generate_ms": 1130.2,
+   "tokens_per_second": 56.63,
+   "prefill_ms": 313.7,
+   "prompt_tokens_per_second": 89.25,
+   "active_bytes": 20267474410,
+   "peak_bytes": 25730964054,
+   "cache_bytes": 4963968949,
+   "content_tail": ""
+  }
+ ],
+ "tps_mean": 56.5,
+ "tps_min": 56.43,
+ "tps_max": 56.63,
+ "finished_utc": "2026-09-02T00:49:11Z"
+}
