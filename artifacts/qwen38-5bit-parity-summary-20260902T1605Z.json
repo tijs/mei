@@ -1,0 +1,99 @@
+{
+  "config": {
+    "binary_sha256_16": "a0bd8367aa5cb3cb",
+    "cache_reuse": true,
+    "compiled_decode": false,
+    "config_sha256": "191e0af232104ed8b65258cf3fb2b842e288008baca7633c11b82a1ac7203aab",
+    "context_cap": 65536,
+    "fork": "91fed8be",
+    "kv_bits": null,
+    "kv_cache_dir": "disposable default (4119ec5 model-aware)",
+    "optimization_profile": "generic",
+    "prefill_step_size": 64,
+    "source": "Qwen/Qwen3.8-27B@1d4bf0f2 (5bit affine g64, bf16)"
+  },
+  "engine": "mei",
+  "load_rows": [
+    {
+      "active_GB": 21.77,
+      "artifact": "probe-load-qwen38-5bit-r1-20260902T150853Z.json",
+      "hello_prefill_pps": 101.0221052500365,
+      "hello_tps": 12.695307653920693,
+      "peak_GB": 21.83,
+      "short_decode_tps": 13.091185031748758
+    },
+    {
+      "active_GB": 21.77,
+      "artifact": "probe-load-qwen38-5bit-r2-20260902T160236Z.json",
+      "hello_prefill_pps": 35.75792839270595,
+      "hello_tps": 12.673100322852424,
+      "peak_GB": 21.93,
+      "short_decode_tps": 13.110487864534777
+    },
+    {
+      "active_GB": 21.77,
+      "artifact": "probe-load-qwen38-5bit-r3-20260902T160330Z.json",
+      "hello_prefill_pps": 107.99565533498709,
+      "hello_tps": 12.704282775309492,
+      "peak_GB": 21.83,
+      "short_decode_tps": 13.113088083887668
+    }
+  ],
+  "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+  "probe_coding": {
+    "python_json_sum": {
+      "failed": {},
+      "status": "passed",
+      "tps": 12.676126636459951
+    },
+    "shell_rename": {
+      "failed": {},
+      "status": "passed",
+      "tps": 12.711891415021451
+    },
+    "sql_users_query": {
+      "failed": {},
+      "status": "passed",
+      "tps": 12.716009228003244
+    },
+    "swift_fibonacci": {
+      "failed": {},
+      "status": "passed",
+      "tps": 12.658088522189459
+    }
+  },
+  "probe_coding_overall": "passed",
+  "probe_longctx": {
+    "fill_30000_cache_reuse": {
+      "cached": 30000,
+      "mem_active_GB": 25.54,
+      "mem_peak_GB": 34.64,
+      "prefill_pps": 34108.71192762411,
+      "status": "passed",
+      "tps": 6.597064929793547
+    },
+    "fill_30000_fresh": {
+      "cached": 0,
+      "mem_active_GB": 25.54,
+      "mem_peak_GB": 34.64,
+      "prefill_pps": 55.11997526062588,
+      "status": "passed",
+      "tps": 6.733067311972514
+    }
+  },
+  "probe_mei": {
+    "cache_growing_turn1": "passed",
+    "cache_growing_turn2_reuses_slot": "passed",
+    "cache_repeat_1": "passed",
+    "cache_repeat_2": "passed",
+    "context_exact_cap": "passed",
+    "context_over_cap_rejected": "passed",
+    "mei_status": "passed",
+    "models_identity": "passed",
+    "parity_stream_vs_nonstream": "passed",
+    "plain_completion": "passed",
+    "tool_nonstreaming": "passed",
+    "tool_streaming": "passed"
+  },
+  "probe_mei_overall": "passed"
+}

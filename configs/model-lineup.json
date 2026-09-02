@@ -4,7 +4,8 @@
     "default_bits": 4,
     "default_group_size": 64,
     "mode": "affine",
-    "policy": "Prefer first-party or established mlx-community checkpoints already optimized for Apple/MLX, pinned by immutable revision. Where no suitable MLX checkpoint exists, convert from the original model source (never from GGUF) with a reproducible, Mei-owned conversion command that records bits, group size, calibration/data choices, and revision. Choose per-model bit depth by weight size, long-context/KV-cache headroom, tool reliability, and measured speed; start memory-safe at 4-bit for 26-35B models and test 5-bit or higher only when the memory gate leaves headroom. Do not force the same bit depth or recipe across architectures. Gemma and Qwen3.5/Qwen3.8 image-text-to-text (VLM) checkpoints carry preprocessor/processor files; the architecture-specific load/template/tool-call path is added only when required by evidence."
+    "policy": "Prefer first-party or established mlx-community checkpoints already optimized for Apple/MLX, pinned by immutable revision. Where no suitable MLX checkpoint exists, convert from the original model source (never from GGUF) with a reproducible, Mei-owned conversion command that records bits, group size, calibration/data choices, and revision. Choose per-model bit depth by weight size, long-context/KV-cache headroom, tool reliability, and measured speed; start memory-safe at 4-bit for 26-35B models and test 5-bit or higher only when the memory gate leaves headroom. Do not force the same bit depth or recipe across architectures. Gemma and Qwen3.5/Qwen3.8 image-text-to-text (VLM) checkpoints carry preprocessor/processor files; the architecture-specific load/template/tool-call path is added only when required by evidence.",
+    "publication_policy": "For every Mei-produced model artifact intended for end users, publish the complete model directory to a dedicated public Hugging Face model repository with a self-contained README model card and sanitized conversion-provenance.json. Record hf_repository, hf_url, hf_revision, model_card, and provenance_file on the corresponding lineup entry. Keep third-party artifacts linked to their upstream repositories and do not imply that their provenance is Mei-produced."
   },
   "models": [
     {
@@ -245,7 +246,7 @@
       "role": "secondary-comparator",
       "format": "mlx",
       "architecture": "qwen3_5",
-      "status": "loadable-produced-5bit-affine-g64-generic-profile",
+      "status": "loadable-parity-passed-3repeat-perf-memory-constrained-at-cap",
       "quantization": {
         "bits": 5,
         "group_size": 64,
@@ -257,6 +258,15 @@
       "pinned_revision_hf_cache": null,
       "local_staged_path": "~/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64",
       "staged_complete": true,
+      "hf_repository": "Tostibrown/Qwen3.8-27B-5bit-affine-g64",
+      "hf_url": "https://huggingface.co/Tostibrown/Qwen3.8-27B-5bit-affine-g64",
+      "publication": {
+        "status": "published",
+        "visibility": "public",
+        "hf_revision": "f592c6fb6ed2e962b9f31cf0fbe30222d9dc727f",
+        "model_card": "README.md",
+        "provenance_file": "conversion-provenance.json"
+      },
       "production": {
         "source_repo": "Qwen/Qwen3.8-27B",
         "source_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
@@ -280,7 +290,8 @@
         "load"
       ],
       "notes": [
-        "2026-09-02 (session L worker): produced via tools/convert_mlx_quant.py from the pin-verified local source tree (revision 1d4bf0f2, tree_digest 77d181b3, config sha 191e0af2, 55,586,114,863 B); 4 shards = 18,514,906,426 B; converter printed 'Quantized model with 5.501 bits per weight'; provenance JSON next to the staged output (schema mei.convert-mlx-quant/provenance-v1, NOT-UD/non-GGUF claims). Bounded loadability gate PASSED on the proven safe GENERIC profile (4119ec5 disk-KV default, context cap 65536, prefill step 64, no --kv-cache-dir): hello passed 12.81 t/s decode / 25.46 pps prefill; short decode 13.28 t/s (32 tok); post-load active 18.49 GB, gen active 21.77-21.77 GB, peak 21.93 GB < 30 GB limit; 0 SmallVector in server.log. See artifacts/probe-load-qwen38-27B-5bit-affine-g64-20260902T125829Z.json. Full UD-Q5_K_M behavioral comparison vs the unsloth GGUF reference is todo 0b87b76a#6."
+        "2026-09-02 (session L worker): produced via tools/convert_mlx_quant.py from the pin-verified local source tree (revision 1d4bf0f2, tree_digest 77d181b3, config sha 191e0af2, 55,586,114,863 B); 4 shards = 18,514,906,426 B; converter printed 'Quantized model with 5.501 bits per weight'; provenance JSON next to the staged output (schema mei.convert-mlx-quant/provenance-v1, NOT-UD/non-GGUF claims). Bounded loadability gate PASSED on the proven safe GENERIC profile (4119ec5 disk-KV default, context cap 65536, prefill step 64, no --kv-cache-dir): hello passed 12.81 t/s decode / 25.46 pps prefill; short decode 13.28 t/s (32 tok); post-load active 18.49 GB, gen active 21.77-21.77 GB, peak 21.93 GB < 30 GB limit; 0 SmallVector in server.log. See artifacts/probe-load-qwen38-27B-5bit-affine-g64-20260902T125829Z.json. Full UD-Q5_K_M behavioral comparison vs the unsloth GGUF reference is todo 0b87b76a#6.",
+        "2026-09-02 (session N worker, Umans run): Qwen3.8 MLX PARITY COMPLETED on the proven safe generic config (4119ec5 disk-KV default, cap 65536, prefill 64, cache-reuse on, 3 cold server starts, port 8024; fork 91fed8be; artifacts/probe-mei-qwen38-5bit-20260902T150903Z.json, probe-longctx-qwen38-5bit-20260902T154139Z.json, probe-coding-qwen38-5bit-20260902T155730Z.json, probe-load-qwen38-5bit-r1/r2/r3-*.json). probe_mei acceptance 11/11 PASSED: models identity, mei_status, plain completion, tool NON-STREAMING add_numbers(15,27) exact, tool STREAMING same, streaming/non-streaming parity (identical content+usage), cache_repeat 6207/6212 cached, growing-transcript turn2 slot reuse, context_exact_cap 65536 FILLED (active 30.2 GB, peak 34.64 GB) + 65537 over-cap HTTP-400 rejected. Long-context 30000 fresh PASSED (55.1 pps prefill, decode 6.73 t/s at 30k loaded) + strict-extension 30001 cached=30000 restored in 7.9s (34k pps restore). Coding 4/4 PASSED with 1500-token budget (Swift fibonacci incl. func marker, Python json_sum, SQL users query, bash rename loop); first attempt at 512 max_tokens truncated mid-doc-comment (probe budget artifact, model output correct). Decode 3-repeat cold: hello 12.70/12.67/12.70 t/s (sd 0.01), short 13.09/13.11/13.11 t/s (sd 0.01), peak 21.83/21.93/21.83 GB; prefill pps 101/36/108 hello (short-prompt noise, not a perf signal). MEMORY CONSTRAINT at exact 65536 cap: active 30.2 GB / peak 34.64 GB EXCEEDS the 32 GB physical ceiling (survived via swap/compression; decode tps at cap ill-conditioned single-token 604 t/s). At 30k loaded the working set is 25.5 GB — clean fit. VERDICT: model is Mei-ready for short/medium context and 30k-loaded use; full-cap 65536 fills are memory-constrained on this 32 GB M1 Max (recorded constraint, not a crash/blocker); decode 13.1 t/s short / 6.7 t/s @30k loaded is below the 30 t/s primary-target goal — Qwen3.8-5bit stays a behavioral comparator, not a speed candidate."
       ]
     }
   ]

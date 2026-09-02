@@ -150,6 +150,13 @@ explicit `--kv-cache-dir` always wins.
   carries an MTP/Next-N head (compare without `--spec-type`). The MLX 4-bit
   is **not** UD-Q5 and must not be claimed as GGUF-UD equivalence; it is a
   regular 4-bit MLX comparator.
+- **Mei-produced Qwen3.8 comparator**: public model repository
+  [`Tostibrown/Qwen3.8-27B-5bit-affine-g64`](https://huggingface.co/Tostibrown/Qwen3.8-27B-5bit-affine-g64)
+  — regular 5-bit affine/group-64 MLX quant, produced directly from the
+  pinned original Qwen source. Its model card explains the Mei use case and
+  its `conversion-provenance.json` records the source, recipe, digests, and
+  non-UD/non-GGUF claims. This is a published artifact for end-user setup,
+  not a replacement for the primary Ornith model.
 - **Secondary comparator — Gemma 4 26B-A4B (APEX-I-Quality)**: MLX candidate
   `mlx-community/gemma-4-26b-a4b-it-4bit` (regular 4-bit, `gemma4`, source
   `google/gemma-4-26B-A4B-it`; staged at
@@ -174,11 +181,16 @@ explicit `--kv-cache-dir` always wins.
 
 The machine-readable lineup is `configs/model-lineup.json` and is the source
 of truth for exactly pinned revisions, GGUF blob SHA-256 digests, quant
-settings, local staged paths, status, and test phases. Keep model status and
-test phases there in sync with this section. `scripts/stage_model.sh` can
-stage an explicitly selected Hugging Face repository with `--model-id`; it
-must not be run for the cached GGUF files, which require llama.cpp rather than
-Mei's MLX loader.
+settings, local staged paths, status, test phases, and published model URLs.
+Every Mei-produced artifact intended for end users should have a dedicated
+Hugging Face model repository with a self-contained model card and sanitized
+`conversion-provenance.json`; record its repository, URL, immutable published
+revision, and those two files in the lineup. Third-party models remain linked
+to their upstream repositories and are not described as Mei-produced. Keep
+model status and test phases there in sync with this section.
+`scripts/stage_model.sh` can stage an explicitly selected Hugging Face
+repository with `--model-id`; it must not be run for the cached GGUF files,
+which require llama.cpp rather than Mei's MLX loader.
 
 ### MLX quantization strategy
 

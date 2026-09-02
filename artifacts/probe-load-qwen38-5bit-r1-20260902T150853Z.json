@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788361739.392496,
+  "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 3.205,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 31,
+        "generate_ms": 2441.847085952759,
+        "mei_memory_active_bytes": 21771542766,
+        "mei_memory_cache_bytes": 108601400,
+        "mei_memory_peak_bytes": 21831694302,
+        "prefill_ms": 564.2329454421997,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 52
+        },
+        "prompt_tokens_per_second": 101.0221052500365,
+        "tokens_per_second": 12.695307653920693,
+        "total_tokens": 88
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 13.091185031748758,
+      "elapsed_seconds": 3.026,
+      "prompt_tokens": 65,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 2444.3929195404053,
+        "mei_memory_active_bytes": 21773115882,
+        "mei_memory_cache_bytes": 147159420,
+        "mei_memory_peak_bytes": 21833325146,
+        "prefill_ms": 340.98100662231445,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 60
+        },
+        "prompt_tokens_per_second": 190.62645349040469,
+        "tokens_per_second": 13.091185031748758,
+        "total_tokens": 97
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.011,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 18494713276,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+        "prefillStepSize": 64,
+        "status": "ok",
+        "uptimeSeconds": 71
+      }
+    }
+  },
+  "server_log_tail": "mei: resolving fork-pinned vmlx dependency ...\nmei: building (release, scratch: /Users/tijs/.local/share/local-model-bench/mei-build) ...\nmlx.metallib already present and verified at /Users/tijs/.local/share/local-model-bench/mei-build/release/mlx.metallib\nmei isolated launch: /Users/tijs/.local/share/local-model-bench/mei-build/release/mei --model-dir /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 --served-model-id Qwen/Qwen3.8-27B-5bit-affine-g64 --optimization-profile generic --host 127.0.0.1 --port 8024 --context-cap 65536 --max-tokens 32768 --temperature 0.6 --top-p 0.95 --top-k 20 --emit-reasoning true --cache-reuse true --memory-limit-bytes 0 --cache-limit-bytes 0 --log-requests false --ssm-rederive true --compiled-decode false --load-mmap true \nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 (served id: Qwen/Qwen3.8-27B-5bit-affine-g64)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/Qwen-Qwen3.8-27B-5bit-affine-g64); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 18494713276 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: failed to bind 127.0.0.1:8024: The operation couldn\u2019t be completed. (NIOCore.IOError error 1.)\n",
+  "started_epoch": 1788361733.149673,
+  "status": "passed"
+}

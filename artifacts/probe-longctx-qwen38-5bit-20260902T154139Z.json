@@ -1,0 +1,51 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788364262.480247,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "Qwen/Qwen3.8-27B-5bit-affine-g64",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 6.597064929793547,
+      "elapsed_seconds": 7.891,
+      "failed_checks": {},
+      "memory_active_bytes": 25538158602,
+      "memory_peak_bytes": 34644648742,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 34108.71192762411,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 0,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 6.733067311972514,
+      "elapsed_seconds": 550.883,
+      "failed_checks": {},
+      "memory_active_bytes": 25537634314,
+      "memory_peak_bytes": 34644648742,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 55.11997526062588,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788363699.426601,
+  "status": "passed"
+}
