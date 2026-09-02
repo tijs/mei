@@ -266,3 +266,10 @@ probe/bench drivers lives in `tools/` with outputs under `artifacts/`):
   the thinking/visible streams are kept separate.
 - **No MTP**: explicitly out of scope (the benchmark's own data shows no
   MTP/speculative win on this hardware).
+
+## Name origin
+
+Mei is named after *Mei long*, a small Early Cretaceous troodontid dinosaur
+whose fossil was found preserved in a sleeping posture. The name is commonly
+translated as “sleeping dragon.” It felt apt for a small server project built
+to wake a sleeping model on Apple Silicon.
