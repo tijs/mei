@@ -1,0 +1,8 @@
+gated-boundary 2026-09-01T17:21:42Z max-wait-min=5
+--- foreign runners/servers ---
+--- memory ---
+The system has 34359738368 (2097152 pages with a page size of 16384).
+
+Stats:
+Pages free: 1425400
+reclaimable_gb=24

@@ -1,0 +1,89 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788299071.645112,
+  "lengths": [
+    30000,
+    80000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 28.772139214322088,
+      "elapsed_seconds": 2.085,
+      "failed_checks": {},
+      "memory_active_bytes": 6651253778,
+      "memory_peak_bytes": 17636562344,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 231405.46068665828,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 0,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 28.651268750547015,
+      "elapsed_seconds": 137.716,
+      "failed_checks": {},
+      "memory_active_bytes": 6599119890,
+      "memory_peak_bytes": 17636562344,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 221.45017316018155,
+      "status": "passed"
+    },
+    "fill_80000_cache_reuse": {
+      "cached_tokens": 80000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 16.273186591695417,
+      "elapsed_seconds": 11.383,
+      "failed_checks": {},
+      "memory_active_bytes": 8495633426,
+      "memory_peak_bytes": 17636562344,
+      "prompt_tokens": 80001,
+      "prompt_tokens_per_second": 17395.219997577464,
+      "status": "passed"
+    },
+    "fill_80000_fresh": {
+      "cached_tokens": 30001,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 17.46355897144376,
+      "elapsed_seconds": 280.04,
+      "failed_checks": {},
+      "memory_active_bytes": 8443499538,
+      "memory_peak_bytes": 17636562344,
+      "prompt_tokens": 80000,
+      "prompt_tokens_per_second": 289.89847642682776,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788298636.86378,
+  "status": "passed"
+}

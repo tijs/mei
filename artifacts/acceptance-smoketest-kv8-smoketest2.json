@@ -1,0 +1,310 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788285737.074985,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "cache_growing_turn1": {
+      "cached_tokens": 0,
+      "elapsed_seconds": 3.8865145412273705,
+      "request_seconds": 3.88643441721797,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 330.8260440826416,
+        "mei_memory_active_bytes": 5506114578,
+        "mei_memory_cache_bytes": 1253873776,
+        "mei_memory_peak_bytes": 6676897974,
+        "prefill_ms": 3433.632016181946,
+        "prompt_tokens": 790,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 230.07707182275365,
+        "tokens_per_second": 48.36378600229896,
+        "total_tokens": 806
+      }
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "cached_tokens": 785,
+      "elapsed_seconds": 0.7275533750653267,
+      "request_seconds": 0.7274600830860436,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 332.7779769897461,
+        "mei_memory_active_bytes": 5558674450,
+        "mei_memory_cache_bytes": 1490188560,
+        "mei_memory_peak_bytes": 6676897974,
+        "prefill_ms": 255.34188747406006,
+        "prompt_tokens": 813,
+        "prompt_tokens_details": {
+          "cached_tokens": 785
+        },
+        "prompt_tokens_per_second": 3183.9664382624724,
+        "tokens_per_second": 48.08010477355901,
+        "total_tokens": 829
+      }
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 26.99334758333862,
+      "request_seconds": 26.99319341732189,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 371.4250326156616,
+        "mei_memory_active_bytes": 5817832466,
+        "mei_memory_cache_bytes": 1245108124,
+        "mei_memory_peak_bytes": 6676897974,
+        "prefill_ms": 26383.14700126648,
+        "prompt_tokens": 6170,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 233.8614115936897,
+        "tokens_per_second": 43.07733349937206,
+        "total_tokens": 6186
+      }
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 0.6367933331057429,
+      "request_seconds": 0.6366691668517888,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 370.1930046081543,
+        "mei_memory_active_bytes": 5817832466,
+        "mei_memory_cache_bytes": 1297653084,
+        "mei_memory_peak_bytes": 6676897974,
+        "prefill_ms": 88.13989162445068,
+        "prompt_tokens": 6170,
+        "prompt_tokens_details": {
+          "cached_tokens": 6165
+        },
+        "prompt_tokens_per_second": 70002.35519110163,
+        "tokens_per_second": 43.22069785444985,
+        "total_tokens": 6186
+      }
+    },
+    "context_exact_cap": {
+      "elapsed_seconds": 325.61085166735575,
+      "request_seconds": 325.610185790807,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 0.09799003601074219,
+        "mei_memory_active_bytes": 7785026578,
+        "mei_memory_cache_bytes": 9914073952,
+        "mei_memory_peak_bytes": 11957409214,
+        "prefill_ms": 323839.2159938812,
+        "prompt_tokens": 65536,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 202.37203143808955,
+        "tokens_per_second": 10205.119221411192,
+        "total_tokens": 65537
+      }
+    },
+    "context_over_cap_rejected": {
+      "elapsed_seconds": 1.2501158341765404,
+      "error": "HTTP 400: {\"error\":{\"code\":\"engine_error\",\"message\":\"request exceeded context cap: 65537 prompt tokens > 65536 allowed\",\"type\":\"invalid_request_error\"}}",
+      "rejected_as_expected": true,
+      "status": "passed"
+    },
+    "mei_status": {
+      "context_cap": null,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "elapsed_seconds": 0.0013815411366522312,
+      "memory": {
+        "activeBytes": 5038040076,
+        "cacheBytes": 0,
+        "cacheLimitBytes": 32641751449,
+        "device": {
+          "architecture": "applegpu_g13s",
+          "memoryBytes": 34359738368
+        },
+        "memoryLimitBytes": 24051816857,
+        "peakBytes": 0,
+        "recommendedWorkingSetBytes": 26800603136
+      },
+      "prefill_step_size": null,
+      "request_seconds": 0.0013424591161310673,
+      "status": "passed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.01707991724833846,
+      "request_seconds": 0.01692695776000619,
+      "served_ids": [
+        "ornith-ai/Ornith-1.5-9B-MLX-4bit"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 1.871471124701202,
+      "nonstream_usage": {
+        "completion_tokens": 32,
+        "generate_ms": 686.0530376434326,
+        "mei_memory_active_bytes": 5350074802,
+        "mei_memory_cache_bytes": 1114491764,
+        "mei_memory_peak_bytes": 5992295162,
+        "prefill_ms": 248.15106391906738,
+        "prompt_tokens": 16,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 64.4768543294188,
+        "tokens_per_second": 46.643624099266205,
+        "total_tokens": 48
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 32,
+        "generate_ms": 691.769003868103,
+        "mei_memory_active_bytes": 5350072882,
+        "mei_memory_cache_bytes": 1166486388,
+        "mei_memory_peak_bytes": 5992295162,
+        "prefill_ms": 74.8060941696167,
+        "prompt_tokens": 16,
+        "prompt_tokens_details": {
+          "cached_tokens": 11
+        },
+        "prompt_tokens_per_second": 213.88631738640584,
+        "tokens_per_second": 46.258215995611906,
+        "total_tokens": 48
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 1.0602917498908937,
+      "request_seconds": 1.0602326253429055,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 680.0088882446289,
+        "mei_memory_active_bytes": 5246639406,
+        "mei_memory_cache_bytes": 122787748,
+        "mei_memory_peak_bytes": 5298675726,
+        "prefill_ms": 281.5699577331543,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 53.27272881226767,
+        "tokens_per_second": 47.05820843401712,
+        "total_tokens": 47
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 2.6471531661227345,
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "reasoning_content": "The user wants me to compute 15 + 27 using the add_numbers function.\n",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"b\":27,\"a\":15}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_a02aa3cd-5d9",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1788285373,
+        "id": "chatcmpl-b2a3eeb0-107f-4b5e-9795-",
+        "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 59,
+          "generate_ms": 1264.267921447754,
+          "mei_memory_active_bytes": 5317843122,
+          "mei_memory_cache_bytes": 1041785056,
+          "mei_memory_peak_bytes": 5992295162,
+          "prefill_ms": 1284.6651077270508,
+          "prompt_tokens": 293,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_tokens_per_second": 228.07500432420315,
+          "tokens_per_second": 46.66732343603024,
+          "total_tokens": 352
+        }
+      },
+      "request_seconds": 2.647051916923374,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    "tool_streaming": {
+      "assembled_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "message": {
+              "content": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"b\":27,\"a\":15}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_6b766a09-476",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "completion_tokens": 59,
+          "generate_ms": 1262.9640102386475,
+          "mei_memory_active_bytes": 5317842098,
+          "mei_memory_cache_bytes": 1094329780,
+          "mei_memory_peak_bytes": 5992295162,
+          "prefill_ms": 72.57080078125,
+          "prompt_tokens": 293,
+          "prompt_tokens_details": {
+            "cached_tokens": 288
+          },
+          "prompt_tokens_per_second": 4037.4365012615644,
+          "tokens_per_second": 46.715503784507256,
+          "total_tokens": 352
+        }
+      },
+      "client_ttft_seconds": 1.4018082502298057,
+      "elapsed_seconds": 1.416123874951154,
+      "request_seconds": 1.4160598330199718,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    }
+  },
+  "started_epoch": 1788285369.5780659,
+  "status": "passed"
+}

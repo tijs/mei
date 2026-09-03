@@ -1,0 +1,35 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788301755.5773609,
+  "lengths": [
+    30000,
+    80000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "elapsed_seconds": 0.001,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "error"
+    },
+    "fill_30000_fresh": {
+      "elapsed_seconds": 14.302,
+      "error": "RemoteDisconnected: Remote end closed connection without response",
+      "status": "error"
+    },
+    "fill_80000_cache_reuse": {
+      "elapsed_seconds": 0.001,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "error"
+    },
+    "fill_80000_fresh": {
+      "elapsed_seconds": 0.001,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "error"
+    }
+  },
+  "started_epoch": 1788301737.818521,
+  "status": "failed"
+}

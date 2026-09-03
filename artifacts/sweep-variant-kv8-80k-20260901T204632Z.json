@@ -1,0 +1,879 @@
+{
+  "cells": [
+    {
+      "config": {
+        "cache_limit_bytes": 0,
+        "compiled": false,
+        "compiled_threshold": null,
+        "kv_bits": 8,
+        "max_kv_window": 0,
+        "prefill_step": 512,
+        "ssm_rederive": true,
+        "tag": "ps512-ssmtrue-cl0g-kv8-compiledfalse"
+      },
+      "profile": {
+        "dumps": [
+          "generation-end tokens=64 total=5555.3ms prompt.prepare_total count=1 total=1925.4ms avg=1925.444ms | prompt.async_eval_submit count=1 total=1920.7ms avg=1920.680ms | decode.async_eval_submit count=64 total=1111.9ms avg=17.374ms | decode.step_build count=64 total=296.0ms avg=4.626ms | decode.model_forward count=65 total=294.0ms avg=4.523ms | decode.kv_quantize count=65 total=6.2ms avg=0.095ms | decode.token_item_sync count=64 total=0.7ms avg=0.011ms | decode.sample count=65 total=0.3ms avg=0.005ms | prompt.model_prepare count=1 total=0.0ms avg=0.006ms",
+          "generation-end tokens=64 total=144920.8ms prompt.prepare_total count=1 total=71319.3ms avg=71319.329ms | prompt.model_prepare count=1 total=69092.8ms avg=69092.824ms | prompt.async_eval_submit count=1 total=2221.8ms avg=2221.830ms | decode.async_eval_submit count=64 total=1507.8ms avg=23.560ms | decode.step_build count=64 total=386.9ms avg=6.046ms | decode.model_forward count=65 total=382.9ms avg=5.891ms | decode.kv_quantize count=65 total=7.9ms avg=0.122ms | decode.token_item_sync count=64 total=0.8ms avg=0.013ms | decode.sample count=65 total=0.4ms avg=0.006ms",
+          "generation-end tokens=64 total=304703.8ms prompt.prepare_total count=1 total=150931.8ms avg=150931.844ms | prompt.model_prepare count=1 total=148886.5ms avg=148886.478ms | prompt.async_eval_submit count=1 total=2040.5ms avg=2040.545ms | decode.async_eval_submit count=64 total=1952.2ms avg=30.504ms | decode.step_build count=64 total=443.7ms avg=6.933ms | decode.model_forward count=65 total=438.6ms avg=6.748ms | decode.kv_quantize count=65 total=9.0ms avg=0.139ms | decode.token_item_sync count=64 total=0.9ms avg=0.014ms | decode.sample count=65 total=0.4ms avg=0.007ms",
+          "generation-end tokens=64 total=424799.1ms prompt.prepare_total count=1 total=210801.8ms avg=210801.830ms | prompt.model_prepare count=1 total=208325.6ms avg=208325.575ms | prompt.async_eval_submit count=1 total=2471.5ms avg=2471.499ms | decode.async_eval_submit count=64 total=2261.1ms avg=35.329ms | decode.step_build count=64 total=466.8ms avg=7.294ms | decode.model_forward count=65 total=461.4ms avg=7.099ms | decode.kv_quantize count=65 total=9.3ms avg=0.143ms | decode.token_item_sync count=64 total=1.2ms avg=0.019ms | decode.sample count=65 total=0.4ms avg=0.007ms",
+          "generation-end tokens=64 total=3348.1ms decode.async_eval_submit count=64 total=2215.2ms avg=34.612ms | decode.step_build count=64 total=490.7ms avg=7.667ms | decode.model_forward count=65 total=483.4ms avg=7.438ms | prompt.prepare_total count=1 total=75.5ms avg=75.451ms | prompt.async_eval_submit count=1 total=72.1ms avg=72.105ms | decode.kv_quantize count=65 total=9.6ms avg=0.148ms | decode.token_item_sync count=64 total=1.2ms avg=0.019ms | decode.sample count=65 total=0.5ms avg=0.007ms | prompt.model_prepare count=1 total=0.0ms avg=0.011ms",
+          "generation-end tokens=64 total=11422.1ms decode.async_eval_submit count=64 total=4033.2ms avg=63.019ms | prompt.prepare_total count=1 total=3315.6ms avg=3315.588ms | prompt.async_eval_submit count=1 total=3312.2ms avg=3312.160ms | decode.step_build count=64 total=378.5ms avg=5.914ms | decode.model_forward count=65 total=373.6ms avg=5.747ms | decode.kv_quantize count=65 total=7.6ms avg=0.116ms | decode.token_item_sync count=64 total=1.1ms avg=0.018ms | decode.sample count=65 total=0.4ms avg=0.006ms | prompt.model_prepare count=1 total=0.0ms avg=0.009ms",
+          "generation-end tokens=64 total=3341.8ms decode.async_eval_submit count=64 total=2230.8ms avg=34.856ms | decode.step_build count=64 total=460.5ms avg=7.195ms | decode.model_forward count=65 total=453.9ms avg=6.983ms | prompt.prepare_total count=1 total=94.6ms avg=94.561ms | prompt.async_eval_submit count=1 total=91.1ms avg=91.080ms | decode.kv_quantize count=65 total=8.9ms avg=0.137ms | decode.token_item_sync count=64 total=1.4ms avg=0.022ms | decode.sample count=65 total=0.6ms avg=0.009ms | prompt.model_prepare count=1 total=0.0ms avg=0.009ms",
+          "generation-end tokens=70 total=415402.3ms prompt.prepare_total count=1 total=207248.8ms avg=207248.755ms | prompt.model_prepare count=2 total=204541.7ms avg=102270.865ms | decode.async_eval_submit count=71 total=2460.4ms avg=34.653ms | decode.step_build count=71 total=521.5ms avg=7.344ms | decode.model_forward count=72 total=515.2ms avg=7.156ms | prompt.async_eval_submit count=1 total=103.0ms avg=102.988ms | decode.kv_quantize count=72 total=10.1ms avg=0.140ms | decode.token_item_sync count=71 total=1.2ms avg=0.018ms | decode.sample count=72 total=0.5ms avg=0.007ms"
+        ]
+      },
+      "rows": [
+        {
+          "cached_tokens": 0,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 46.37412375452948,
+          "elapsed_seconds": 3.987,
+          "finish_reason": "length",
+          "generate_ms": 1380.079984664917,
+          "name": "ctx_512_fresh",
+          "prefill_ms": 1961.1220359802246,
+          "prompt_tokens": 512,
+          "request_seconds": 3.959,
+          "started_epoch": 1788295607.16583,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5141797774,
+              "cacheBytes": 1679251356,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 6424983608,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 4
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5089893262,
+              "cacheBytes": 267259668,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 5298215778,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 0
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 1380.079984664917,
+            "mei_memory_active_bytes": 5264647058,
+            "mei_memory_cache_bytes": 1556402072,
+            "mei_memory_peak_bytes": 6424983608,
+            "prefill_ms": 1961.1220359802246,
+            "prompt_tokens": 512,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_tokens_per_second": 261.07503286713506,
+            "tokens_per_second": 46.37412375452948,
+            "total_tokens": 576
+          }
+        },
+        {
+          "cached_tokens": 0,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 34.33791373943384,
+          "elapsed_seconds": 74.078,
+          "finish_reason": "length",
+          "generate_ms": 1863.8290166854858,
+          "name": "ctx_16384_fresh",
+          "prefill_ms": 71360.39197444916,
+          "prompt_tokens": 16384,
+          "request_seconds": 74.049,
+          "started_epoch": 1788295611.154426,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5193309070,
+              "cacheBytes": 5431302692,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 7577116014,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 78
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5141797774,
+              "cacheBytes": 1679251356,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 6424983608,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 4
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 1863.8290166854858,
+            "mei_memory_active_bytes": 5869034386,
+            "mei_memory_cache_bytes": 4755577376,
+            "mei_memory_peak_bytes": 7577116014,
+            "prefill_ms": 71360.39197444916,
+            "prompt_tokens": 16384,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_tokens_per_second": 229.59515140929088,
+            "tokens_per_second": 34.33791373943384,
+            "total_tokens": 16448
+          }
+        },
+        {
+          "cached_tokens": 0,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 27.040959476707677,
+          "elapsed_seconds": 154.418,
+          "finish_reason": "length",
+          "generate_ms": 2366.779923439026,
+          "name": "ctx_33175_fresh",
+          "prefill_ms": 150972.19514846802,
+          "prompt_tokens": 33175,
+          "request_seconds": 154.391,
+          "started_epoch": 1788295685.232934,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5244820366,
+              "cacheBytes": 9153278592,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 8803164192,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 233
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5193309070,
+              "cacheBytes": 5431302692,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 7577116014,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 78
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 2366.779923439026,
+            "mei_memory_active_bytes": 6505192338,
+            "mei_memory_cache_bytes": 7892906620,
+            "mei_memory_peak_bytes": 8803164192,
+            "prefill_ms": 150972.19514846802,
+            "prompt_tokens": 33175,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_tokens_per_second": 219.74244970986396,
+            "tokens_per_second": 27.040959476707677,
+            "total_tokens": 33239
+          }
+        },
+        {
+          "cached_tokens": 0,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 23.771841014310723,
+          "elapsed_seconds": 214.959,
+          "finish_reason": "length",
+          "generate_ms": 2692.260980606079,
+          "name": "ctx_45000_fresh",
+          "prefill_ms": 210850.2720594406,
+          "prompt_tokens": 45000,
+          "request_seconds": 214.931,
+          "started_epoch": 1788295839.652307,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5296331662,
+              "cacheBytes": 12333380398,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 448
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5244820366,
+              "cacheBytes": 9153278592,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 8803164192,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 233
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 2692.260980606079,
+            "mei_memory_active_bytes": 6968826770,
+            "mei_memory_cache_bytes": 10660885290,
+            "mei_memory_peak_bytes": 9856591682,
+            "prefill_ms": 210850.2720594406,
+            "prompt_tokens": 45000,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_tokens_per_second": 213.4215885067205,
+            "tokens_per_second": 23.771841014310723,
+            "total_tokens": 45064
+          }
+        },
+        {
+          "cached_tokens": 45000,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 23.819749838701075,
+          "elapsed_seconds": 3.978,
+          "finish_reason": "length",
+          "generate_ms": 2686.8460178375244,
+          "name": "ctx_45000_reuse_r1",
+          "prefill_ms": 107.79702663421631,
+          "prompt_tokens": 45001,
+          "request_seconds": 3.943,
+          "started_epoch": 1788296054.611784,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 1,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5347842958,
+              "cacheBytes": 15665394478,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 452
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 0,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5296331662,
+              "cacheBytes": 12333380398,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 448
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 2686.8460178375244,
+            "mei_memory_active_bytes": 7020108690,
+            "mei_memory_cache_bytes": 13993128746,
+            "mei_memory_peak_bytes": 9856591682,
+            "prefill_ms": 107.79702663421631,
+            "prompt_tokens": 45001,
+            "prompt_tokens_details": {
+              "cached_tokens": 45000
+            },
+            "prompt_tokens_per_second": 417460.4940885822,
+            "tokens_per_second": 23.819749838701075,
+            "total_tokens": 45065
+          }
+        },
+        {
+          "cached_tokens": 45001,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 17.819862266808627,
+          "elapsed_seconds": 10.483,
+          "finish_reason": "length",
+          "generate_ms": 3591.498017311096,
+          "name": "ctx_45000_reuse_r2",
+          "prefill_ms": 4147.029995918274,
+          "prompt_tokens": 45002,
+          "request_seconds": 10.45,
+          "started_epoch": 1788296058.5907588,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 2,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5399354254,
+              "cacheBytes": 17519407918,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 462
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 1,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5347842958,
+              "cacheBytes": 15665394478,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 452
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 3591.498017311096,
+            "mei_memory_active_bytes": 7071619986,
+            "mei_memory_cache_bytes": 15847142186,
+            "mei_memory_peak_bytes": 9856591682,
+            "prefill_ms": 4147.029995918274,
+            "prompt_tokens": 45002,
+            "prompt_tokens_details": {
+              "cached_tokens": 45001
+            },
+            "prompt_tokens_per_second": 10851.62153258919,
+            "tokens_per_second": 17.819862266808627,
+            "total_tokens": 45066
+          }
+        },
+        {
+          "cached_tokens": 45002,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true,
+            "prompt_tokens_match": true
+          },
+          "completion_tokens": 64,
+          "contended_during_row": false,
+          "decode_tps_engine": 23.94473920206133,
+          "elapsed_seconds": 4.213,
+          "finish_reason": "length",
+          "generate_ms": 2672.8209257125854,
+          "name": "ctx_45000_reuse_r3",
+          "prefill_ms": 126.89006328582764,
+          "prompt_tokens": 45003,
+          "request_seconds": 4.178,
+          "started_epoch": 1788296069.0762088,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 3,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5450865550,
+              "cacheBytes": 17519407918,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 467
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 2,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5399354254,
+              "cacheBytes": 17519407918,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 462
+          },
+          "usage": {
+            "completion_tokens": 64,
+            "generate_ms": 2672.8209257125854,
+            "mei_memory_active_bytes": 7123131282,
+            "mei_memory_cache_bytes": 15847142186,
+            "mei_memory_peak_bytes": 9856591682,
+            "prefill_ms": 126.89006328582764,
+            "prompt_tokens": 45003,
+            "prompt_tokens_details": {
+              "cached_tokens": 45002
+            },
+            "prompt_tokens_per_second": 354661.3409643274,
+            "tokens_per_second": 23.94473920206133,
+            "total_tokens": 45067
+          }
+        },
+        {
+          "cached_tokens": 0,
+          "checks": {
+            "decode_above_floor": true,
+            "http_200": true
+          },
+          "completion_tokens": 70,
+          "contended_during_row": false,
+          "decode_tps_engine": 23.614287707795377,
+          "elapsed_seconds": 211.499,
+          "finish_reason": "stop",
+          "generate_ms": 2964.3070697784424,
+          "name": "chat_40k",
+          "prefill_ms": 207281.3379764557,
+          "prompt_tokens": 44002,
+          "request_seconds": 211.463,
+          "started_epoch": 1788296073.2912252,
+          "status": "passed",
+          "status_after": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 3,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5502376846,
+              "cacheBytes": 14986119608,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 10127269490,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 678
+          },
+          "status_before": {
+            "cache": {
+              "isHybrid": true,
+              "pagedEnabled": false,
+              "pagedEvictions": 0,
+              "pagedHits": 0,
+              "pagedMisses": 0,
+              "ssmHits": 3,
+              "ssmMisses": 0
+            },
+            "cacheReuse": true,
+            "contextCap": 131072,
+            "kvBits": 8,
+            "maxTokens": 64,
+            "memory": {
+              "activeBytes": 5450865550,
+              "cacheBytes": 17519407918,
+              "cacheLimitBytes": 32641751449,
+              "device": {
+                "architecture": "applegpu_g13s",
+                "memoryBytes": 34359738368
+              },
+              "memoryLimitBytes": 24051816857,
+              "peakBytes": 9856591682,
+              "recommendedWorkingSetBytes": 26800603136
+            },
+            "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+            "prefillStepSize": 512,
+            "status": "ok",
+            "uptimeSeconds": 467
+          },
+          "usage": {
+            "completion_tokens": 70,
+            "generate_ms": 2964.3070697784424,
+            "mei_memory_active_bytes": 8633965458,
+            "mei_memory_cache_bytes": 11854530996,
+            "mei_memory_peak_bytes": 10127269490,
+            "prefill_ms": 207281.3379764557,
+            "prompt_tokens": 44002,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_tokens_per_second": 212.28153209334272,
+            "tokens_per_second": 23.614287707795377,
+            "total_tokens": 44072
+          }
+        }
+      ],
+      "status_after_cell": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": false,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 3,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 131072,
+        "kvBits": 8,
+        "maxTokens": 64,
+        "memory": {
+          "activeBytes": 5502376846,
+          "cacheBytes": 14986119608,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 10127269490,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 678
+      },
+      "status_after_load": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 131072,
+        "kvBits": 8,
+        "maxTokens": 64,
+        "memory": {
+          "activeBytes": 5038040076,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+        "prefillStepSize": 512,
+        "status": "ok",
+        "uptimeSeconds": 0
+      }
+    }
+  ],
+  "contention_boundary": {
+    "foreign_servers": []
+  },
+  "engine": "mei",
+  "finished_epoch": 1788296284.820093,
+  "machine": {
+    "note": "M1 Max g13s 32GB"
+  },
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "pin": "vmlx-swift aeb5e21c195d8519609488ef75a25ce7e48d8f88",
+  "started_epoch": 1788295592.297981,
+  "status": "passed"
+}

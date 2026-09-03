@@ -1,0 +1,72 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788284127.345286,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "cache_growing_turn1": {
+      "elapsed_seconds": 0.00010170880705118179,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "elapsed_seconds": 0.00010254187509417534,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 0.00019145803526043892,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 0.00015195924788713455,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "context_exact_cap": {
+      "elapsed_seconds": 0.0010004169307649136,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "context_over_cap_rejected": {
+      "elapsed_seconds": 1.2531872503459454,
+      "error": "HTTP 400: {\"error\":{\"code\":\"engine_error\",\"message\":\"request exceeded context cap: 65537 prompt tokens > 65536 allowed\",\"type\":\"invalid_request_error\"}}",
+      "rejected_as_expected": true,
+      "status": "passed"
+    },
+    "mei_status": {
+      "elapsed_seconds": 0.00013620778918266296,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.01024470804259181,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "parity_stream_vs_nonstream": {
+      "elapsed_seconds": 9.358301758766174e-05,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "plain_completion": {
+      "elapsed_seconds": 0.00012812484055757523,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 0.00010524969547986984,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    },
+    "tool_streaming": {
+      "elapsed_seconds": 0.00010525016114115715,
+      "error": "URLError: <urlopen error [Errno 61] Connection refused>",
+      "status": "failed"
+    }
+  },
+  "started_epoch": 1788284124.056463,
+  "status": "failed"
+}

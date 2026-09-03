@@ -1,0 +1,51 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788290673.721868,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "ornith-ai/Ornith-1.5-9B-MLX-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 28.78334749435668,
+      "elapsed_seconds": 2.022,
+      "failed_checks": {},
+      "memory_active_bytes": 6651253778,
+      "memory_peak_bytes": 11957409214,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 296969.2944810903,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 0,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 28.716756881429795,
+      "elapsed_seconds": 137.9,
+      "failed_checks": {},
+      "memory_active_bytes": 6599119890,
+      "memory_peak_bytes": 11957409214,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 220.98042674528847,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788290531.944881,
+  "status": "passed"
+}
