@@ -1,0 +1,215 @@
+{
+  "alias": "mudler/gemma-4-26B-A4B-it-APEX-GGUF:APEX-I-Quality",
+  "contention_boundary": {
+    "foreign_servers": []
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788441498.638304,
+  "gguf": "/Users/tijs/.cache/huggingface/hub/models--mudler--gemma-4-26B-A4B-it-APEX-GGUF/snapshots/e79ec24ceca5060b55b9a267c565b0b0843f3678/gemma-4-26B-A4B-APEX-I-Quality.gguf",
+  "gguf_provenance": {
+    "digest_matches_pinned": true,
+    "expected_sha256": "472828ccd00bcf52d6ca72e97d49526fd254371a90ae6a77505409e6e2bf3304",
+    "llama_bin": "/opt/homebrew/bin/llama-server",
+    "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+    "magic_ok": true,
+    "meta": {
+      "arch": "gemma4",
+      "block_count": 30,
+      "context_length": 262144,
+      "file_type": 18,
+      "full_attention_interval": null,
+      "mtp_head_present": false,
+      "mtp_nextn_predict_layers": null,
+      "mtp_note": "no MTP head",
+      "quant_version": 2
+    },
+    "path": "/Users/tijs/.cache/huggingface/hub/models--mudler--gemma-4-26B-A4B-it-APEX-GGUF/snapshots/e79ec24ceca5060b55b9a267c565b0b0843f3678/gemma-4-26B-A4B-APEX-I-Quality.gguf",
+    "repo": "mudler/gemma-4-26B-A4B-it-APEX-GGUF",
+    "revision": "e79ec24ceca5060b55b9a267c565b0b0843f3678",
+    "sha256": "472828ccd00bcf52d6ca72e97d49526fd254371a90ae6a77505409e6e2bf3304",
+    "size_bytes": 20576637248
+  },
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "methodology": "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; mode=short (45k = same exact 45K-token prompt + 40K chat pattern as the Mei bench; short = Mei probe_load-style short decode rows)",
+  "rows": [
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 47.70515138691186,
+      "elapsed_seconds": 0.853,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 22421667840
+      },
+      "mem_before": {
+        "rss_bytes": 22416818176
+      },
+      "name": "short_fresh_r1",
+      "prompt_tokens": 14,
+      "prompt_tokens_per_second": 81.78000011682857,
+      "request_seconds": 0.822,
+      "started_epoch": 1788441495.280746,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 649.825,
+        "predicted_n": 32,
+        "predicted_per_second": 47.70515138691186,
+        "predicted_per_token_ms": 20.96209677419355,
+        "prompt_ms": 171.191,
+        "prompt_n": 14,
+        "prompt_per_second": 81.78000011682857,
+        "prompt_per_token_ms": 12.227928571428572
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 14,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 46
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 47.86935064453764,
+      "elapsed_seconds": 0.756,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 22427828224
+      },
+      "mem_before": {
+        "rss_bytes": 22421700608
+      },
+      "name": "short_fresh_r2",
+      "prompt_tokens": 14,
+      "prompt_tokens_per_second": 66.006600660066,
+      "request_seconds": 0.725,
+      "started_epoch": 1788441496.1341288,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 647.596,
+        "predicted_n": 32,
+        "predicted_per_second": 47.86935064453764,
+        "predicted_per_token_ms": 20.890193548387096,
+        "prompt_ms": 75.75,
+        "prompt_n": 5,
+        "prompt_per_second": 66.006600660066,
+        "prompt_per_token_ms": 15.15
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 14,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 46
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 47.71594543758601,
+      "elapsed_seconds": 0.757,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 22427844608
+      },
+      "mem_before": {
+        "rss_bytes": 22427828224
+      },
+      "name": "short_fresh_r3",
+      "prompt_tokens": 14,
+      "prompt_tokens_per_second": 65.98482349059717,
+      "request_seconds": 0.727,
+      "started_epoch": 1788441496.890086,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 649.678,
+        "predicted_n": 32,
+        "predicted_per_second": 47.71594543758601,
+        "predicted_per_token_ms": 20.957354838709676,
+        "prompt_ms": 75.775,
+        "prompt_n": 5,
+        "prompt_per_second": 65.98482349059717,
+        "prompt_per_token_ms": 15.155000000000001
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 14,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 46
+      }
+    },
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 47.67125899795013,
+      "elapsed_seconds": 0.991,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 22428106752
+      },
+      "mem_before": {
+        "rss_bytes": 22427844608
+      },
+      "name": "short_chat",
+      "prompt_tokens": 29,
+      "prompt_tokens_per_second": 94.10878976096367,
+      "request_seconds": 0.96,
+      "started_epoch": 1788441497.646837,
+      "status": "passed",
+      "text_source": "message.reasoning_content",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 650.287,
+        "predicted_n": 32,
+        "predicted_per_second": 47.67125899795013,
+        "predicted_per_token_ms": 20.977,
+        "prompt_ms": 308.154,
+        "prompt_n": 29,
+        "prompt_per_second": 94.10878976096367,
+        "prompt_per_token_ms": 10.626
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 29,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 61
+      }
+    }
+  ],
+  "server_log": "/Users/tijs/.local/share/local-model-bench/mei-runtime-gemma-ceiling/logs/llama-ceiling.log",
+  "started_epoch": 1788441492.948364,
+  "status": "passed"
+}
