@@ -40,13 +40,32 @@ release requires explicit user authorization.
   `mlx-community/gemma-4-26b-a4b-it-4bit`: 30k fresh fill 266.5/265.3/266.2
   pps (3 cold repeats) vs ~139 baseline (+91%), peak 27.23 GB unchanged,
   30k loaded decode unchanged (~7.4 t/s), acceptance pass-set identical to
-  the 64 baseline (only the pre-existing user-gated Gemma string-args tool
-  schema fails). The 30k-decode row closes the last measurable GGUF A/B gap
+  the 64 baseline (at that time the only gate not yet passed was the
+  pre-existing user-gated Gemma string-args tool schema, since cleared by the
+  `ba1e9df`/`00418a5` argument-typing work). The 30k-decode row closes the
   (GGUF 37.08 t/s, MLX 5.0x slower — dense/rotating-attention cost, recorded
   as a measured constraint). Note: this change postdates the staged
   v0.2.0-alpha.1 snapshot (2026-09-03T14:27Z); any future staging refresh
   must re-run `scripts/stage_release_candidate.sh`. Evidence:
   `artifacts/gemma4-prefill-step-sweep-20260903.md`.
+- Safe user-local CLI installer (commit `9593126`): `scripts/install_mei.sh`
+  copies an already-built `mei` executable (and any colocated `mlx.metallib` /
+  `default.metallib` / `*.provenance`) into a single user-local destination
+  dir, defaulting to `$HOME/.local/bin`. Source resolution order: `--binary`,
+  `$MEI_BINARY`, repo `.build/release/mei`, or `bin/mei` beside the installer.
+  Refuses system / package-manager prefixes (`/usr`, `/usr/local`, `/opt`,
+  `/opt/homebrew`, `/bin`, `/sbin`, `/Library`) unless `--force`; preserves an
+  existing differing file unless `--force`; idempotent rerun is a no-op;
+  supports `--prefix`, `--dry-run`, `--help`, `--version`; never builds or
+  downloads. `scripts/test_install_mei.sh` is a deterministic, weight-free,
+  server-free suite (31 checks) covering help, unknown-option exit-2,
+  missing-binary failure, dry-run, install + executable bit, idempotent rerun,
+  `--force` overwrite, colocated Metal companions, and the system-prefix
+  guard. Documented in `docs/INSTALL.md`; README Build section points at it.
+  Verified against the final release binary at `00418a5`: installed to
+  `/Users/tijs/.local/bin/mei` reporting `mei 0.2.0-alpha.1`, SHA-256 matching
+  the final release binary, with `mlx.metallib` / `default.metallib` /
+  provenance installed alongside.
 
 ### Fixed
 
@@ -79,15 +98,35 @@ release requires explicit user authorization.
   prompt/completion/total tokens across non-streaming chat, raw
   `/v1/completions`, and the streaming finish; streaming honors
   `stream_options.include_usage` (final usage chunk emitted only when true).
-  Verified live against the release binary: Gemma tool args integer
+  Verified live against the final release binary: Gemma tool args integer
   non-streaming and streaming; `include_usage` true→emitted / false→omitted;
   raw `/v1/completions` integer usage with `total = prompt + completion`
-  (187/22/209 both paths; streaming cached 186 reused prefix vs non-streaming
-  0). Canonical `MEIAcceptanceTests` vs the Ornith release binary
+  (final usage tuples (prompt, completion, total, cached_tokens), all
+  integer, total arithmetic valid: `(168,22,190,0)` chat non-streaming,
+  `(168,22,190,167)` chat streaming `include_usage=true` — prefix reused —
+  and `(5,16,21,4)` raw `/v1/completions`). Canonical `MEIAcceptanceTests`
+  vs the Ornith release binary
   (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`) 5/5 PASS. Focused suites against
-  the release binary: `ToolArgumentNormalizerTests` 9/9, `OpenAITypesTests`
+  the release binary: `ToolArgumentNormalizerTests` 16/16, `OpenAITypesTests`
   12/12, `ServerConfigParsingTests` 28/28, `SSMAnchorBoundariesTests` 9/9,
   `CacheRestoreTrackerTests` 6/6, `QuantizedRotatingKVCacheTests` 6/6.
+  Evidence: `artifacts/gemma4-tool-api-contract-20260903.md`.
+
+### Hardening
+
+- Tool-argument normalization hardening (commit `00418a5`, the final head for
+  this candidate): the schema-aware `ToolArgumentNormalizer` now recurses
+  **every** array element against its `items` schema, so primitive numeric
+  arrays (`items: {type: integer|number}`) coerce numeric strings exactly like
+  object numeric properties, while string-typed items and properties pass
+  through untouched; moreover numeric parsing now **rejects non-finite
+  conversions** (NaN / ±infinity / overflow-to-infinity stay strings) so JSON
+  serialization can never throw and silently fall back to `{}` — which would
+  drop every argument. `ToolArgumentNormalizerTests` grew 9/9 → 16/16
+  (strict TDD). Verified against the final release binary: exact integer
+  tool args `{"a":15,"b":27}` non-streaming and streaming; all count fields
+  integer with total arithmetic valid. Final binary SHA-256
+  `e998782c9f2019449a73ccbeb348e91a8cb568a73a392a8ab792be7bb90aa60a`.
   Evidence: `artifacts/gemma4-tool-api-contract-20260903.md`.
 
 ### Known blockers

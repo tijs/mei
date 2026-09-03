@@ -8,6 +8,12 @@ source-first release candidate. It is **not** tagged, pushed, or published:
 public release requires explicit user authorization, and pushing the vMLX fork
 commit below is a prerequisite for a fully source-reproducible tag.
 
+The candidate's final implementation HEAD is `00418a5`, which stacks the
+tool-argument hardening (primitive numeric arrays + reject non-finite
+conversions) on top of the user-local installer commit `9593126` and the
+`ba1e9df` tool-typing commit. All verification below is against the binary
+built from that final HEAD.
+
 Status metadata lives in three places and must stay in sync:
 
 - `Sources/MeiCore/ServerConfig.swift:6` — `ServerConfig.version` (runtime
@@ -41,7 +47,10 @@ profile, cap 65536, prefill 64, kv-bits none):
   schema-aware tool-call argument typing commit (`ba1e9df`) coerces
   number/integer JSON-Schema fields to JSON integers, so live Gemma
   `add_numbers` returns `{"a":15,"b":27}` (integer) non-streaming and
-  streaming — matching the GGUF path. Peak ~25.8 GB 4-bit row.
+  streaming — matching the GGUF path — and commit `00418a5` hardens it
+  further (recurses primitive numeric arrays per `items` schema; rejects
+  non-finite conversions so serialization cannot throw). Peak ~25.8 GB 4-bit
+  row.
 - **Qwen3.8-Heretic** (`orcarouter/Qwen3.8-27B-Uncensored-MLX` @ `14963e70`
   4-bit/): lineage gate PASS (distinct tensors from base Qwen, gated source
   `404ea47a`); `probe_load` hello 15.07 / short 15.72 t/s, peak 18.98 GB;
@@ -157,27 +166,43 @@ swift test --scratch-path ~/.local/share/local-model-bench/mei-build \
 # 4. staging + boundary diff checks
 bash scripts/stage_release_candidate.sh 0.2.0-alpha.1
 
-# 5. working-tree diff review vs HEAD
+# 5. installer (user-local, safe) + its deterministic test suite
+scripts/install_mei.sh
+scripts/test_install_mei.sh
+
+# 6. working-tree diff review vs HEAD
 git diff --stat
 ```
 
-Expected results (measured, see evidence note for exact numbers):
+Expected results (measured, parent-verified at final HEAD `00418a5`; see the
+evidence note for exact numbers):
 
 - `mei --version` prints `mei 0.2.0-alpha.1`.
+- Final release build completes with exit 0; final binary SHA-256:
+  `e998782c9f2019449a73ccbeb348e91a8cb568a73a392a8ab792be7bb90aa60a` (matches
+  the binary installed at `~/.local/bin/mei`, verified below).
 - Focused unit suites against the release binary pass:
-  `ToolArgumentNormalizerTests` 9/9, `OpenAITypesTests` 12/12,
+  `ToolArgumentNormalizerTests` 16/16, `OpenAITypesTests` 12/12,
   `ServerConfigParsingTests` 28/28, `SSMAnchorBoundariesTests` 9/9,
   `CacheRestoreTrackerTests` 6/6, `QuantizedRotatingKVCacheTests` 6/6.
   (These are the suites re-run for this evidence; the broader non-acceptance
-  baseline is 52/52 in prior runs. This is not a claim that the entire
+  baseline is 70/70 in prior runs. This is not a claim that the entire
   non-acceptance suite passed in one run this tick.)
+- Installer harness `scripts/test_install_mei.sh`: 31/31 PASS (help,
+  unknown-option exit 2, missing-binary failure, dry-run, install +
+  executable bit, idempotent rerun, `--force` overwrite, colocated Metal
+  companions, system-prefix guard). User-local install verified:
+  `/Users/tijs/.local/bin/mei` reports `mei 0.2.0-alpha.1`, hash matches the
+  final release binary, and colocated `mlx.metallib` / `default.metallib` /
+  provenance sidecar are installed.
 - Live (server-backed) verification:
   - Gemma 4 at 127.0.0.1:8024 — tool `add_numbers` returns integer JSON args
     `{"a":15,"b":27}` non-streaming and streaming;
-    `stream_options.include_usage` true→usage emitted / false→omitted; raw
-    `/v1/completions` returns the same integer usage fields with
-    `total = prompt + completion` (187/22/209 both paths; a separate
-    streaming run reused the prefix → cached_tokens=186 vs non-streaming 0).
+    `stream_options.include_usage` true→usage emitted / false→omitted. Final
+    usage tuples (prompt, completion, total, cached_tokens), all integer and
+    total arithmetic valid: chat non-streaming `(168, 22, 190, 0)`, chat
+    streaming `include_usage=true` `(168, 22, 190, 167)` (prefix reused), raw
+    `/v1/completions` `(5, 16, 21, 4)`.
   - Canonical `MEIAcceptanceTests` vs the Ornith release binary
     (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`): 5/5 PASS (health, models
     identity, plain completion, tool non-streaming, tool streaming).

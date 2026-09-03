@@ -184,8 +184,9 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
   `mlx-community/gemma-4-26b-a4b-it-4bit` (regular 4-bit, `gemma4`, source
   `google/gemma-4-26B-A4B-it`; staged at
   `mei-models/gemma-4-26b-a4b-it-4bit`, pinned `0d77464`; **loadable**:
-  chat-prefill crash fixed; common matrix PASS except the tool strict-schema
-  gate — Gemma emits string-typed tool args, a documented user go/no-go).
+  chat-prefill crash fixed; common matrix PASS. The tool strict-schema gate is
+  **cleared** — schema-aware argument typing coerces Gemma's string-typed
+  fields to JSON integers, so live tool calls return `{"a":15,"b":27}`.
   GGUF
   reference `mudler/gemma-4-26B-A4B-it-APEX-GGUF` `APEX-I-Quality`
   (arch `gemma4`, no MTP) is cached complete. Separate architecture from
