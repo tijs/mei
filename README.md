@@ -64,7 +64,16 @@ swift test             # unit tests (acceptance tests need a live server)
 swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
 # The release launcher resolves the fork-pinned dependency automatically:
 scripts/start_mei_server.sh
+
+# Put the built CLI on your PATH (user-local, no package-manager/system dirs):
+scripts/prepare_metallib.sh .build/release   # Metal kernel lib the binary needs
+scripts/install_mei.sh                       # -> $HOME/.local/bin/mei
 ```
+
+See [`docs/INSTALL.md`](docs/INSTALL.md) for the installer's options
+(`--prefix`, `--binary`, `--dry-run`, `--force`) and safety contract.
+`scripts/test_install_mei.sh` is a deterministic, weight-free test suite for
+it.
 
 `vmlx-swift` is pinned to the Mei-maintained fork
 ([`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift)) at revision
