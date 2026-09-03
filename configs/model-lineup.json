@@ -13,6 +13,7 @@
       "role": "primary",
       "format": "mlx",
       "architecture": "qwen3_5_moe",
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched ornith-ai artifact; sidecar verify ok; Mei serves the byte-identical -aligned repack (see that entry)" },
       "status": "loadable-accept-passed-fits-32gb-env-gated",
       "quantization": {
         "bits": 4,
@@ -56,6 +57,7 @@
       "role": "fallback",
       "format": "mlx",
       "architecture": "qwen3_5",
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched ornith-ai artifact; sidecar verify ok" },
       "status": "validated",
       "quantization": {
         "bits": 4,
@@ -92,6 +94,7 @@
       "format": "mlx",
       "source_checkpoint": "Qwen/Qwen3.8-27B",
       "architecture": "qwen3_5",
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched mlx-community artifact; sidecar verify ok" },
       "status": "loadable-accept-passed-perf-memory-constrained",
       "quantization": {
         "bits": 4,
@@ -148,6 +151,7 @@
       "format": "mlx",
       "source_checkpoint": "google/gemma-4-26B-A4B-it",
       "architecture": "gemma4",
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched mlx-community artifact; sidecar verify ok" },
       "status": "loadable-accept-passed",
       "quantization": {
         "bits": 4,
@@ -202,6 +206,7 @@
       "source_checkpoint": "orcarouter/Qwen3.8-27B-Uncensored",
       "source_revision": "404ea47aaa5d8a8b00049c9e9750089aca011ab2",
       "architecture": "qwen3_5",
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched orcarouter artifact (4-bit subdir relocated to root); sidecar verify ok; lineage gate vs base Qwen3.8 passed 2026-09-02" },
       "status": "loadable-accept-passed",
       "quantization": {
         "bits": 4,
@@ -252,6 +257,7 @@
       "role": "secondary-comparator",
       "format": "mlx",
       "architecture": "qwen3_5",
+      "artifact_audit": { "class": "mei-produced-conversion", "audited_utc": "2026-09-04", "note": "conversion-provenance.json + README model card inside dir; published handle verified live 2026-09-04 (public, sha f592c6fb, 13 siblings sized to match local)" },
       "status": "loadable-parity-passed-3repeat-perf-memory-constrained-at-cap",
       "quantization": {
         "bits": 5,
