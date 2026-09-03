@@ -1,0 +1,258 @@
+{
+  "base_url": "http://127.0.0.1:8077/v1",
+  "calibration": {
+    "prompt_tokens": 101,
+    "units": 100,
+    "units_per_token": 0.9901
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788441191.5916889,
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M",
+  "rows": {
+    "coding_python_json_sum": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'def '": true,
+        "marker_'json'": true,
+        "marker_'json_sum'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 868,
+      "content_head": "Here's a Python function that does this:\n\n```python\nimport json\n\n\ndef json_sum(json_string):\n    \"\"\"Read a JSON object from a string and return the sum of all\n    integer values at the top level.\n\n    Nested values (inside objects or arrays) are ignored.\n    \"\"\"\n    data = json.loads(json_string)\n\n ",
+      "content_tail": " \"hello\", \"z\": 5}'))   # 15 (string ignored)\nprint(json_sum('{\"n\": {\"inner\": 99}, \"top\": 4}'))    # 4 (nested ignored)\nprint(json_sum('{\"flag\": true, \"num\": 7}'))          # 7 (bool ignored)\n```\n\nIf you'd prefer to **include** booleans as `1`/`0`, simply drop the `not isinstance(value, bool)` check.",
+      "decode_tps_engine": 50.67152630176583,
+      "elapsed_seconds": 17.384,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 43,
+      "prompt_tps_engine": 167.06425368901182,
+      "rss_after": 22961995776,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 868,
+        "prompt_tokens": 43,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 911
+      }
+    },
+    "coding_shell_rename": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'.bak'": true,
+        "marker_'.txt'": true,
+        "marker_'for '": true,
+        "nonempty": true
+      },
+      "completion_tokens": 554,
+      "content_head": "Here's a bash one-liner that does this:\n\n```bash\nfor f in *.txt; do mv \"$f\" \"${f%.txt}.bak\"; done\n```\n\n**How it works:**\n\n- `for f in *.txt; do` \u2014 loops through every file matching the `*.txt` pattern\n- `mv \"$f\" \"${f%.txt}.bak\"` \u2014 renames each file:\n  - `\"$f\"` \u2014 the original filename (quoted to safe",
+      "content_tail": "o `mv`. To guard against this, you can enable `nullglob`:\n  ```bash\n  shopt -s nullglob; for f in *.txt; do mv \"$f\" \"${f%.txt}.bak\"; done\n  ```\n- If you want to be extra safe and only rename regular files, add a check:\n  ```bash\n  for f in *.txt; do [ -f \"$f\" ] && mv \"$f\" \"${f%.txt}.bak\"; done\n  ```",
+      "decode_tps_engine": 50.78015023211028,
+      "elapsed_seconds": 11.17,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 39,
+      "prompt_tps_engine": 157.1288133954328,
+      "rss_after": 23253041152,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 554,
+        "prompt_tokens": 39,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 593
+      }
+    },
+    "coding_sql_users_query": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'SELECT'": true,
+        "marker_'users'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 384,
+      "content_head": "Here's the SQL query:\n\n```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```\n\n**How it works:**\n- `SELECT name, email` \u2014 selects only the two columns you need\n- `FROM users` \u2014 specifies the table\n- `ORDER BY created_at DESC` \u2014 sorts by the creation timestamp, newest first (`DES",
+      "content_tail": "sers\nORDER BY created_at DESC;\n```\n\n**Oracle 12c+:**\n```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nFETCH FIRST 10 ROWS ONLY;\n```\n\n**Oracle (older versions):**\n```sql\nSELECT name, email\nFROM (\n    SELECT name, email\n    FROM users\n    ORDER BY created_at DESC\n)\nWHERE ROWNUM <= 10;\n```",
+      "decode_tps_engine": 50.80429971512451,
+      "elapsed_seconds": 7.844,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 40,
+      "prompt_tps_engine": 154.0191291758436,
+      "rss_after": 23112515584,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 384,
+        "prompt_tokens": 40,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 424
+      }
+    },
+    "coding_swift_fibonacci": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'fibonacci'": true,
+        "marker_'func'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 1082,
+      "content_head": "Here's a Swift function that computes the n-th Fibonacci number:\n\n```swift\n/// Returns the n-th Fibonacci number (0-indexed).\n///\n/// The Fibonacci sequence is defined as:\n/// - `F(0) = 0`\n/// - `F(1) = 1`\n/// - `F(n) = F(n - 1) + F(n - 2)` for `n > 1`\n///\n/// For example, the first ten values are `",
+      "content_tail": "ion.\n- **Input validation** \u2014 Uses `fatalError` for negative input; if you'd prefer a non-crashing API, you could change the return type to `Int?` and return `nil` for `n < 0`.\n\nIf you expect very large indices and want to avoid overflow, consider returning a `UInt64` or using a big-integer library.",
+      "decode_tps_engine": 50.29448327210604,
+      "elapsed_seconds": 21.722,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 33,
+      "prompt_tps_engine": 148.99092509819857,
+      "rss_after": 22806380544,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 1082,
+        "prompt_tokens": 33,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 1115
+      }
+    },
+    "identity_limerick": {
+      "content_head": "",
+      "content_tail": "",
+      "decode_tps_engine": 50.78199163398587,
+      "elapsed_seconds": 4.116,
+      "http_200": true,
+      "note": "behavioral identity row: refusal-differential vs base Qwen; compare against Mei MLX row in the A/B doc",
+      "refusal_cues": [],
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 200,
+        "prompt_tokens": 22,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 222
+      }
+    },
+    "longctx_fresh_30000": {
+      "cached_tokens": 97,
+      "checks": {
+        "http_ok": true,
+        "nonempty": true,
+        "size_ok": true
+      },
+      "completion_tokens": 64,
+      "decode_tps_engine": 39.86367887338916,
+      "elapsed_seconds": 59.625,
+      "failed_checks": {},
+      "http_200": true,
+      "note": "fresh fill, target 30000 tok (self-calibrated units=29702)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 510.63387366708236,
+      "rss_after": 23739318272,
+      "status": "passed",
+      "timings": {
+        "cache_n": 97,
+        "predicted_ms": 1580.386,
+        "predicted_n": 64,
+        "predicted_per_second": 39.86367887338916,
+        "predicted_per_token_ms": 25.08549206349206,
+        "prompt_ms": 57978.919,
+        "prompt_n": 29606,
+        "prompt_per_second": 510.63387366708236,
+        "prompt_per_token_ms": 1.9583503006147402
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 97
+        },
+        "total_tokens": 29767
+      }
+    },
+    "longctx_reuse_30000": {
+      "cached_tokens": 29699,
+      "checks": {
+        "cached_ok": true,
+        "http_ok": true
+      },
+      "completion_tokens": 64,
+      "decode_tps_engine": 39.88730254202412,
+      "elapsed_seconds": 1.688,
+      "failed_checks": {},
+      "http_200": true,
+      "note": "cache-reuse row (llama.cpp internal slot cache; NOT Mei disk-KV)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 55.325034578146614,
+      "rss_after": 23739564032,
+      "status": "passed",
+      "timings": {
+        "cache_n": 29699,
+        "predicted_ms": 1579.45,
+        "predicted_n": 64,
+        "predicted_per_second": 39.88730254202412,
+        "predicted_per_token_ms": 25.070634920634923,
+        "prompt_ms": 72.3,
+        "prompt_n": 4,
+        "prompt_per_second": 55.325034578146614,
+        "prompt_per_token_ms": 18.075
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 29699
+        },
+        "total_tokens": 29767
+      }
+    },
+    "tool_call": {
+      "checks": {
+        "args_15_27": true,
+        "http_ok": true,
+        "name_match": true,
+        "parseable_args": true,
+        "tool_calls_present": true
+      },
+      "content_tail": "",
+      "elapsed_seconds": 2.325,
+      "failed_checks": {},
+      "http_200": true,
+      "rss_after": 24553095168,
+      "status": "passed",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"a\":15,\"b\":27}",
+            "name": "add_pair"
+          },
+          "id": "u5OrYGwW2uJnzGbj9ewc8IW4rAMewdOR",
+          "type": "function"
+        }
+      ],
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 73,
+        "prompt_tokens": 294,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 367
+      }
+    }
+  },
+  "started": "2026-09-03T13:13:11.591709+00:00",
+  "started_epoch": 1788441065.3856032,
+  "status": "passed"
+}

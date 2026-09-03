@@ -23,7 +23,7 @@ DEFAULT_KEYS = (
     "attention.head_count,attention.key_length,attention.value_length,"
 )
 SUPPORTED_ARCHS = ("qwen3", "qwen3moe", "qwen3next", "qwen3_hybrid",
-                   "qwen3moe_hybrid", "mamba", "qwen35")
+                   "qwen3moe_hybrid", "mamba", "qwen35", "qwen35moe", "gemma4")
 
 
 def _open_meta(path: Path):
@@ -139,7 +139,9 @@ def read_tensor_names(path: Path) -> list:
 def mtp_report(path: Path, meta: dict) -> None:
     names = read_tensor_names(path)
     arch = str(meta.get("general.architecture", "?"))
-    npred = meta.get("qwen35.nextn_predict_layers") or meta.get("nextn_predict_layers")
+    npred = (meta.get(f"{arch}.nextn_predict_layers")
+             or meta.get("nextn_predict_layers")
+             or meta.get("qwen35.nextn_predict_layers"))
     nextn = [n for n in names if ".nextn." in n or n.endswith(".nextn") or ".mtp." in n]
     drafter = [n for n in names if ".dft" in n or ".draft" in n or ".spec" in n]
     if npred or nextn or drafter:

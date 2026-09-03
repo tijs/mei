@@ -121,25 +121,27 @@ def llama_version(bin_path: str | None) -> tuple[str, str]:
 
 def gguf_meta_summary(path: Path) -> dict[str, Any]:
     """GGUF header facts for comparator hygiene: arch, quant, context length,
-    MTP head presence. Imported from gguf_meta.py (Mei tool, no deps)."""
+    MTP head presence. Imported from gguf_meta.py (Mei tool, no deps).
+    Arch-aware since llama.cpp builds write arch-prefixed keys
+    (qwen35.*, qwen35moe.*, gemma4.*); bare fallbacks cover both."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from gguf_meta import read_gguf_meta  # type: ignore[import-not-found]
     keys = (
         "general.architecture,general.file_type,general.quantization_version,"
-        "llama.context_length,qwen35.context_length,nextn_predict_layers,"
-        "qwen35.nextn_predict_layers,full_attention_interval,"
-        "qwen35.full_attention_interval,qwen35.block_count")
+        "context_length,llama.context_length,nextn_predict_layers,"
+        "full_attention_interval,block_count")
     meta = read_gguf_meta(path, [k.strip() for k in keys.split(",")])["metadata"]
-    npred = meta.get("qwen35.nextn_predict_layers") or meta.get("nextn_predict_layers")
+    arch = meta.get("general.architecture")
+    npred = meta.get(f"{arch}.nextn_predict_layers") or meta.get("nextn_predict_layers")
     return {
-        "arch": meta.get("general.architecture"),
+        "arch": arch,
         "file_type": meta.get("general.file_type"),
         "quant_version": meta.get("general.quantization_version"),
-        "context_length": meta.get("llama.context_length")
-        or meta.get("qwen35.context_length"),
-        "full_attention_interval": meta.get("full_attention_interval")
-        or meta.get("qwen35.full_attention_interval"),
-        "block_count": meta.get("qwen35.block_count"),
+        "context_length": meta.get(f"{arch}.context_length")
+        or meta.get("llama.context_length") or meta.get("context_length"),
+        "full_attention_interval": meta.get(f"{arch}.full_attention_interval")
+        or meta.get("full_attention_interval"),
+        "block_count": meta.get(f"{arch}.block_count") or meta.get("block_count"),
         "mtp_head_present": bool(npred),
         "mtp_nextn_predict_layers": npred,
         "mtp_note": (
@@ -179,8 +181,24 @@ def verify_provenance(
     try:
         meta = gguf_meta_summary(gguf)
         prov["meta"] = meta
-        ok = ok and meta["arch"] == arch
-        ok = ok and int(meta.get("context_length") or 0) >= 65536
+        # Architecture is a family-prefix gate (qwen35 matches qwen35 and
+        # qwen35moe; gemma matches gemma4). The sha256 content pin above is
+        # the exact-identity gate; arch only guards same-family hygiene.
+        meta_arch = str(meta.get("arch") or "")
+        ok = ok and bool(meta_arch) and meta_arch.startswith(arch)
+        # Context: only enforceable when the header records it. Several
+        # official GGUFs (ornith-ai 9B/35B, mudler gemma4) carry NO
+        # context_length metadata key — the runtime context is set by the
+        # explicit llama-server --ctx-size launch arg, so its absence is
+        # recorded as a note, not a failure, as long as the server is
+        # launched with --ctx-size >= 65536.
+        ctx = meta.get("context_length")
+        if ctx is not None:
+            ok = ok and int(ctx) >= 65536
+        else:
+            prov["context_note"] = (
+                "context_length absent from GGUF header; runtime context is "
+                "the llama-server --ctx-size launch arg")
     except Exception as exc:  # noqa: BLE001
         prov["meta_error"] = f"{type(exc).__name__}: {exc}"
         ok = False

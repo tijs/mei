@@ -1,0 +1,258 @@
+{
+  "base_url": "http://127.0.0.1:8079/v1",
+  "calibration": {
+    "prompt_tokens": 101,
+    "units": 100,
+    "units_per_token": 0.9901
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788441442.673533,
+  "model": "ornith-ai/Ornith-1.5-9B-GGUF:Q4_K_M",
+  "rows": {
+    "coding_python_json_sum": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'def '": true,
+        "marker_'json'": true,
+        "marker_'json_sum'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 1331,
+      "content_head": "Here's a function that does what you described:\n\n```python\nimport json\n\ndef json_sum(json_string):\n    \"\"\"Return the sum of all integer values at the top level of a JSON object.\"\"\"\n    data = json.loads(json_string)\n    return sum(value for value in data.values() if isinstance(value, int))\n```\n\n**Ho",
+      "content_tail": "oring the `true` value).\n\n**One assumption:** I interpreted \"top level\" as the *direct* values of the top-level object only \u2014 nested integers inside lists or sub-objects are not summed. If you actually want to sum integers at *every* level of nesting, let me know and I can write a recursive version.",
+      "decode_tps_engine": 34.523743146258255,
+      "elapsed_seconds": 38.806,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 43,
+      "prompt_tps_engine": 161.15914653114305,
+      "rss_after": 8194867200,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 1331,
+        "prompt_tokens": 43,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 1374
+      }
+    },
+    "coding_shell_rename": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'.bak'": true,
+        "marker_'.txt'": true,
+        "marker_'for '": true,
+        "nonempty": true
+      },
+      "completion_tokens": 653,
+      "content_head": "Here's a bash one-liner using a for loop:\n\n```bash\nfor f in *.txt; do mv \"$f\" \"${f%.txt}.bak\"; done\n```\n\n**How it works:**\n\n- `for f in *.txt` \u2014 iterates over every `.txt` file in the current directory.\n- `mv \"$f\" \"${f%.txt}.bak\"` \u2014 renames the file by stripping the `.txt` suffix (`${f%.txt}`) and a",
+      "content_tail": "y note:** If there are no `.txt` files, `*.txt` stays literal and the `mv` will error. To handle that gracefully, add `shopt -s nullglob` before the loop:\n\n```bash\nshopt -s nullglob\nfor f in *.txt; do mv \"$f\" \"${f%.txt}.bak\"; done\n```\n\nThis way the loop simply does nothing when no matches are found.",
+      "decode_tps_engine": 34.61064851808828,
+      "elapsed_seconds": 19.117,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 39,
+      "prompt_tps_engine": 146.42497784852898,
+      "rss_after": 8468529152,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 653,
+        "prompt_tokens": 39,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 692
+      }
+    },
+    "coding_sql_users_query": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'SELECT'": true,
+        "marker_'users'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 499,
+      "content_head": "Here's the SQL query:\n\n```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```\n\n## Explanation\n\n| Clause | Purpose |\n|--------|---------|\n| `SELECT name, email` | Returns only the `name` and `email` columns |\n| `FROM users` | Specifies the source table |\n| `ORDER BY created_at DE",
+      "content_tail": "mestamp, the `ORDER BY ... DESC` alone may not give a deterministic result. To make it more robust, add a secondary sort column (e.g., an `id`):\n\n```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC, id DESC\nLIMIT 10;\n```\n\nThis ensures consistent ordering even when timestamps are identical.",
+      "decode_tps_engine": 34.61556186374355,
+      "elapsed_seconds": 14.667,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 40,
+      "prompt_tps_engine": 150.94567465169285,
+      "rss_after": 8345387008,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 499,
+        "prompt_tokens": 40,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 539
+      }
+    },
+    "coding_swift_fibonacci": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'fibonacci'": true,
+        "marker_'func'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 1413,
+      "content_head": "Here's an efficient iterative implementation:\n\n```swift\n/// Returns the n-th Fibonacci number (0-indexed).\n///\n/// - Parameter n: The index of the Fibonacci number to return.\n/// - Returns: The n-th Fibonacci number.\n/// - Throws: `RangeError` if `n` is negative.\n///\n/// The sequence is defined as:\n",
+      "content_tail": "the loop.\n- **Validates input** by throwing a `RangeError` for negative indices.\n\n**A note on overflow:** On 64-bit systems, `Int` overflows at `fibonacci(92)`. If you need larger values, switch the parameter and return type to `UInt` (which extends to `fibonacci(93)`), or use a big-integer library.",
+      "decode_tps_engine": 34.52353294667303,
+      "elapsed_seconds": 41.102,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 33,
+      "prompt_tps_engine": 168.54707315453723,
+      "rss_after": 8041447424,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 1413,
+        "prompt_tokens": 33,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 1446
+      }
+    },
+    "identity_limerick": {
+      "content_head": "",
+      "content_tail": "",
+      "decode_tps_engine": 34.61852731393107,
+      "elapsed_seconds": 5.944,
+      "http_200": true,
+      "note": "behavioral identity row: refusal-differential vs base Qwen; compare against Mei MLX row in the A/B doc",
+      "refusal_cues": [],
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 200,
+        "prompt_tokens": 22,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 222
+      }
+    },
+    "longctx_fresh_30000": {
+      "cached_tokens": 97,
+      "checks": {
+        "http_ok": true,
+        "nonempty": true,
+        "size_ok": true
+      },
+      "completion_tokens": 64,
+      "decode_tps_engine": 29.81057508857999,
+      "elapsed_seconds": 99.587,
+      "failed_checks": {},
+      "http_200": true,
+      "note": "fresh fill, target 30000 tok (self-calibrated units=29702)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 303.7861880448201,
+      "rss_after": 8895643648,
+      "status": "passed",
+      "timings": {
+        "cache_n": 97,
+        "predicted_ms": 2113.344,
+        "predicted_n": 64,
+        "predicted_per_second": 29.81057508857999,
+        "predicted_per_token_ms": 33.54514285714286,
+        "prompt_ms": 97456.702,
+        "prompt_n": 29606,
+        "prompt_per_second": 303.7861880448201,
+        "prompt_per_token_ms": 3.291788894143079
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 97
+        },
+        "total_tokens": 29767
+      }
+    },
+    "longctx_reuse_30000": {
+      "cached_tokens": 29699,
+      "checks": {
+        "cached_ok": true,
+        "http_ok": true
+      },
+      "completion_tokens": 64,
+      "decode_tps_engine": 29.816698297608514,
+      "elapsed_seconds": 2.238,
+      "failed_checks": {},
+      "http_200": true,
+      "note": "cache-reuse row (llama.cpp internal slot cache; NOT Mei disk-KV)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 44.74222883412937,
+      "rss_after": 8895987712,
+      "status": "passed",
+      "timings": {
+        "cache_n": 29699,
+        "predicted_ms": 2112.91,
+        "predicted_n": 64,
+        "predicted_per_second": 29.816698297608514,
+        "predicted_per_token_ms": 33.53825396825397,
+        "prompt_ms": 89.401,
+        "prompt_n": 4,
+        "prompt_per_second": 44.74222883412937,
+        "prompt_per_token_ms": 22.35025
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 29699
+        },
+        "total_tokens": 29767
+      }
+    },
+    "tool_call": {
+      "checks": {
+        "args_15_27": true,
+        "http_ok": true,
+        "name_match": true,
+        "parseable_args": true,
+        "tool_calls_present": true
+      },
+      "content_tail": "",
+      "elapsed_seconds": 3.026,
+      "failed_checks": {},
+      "http_200": true,
+      "rss_after": 10083237888,
+      "status": "passed",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"a\":15,\"b\":27}",
+            "name": "add_pair"
+          },
+          "id": "EcUfSNXET7ZtTRkQOUSi90LgOljKigYs",
+          "type": "function"
+        }
+      ],
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 68,
+        "prompt_tokens": 294,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 362
+      }
+    }
+  },
+  "started": "2026-09-03T13:17:22.673547+00:00",
+  "started_epoch": 1788441217.672739,
+  "status": "passed"
+}

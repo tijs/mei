@@ -1,0 +1,215 @@
+{
+  "alias": "ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M",
+  "contention_boundary": {
+    "foreign_servers": []
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788441048.7512069,
+  "gguf": "/Users/tijs/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf",
+  "gguf_provenance": {
+    "digest_matches_pinned": true,
+    "expected_sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+    "llama_bin": "/opt/homebrew/bin/llama-server",
+    "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+    "magic_ok": true,
+    "meta": {
+      "arch": "qwen35moe",
+      "block_count": 41,
+      "context_length": 262144,
+      "file_type": 15,
+      "full_attention_interval": 4,
+      "mtp_head_present": true,
+      "mtp_nextn_predict_layers": 1,
+      "mtp_note": "llama.cpp runs WITHOUT --spec-type draft-mtp; single-token decode, comparable to Mei's no-MTP baseline",
+      "quant_version": 2
+    },
+    "path": "/Users/tijs/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf",
+    "repo": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+    "revision": "12393612fd4f730ff5aadc23e9b8f9648aa49ceb",
+    "sha256": "42739874cc2ccfdb8523b23fbe52e29b2a7555c8176737ca9ca0b5d59859d41f",
+    "size_bytes": 21713463040
+  },
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "methodology": "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; mode=short (45k = same exact 45K-token prompt + 40K chat pattern as the Mei bench; short = Mei probe_load-style short decode rows)",
+  "rows": [
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 50.55488058447965,
+      "elapsed_seconds": 0.836,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 22871392256
+      },
+      "mem_before": {
+        "rss_bytes": 22738796544
+      },
+      "name": "short_fresh_r1",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 92.67378116155894,
+      "request_seconds": 0.778,
+      "started_epoch": 1788441045.676641,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 613.195,
+        "predicted_n": 32,
+        "predicted_per_second": 50.55488058447965,
+        "predicted_per_token_ms": 19.780483870967743,
+        "prompt_ms": 140.277,
+        "prompt_n": 13,
+        "prompt_per_second": 92.67378116155894,
+        "prompt_per_token_ms": 10.79053846153846
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 45
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 50.6297689975959,
+      "elapsed_seconds": 0.731,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 23022288896
+      },
+      "mem_before": {
+        "rss_bytes": 22871425024
+      },
+      "name": "short_fresh_r2",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 69.08104934113949,
+      "request_seconds": 0.7,
+      "started_epoch": 1788441046.512289,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 612.288,
+        "predicted_n": 32,
+        "predicted_per_second": 50.6297689975959,
+        "predicted_per_token_ms": 19.751225806451615,
+        "prompt_ms": 57.903,
+        "prompt_n": 4,
+        "prompt_per_second": 69.08104934113949,
+        "prompt_per_token_ms": 14.47575
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 45
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 50.53798500163026,
+      "elapsed_seconds": 0.693,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 23022370816
+      },
+      "mem_before": {
+        "rss_bytes": 23022288896
+      },
+      "name": "short_fresh_r3",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 84.37216562256111,
+      "request_seconds": 0.662,
+      "started_epoch": 1788441047.2429,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 613.4,
+        "predicted_n": 32,
+        "predicted_per_second": 50.53798500163026,
+        "predicted_per_token_ms": 19.787096774193547,
+        "prompt_ms": 47.409,
+        "prompt_n": 4,
+        "prompt_per_second": 84.37216562256111,
+        "prompt_per_token_ms": 11.85225
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 45
+      }
+    },
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 50.55356149840756,
+      "elapsed_seconds": 0.815,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 23024336896
+      },
+      "mem_before": {
+        "rss_bytes": 23022370816
+      },
+      "name": "short_chat",
+      "prompt_tokens": 23,
+      "prompt_tokens_per_second": 136.89253935660506,
+      "request_seconds": 0.785,
+      "started_epoch": 1788441047.936011,
+      "status": "passed",
+      "text_source": "message.reasoning_content",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 613.211,
+        "predicted_n": 32,
+        "predicted_per_second": 50.55356149840756,
+        "predicted_per_token_ms": 19.781,
+        "prompt_ms": 168.015,
+        "prompt_n": 23,
+        "prompt_per_second": 136.89253935660506,
+        "prompt_per_token_ms": 7.305
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 23,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 55
+      }
+    }
+  ],
+  "server_log": "/Users/tijs/.local/share/local-model-bench/mei-runtime-ornith35-ceiling/logs/llama-ceiling.log",
+  "started_epoch": 1788441041.1160169,
+  "status": "passed"
+}
