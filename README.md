@@ -1,6 +1,8 @@
-# Mei
+<p align="center">
+  <img src="assets/mei-logo.png" alt="Mei logo" width="300" height="300">
+</p>
 
-![Mei sleeping-dinosaur logo](assets/mei-logo.jpg)
+# Mei
 
 Mei — after *Mei long*, the sleeping-dragon dinosaur — is a narrow, native
 Swift/MLX OpenAI-compatible inference server for Apple Silicon, built directly
@@ -20,6 +22,14 @@ with correct tool-calling and no long-context collapse on that target.
 Mei's source is MIT-licensed; model weights are not included. See
 [`NOTICE.md`](NOTICE.md) and [`docs/RELEASE-0.1.0.md`](docs/RELEASE-0.1.0.md)
 for dependency, patch-queue, checkpoint, and benchmark provenance.
+
+**Preview release candidate:** `0.2.0-alpha.1` (source-first; **not tagged or
+published**). Packages the verified Qwen3.8 / Gemma 4 / Qwen3.8-Heretic
+runtime work on top of 0.1.0. See
+[`docs/RELEASE-0.2.0-alpha.1.md`](docs/RELEASE-0.2.0-alpha.1.md) for the
+explicit staging allowlist, model-weight separation, the un-pushed vMLX fork
+commit caveat, and the known blockers. Releasing a tag requires explicit user
+authorization.
 
 ## Optimization profiles
 
@@ -146,7 +156,10 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
 - **Secondary comparator — Qwen3.8 (dense qwen35)**: MLX candidate
   `mlx-community/Qwen3.8-27B-4bit` (regular 4-bit, `qwen3_5`,
   source `Qwen/Qwen3.8-27B`; staged at `mei-models/Qwen3.8-27B-4bit`, pinned
-  `3e6447f`; **loadability pending GPU**). GGUF
+  `3e6447f`; **loadable**: `probe_load` 3x PASS (~15.6 t/s short decode, peak
+  18.9 GB), `probe_mei` 10/12, `probe_coding` 4/4; the 0.1.0-era raw
+  `/v1/completions` crash is root-caused and fixed; decode ~15.7 t/s is
+  memory-constrained at the 65536 cap — see the lineup). GGUF
   reference `unsloth/Qwen3.8-27B-GGUF` `UD-Q5_K_M` is cached complete and
   carries an MTP/Next-N head (compare without `--spec-type`). The MLX 4-bit
   is **not** UD-Q5 and must not be claimed as GGUF-UD equivalence; it is a
@@ -161,8 +174,10 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
 - **Secondary comparator — Gemma 4 26B-A4B (APEX-I-Quality)**: MLX candidate
   `mlx-community/gemma-4-26b-a4b-it-4bit` (regular 4-bit, `gemma4`, source
   `google/gemma-4-26B-A4B-it`; staged at
-  `mei-models/gemma-4-26b-a4b-it-4bit`, pinned `0d77464`; **loadability
-  pending GPU**). GGUF
+  `mei-models/gemma-4-26b-a4b-it-4bit`, pinned `0d77464`; **loadable**:
+  chat-prefill crash fixed; common matrix PASS except the tool strict-schema
+  gate — Gemma emits string-typed tool args, a documented user go/no-go).
+  GGUF
   reference `mudler/gemma-4-26B-A4B-it-APEX-GGUF` `APEX-I-Quality`
   (arch `gemma4`, no MTP) is cached complete. Separate architecture from
   qwen3_5; the VLM load/template/tool-call path is added only when required
@@ -177,8 +192,10 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
   `orcarouter/Qwen3.8-27B-Uncensored`, distinct from base Qwen3.8. No source
   conversion is required; it is staged at
   `mei-models/Qwen3.8-27B-Uncensored-MLX-4bit` pinned `14963e70`
-  (**loadability pending GPU**). This supersedes the earlier "2-bit only"
-  claim.
+  (**loadable**: `probe_load` hello 15.07 / short 15.72 t/s, peak 18.98 GB;
+  `probe_mei` 10/10 incl. tool stream+non-stream parity and KV reuse; 30k
+  long-context and the GGUF behavioral comparison pending todo 8). This
+  supersedes the earlier "2-bit only" claim.
 
 The machine-readable lineup is `configs/model-lineup.json` and is the source
 of truth for exactly pinned revisions, GGUF blob SHA-256 digests, quant

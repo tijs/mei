@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "release": "0.2.0-alpha.1",
+  "kind": "source-first",
+  "description": "Explicit staging allowlist for the Mei source-first release candidate. Only the paths listed here may enter the candidate bundle. Historical benchmark evidence (artifacts/), git metadata, build products, prior bundles (dist/), and model weights/caches are excluded by construction.",
+  "root_files": [
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "NOTICE.md",
+    "Package.resolved",
+    "Package.swift",
+    "README.md",
+    "SECURITY.md",
+    ".gitignore",
+    ".kiem"
+  ],
+  "directories": [
+    {
+      "path": "Sources",
+      "note": "MeiCore engine/router/HTTP/DTOs + Mei CLI entry point"
+    },
+    {
+      "path": "Tests",
+      "note": "Unit tests + black-box acceptance oracle"
+    },
+    {
+      "path": "docs",
+      "note": "Release notes + vMLX fork provenance"
+    },
+    {
+      "path": "scripts",
+      "note": "Stage/start/stop/prepare + release staging tooling"
+    },
+    {
+      "path": "tools",
+      "exclude": ["__pycache__/**", "*.pyc"],
+      "note": "Probe/bench/convert/disk-guard tooling (authoritative copies)"
+    },
+    {
+      "path": "configs",
+      "note": "model-lineup.json (machine-readable model provenance) + this allowlist"
+    },
+    {
+      "path": "assets",
+      "note": "README logo"
+    },
+    {
+      "path": ".github",
+      "note": "Issue templates (public-repo metadata, from the 0.1.0 release prep)"
+    }
+  ],
+  "excluded_directories": [
+    "artifacts",
+    ".git",
+    ".build",
+    ".swiftpm",
+    ".mei",
+    "dist",
+    "__pycache__"
+  ],
+  "excluded_files": [
+    ".DS_Store",
+    "*.pyc",
+    "*.swiftmodule",
+    "*.o"
+  ]
+}

@@ -3,7 +3,7 @@ import Foundation
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.1.0"
+    public static let version = "0.2.0-alpha.1"
     public var modelDirectory: String
     public var servedModelID: String
     /// Requested profile from the operator. `auto` is resolved from config.json.

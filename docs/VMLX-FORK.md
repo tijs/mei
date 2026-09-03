@@ -18,20 +18,30 @@ repository cache being pre-populated.
 ## Integrated commits
 
 The five changes formerly carried as local diff files in Mei were ported onto
-the fork's current upstream `main` (`2422cfb8`) as separate commits:
+the fork's current upstream `main` (`2422cfb8`) as separate commits, plus one
+additional Mei-maintained commit (0006) that exists only in the local fork
+checkout so far:
 
-| Former patch | Fork commit | Scope |
-|---|---|---|
-| `0001-quantized-rotating-kv` | `ae1783be` | Real affine 4/8-bit rotating KV conversion with ring/sink state preservation |
-| `0002-quantized-rotating-diskstore` | `1326d803` | Safe disk persistence through the existing fp16 rotating record |
-| `0003-compiled-decode-threshold` | `ab09d363` | Long-prompt compiled-decode guard with eager fallback |
-| `0004-max-kv-window-probe` | `9b8e93b1` | Explicit, opt-in Qwen3.5 bounded KV-window probe |
-| `0005-ssm-anchor-boundaries` | `91fed8be` | Explicit recurrent-cache anchor boundaries, default off |
+| Former patch | Fork commit | Scope | Pushed |
+|---|---|---|---|
+| `0001-quantized-rotating-kv` | `ae1783be` | Real affine 4/8-bit rotating KV conversion with ring/sink state preservation | yes |
+| `0002-quantized-rotating-diskstore` | `1326d803` | Safe disk persistence through the existing fp16 rotating record | yes |
+| `0003-compiled-decode-threshold` | `ab09d363` | Long-prompt compiled-decode guard with eager fallback | yes |
+| `0004-max-kv-window-probe` | `9b8e93b1` | Explicit, opt-in Qwen3.5 bounded KV-window probe | yes |
+| `0005-ssm-anchor-boundaries` | `91fed8be` | Explicit recurrent-cache anchor boundaries, default off | yes |
+| `0006-rotating-stripped-boundary` | `318a4e68` | Persist gen-suffix-stripped cross-turn boundary for standalone rotating/companion topologies (Gemma3/4, Mistral SWA) + env-gated cache-fetch diagnostics | **no — local only** |
 
-Both `main` and `mei/patch-stack` currently point to `91fed8be` in the fork.
-Each commit has a focused message and remains independently cherry-pickable.
+`main` currently points to `91fed8be` in the remote fork; the local checkout
+at `~/projects/vmlx-swift` carries the additional `318a4e68` on top. Each
+commit has a focused message and remains independently cherry-pickable.
 The commits are Mei-maintained changes; they are not represented as upstream
 accepted changes.
+
+> **Publish gate (2026-09-03):** commit `318a4e68` is the Gemma 4
+> growing-transcript reuse fix used by the verified `0.2.0-alpha.1` runtime.
+> It is consumed via a local SwiftPM edit and must be pushed to
+> `tijs/vmlx-swift` before the alpha.1 candidate is fully source-reproducible.
+> Pushing is a user action (no autonomous GitHub writes).
 
 ## Normal workflow
 
