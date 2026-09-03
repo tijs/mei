@@ -1,0 +1,14 @@
+{
+  "engine": "llama.cpp (llama-server, brew build 10470)",
+  "model": "unsloth/Qwen3.8-27B-GGUF UD-Q5_K_M @ 4ca720788d1e01f1bff70c033e0d0028fd02e502",
+  "note": "30k loaded decode retest with continuation-suffix prompt (pure 'hello '*N fill degenerates to EOS at step 1 on llama.cpp qwen35 GGUFs — see qwen38-gguf-ab-20260904.md; same protocol as gguf-ref-heretic-30k-decode-retest-20260903.json)",
+  "prompt": "'hello '*29702 + 'Now continue: 1, 2, 3,'",
+  "rows": {
+    "r1": {"elapsed_s": 7.91, "prompt_tokens": 29715, "cached_tokens": 29711, "completion_tokens": 64, "decode_tps": 8.301, "rss_gb": 24.24},
+    "r2": {"elapsed_s": 7.91, "prompt_tokens": 29715, "cached_tokens": 29711, "completion_tokens": 64, "decode_tps": 8.298, "rss_gb": 24.24}
+  },
+  "mean_decode_tps": 8.2995,
+  "sd": 0.0015,
+  "server_port": 8078,
+  "timestamp_utc": "2026-09-03T21:12-21:14Z"
+}
