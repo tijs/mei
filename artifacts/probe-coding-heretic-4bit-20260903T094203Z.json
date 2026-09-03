@@ -1,0 +1,129 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788428664.458238,
+  "min_decode_tps": 5.0,
+  "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+  "probes": {
+    "python_json_sum": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'def '": true,
+        "marker_'json'": true,
+        "marker_'json_sum'": true,
+        "nonempty": true
+      },
+      "content_head": "```python\nimport json\n\ndef json_sum(json_string: str) -> int:\n    \"\"\"\n    Read a JSON object from a string and return the sum of all\n    integer values at the top level.\n    \"\"\"\n    data = json.loads(",
+      "content_tail": " in data.values()\n        if isinstance(value, int) and not isinstance(value, bool)\n    )\n```\n\nExample:\n\n```python\nprint(json_sum('{\"a\": 1, \"b\": 2, \"c\": \"x\", \"d\": [3, 4], \"e\": true}'))\n# Output: 3\n```",
+      "decode_tokens_per_second_engine": 15.28223459236807,
+      "elapsed_seconds": 40.629,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 589,
+        "generate_ms": 38541.483998298645,
+        "mei_memory_active_bytes": 18863302474,
+        "mei_memory_cache_bytes": 219957595,
+        "mei_memory_peak_bytes": 19022687478,
+        "prefill_ms": 1964.1119241714478,
+        "prompt_tokens": 85,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 43.27655616461719,
+        "tokens_per_second": 15.28223459236807,
+        "total_tokens": 674
+      }
+    },
+    "shell_rename": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'.bak'": true,
+        "marker_'.txt'": true,
+        "marker_'for '": true,
+        "nonempty": true
+      },
+      "content_head": "```bash\nfor f in *.txt; do [ -e \"$f\" ] && mv -- \"$f\" \"${f%.txt}.bak\"; done\n```",
+      "content_tail": "```bash\nfor f in *.txt; do [ -e \"$f\" ] && mv -- \"$f\" \"${f%.txt}.bak\"; done\n```",
+      "decode_tokens_per_second_engine": 15.287431926088306,
+      "elapsed_seconds": 40.355,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 585,
+        "generate_ms": 38266.72804355621,
+        "mei_memory_active_bytes": 18863154926,
+        "mei_memory_cache_bytes": 220305167,
+        "mei_memory_peak_bytes": 19023440378,
+        "prefill_ms": 1965.5228853225708,
+        "prompt_tokens": 81,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 41.2104079809311,
+        "tokens_per_second": 15.287431926088306,
+        "total_tokens": 666
+      }
+    },
+    "sql_users_query": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'SELECT'": true,
+        "marker_'users'": true,
+        "nonempty": true
+      },
+      "content_head": "```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```",
+      "content_tail": "```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```",
+      "decode_tokens_per_second_engine": 15.278049051158934,
+      "elapsed_seconds": 10.796,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 133,
+        "generate_ms": 8705.299973487854,
+        "mei_memory_active_bytes": 18829600506,
+        "mei_memory_cache_bytes": 347074629,
+        "mei_memory_peak_bytes": 19022687478,
+        "prefill_ms": 1968.6321020126343,
+        "prompt_tokens": 82,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 41.65328804511882,
+        "tokens_per_second": 15.278049051158934,
+        "total_tokens": 215
+      }
+    },
+    "swift_fibonacci": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'fibonacci'": true,
+        "marker_'func'": true,
+        "nonempty": true
+      },
+      "content_head": "```swift\n/// Returns the n-th Fibonacci number, where the sequence is 0-indexed.\n///\n/// The sequence begins: 0, 1, 1, 2, 3, 5, 8, ...\n///\n/// - Parameter n: The index of the desired Fibonacci number.",
+      "content_tail": "ci number.\nfunc fibonacci(_ n: Int) -> Int {\n    precondition(n >= 0, \"n must be non-negative\")\n\n    var a = 0\n    var b = 1\n\n    for _ in 0..<n {\n        (a, b) = (b, a + b)\n    }\n\n    return a\n}\n```",
+      "decode_tokens_per_second_engine": 15.286221786298071,
+      "elapsed_seconds": 49.011,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 715,
+        "generate_ms": 46774.14798736572,
+        "mei_memory_active_bytes": 18861811414,
+        "mei_memory_cache_bytes": 219194516,
+        "mei_memory_peak_bytes": 19021572578,
+        "prefill_ms": 2096.859931945801,
+        "prompt_tokens": 75,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 35.76776820300202,
+        "tokens_per_second": 15.286221786298071,
+        "total_tokens": 790
+      }
+    }
+  },
+  "started_epoch": 1788428523.667271,
+  "status": "passed"
+}

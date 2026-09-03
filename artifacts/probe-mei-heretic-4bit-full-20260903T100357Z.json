@@ -1,0 +1,292 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788430976.175955,
+  "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+  "probes": {
+    "cache_growing_turn1": {
+      "cached_tokens": 823,
+      "elapsed_seconds": 1.5212971670553088,
+      "request_seconds": 1.5212051249109209,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 1033.5109233856201,
+        "mei_memory_active_bytes": 18975880614,
+        "mei_memory_cache_bytes": 4957074358,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 313.46309185028076,
+        "prompt_tokens": 828,
+        "prompt_tokens_details": {
+          "cached_tokens": 823
+        },
+        "prompt_tokens_per_second": 2641.459302632915,
+        "tokens_per_second": 15.481210346172736,
+        "total_tokens": 844
+      }
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "cached_tokens": 846,
+      "elapsed_seconds": 1.5212044999934733,
+      "request_seconds": 1.5211316249333322,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 1036.4819765090942,
+        "mei_memory_active_bytes": 18980599206,
+        "mei_memory_cache_bytes": 4993811541,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 314.1329288482666,
+        "prompt_tokens": 851,
+        "prompt_tokens_details": {
+          "cached_tokens": 846
+        },
+        "prompt_tokens_per_second": 2709.0442352544724,
+        "tokens_per_second": 15.436833792217527,
+        "total_tokens": 867
+      }
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 1.7015448748134077,
+      "request_seconds": 1.7013726248405874,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 998.8429546356201,
+        "mei_memory_active_bytes": 20034446758,
+        "mei_memory_cache_bytes": 3999363978,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 384.708046913147,
+        "prompt_tokens": 6212,
+        "prompt_tokens_details": {
+          "cached_tokens": 6207
+        },
+        "prompt_tokens_per_second": 16147.309758255311,
+        "tokens_per_second": 16.018534170706378,
+        "total_tokens": 6228
+      }
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 1.6220192909240723,
+      "request_seconds": 1.6218830840662122,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 16,
+        "generate_ms": 1056.0880899429321,
+        "mei_memory_active_bytes": 20034446758,
+        "mei_memory_cache_bytes": 3999429514,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 345.51799297332764,
+        "prompt_tokens": 6212,
+        "prompt_tokens_details": {
+          "cached_tokens": 6207
+        },
+        "prompt_tokens_per_second": 17978.80320658015,
+        "tokens_per_second": 15.150251340174277,
+        "total_tokens": 6228
+      }
+    },
+    "context_exact_cap": {
+      "elapsed_seconds": 760.9465852910653,
+      "request_seconds": 760.9458121671341,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 0.10597705841064453,
+        "mei_memory_active_bytes": 27248879250,
+        "mei_memory_cache_bytes": 1292,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 759031.1698913574,
+        "prompt_tokens": 65536,
+        "prompt_tokens_details": {
+          "cached_tokens": 30001
+        },
+        "prompt_tokens_per_second": 86.34164524413454,
+        "tokens_per_second": 9436.004499437571,
+        "total_tokens": 65537
+      }
+    },
+    "context_over_cap_rejected": {
+      "elapsed_seconds": 1.2865457497537136,
+      "error": "HTTP 400: {\"error\":{\"code\":\"engine_error\",\"message\":\"request exceeded context cap: 65537 prompt tokens > 65536 allowed\",\"type\":\"invalid_request_error\"}}",
+      "rejected_as_expected": true,
+      "status": "passed"
+    },
+    "mei_status": {
+      "elapsed_seconds": 30.002443333156407,
+      "error": "TimeoutError: timed out",
+      "status": "failed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.010716082993894815,
+      "request_seconds": 0.010611250065267086,
+      "served_ids": [
+        "orcarouter/Qwen3.8-27B-Uncensored-MLX"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 4.882157666608691,
+      "nonstream_usage": {
+        "completion_tokens": 30,
+        "generate_ms": 1997.7450370788574,
+        "mei_memory_active_bytes": 18824881830,
+        "mei_memory_cache_bytes": 5197171338,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 307.5059652328491,
+        "prompt_tokens": 58,
+        "prompt_tokens_details": {
+          "cached_tokens": 53
+        },
+        "prompt_tokens_per_second": 188.6142272267185,
+        "tokens_per_second": 15.016931311648555,
+        "total_tokens": 88
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 30,
+        "generate_ms": 1995.5909252166748,
+        "mei_memory_active_bytes": 18824881830,
+        "mei_memory_cache_bytes": 5197171338,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 310.4759454727173,
+        "prompt_tokens": 58,
+        "prompt_tokens_details": {
+          "cached_tokens": 53
+        },
+        "prompt_tokens_per_second": 186.80996336670043,
+        "tokens_per_second": 15.033141121716966,
+        "total_tokens": 88
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 324.1056371247396,
+      "request_seconds": 324.1054119998589,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 20,
+        "generate_ms": 1413.640022277832,
+        "mei_memory_active_bytes": 18825078410,
+        "mei_memory_cache_bytes": 5197956838,
+        "mei_memory_peak_bytes": 31697988006,
+        "prefill_ms": 3510.5159282684326,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 52
+        },
+        "prompt_tokens_per_second": 16.236929603710795,
+        "tokens_per_second": 14.147873351642605,
+        "total_tokens": 77
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 4.50499916728586,
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "reasoning_content": "We need answer user asks simple addition, must use add_numbers. Need call tool. Then final answer.\n",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"a\":15,\"b\":27}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_b3715b3d-ab7",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1788430196,
+        "id": "chatcmpl-3d213532-fbab-42c5-be12-",
+        "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 61,
+          "generate_ms": 4028.12397480011,
+          "mei_memory_active_bytes": 18878360870,
+          "mei_memory_cache_bytes": 5143035978,
+          "mei_memory_peak_bytes": 31697988006,
+          "prefill_ms": 318.5079097747803,
+          "prompt_tokens": 331,
+          "prompt_tokens_details": {
+            "cached_tokens": 326
+          },
+          "prompt_tokens_per_second": 1039.220659336382,
+          "tokens_per_second": 15.143525964348463,
+          "total_tokens": 392
+        }
+      },
+      "request_seconds": 4.504768916871399,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    "tool_streaming": {
+      "assembled_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "message": {
+              "content": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"a\":15,\"b\":27}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_cd426a58-aa5",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "completion_tokens": 61,
+          "generate_ms": 4015.8599615097046,
+          "mei_memory_active_bytes": 18878360870,
+          "mei_memory_cache_bytes": 5143035978,
+          "mei_memory_peak_bytes": 31697988006,
+          "prefill_ms": 310.93108654022217,
+          "prompt_tokens": 331,
+          "prompt_tokens_details": {
+            "cached_tokens": 326
+          },
+          "prompt_tokens_per_second": 1064.5445705769973,
+          "tokens_per_second": 15.189772697419441,
+          "total_tokens": 392
+        }
+      },
+      "client_ttft_seconds": 4.436665167100728,
+      "elapsed_seconds": 4.454425875097513,
+      "request_seconds": 4.454321250319481,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    }
+  },
+  "started_epoch": 1788429837.6783319,
+  "status": "failed"
+}

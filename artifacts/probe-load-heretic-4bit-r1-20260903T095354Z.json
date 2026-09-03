@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788429241.265693,
+  "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 3.357,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 27,
+        "generate_ms": 1801.975965499878,
+        "mei_memory_active_bytes": 18825143946,
+        "mei_memory_cache_bytes": 5225205480,
+        "mei_memory_peak_bytes": 24712325282,
+        "prefill_ms": 1428.3751249313354,
+        "prompt_tokens": 57,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 39.90548351417146,
+        "tokens_per_second": 14.983551677122426,
+        "total_tokens": 84
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 32,
+      "decode_tokens_per_second_engine": 15.499220955227544,
+      "elapsed_seconds": 3.567,
+      "prompt_tokens": 65,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 32,
+        "generate_ms": 2064.6198987960815,
+        "mei_memory_active_bytes": 18827060931,
+        "mei_memory_cache_bytes": 5182383167,
+        "mei_memory_peak_bytes": 24712325282,
+        "prefill_ms": 1390.228033065796,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 46.75491966354538,
+        "tokens_per_second": 15.499220955227544,
+        "total_tokens": 97
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.017,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": true,
+          "pagedEnabled": false,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 1
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 18332837266,
+          "cacheBytes": 5703401992,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 24712325282,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+        "prefillStepSize": 64,
+        "status": "ok",
+        "uptimeSeconds": 822
+      }
+    }
+  },
+  "server_log_tail": "59336 budget=34359738368 source=phys_footprint fraction=0.25 allowed=true\n[vmlx][cache/paged-store] tokens=817 requiredCompanion=false effectiveKVLayers=0 blocks=0 payload=false companion=false rotatingOffsets=[817]\n[vmlx][cache/disk-store] count=817 hash=0edc67532a50 modelKey=mlx-community/gemma-4-26b-a4b-it-4bit salt=6d50a752e29b keys=[\"__jang_cache_format_version__\", \"__layer_kind_0__\", \"__layer_kind_10__\", \"__layer_kind_11__\", \"__layer_kind_12__\", \"__layer_kind_13__\"]\n[vmlx][cache/disk-store] SKIP validated hash=0edc67532a50cf3855b04bf6bbf27892 count=817 bytes=184065002\n[vmlx][cache/store-budget] cache=186982400 active=9368159336 budget=34359738368 source=phys_footprint fraction=0.25 allowed=true\n[vmlx][cache/paged-store] tokens=830 requiredCompanion=false effectiveKVLayers=0 blocks=0 payload=false companion=false rotatingOffsets=[830]\n[vmlx][cache/disk-store] count=830 hash=05783b66f79a modelKey=mlx-community/gemma-4-26b-a4b-it-4bit salt=6d50a752e29b keys=[\"__jang_cache_format_version__\", \"__layer_kind_0__\", \"__layer_kind_10__\", \"__layer_kind_11__\", \"__layer_kind_12__\", \"__layer_kind_13__\"]\n[vmlx][cache/disk-store] SKIP validated hash=05783b66f79a6bc3f43c965ec3a2a29e count=830 bytes=186993642\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit (served id: mlx-community/gemma-4-26b-a4b-it-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/mlx-community-gemma-4-26b-a4b-it-4bit); topology layers=30 kvLayers=5 rotatingLayers=25 restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 15344812572 cache 3900 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/mlx-community-Qwen3.8-27B-4bit); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 16054544548 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n[Qwen4Exp] fused_gdn_decode_input_projections=active dtype=bfloat16\n[Qwen4Exp] bf16_affine_dispatch op=dense native=false input=bfloat16 weight=uint32 scales=bfloat16 biases=Optional(MLX.DType.bfloat16) gs=64 bits=4\n[Qwen4Exp] compiled_gdn_tail=active gate_mode=silu recurrence_output=bfloat16 gate=bfloat16 metadata=bfloat16 shared_weight_inputs=true\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/mlx-community-Qwen3.8-27B-4bit); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 16054544548 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n[Qwen4Exp] fused_gdn_decode_input_projections=active dtype=bfloat16\n[Qwen4Exp] bf16_affine_dispatch op=dense native=false input=bfloat16 weight=uint32 scales=bfloat16 biases=Optional(MLX.DType.bfloat16) gs=64 bits=4\n[Qwen4Exp] compiled_gdn_tail=active gate_mode=silu recurrence_output=bfloat16 gate=bfloat16 metadata=bfloat16 shared_weight_inputs=true\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-Uncensored-MLX-4bit (served id: orcarouter/Qwen3.8-27B-Uncensored-MLX)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/orcarouter-Qwen3.8-27B-Uncensored-MLX); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 16054543944 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n[Qwen4Exp] fused_gdn_decode_input_projections=active dtype=bfloat16\n[Qwen4Exp] bf16_affine_dispatch op=dense native=false input=bfloat16 weight=uint32 scales=bfloat16 biases=Optional(MLX.DType.bfloat16) gs=64 bits=4\n[Qwen4Exp] compiled_gdn_tail=active gate_mode=silu recurrence_output=bfloat16 gate=bfloat16 metadata=bfloat16 shared_weight_inputs=true\n",
+  "started_epoch": 1788429234.323167,
+  "status": "passed"
+}
