@@ -1,0 +1,51 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788424528.903955,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "mlx-community/Qwen3.8-27B-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 11.76218444516354,
+      "elapsed_seconds": 4.049,
+      "failed_checks": {},
+      "memory_active_bytes": 22591498226,
+      "memory_peak_bytes": 31697988608,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 93184.73708126105,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 0,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 11.610879133261143,
+      "elapsed_seconds": 541.422,
+      "failed_checks": {},
+      "memory_active_bytes": 22591105262,
+      "memory_peak_bytes": 31697988608,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 55.814708610587886,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788423981.3013382,
+  "status": "passed"
+}

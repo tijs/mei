@@ -91,3 +91,17 @@ probe: python3 tools/probe_coding.py --base-url ... --model mlx-community/Qwen3.
 probe: .venv/bin/python tools/probe_long_context.py --base-url ... --model ... --tokenizer <4bit staged dir> --lengths 30000 --output ...
 threshold: .venv/bin/python tools/probe_context_threshold.py --base-url ... --model ... --tokenizer <4bit staged dir> [--endpoint completions] --lengths ... --output ...
 ```
+
+## UPDATE (2026-09-03, raw-path re-verification pass): ALL previously-blocked raw legs now PASS
+
+Engine: Mei binary sha256(16) `8051d806ce875ab8` (== the 08:58Z build; rebuild this tick was byte-identical, no source delta), Mei HEAD `3a282ef`, vmlx fork pinned `91fed8be`, model-aware disposable disk-KV default, port 8024, temp 0. The raw /v1/completions crash (SmallVector OOR array.cpp:335, 4/4 repro) is CONFIRMED FIXED by the Mei-side [1,T] token-shape change (EE7368d, Sources/MeiCore/Engine.swift) — no dependence on the vmlx fork edits.
+
+| Probe | Result | Evidence artifact |
+|---|---|---|
+| raw /v1/completions smoke (9-token prompt, 60 tok out, temp 0) | PASS — HTTP 200, 15.54 t/s, 4.79 s, peak 18.82 GB | artifacts/raw-smoke-qwen38-4bit-20260903T080352Z.json + raw-smoke-req.json |
+| probe_mei full acceptance (12/12): models_identity, mei_status, plain, tool_nonstream, tool_stream (a=15,b=27 int args), parity, cache_repeat 6207/6212, cache_growing 846/851 | PASS | artifacts/probe-mei-qwen38-4bit-rawfix-20260903T080402Z.json |
+| probe_mei context_exact_cap — raw 65536 | PASS — prefill 1292.6 s (50.7 pps), 1-token decode, active 27.25 GB, **peak 31.70 GB** (< 32 GB, ~0.3 GB headroom) | same |
+| probe_mei context_over_cap_rejected (65537) | PASS — HTTP 400 "request exceeded context cap", 1.3 s | same |
+| probe_long_context raw 30k (fresh server, no restored cache) | PASS — fresh fill 30000 tok in 541.4 s (55.8 pps), decode 11.61 t/s; reuse 30000/30001 cached, restore 4.0 s, decode 11.76 t/s; peak 31.70 GB | artifacts/probe-longctx-qwen38-4bit-rawfix-20260903T082621Z.json |
+
+Status: Qwen3.8-27B-4bit common matrix is now COMPLETE on the chat path AND the raw path — all legs green. Decode 15.2–15.7 t/s short-context / 11.6 t/s at 30k; peak 31.70 GB at both 30k raw and 65k exact-cap raw (raw-endpoint prefill carries a heavier workspace than chat fills; still fits 32 GB, high-pressure). 4-bit remains the fastest safe Qwen3.8 config (llama.cpp UD-Q5_K_M reference: 9.286 t/s). Remaining todo-8 gap for this model: none measured; the GGUF/llama.cpp reference comparison for this model is the 9.286 t/s ceiling counter-check (2026-09-02) — a full same-suite A/B stays pending at the plan level.
