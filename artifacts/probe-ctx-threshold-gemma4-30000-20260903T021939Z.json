@@ -1,0 +1,26 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "endpoint": "chat",
+  "engine": "mei",
+  "finished_epoch": 1788402190.884174,
+  "lengths": [
+    30000
+  ],
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "fill_30000": {
+      "completion_tokens": 9,
+      "decode_tokens_per_second": 6.94076515902377,
+      "elapsed_seconds": 209.0826667090878,
+      "length_tokens": 30000,
+      "mem_active_GB": 26.4,
+      "mem_cache_GB": 0.82,
+      "mem_peak_GB": 27.24,
+      "prompt_tokens": 30014,
+      "prompt_tokens_per_second": 145.0567529775626,
+      "status": "passed"
+    }
+  },
+  "server_alive_final": true,
+  "started_epoch": 1788401980.8550432
+}

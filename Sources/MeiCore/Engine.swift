@@ -279,8 +279,18 @@ public actor Engine {
         parameters: GenerateParameters,
         tools: [MeiJSONValue]?
     ) async throws -> GenerationRun {
+        // Emit the token array as `[1, T]` (batch-first), matching the raw
+        // completions path and the vmlx cache-restore rebuild. A multimodal
+        // bundle routed through the loader's VLM-first registry (Gemma4 with a
+        // bundled vision tower, Qwen3.5/3.8 with vision_config) runs its VLM
+        // `prepare`, which embeds `tokens` directly; a 1-D array yields a 2-D
+        // embedding whose `dim(1)` is the hidden size and chunked prefill then
+        // slices out of rank -> precondition crash (Gemma4.prepare measured
+        // 2026-09-03, 19-token chat prompt). Text-only models take the
+        // rank-safe LLM default prepare, which flattens [1, T] and only
+        // rejects batch > 1, so [1, T] is safe for every model class.
         let input = LMInput(
-            tokens: MLXArray(tokens),
+            tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
             toolSchemas: MessageMapping.templateTools(tools))
 
@@ -378,8 +388,10 @@ public actor Engine {
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
+        // Batch-first `[1, T]` tokens like generateLocked and the raw path — see
+        // the comment there; Gemma4's VLM prepare crashed on 1-D chat tokens.
         let input = LMInput(
-            tokens: MLXArray(tokens),
+            tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
             toolSchemas: MessageMapping.templateTools(request.tools))
 

@@ -1,0 +1,129 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788401642.397435,
+  "min_decode_tps": 5.0,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "python_json_sum": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'def '": true,
+        "marker_'json'": true,
+        "marker_'json_sum'": true,
+        "nonempty": true
+      },
+      "content_head": "To solve this, we will use the `json.loads()` function to parse the string into a Python dictionary. We then iterate through the dictionary's values and sum those that are of type `int`.\n\nHere is the ",
+      "content_tail": "ist (e.g., `\"[1, 2, 3]\"`), it returns `0` as there are no \"top-level keys\" to iterate through.\n4.  **Complexity**: The function runs in $O(n)$ time, where $n$ is the number of keys in the JSON object.",
+      "decode_tokens_per_second_engine": 20.23566049658044,
+      "elapsed_seconds": 35.153,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 703,
+        "generate_ms": 34740.65005779266,
+        "mei_memory_active_bytes": 24115364576,
+        "mei_memory_cache_bytes": 169411298,
+        "mei_memory_peak_bytes": 25270600958,
+        "prefill_ms": 343.6779975891113,
+        "prompt_tokens": 48,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 139.6656182144864,
+        "tokens_per_second": 20.23566049658044,
+        "total_tokens": 751
+      }
+    },
+    "shell_rename": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'.bak'": true,
+        "marker_'.txt'": true,
+        "marker_'for '": true,
+        "nonempty": true
+      },
+      "content_head": "Here is the bash one-liner:\n\n```bash\nfor f in *.txt; do mv \"$f\" \"${f%.txt}.bak\"; done\n```\n\n### Explanation:\n*   `for f in *.txt;`: This starts a loop that iterates through every file ending in `.txt` ",
+      "content_tail": "*   `\"${f%.txt}.bak\"`: This uses **shell parameter expansion**. The `${f%.txt}` part tells the shell to take the filename and strip the `.txt` suffix from the end, then we append `.bak` to the result.",
+      "decode_tokens_per_second_engine": 50.76539860160836,
+      "elapsed_seconds": 3.984,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 184,
+        "generate_ms": 3624.516010284424,
+        "mei_memory_active_bytes": 23996777184,
+        "mei_memory_cache_bytes": 54903948,
+        "mei_memory_peak_bytes": 25270600958,
+        "prefill_ms": 320.27506828308105,
+        "prompt_tokens": 43,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 134.25959201417967,
+        "tokens_per_second": 50.76539860160836,
+        "total_tokens": 227
+      }
+    },
+    "sql_users_query": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'SELECT'": true,
+        "marker_'users'": true,
+        "nonempty": true
+      },
+      "content_head": "To select the name and email of the 10 most recently created users, you can use the following SQL query:\n\n```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```\n\n### Explanation:\n",
+      "content_tail": "ts based on the `created_at` timestamp. `DESC` (descending) ensures that the most recent dates appear at the top.\n*   **`LIMIT 10`**: Restricts the output to only the first 10 rows of the sorted list.",
+      "decode_tokens_per_second_engine": 50.71586803517663,
+      "elapsed_seconds": 3.919,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 180,
+        "generate_ms": 3549.185037612915,
+        "mei_memory_active_bytes": 23998137056,
+        "mei_memory_cache_bytes": 53609612,
+        "mei_memory_peak_bytes": 25270600958,
+        "prefill_ms": 330.233097076416,
+        "prompt_tokens": 45,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 136.2673832465284,
+        "tokens_per_second": 50.71586803517663,
+        "total_tokens": 225
+      }
+    },
+    "swift_fibonacci": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'fibonacci'": true,
+        "marker_'func'": true,
+        "nonempty": true
+      },
+      "content_head": "Here is a Swift implementation using an iterative approach. This is preferred over recursion because it has a time complexity of $O(n)$ and a space complexity of $O(1)$, preventing stack overflow erro",
+      "content_tail": "t because Fibonacci numbers grow exponentially, `Int` will overflow if $n$ is very large (typically around $n=92$ on 64-bit systems). For much larger numbers, you would need to use a `BigInt` library.",
+      "decode_tokens_per_second_engine": 26.333115282557063,
+      "elapsed_seconds": 20.818,
+      "failed_checks": {},
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 535,
+        "generate_ms": 20316.62392616272,
+        "mei_memory_active_bytes": 24109187772,
+        "mei_memory_cache_bytes": 129762048,
+        "mei_memory_peak_bytes": 25270600958,
+        "prefill_ms": 426.98097229003906,
+        "prompt_tokens": 39,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 91.33896480405251,
+        "tokens_per_second": 26.333115282557063,
+        "total_tokens": 574
+      }
+    }
+  },
+  "started_epoch": 1788401578.5228002,
+  "status": "passed"
+}
