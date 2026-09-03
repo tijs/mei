@@ -69,6 +69,26 @@ release requires explicit user authorization.
   edit; `Package.swift`/`Package.resolved` stay pinned to the remote revision
   `91fed8be`. Pure-source builds therefore lack this fix until the fork
   `main` advances (blocker, user action).
+- Gemma 4 tool-call argument typing + explicit /v1 usage contract
+  (commit `ba1e9df`): a schema-aware `ToolArgumentNormalizer` coerces fields
+  whose request tool JSON-Schema type is number/integer to JSON numbers
+  (string→number only when the emitted value is fully numeric), so Gemma-4's
+  literal `{"a":"15","b":"27"}` spelling now reaches the API as integer
+  `{"a":15,"b":27}` — matching the GGUF path — while string/boolean/nested
+  fields pass through untouched. One shared `Router.usage(run:)` defines
+  prompt/completion/total tokens across non-streaming chat, raw
+  `/v1/completions`, and the streaming finish; streaming honors
+  `stream_options.include_usage` (final usage chunk emitted only when true).
+  Verified live against the release binary: Gemma tool args integer
+  non-streaming and streaming; `include_usage` true→emitted / false→omitted;
+  raw `/v1/completions` integer usage with `total = prompt + completion`
+  (187/22/209 both paths; streaming cached 186 reused prefix vs non-streaming
+  0). Canonical `MEIAcceptanceTests` vs the Ornith release binary
+  (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`) 5/5 PASS. Focused suites against
+  the release binary: `ToolArgumentNormalizerTests` 9/9, `OpenAITypesTests`
+  12/12, `ServerConfigParsingTests` 28/28, `SSMAnchorBoundariesTests` 9/9,
+  `CacheRestoreTrackerTests` 6/6, `QuantizedRotatingKVCacheTests` 6/6.
+  Evidence: `artifacts/gemma4-tool-api-contract-20260903.md`.
 
 ### Known blockers
 
@@ -76,8 +96,6 @@ Full list with measured evidence in `docs/RELEASE-0.2.0-alpha.1.md`; summary:
 
 - Fork commit `318a4e68` (Gemma4 reuse fix + cache-fetch diagnostics) is
   un-pushed; external/source-only builds resolve `91fed8be` without it.
-- Gemma 4 tool calls emit string-typed JSON arguments; the strict-schema tool
-  gate FAILS on this family (user go/no-go).
 - Qwen3.8-27B decode is below the 30 t/s primary target: 4-bit 15.66 t/s
   (sd 0.060, 3 cold repeats, peak 18.9 GB), 5-bit parity artifact 13.11 t/s —
   hardware ceiling accepted and recorded in the plan (2026-09-02); 4-bit raw

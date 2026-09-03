@@ -37,8 +37,11 @@ profile, cap 65536, prefill 64, kv-bits none):
 - **Gemma 4 26B-A4B** (`mlx-community/gemma-4-26b-a4b-it-4bit` @ `0d77464`,
   staged): loadable; VLM chat-preflight crash fixed (batch-first `[1,T]`);
   growing-transcript reuse fixed in vmlx fork commit `318a4e68` (un-pushed);
-  common matrix PASS except the tool strict-schema gate (string-typed args —
-  see blockers). Peak ~25.8 GB 4-bit row.
+  common matrix PASS. The tool strict-schema gate is CLEARED: the
+  schema-aware tool-call argument typing commit (`ba1e9df`) coerces
+  number/integer JSON-Schema fields to JSON integers, so live Gemma
+  `add_numbers` returns `{"a":15,"b":27}` (integer) non-streaming and
+  streaming — matching the GGUF path. Peak ~25.8 GB 4-bit row.
 - **Qwen3.8-Heretic** (`orcarouter/Qwen3.8-27B-Uncensored-MLX` @ `14963e70`
   4-bit/): lineage gate PASS (distinct tensors from base Qwen, gated source
   `404ea47a`); `probe_load` hello 15.07 / short 15.72 t/s, peak 18.98 GB;
@@ -52,7 +55,7 @@ profile, cap 65536, prefill 64, kv-bits none):
 | Ornith-1.5-9B-MLX-4bit (fallback) | validated | benchmark rows in artifacts | — |
 | Qwen3.8-27B-4bit | loadable-accept-passed-perf-memory-constrained | 15.66 t/s (sd 0.060) | 18.9 GB |
 | Qwen3.8-27B-5bit-affine-g64 (Mei-produced) | loadable-parity-passed-3repeat-perf-memory-constrained-at-cap | 13.11 t/s (sd 0.012) | 21.9 GB |
-| Gemma 4 26B-A4B 4-bit | loadable-accept-passed-tool-string-args | matrix rows in artifacts | ~25.8 GB |
+| Gemma 4 26B-A4B 4-bit | loadable-accept-passed | 51.35 t/s (short) | ~25.8 GB |
 | Qwen3.8-27B-Uncensored-MLX-4bit (Heretic) | loadable-accept-passed | 15.1–15.8 t/s | 20.6 GB |
 
 GGUF/llama.cpp reference matching per model is a later unit (plan todo 8);
@@ -102,7 +105,7 @@ Consequences, stated plainly:
 | # | Blocker | Evidence | Owner |
 |---|---|---|---|
 | B1 | vMLX fork `318a4e68` un-pushed (Gemma4 rotating-boundary reuse fix) | `artifacts/gemma4-growing-reuse-fix-20260903.md` (cached 0 → 786/824, byte-identical cache-ON/OFF) | user (push) |
-| B2 | Gemma 4 tool calls emit string-typed JSON args; strict-schema tool gate FAILS | `artifacts/gemma4-26b-common-matrix-20260903.md` | user go/no-go |
+| ~~B2~~ | ~~Gemma 4 tool calls emit string-typed JSON args; strict-schema tool gate FAILS~~ | ~~`artifacts/gemma4-26b-common-matrix-20260903.md`~~ | ~~user go/no-go~~ |
 | B3 | Qwen3.8-27B decode 15.7 t/s (4-bit) / 13.1 t/s (5-bit) < 30 t/s primary target — hardware ceiling accepted | plan 0b87b76a speed-gate exhaustion note, `artifacts/qwen38-4bit-5bit-ab-20260902.md` | recorded |
 | B4 | Ornith 35B >= 30 t/s only with env-gated fused gate/up cache off (`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`) | `artifacts/ornith-35B-fuse-gateup-eliminated-20260902.md` | user go/no-go for env default |
 | B5 | Qwen3.8-27B-4bit full-cap 65536 fill memory-constrained (active 30.2 GB / peak 34.6 GB exceeds 32 GB physical) | lineup note, parity matrix | recorded |
@@ -161,9 +164,24 @@ git diff --stat
 Expected results (measured, see evidence note for exact numbers):
 
 - `mei --version` prints `mei 0.2.0-alpha.1`.
-- Non-acceptance unit suite passes (52/52 in prior runs; 5 live-server
-  `MeiAcceptanceTests` failures are the known server-required set, unchanged
-  across 0.1.0 and this candidate).
+- Focused unit suites against the release binary pass:
+  `ToolArgumentNormalizerTests` 9/9, `OpenAITypesTests` 12/12,
+  `ServerConfigParsingTests` 28/28, `SSMAnchorBoundariesTests` 9/9,
+  `CacheRestoreTrackerTests` 6/6, `QuantizedRotatingKVCacheTests` 6/6.
+  (These are the suites re-run for this evidence; the broader non-acceptance
+  baseline is 52/52 in prior runs. This is not a claim that the entire
+  non-acceptance suite passed in one run this tick.)
+- Live (server-backed) verification:
+  - Gemma 4 at 127.0.0.1:8024 — tool `add_numbers` returns integer JSON args
+    `{"a":15,"b":27}` non-streaming and streaming;
+    `stream_options.include_usage` true→usage emitted / false→omitted; raw
+    `/v1/completions` returns the same integer usage fields with
+    `total = prompt + completion` (187/22/209 both paths; a separate
+    streaming run reused the prefix → cached_tokens=186 vs non-streaming 0).
+  - Canonical `MEIAcceptanceTests` vs the Ornith release binary
+    (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`): 5/5 PASS (health, models
+    identity, plain completion, tool non-streaming, tool streaming).
+  - Full evidence: `artifacts/gemma4-tool-api-contract-20260903.md`.
 - Release build completes with exit 0; the staged tree passes all boundary
   checks and the manifest matches the allowlist one-for-one.
 
