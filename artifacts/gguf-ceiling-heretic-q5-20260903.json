@@ -1,0 +1,215 @@
+{
+  "alias": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5:Q5_K_M",
+  "contention_boundary": {
+    "foreign_servers": []
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788434931.255501,
+  "gguf": "/Users/tijs/.cache/huggingface/hub/models--trohrbaugh--Qwen3.8-27B-heretic-ara-gguf-Q5/snapshots/26f9b116cb7522faa3989b584cb37b4d41cd0191/Qwen3.8-27B-heretic-ara-Q5_K_M.gguf",
+  "gguf_provenance": {
+    "digest_matches_pinned": true,
+    "expected_sha256": "e79fdc96668747e3d629568582209b3bfab3c3a8496f8b90f7098a47238556a4",
+    "llama_bin": "/opt/homebrew/bin/llama-server",
+    "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+    "magic_ok": true,
+    "meta": {
+      "arch": "qwen35",
+      "block_count": 65,
+      "context_length": 262144,
+      "file_type": 17,
+      "full_attention_interval": 4,
+      "mtp_head_present": true,
+      "mtp_nextn_predict_layers": 1,
+      "mtp_note": "llama.cpp runs WITHOUT --spec-type draft-mtp; single-token decode, comparable to Mei's no-MTP baseline",
+      "quant_version": 2
+    },
+    "path": "/Users/tijs/.cache/huggingface/hub/models--trohrbaugh--Qwen3.8-27B-heretic-ara-gguf-Q5/snapshots/26f9b116cb7522faa3989b584cb37b4d41cd0191/Qwen3.8-27B-heretic-ara-Q5_K_M.gguf",
+    "repo": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5",
+    "revision": "26f9b116cb7522faa3989b584cb37b4d41cd0191",
+    "sha256": "e79fdc96668747e3d629568582209b3bfab3c3a8496f8b90f7098a47238556a4",
+    "size_bytes": 19704559264
+  },
+  "llama_version": "version: 0.1.1-dev (build 10470, commit 34af94cd9)",
+  "methodology": "Mei-contained ceiling probe; one request at a time; 3 repeats; ctx>=64K; mode=short (45k = same exact 45K-token prompt + 40K chat pattern as the Mei bench; short = Mei probe_load-style short decode rows)",
+  "rows": [
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 8.618927657646342,
+      "elapsed_seconds": 3.149,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24334565376
+      },
+      "mem_before": {
+        "rss_bytes": 24019271680
+      },
+      "name": "short_fresh_r1",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 19.67884130982368,
+      "request_seconds": 3.112,
+      "started_epoch": 1788434917.603829,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 2436.498,
+        "predicted_n": 22,
+        "predicted_per_second": 8.618927657646342,
+        "predicted_per_token_ms": 116.02371428571429,
+        "prompt_ms": 660.608,
+        "prompt_n": 13,
+        "prompt_per_second": 19.67884130982368,
+        "prompt_per_token_ms": 50.815999999999995
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 8.619380471767425,
+      "elapsed_seconds": 2.756,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24718458880
+      },
+      "mem_before": {
+        "rss_bytes": 24334581760
+      },
+      "name": "short_fresh_r2",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 15.470476529353295,
+      "request_seconds": 2.721,
+      "started_epoch": 1788434920.752358,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 2436.37,
+        "predicted_n": 22,
+        "predicted_per_second": 8.619380471767425,
+        "predicted_per_token_ms": 116.01761904761904,
+        "prompt_ms": 258.557,
+        "prompt_n": 4,
+        "prompt_per_second": 15.470476529353295,
+        "prompt_per_token_ms": 64.63925
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 9,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 22,
+      "contended_during_row": false,
+      "decode_tps_engine": 8.620119934602023,
+      "elapsed_seconds": 2.696,
+      "finish_reason": "stop",
+      "mem_after": {
+        "rss_bytes": 24718508032
+      },
+      "mem_before": {
+        "rss_bytes": 24718475264
+      },
+      "name": "short_fresh_r3",
+      "prompt_tokens": 13,
+      "prompt_tokens_per_second": 17.861368984625827,
+      "request_seconds": 2.661,
+      "started_epoch": 1788434923.5080771,
+      "status": "passed",
+      "text_source": "choice.text",
+      "timings": {
+        "cache_n": 9,
+        "predicted_ms": 2436.161,
+        "predicted_n": 22,
+        "predicted_per_second": 8.620119934602023,
+        "predicted_per_token_ms": 116.00766666666667,
+        "prompt_ms": 223.947,
+        "prompt_n": 4,
+        "prompt_per_second": 17.861368984625827,
+        "prompt_per_token_ms": 55.98675
+      },
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 13,
+        "prompt_tokens_details": {
+          "cached_tokens": 9
+        },
+        "total_tokens": 35
+      }
+    },
+    {
+      "cached_tokens": 0,
+      "checks": {
+        "http_200": true,
+        "nonempty": true
+      },
+      "completion_tokens": 32,
+      "contended_during_row": false,
+      "decode_tps_engine": 8.62318596679406,
+      "elapsed_seconds": 5.051,
+      "finish_reason": "length",
+      "mem_after": {
+        "rss_bytes": 24730206208
+      },
+      "mem_before": {
+        "rss_bytes": 24718508032
+      },
+      "name": "short_chat",
+      "prompt_tokens": 65,
+      "prompt_tokens_per_second": 46.019360699041165,
+      "request_seconds": 5.014,
+      "started_epoch": 1788434926.204055,
+      "status": "passed",
+      "text_source": "message.reasoning_content",
+      "timings": {
+        "cache_n": 0,
+        "predicted_ms": 3594.959,
+        "predicted_n": 32,
+        "predicted_per_second": 8.62318596679406,
+        "predicted_per_token_ms": 115.9664193548387,
+        "prompt_ms": 1412.449,
+        "prompt_n": 65,
+        "prompt_per_second": 46.019360699041165,
+        "prompt_per_token_ms": 21.729984615384616
+      },
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 65,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 97
+      }
+    }
+  ],
+  "server_log": "/Users/tijs/.local/share/local-model-bench/mei-runtime-heretic-ceiling/logs/llama-ceiling.log",
+  "started_epoch": 1788434912.226798,
+  "status": "passed"
+}

@@ -1,0 +1,27 @@
+{
+  "engine": "llama.cpp (llama-server) build 10470",
+  "model": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5:Q5_K_M (local blob e79fdc966687..., qwen35, Q5_K_M, ctx 262144)",
+  "leg": "30k-loaded decode retest with instruction tail (corrects the degenerate pure-repetition row in gguf-ref-heretic-q5-20260903.json)",
+  "method": "one-off /v1/completions against the adapter-run llama-server on port 8077 (slot cache retained from the preceding 29703-token fill); prompt = 'hello ' * 29698 + 'Now reply with exactly the word DONE.'; temp 0; max_tokens 32",
+  "rows": {
+    "fresh_prefill_locked": {
+      "prompt_tokens": 29707,
+      "cached_tokens": 29699,
+      "completion_tokens": 3,
+      "decode_tps": 7.636,
+      "elapsed_seconds": 1.4,
+      "text": "\n\nDONE",
+      "note": "decode measured while 29.7k tokens resident in KV (llama.cpp slot cache from the prior fill) - the loaded-context decode rate"
+    },
+    "reuse": {
+      "prompt_tokens": 29707,
+      "cached_tokens": 29703,
+      "completion_tokens": 3,
+      "decode_tps": 7.662,
+      "elapsed_seconds": 0.6,
+      "text": "\n\nDONE"
+    }
+  },
+  "loaded_context_decode_tps_mean": 7.649,
+  "recorded_at_utc": "2026-09-03T12:05:00Z"
+}

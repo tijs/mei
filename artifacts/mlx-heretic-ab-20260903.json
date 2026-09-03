@@ -1,0 +1,85 @@
+{
+  "identity_limerick_512": {
+    "content_head": "",
+    "content_tail": "",
+    "decode_tps": 15.48574179218608,
+    "elapsed": 33.58,
+    "reasoning_len": 1702,
+    "refusal_cues": [],
+    "usage": {
+      "completion_tokens": 512,
+      "generate_ms": 33062.67189979553,
+      "mei_memory_active_bytes": 18842281638,
+      "mei_memory_cache_bytes": 41424323,
+      "mei_memory_peak_bytes": 19049853010,
+      "prefill_ms": 383.28099250793457,
+      "prompt_tokens": 64,
+      "prompt_tokens_details": {
+        "cached_tokens": 59
+      },
+      "prompt_tokens_per_second": 166.97932131000493,
+      "tokens_per_second": 15.48574179218608,
+      "total_tokens": 576
+    }
+  },
+  "recorded_at_utc": "2026-09-03T12:15:00Z",
+  "status": {
+    "cache": {
+      "isHybrid": true,
+      "pagedEnabled": false,
+      "pagedEvictions": 0,
+      "pagedHits": 0,
+      "pagedMisses": 0,
+      "ssmHits": 0,
+      "ssmMisses": 1
+    },
+    "cacheReuse": true,
+    "contextCap": 65536,
+    "maxTokens": 32768,
+    "memory": {
+      "activeBytes": 18332837282,
+      "cacheBytes": 550868679,
+      "cacheLimitBytes": 32641751449,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "memoryLimitBytes": 24051816857,
+      "peakBytes": 19049853010,
+      "recommendedWorkingSetBytes": 26800603136
+    },
+    "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+    "prefillStepSize": 64,
+    "status": "ok",
+    "uptimeSeconds": 375
+  },
+  "tool_call": {
+    "content_tail": "",
+    "elapsed": 2.51,
+    "tool_calls": [
+      {
+        "function": {
+          "arguments": "{\"b\":27,\"a\":15}",
+          "name": "add_pair"
+        },
+        "id": "call_02aa3ddd-8ce",
+        "type": "function"
+      }
+    ],
+    "usage": {
+      "completion_tokens": 32,
+      "generate_ms": 2044.8449850082397,
+      "mei_memory_active_bytes": 18826700678,
+      "mei_memory_cache_bytes": 223725355,
+      "mei_memory_peak_bytes": 19049853010,
+      "prefill_ms": 307.02996253967285,
+      "prompt_tokens": 65,
+      "prompt_tokens_details": {
+        "cached_tokens": 60
+      },
+      "prompt_tokens_per_second": 211.70572234167872,
+      "tokens_per_second": 15.64910799332354,
+      "total_tokens": 97
+    }
+  }
+}

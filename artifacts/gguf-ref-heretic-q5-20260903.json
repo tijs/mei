@@ -1,0 +1,260 @@
+{
+  "base_url": "http://127.0.0.1:8077/v1",
+  "calibration": {
+    "prompt_tokens": 101,
+    "units": 100,
+    "units_per_token": 0.9901
+  },
+  "engine": "llama.cpp (llama-server)",
+  "finished_epoch": 1788436295.757683,
+  "model": "trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5:Q5_K_M",
+  "rows": {
+    "coding_python_json_sum": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'def '": true,
+        "marker_'json'": true,
+        "marker_'json_sum'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 775,
+      "content_head": "```python\nimport json\n\ndef json_sum(json_string: str) -> int:\n    \"\"\"\n    Return the sum of all integer values at the top level of a JSON object.\n\n    Args:\n        json_string: A string containing a JSON object.\n\n    Returns:\n        The sum of all top-level integer values.\n    \"\"\"\n    data = json.",
+      "content_tail": "\n    Returns:\n        The sum of all top-level integer values.\n    \"\"\"\n    data = json.loads(json_string)\n\n    if not isinstance(data, dict):\n        return 0\n\n    return sum(\n        value\n        for value in data.values()\n        if isinstance(value, int) and not isinstance(value, bool)\n    )\n```",
+      "decode_tps_engine": 8.615483747390812,
+      "elapsed_seconds": 90.81,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 85,
+      "prompt_tps_engine": 44.42024860876814,
+      "rss_after": 24717066240,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 775,
+        "prompt_tokens": 85,
+        "prompt_tokens_details": {
+          "cached_tokens": 42
+        },
+        "total_tokens": 860
+      }
+    },
+    "coding_shell_rename": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'.bak'": true,
+        "marker_'.txt'": true,
+        "marker_'for '": true,
+        "nonempty": true
+      },
+      "completion_tokens": 346,
+      "content_head": "```bash\nshopt -s nullglob; for f in *.txt; do mv -- \"$f\" \"${f%.txt}.bak\"; done\n```",
+      "content_tail": "```bash\nshopt -s nullglob; for f in *.txt; do mv -- \"$f\" \"${f%.txt}.bak\"; done\n```",
+      "decode_tps_engine": 8.626822847667713,
+      "elapsed_seconds": 41.243,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 81,
+      "prompt_tps_engine": 39.7046382143908,
+      "rss_after": 24567611392,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 346,
+        "prompt_tokens": 81,
+        "prompt_tokens_details": {
+          "cached_tokens": 42
+        },
+        "total_tokens": 427
+      }
+    },
+    "coding_sql_users_query": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'SELECT'": true,
+        "marker_'users'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 83,
+      "content_head": "```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```",
+      "content_tail": "```sql\nSELECT name, email\nFROM users\nORDER BY created_at DESC\nLIMIT 10;\n```",
+      "decode_tps_engine": 8.626770657828084,
+      "elapsed_seconds": 10.473,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 82,
+      "prompt_tps_engine": 41.4420164027501,
+      "rss_after": 24717213696,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 83,
+        "prompt_tokens": 82,
+        "prompt_tokens_details": {
+          "cached_tokens": 42
+        },
+        "total_tokens": 165
+      }
+    },
+    "coding_swift_fibonacci": {
+      "checks": {
+        "decode_above_floor": true,
+        "marker_'fibonacci'": true,
+        "marker_'func'": true,
+        "nonempty": true
+      },
+      "completion_tokens": 1396,
+      "content_head": "```swift\n/// Returns the n-th Fibonacci number (0-indexed), where `fibonacci(0) == 0` and `fibonacci(1) == 1`.\n///\n/// - Parameter n: The index in the Fibonacci sequence. Must be non-negative.\n/// - Returns: The Fibonacci number at the given index.\n/// - Precondition: `n` must be greater than or equ",
+      "content_tail": "be greater than or equal to 0.\nfunc fibonacci(_ n: Int) -> Int {\n    precondition(n >= 0, \"n must be non-negative\")\n\n    var previous = 0\n    var current = 1\n\n    for _ in 0..<n {\n        let next = previous + current\n        previous = current\n        current = next\n    }\n\n    return previous\n}\n```",
+      "decode_tps_engine": 8.606268544426552,
+      "elapsed_seconds": 162.868,
+      "failed_checks": {},
+      "http_200": true,
+      "prompt_tokens": 75,
+      "prompt_tps_engine": 44.8649361490386,
+      "rss_after": 24714772480,
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 1396,
+        "prompt_tokens": 75,
+        "prompt_tokens_details": {
+          "cached_tokens": 42
+        },
+        "total_tokens": 1471
+      }
+    },
+    "identity_limerick": {
+      "content_head": "",
+      "content_tail": "",
+      "decode_tps_engine": 8.629514309252478,
+      "elapsed_seconds": 24.037,
+      "http_200": true,
+      "note": "behavioral identity row: refusal-differential vs base Qwen; compare against Mei MLX row in the A/B doc",
+      "refusal_cues": [],
+      "status": "passed",
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 200,
+        "prompt_tokens": 64,
+        "prompt_tokens_details": {
+          "cached_tokens": 42
+        },
+        "total_tokens": 264
+      }
+    },
+    "longctx_fresh_30000": {
+      "cached_tokens": 97,
+      "checks": {
+        "http_ok": true,
+        "nonempty": false,
+        "size_ok": true
+      },
+      "completion_tokens": 1,
+      "decode_tps_engine": 1000000.0,
+      "elapsed_seconds": 370.695,
+      "failed_checks": {
+        "nonempty": false
+      },
+      "http_200": true,
+      "note": "fresh fill, target 30000 tok (self-calibrated units=29702)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 79.89097847060101,
+      "rss_after": 24281497600,
+      "status": "failed",
+      "timings": {
+        "cache_n": 97,
+        "predicted_ms": 0.001,
+        "predicted_n": 1,
+        "predicted_per_second": 0.0,
+        "predicted_per_token_ms": 0.0,
+        "prompt_ms": 370580.015,
+        "prompt_n": 29606,
+        "prompt_per_second": 79.89097847060101,
+        "prompt_per_token_ms": 12.517057859893265
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 1,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 97
+        },
+        "total_tokens": 29704
+      }
+    },
+    "longctx_reuse_30000": {
+      "cached_tokens": 29699,
+      "checks": {
+        "cached_ok": true,
+        "http_ok": true
+      },
+      "completion_tokens": 1,
+      "decode_tps_engine": 1000000.0,
+      "elapsed_seconds": 0.311,
+      "failed_checks": {},
+      "http_200": true,
+      "note": "cache-reuse row (llama.cpp internal slot cache; NOT Mei disk-KV)",
+      "prompt_tokens": 29703,
+      "prompt_tps_engine": 14.555458114849843,
+      "rss_after": 24288051200,
+      "status": "passed",
+      "timings": {
+        "cache_n": 29699,
+        "predicted_ms": 0.001,
+        "predicted_n": 1,
+        "predicted_per_second": 0.0,
+        "predicted_per_token_ms": 0.0,
+        "prompt_ms": 274.811,
+        "prompt_n": 4,
+        "prompt_per_second": 14.555458114849843,
+        "prompt_per_token_ms": 68.70275
+      },
+      "url_kind": "raw",
+      "usage": {
+        "completion_tokens": 1,
+        "prompt_tokens": 29703,
+        "prompt_tokens_details": {
+          "cached_tokens": 29699
+        },
+        "total_tokens": 29704
+      }
+    },
+    "tool_call": {
+      "checks": {
+        "args_15_27": true,
+        "http_ok": true,
+        "name_match": true,
+        "parseable_args": true,
+        "tool_calls_present": true
+      },
+      "content_tail": "",
+      "elapsed_seconds": 12.963,
+      "failed_checks": {},
+      "http_200": true,
+      "rss_after": 25066373120,
+      "status": "passed",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"a\":15,\"b\":27}",
+            "name": "add_pair"
+          },
+          "id": "jEB5tb0RuUlVP0djgVXxG3cFEUL3zZ0a",
+          "type": "function"
+        }
+      ],
+      "url_kind": "chat",
+      "usage": {
+        "completion_tokens": 66,
+        "prompt_tokens": 332,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "total_tokens": 398
+      }
+    }
+  },
+  "started": "2026-09-03T11:51:35.759863+00:00",
+  "started_epoch": 1788435582.011651,
+  "status": "failed"
+}
