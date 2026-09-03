@@ -98,3 +98,22 @@ probe: python3 tools/probe_load.py --base-url http://127.0.0.1:8024/v1 --model m
 probe: .venv/bin/python tools/probe_mei.py --base-url ... --model ... --tokenizer <gemma staged dir> --context-cap 65536 [--skip-context] --output ...
 probe: python3 tools/probe_coding.py ... ; .venv/bin/python tools/probe_long_context.py ... --lengths 30000 ...; .venv/bin/python tools/probe_context_threshold.py ... --endpoint chat --lengths 30000 ...
 ```
+## UPDATE (2026-09-03, second worker pass): blocker (a) CLEARED
+
+The exact-repeat KV-reuse gap on the DEFAULT config is fixed as a gated,
+model-aware default: the generic-profile disposable disk-KV default
+(`ModelOptimizationProfile.diskKVRequiredModelTypes`) now includes
+`gemma4`/`gemma4_text` alongside `qwen3_5`/`qwen3_5_text`, so cache-reuse on
+with no explicit `--kv-cache-dir` puts Gemma 4 on a disposable OS-temp disk
+cache. Verified on the default config (no flag): server line `prefix cache
+enabled (paged in-memory + disk at /var/folders/.../T/mei-kv-cache/mlx-community-gemma-4-26b-a4b-it-4bit)`;
+probe_mei cache_repeat_2 cached=6173/6174 (38.99 s -> 0.66 s); probe_load
+short decode 51.05 t/s; post-load 15.34 GB unchanged. Qwen3.8-4bit regression
+on the same binary passed (disposable tier line, probe_load PASS, raw 120-tok
+PASS at 15.6 t/s). Remaining recorded Gemma blockers: (b) growing-transcript
+prefix-extension restore gap (cached_tokens=0 on both tiers, rotating-layer
+25/30 topology — vmlx cache-extension investigation, next unit) and (c) tool
+strict-schema string-args (user go/no-go). Evidence:
+artifacts/gemma4-default-kv-tier-20260903.md, probe-mei-gemma4-defaultkv-20260903T033902Z.json,
+probe-load-gemma4-defaultkv-r1-20260903T033843Z.json,
+probe-load-qwen38-4bit-defaultkv-r1-20260903T034120Z.json.

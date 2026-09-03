@@ -181,41 +181,58 @@ final class ServerConfigParsingTests: XCTestCase {
         }
     }
 
-    // MARK: - Dense Qwen3.5/Qwen3.8 disk-KV safety default (0.1.0 release
-    // fix for the in-memory-only paged KV SmallVector crash; trigger
-    // isolated 2026-09-02 by the 2x2 evidence: cells A/C (in-memory) crash
-    // at vmlx array.cpp:335, cells B/D (disk) pass — the disk tier is the
-    // load-bearing element for dense qwen3_5, so cache-reuse on without an
-    // explicit --kv-cache-dir must default to a disposable on-disk cache).
+    // MARK: - Disk-KV safety default (0.1.0 release fix + gemma4 extension)
+    // Dense qwen3_5/qwen3_8-style checkpoints crash the in-memory-only paged
+    // KV tier (vmlx array.cpp:335 SmallVector crash; trigger isolated
+    // 2026-09-02 by the 2x2 evidence: cells A/C (in-memory) crash, cells
+    // B/D (disk) pass) and gemma4 bundles never restore exact-repeat
+    // prefixes on it (cached=0; disk tier restores 6173/6174, 2026-09-03
+    // evidence) — so cache-reuse on without an explicit --kv-cache-dir must
+    // default both families to a disposable on-disk cache.
     //
     // Fan-out: qwen3_5 / qwen3_5_text are the dense Qwen3.5/Qwen3.8 MLX
     // model_type values (verified on Qwen3.8-27B-4bit and the Heretic
-    // variant); the MoE/hybrid qwen3_5_moe family keeps operator-controlled
-    // cache configuration (Ornith behavior preserved).
+    // variant); gemma4 / gemma4_text are the Gemma 4 text model_type values
+    // (root + nested text_config of mlx-community/gemma-4-26b-a4b-it-4bit).
+    // The MoE/hybrid qwen3_5_moe family keeps operator-controlled cache
+    // configuration (Ornith behavior preserved).
 
     private func makeModelDir(modelType: String) throws -> URL {
+        try makeModelDir(config: ["model_type": modelType])
+    }
+
+    /// Variant for nested metadata (model_type under text_config/...).
+    private func makeModelDir(config: [String: Any]) throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("mei-profile-kv-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try JSONSerialization.data(withJSONObject: ["model_type": modelType])
+        try JSONSerialization.data(withJSONObject: config)
             .write(to: directory.appendingPathComponent("config.json"))
         return directory
+    }
+
+    private func assertDisposableDiskKVDefault(
+        modelDir: URL, servedModelID: String, file: StaticString = #filePath, line: UInt = #line
+    ) throws {
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", modelDir.path,
+            "--served-model-id", servedModelID,
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic, file: file, line: line)
+        XCTAssertTrue(config.cacheReuse, file: file, line: line)
+        XCTAssertFalse(config.kvCacheDirExplicit, file: file, line: line)
+        XCTAssertEqual(
+            config.kvCacheDir,
+            ServerConfig.defaultDisposableKVCacheDir(servedModelID: servedModelID),
+            file: file, line: line)
+        XCTAssertTrue(config.kvCacheDir.contains(servedModelID.replacingOccurrences(of: "/", with: "-")), file: file, line: line)
     }
 
     func testDenseQwen35DefaultsDisposableDiskKVWhenReuseOnAndNoExplicitDir() throws {
         let dir = try makeModelDir(modelType: "qwen3_5")
         defer { try? FileManager.default.removeItem(at: dir) }
-        let config = try ServerConfig.parse(arguments: [
-            "--model-dir", dir.path,
-            "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
-        ])
-        XCTAssertEqual(config.optimizationProfile, .generic)
-        XCTAssertTrue(config.cacheReuse)
-        XCTAssertFalse(config.kvCacheDirExplicit)
-        XCTAssertEqual(
-            config.kvCacheDir,
-            ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
-        XCTAssertTrue(config.kvCacheDir.contains("Qwen3.8-27B-4bit"))
+        try assertDisposableDiskKVDefault(
+            modelDir: dir, servedModelID: "mlx-community/Qwen3.8-27B-4bit")
     }
 
     func testExplicitGenericProfileWithDenseQwen35StillGetsDiskDefault() throws {
@@ -230,6 +247,25 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(
             config.kvCacheDir,
             ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
+    }
+
+    func testGemma4DefaultsDisposableDiskKVWhenReuseOnAndNoExplicitDir() throws {
+        let dir = try makeModelDir(modelType: "gemma4")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try assertDisposableDiskKVDefault(
+            modelDir: dir, servedModelID: "mlx-community/gemma-4-26b-a4b-it-4bit")
+    }
+
+    func testGemma4TextNestedModelTypeDefaultsDisposableDiskKV() throws {
+        // Mirrors the staged bundle: model_type lives in the nested
+        // text_config while the root carries the multimodal gemma4 value.
+        let dir = try makeModelDir(config: [
+            "model_type": "gemma4",
+            "text_config": ["model_type": "gemma4_text"],
+        ])
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try assertDisposableDiskKVDefault(
+            modelDir: dir, servedModelID: "mlx-community/gemma-4-26b-a4b-it-4bit")
     }
 
     func testExplicitKVCacheDirWinsOverDenseQwen35Default() throws {
@@ -271,12 +307,12 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.kvCacheDir, "")
     }
 
-    func testNonQwenGenericModelKeepsKVCacheDirEmptyDefault() throws {
-        let dir = try makeModelDir(modelType: "gemma4")
+    func testUnrelatedGenericModelKeepsKVCacheDirEmptyDefault() throws {
+        let dir = try makeModelDir(modelType: "llama")
         defer { try? FileManager.default.removeItem(at: dir) }
         let config = try ServerConfig.parse(arguments: [
             "--model-dir", dir.path,
-            "--served-model-id", "mlx-community/gemma-4-26b-a4b-it-4bit",
+            "--served-model-id", "mlx-community/Llama-3.3-70B-4bit",
         ])
         XCTAssertEqual(config.optimizationProfile, .generic)
         XCTAssertEqual(config.kvCacheDir, "")
@@ -285,7 +321,7 @@ final class ServerConfigParsingTests: XCTestCase {
     func testMissingModelDirNeverDefaulted() throws {
         let config = try parse([])
         XCTAssertEqual(config.modelDirectory, "/tmp/model")
-        XCTAssertFalse(ModelOptimizationProfile.denseQwen35NeedsDiskKVTier(modelDirectory: "/tmp/model"))
+        XCTAssertFalse(ModelOptimizationProfile.needsDiskKVTier(modelDirectory: "/tmp/model"))
         XCTAssertEqual(config.kvCacheDir, "")
     }
 }

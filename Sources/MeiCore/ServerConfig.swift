@@ -46,8 +46,8 @@ public struct ServerConfig: Sendable {
     /// like Ornith's mamba/GatedDelta layers are disk-backed-restore only,
     /// so in-process prefix reuse for them needs this tier; paged-in-memory
     /// alone covers non-hybrid topologies). "" = disabled. Dense
-    /// qwen3_5/qwen3_8 checkpoints get a disposable default when the flag is
-    /// omitted and cache reuse is on (see parse below).
+    /// qwen3_5/qwen3_8 and gemma4 checkpoints get a disposable default when
+    /// the flag is omitted and cache reuse is on (see parse below).
     public var kvCacheDir: String = ""
     /// True when the operator passed `--kv-cache-dir` (even an empty value):
     /// an explicit choice always wins over the model-aware safe default.
@@ -245,15 +245,17 @@ public extension ServerConfig {
             config.prefillStepSize = config.optimizationProfile.defaultPrefillStepSize
         }
 
-        // Model-aware safe default (0.1.0): dense qwen3_5/qwen3_8-style
-        // checkpoints crash the in-memory-only paged KV tier (vmlx
-        // array.cpp:335 'SmallVector out of range', trigger isolated by the
-        // 2026-09-02 2x2 evidence), so with cache reuse on and no explicit
-        // --kv-cache-dir they land on a disposable on-disk cache under the
-        // OS temp directory. Explicit --kv-cache-dir always wins;
-        // --cache-reuse false keeps caching fully disabled (no dir created).
+        // Model-aware safe default: dense qwen3_5/qwen3_8-style checkpoints
+        // crash the in-memory-only paged KV tier (vmlx array.cpp:335
+        // 'SmallVector out of range'; trigger isolated by the 2026-09-02 2x2
+        // evidence) and gemma4 bundles do not restore exact-repeat prefixes
+        // on it (cached=0; disk tier restores 6173/6174, 2026-09-03
+        // evidence), so with cache reuse on and no explicit --kv-cache-dir
+        // they land on a disposable on-disk cache under the OS temp
+        // directory. Explicit --kv-cache-dir always wins; --cache-reuse
+        // false keeps caching fully disabled (no dir created).
         if !config.kvCacheDirExplicit, config.cacheReuse,
-           ModelOptimizationProfile.denseQwen35NeedsDiskKVTier(
+           ModelOptimizationProfile.needsDiskKVTier(
                modelDirectory: config.modelDirectory) {
             config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
                 servedModelID: config.servedModelID)
@@ -314,13 +316,15 @@ public extension ServerConfig {
                                 model working set, which otherwise hangs)
       --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
       --kv-cache-dir DIR        On-disk KV cache dir for the prefix coordinator
-                                (hybrid models and dense qwen3_5/qwen3_8
-                                checkpoints need the disk tier). With cache
-                                reuse on and this flag omitted, dense
-                                qwen3_5/qwen3_8 models default to a disposable
-                                cache under the OS temp dir (the in-memory-only
-                                tier crashes them, vmlx array.cpp:335);
-                                explicit values always win
+                                (hybrid models, dense qwen3_5/qwen3_8 and
+                                gemma4 checkpoints need the disk tier). With
+                                cache reuse on and this flag omitted, those
+                                model families default to a disposable cache
+                                under the OS temp dir (the in-memory-only tier
+                                crashes dense qwen3_5/qwen3_8, vmlx
+                                array.cpp:335, and never restores gemma4
+                                exact-repeat prefixes); explicit values always
+                                win
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)

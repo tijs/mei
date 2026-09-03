@@ -2,6 +2,22 @@
 
 All notable changes to Mei are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- Generic-profile disk-KV safety default extended to Gemma 4 bundles:
+  `model_type` `gemma4`/`gemma4_text` never restore exact-repeat prefixes on
+  the in-memory-only paged tier (cached=0; the disk tier restored 6173/6174
+  in the 2026-09-03 Gemma 4 26B matrix), so with `--cache-reuse` on and no
+  explicit `--kv-cache-dir` they now default to a disposable on-disk cache
+  under the OS temp directory, matching the existing dense
+  qwen3_5/qwen3_8 default. Explicit `--kv-cache-dir` always wins;
+  `--cache-reuse false` keeps caching fully disabled; the MoE/Ornith
+  `qwen3_5_moe` family is untouched. `denseQwen35NeedsDiskKVTier` /
+  `denseQwen35KVUnsafeModelTypes` renamed to `needsDiskKVTier` /
+  `diskKVRequiredModelTypes` (old names kept as deprecated aliases).
+
 ## [0.1.0] - 2026-09-02
 
 Initial public release for Apple Silicon.

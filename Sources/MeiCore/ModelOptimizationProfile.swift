@@ -41,24 +41,43 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
             : .ornith
     }
 
-    /// Dense Qwen3.5/Qwen3.8-lineage MLX checkpoints (`qwen3_5` /
-    /// `qwen3_5_text`) crash with the in-memory-only paged KV cache tier
-    /// (`Fatal error: SmallVector out of range`, vmlx mlx/c/array.cpp:335;
-    /// trigger isolated by the 2026-09-02 bounded 2x2 — prefill step
-    /// excluded, KV tier implicated). Whenever prefix reuse is enabled these
-    /// models must land on the disk-backed tier, so cache-reuse on without an
-    /// explicit `--kv-cache-dir` defaults them to a disposable on-disk cache.
+    /// Model types whose in-process prefix reuse requires the disk-backed KV
+    /// tier, so cache-reuse on without an explicit `--kv-cache-dir` defaults
+    /// them to a disposable on-disk cache. Two empirically distinct reasons:
+    ///
+    /// - Dense Qwen3.5/Qwen3.8-lineage checkpoints (`qwen3_5`/`qwen3_5_text`)
+    ///   CRASH with the in-memory-only paged KV tier (`Fatal error:
+    ///   SmallVector out of range`, vmlx mlx/c/array.cpp:335; trigger isolated
+    ///   by the 2026-09-02 bounded 2x2 — prefill step excluded, KV tier
+    ///   implicated).
+    /// - Gemma 4 bundles (`gemma4`/`gemma4_text`) do NOT crash but their
+    ///   exact-repeat restore returns cached=0 on the paged in-memory tier;
+    ///   the same requests restore 6173/6174 cached on the disk tier (probe
+    ///   evidence 2026-09-03, mlx-community/gemma-4-26b-a4b-it-4bit) —
+    ///   reuse rides the disk tier for this architecture too.
+    ///
     /// The MoE/hybrid qwen3_5_moe family is intentionally NOT in the set:
     /// Ornith runs keep their operator-controlled cache configuration.
-    public static let denseQwen35KVUnsafeModelTypes: Set<String> = ["qwen3_5", "qwen3_5_text"]
+    public static let diskKVRequiredModelTypes: Set<String> =
+        ["qwen3_5", "qwen3_5_text", "gemma4", "gemma4_text"]
 
-    /// True when the bundle's metadata contains any dense qwen3_5 family
-    /// model_type. Missing/malformed metadata returns false (the safe
-    /// default must not fire on unreadable state — it only needs to fire on
-    /// the empirically verified crashing family).
-    public static func denseQwen35NeedsDiskKVTier(modelDirectory: String) -> Bool {
+    /// True when the bundle's metadata contains any model_type that needs
+    /// the disk KV tier for prefix reuse. Missing/malformed metadata returns
+    /// false (the safe default must not fire on unreadable state — it only
+    /// needs to fire on empirically verified model families).
+    public static func needsDiskKVTier(modelDirectory: String) -> Bool {
         !collectedModelTypes(in: modelDirectory)
-            .isDisjoint(with: denseQwen35KVUnsafeModelTypes)
+            .isDisjoint(with: diskKVRequiredModelTypes)
+    }
+
+    /// @deprecated — use `diskKVRequiredModelTypes` (renamed when the gemma4
+    /// lineage joined the disk-tier-required set; kept as an alias so
+    /// external consumers of the 0.1.0 public API keep compiling).
+    public static let denseQwen35KVUnsafeModelTypes: Set<String> = diskKVRequiredModelTypes
+
+    /// @deprecated — use `needsDiskKVTier(_:)`; behavior is identical.
+    public static func denseQwen35NeedsDiskKVTier(modelDirectory: String) -> Bool {
+        needsDiskKVTier(modelDirectory: modelDirectory)
     }
 
     /// All `model_type` values reachable in config.json (root + nested

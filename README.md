@@ -121,9 +121,10 @@ mode).
 
 Dense qwen3_5/qwen3_8 checkpoints (e.g. Qwen3.8-27B-4bit) crash the
 in-memory-only paged tier (`SmallVector out of range`, vmlx
-`mlx/c/array.cpp:335`), so with cache reuse on and no `--kv-cache-dir`
-given they default to a disposable cache under the OS temp directory; an
-explicit `--kv-cache-dir` always wins.
+`mlx/c/array.cpp:335`), and gemma4 bundles (e.g. gemma-4-26b-a4b-it-4bit)
+never restore exact-repeat prefixes on it, so with cache reuse on and no
+`--kv-cache-dir` given both families default to a disposable cache under
+the OS temp directory; an explicit `--kv-cache-dir` always wins.
 
 ### Models (four-candidate MLX lineup)
 

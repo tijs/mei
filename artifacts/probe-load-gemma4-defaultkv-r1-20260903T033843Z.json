@@ -1,0 +1,86 @@
+{
+  "engine": "mei",
+  "finished_epoch": 1788406733.65739,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 9.641,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 19.585013389587402,
+        "mei_memory_active_bytes": 23980556908,
+        "mei_memory_cache_bytes": 71121571,
+        "mei_memory_peak_bytes": 24003698074,
+        "prefill_ms": 9593.695044517517,
+        "prompt_tokens": 19,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 1.980467370688198,
+        "tokens_per_second": 51.05944939162827,
+        "total_tokens": 20
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 20,
+      "decode_tokens_per_second_engine": 51.04618224989762,
+      "elapsed_seconds": 0.639,
+      "prompt_tokens": 27,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 20,
+        "generate_ms": 391.8020725250244,
+        "mei_memory_active_bytes": 23986504332,
+        "mei_memory_cache_bytes": 65085937,
+        "mei_memory_peak_bytes": 24008634548,
+        "prefill_ms": 219.79796886444092,
+        "prompt_tokens": 27,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 122.84007963991736,
+        "tokens_per_second": 51.04618224989762,
+        "total_tokens": 47
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.009,
+      "status": "passed",
+      "status_body": {
+        "cache": {
+          "isHybrid": false,
+          "pagedEnabled": true,
+          "pagedEvictions": 0,
+          "pagedHits": 0,
+          "pagedMisses": 0,
+          "ssmHits": 0,
+          "ssmMisses": 0
+        },
+        "cacheReuse": true,
+        "contextCap": 65536,
+        "maxTokens": 32768,
+        "memory": {
+          "activeBytes": 15344812572,
+          "cacheBytes": 3900,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+        "prefillStepSize": 64,
+        "status": "ok",
+        "uptimeSeconds": 62
+      }
+    }
+  },
+  "server_log_tail": "24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit (served id: mlx-community/gemma-4-26b-a4b-it-4bit)...\nmei: prefix cache enabled (paged in-memory + no disk); topology layers=30 kvLayers=5 rotatingLayers=25 restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 15344812572 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/gemma-4-26b-a4b-it-4bit (served id: mlx-community/gemma-4-26b-a4b-it-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /Users/tijs/.local/share/local-model-bench/mei-runtime/kv-cache-gemma4-20260903); topology layers=30 kvLayers=5 rotatingLayers=25 restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 15344812572 cache 3900 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/mlx-community-Qwen3.8-27B-4bit); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 16054544548 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n[Qwen4Exp] fused_gdn_decode_input_projections=active dtype=bfloat16\n[Qwen4Exp] bf16_affine_dispatch op=dense native=false input=bfloat16 weight=uint32 scales=bfloat16 biases=Optional(MLX.DType.bfloat16) gs=64 bits=4\n[Qwen4Exp] compiled_gdn_tail=active gate_mode=silu recurrence_output=bfloat16 gate=bfloat16 metadata=bfloat16 shared_weight_inputs=true\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 (served id: Qwen/Qwen3.8-27B-5bit-affine-g64)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/Qwen-Qwen3.8-27B-5bit-affine-g64); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 18494713276 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[Qwen35] fused_gdn_decode_input_projections=active groups=[4]\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit (served id: mlx-community/Qwen3.8-27B-4bit)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/mlx-community-Qwen3.8-27B-4bit); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 16054544548 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[QwenGDN] live_dtype_boundaries q=bfloat16 k=bfloat16 v=bfloat16 a=bfloat16 b=bfloat16 beta=fused_from_bfloat16 decay=float32 recurrent_state=float32 output=bfloat16\n[Qwen4Exp] fused_gdn_decode_input_projections=active dtype=bfloat16\n[Qwen4Exp] bf16_affine_dispatch op=dense native=false input=bfloat16 weight=uint32 scales=bfloat16 biases=Optional(MLX.DType.bfloat16) gs=64 bits=4\n[Qwen4Exp] compiled_gdn_tail=active gate_mode=silu recurrence_output=bfloat16 gate=bfloat16 metadata=bfloat16 shared_weight_inputs=true\nmei: optimization profile generic (requested generic, prefill 64, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-5bit-affine-g64 (served id: Qwen/Qwen3.8-27B-5bit-affine-g64)...\nmei: prefix cache enabled (paged in-memory + disk at /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/mei-kv-cache/Qwen-Qwen3.8-27B-5bit-affine-g64); topology layers=64 kvLayers=16 mambaLayers=48 companion=ssm restore=disk-backed\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 18494713276 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:8024 (context cap 65536, prefill step 64, kv-bits none)\n[Qwen35] fused_gdn_decode_input_projections=active groups=[4]\n",
+  "started_epoch": 1788406723.367579,
+  "status": "passed"
+}
