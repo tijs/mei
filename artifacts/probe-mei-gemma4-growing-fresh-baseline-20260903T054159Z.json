@@ -1,0 +1,174 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788411555.1363049,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "cache_growing_turn1": {
+      "cached_tokens": 0,
+      "elapsed_seconds": 5.598120709,
+      "request_seconds": 5.5980545000000035,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 11,
+        "generate_ms": 743.4040307998657,
+        "mei_memory_active_bytes": 24498065028,
+        "mei_memory_cache_bytes": 182026994,
+        "mei_memory_peak_bytes": 25270600970,
+        "prefill_ms": 4704.952001571655,
+        "prompt_tokens": 793,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 168.5458214526108,
+        "tokens_per_second": 14.796798973721662,
+        "total_tokens": 804
+      }
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "elapsed_seconds": 5.23152975,
+      "error": "AssertionError: growing-transcript reuse failed: cached_tokens=0 usage={'completion_tokens': 5, 'generate_ms': 340.101957321167, 'mei_memory_active_bytes': 24512155392, 'mei_memory_cache_bytes': 187433716, 'mei_memory_peak_bytes': 25270600970, 'prefill_ms': 4736.562967300415, 'prompt_tokens': 824, 'prompt_tokens_details': {'cached_tokens': 0}, 'prompt_tokens_per_second': 173.96580720843568, 'tokens_per_second': 14.7014737562312, 'total_tokens': 829}",
+      "status": "failed"
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 39.017273583,
+      "request_seconds": 39.017106999999996,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 316.0179853439331,
+        "mei_memory_active_bytes": 24928666144,
+        "mei_memory_cache_bytes": 336364266,
+        "mei_memory_peak_bytes": 25270600970,
+        "prefill_ms": 38349.4530916214,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 160.99316945275805,
+        "tokens_per_second": 12.657507437896815,
+        "total_tokens": 6178
+      }
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 0.6528062089999978,
+      "request_seconds": 0.6525485419999981,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 314.5720958709717,
+        "mei_memory_active_bytes": 24586732064,
+        "mei_memory_cache_bytes": 972,
+        "mei_memory_peak_bytes": 25270600970,
+        "prefill_ms": 190.24693965911865,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 6173
+        },
+        "prompt_tokens_per_second": 32452.558822036623,
+        "tokens_per_second": 12.715686014441292,
+        "total_tokens": 6178
+      }
+    },
+    "mei_status": {
+      "context_cap": null,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "elapsed_seconds": 0.0012069999999999997,
+      "memory": {
+        "activeBytes": 15344812572,
+        "cacheBytes": 256,
+        "cacheLimitBytes": 32641751449,
+        "device": {
+          "architecture": "applegpu_g13s",
+          "memoryBytes": 34359738368
+        },
+        "memoryLimitBytes": 24051816857,
+        "peakBytes": 0,
+        "recommendedWorkingSetBytes": 26800603136
+      },
+      "prefill_step_size": null,
+      "request_seconds": 0.0011769999999999975,
+      "status": "passed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.006689417000000003,
+      "request_seconds": 0.006532291999999995,
+      "served_ids": [
+        "mlx-community/gemma-4-26b-a4b-it-4bit"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 0.4028667920000002,
+      "nonstream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 57.641029357910156,
+        "mei_memory_active_bytes": 23982228084,
+        "mei_memory_cache_bytes": 69342195,
+        "mei_memory_peak_bytes": 24141711648,
+        "prefill_ms": 203.00793647766113,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 103.44423161165832,
+        "tokens_per_second": 52.04625998908026,
+        "total_tokens": 24
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 57.8150749206543,
+        "mei_memory_active_bytes": 23976723060,
+        "mei_memory_cache_bytes": 74847219,
+        "mei_memory_peak_bytes": 24141711648,
+        "prefill_ms": 36.93497180938721,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 20
+        },
+        "prompt_tokens_per_second": 568.5668343914302,
+        "tokens_per_second": 51.88958077313253,
+        "total_tokens": 24
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 0.6873079580000001,
+      "request_seconds": 0.687264375,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 19.37699317932129,
+        "mei_memory_active_bytes": 23980556908,
+        "mei_memory_cache_bytes": 71255719,
+        "mei_memory_peak_bytes": 24003717978,
+        "prefill_ms": 638.8800144195557,
+        "prompt_tokens": 19,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 29.739543531131037,
+        "tokens_per_second": 51.60759415796144,
+        "total_tokens": 20
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 2.820183083,
+      "error": "AssertionError: schema/argument mismatch: {'b': '27', 'a': '15'}",
+      "status": "failed"
+    },
+    "tool_streaming": {
+      "elapsed_seconds": 1.5200960829999999,
+      "error": "AssertionError: schema/argument mismatch: {'b': '27', 'a': '15'}",
+      "status": "failed"
+    }
+  },
+  "started_epoch": 1788411499.198525,
+  "status": "failed"
+}

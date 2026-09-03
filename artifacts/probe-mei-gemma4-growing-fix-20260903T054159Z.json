@@ -1,0 +1,190 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788413753.332066,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "cache_growing_turn1": {
+      "cached_tokens": 0,
+      "elapsed_seconds": 5.682181125,
+      "request_seconds": 5.682123666999999,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 11,
+        "generate_ms": 742.1441078186035,
+        "mei_memory_active_bytes": 24497409668,
+        "mei_memory_cache_bytes": 182026994,
+        "mei_memory_peak_bytes": 25270273278,
+        "prefill_ms": 4786.044955253601,
+        "prompt_tokens": 793,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 165.69004416256698,
+        "tokens_per_second": 14.821919198863522,
+        "total_tokens": 804
+      }
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "cached_tokens": 786,
+      "elapsed_seconds": 1.1081813749999938,
+      "request_seconds": 1.1081240829999999,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 5,
+        "generate_ms": 332.9620361328125,
+        "mei_memory_active_bytes": 24511336192,
+        "mei_memory_cache_bytes": 187433716,
+        "mei_memory_peak_bytes": 25270273278,
+        "prefill_ms": 597.815990447998,
+        "prompt_tokens": 824,
+        "prompt_tokens_details": {
+          "cached_tokens": 786
+        },
+        "prompt_tokens_per_second": 1378.35055128335,
+        "tokens_per_second": 15.016727006095046,
+        "total_tokens": 829
+      }
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 38.937064625000005,
+      "request_seconds": 38.936936875,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 309.4940185546875,
+        "mei_memory_active_bytes": 24929321504,
+        "mei_memory_cache_bytes": 336364254,
+        "mei_memory_peak_bytes": 25270273278,
+        "prefill_ms": 38245.97907066345,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 161.4287344714823,
+        "tokens_per_second": 12.924320859833358,
+        "total_tokens": 6178
+      }
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 0.8289201669999997,
+      "request_seconds": 0.8287942919999978,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 314.40794467926025,
+        "mei_memory_active_bytes": 24929321504,
+        "mei_memory_cache_bytes": 972,
+        "mei_memory_peak_bytes": 25270273278,
+        "prefill_ms": 363.7341260910034,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 6167
+        },
+        "prompt_tokens_per_second": 16973.936612302674,
+        "tokens_per_second": 12.722324825730963,
+        "total_tokens": 6178
+      }
+    },
+    "mei_status": {
+      "context_cap": null,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "elapsed_seconds": 0.0011640839999999958,
+      "memory": {
+        "activeBytes": 15344812572,
+        "cacheBytes": 3900,
+        "cacheLimitBytes": 32641751449,
+        "device": {
+          "architecture": "applegpu_g13s",
+          "memoryBytes": 34359738368
+        },
+        "memoryLimitBytes": 24051816857,
+        "peakBytes": 0,
+        "recommendedWorkingSetBytes": 26800603136
+      },
+      "prefill_step_size": null,
+      "request_seconds": 0.0011387909999999932,
+      "status": "passed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.005587500000000002,
+      "request_seconds": 0.005453374999999996,
+      "served_ids": [
+        "mlx-community/gemma-4-26b-a4b-it-4bit"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 0.5425528340000003,
+      "nonstream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 57.70993232727051,
+        "mei_memory_active_bytes": 23981228660,
+        "mei_memory_cache_bytes": 63364032,
+        "mei_memory_peak_bytes": 24142694720,
+        "prefill_ms": 241.15705490112305,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 87.08018104056804,
+        "tokens_per_second": 51.984119180510056,
+        "total_tokens": 24
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 58.22896957397461,
+        "mei_memory_active_bytes": 23981752948,
+        "mei_memory_cache_bytes": 66721928,
+        "mei_memory_peak_bytes": 24142694720,
+        "prefill_ms": 85.84809303283691,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 14
+        },
+        "prompt_tokens_per_second": 244.6181302124847,
+        "tokens_per_second": 51.520746836997915,
+        "total_tokens": 24
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 0.7241426249999999,
+      "request_seconds": 0.724104958,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 19.606947898864746,
+        "mei_memory_active_bytes": 23979819628,
+        "mei_memory_cache_bytes": 64934730,
+        "mei_memory_peak_bytes": 24007385422,
+        "prefill_ms": 650.4740715026855,
+        "prompt_tokens": 19,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 29.209465576556124,
+        "tokens_per_second": 51.00232862137103,
+        "total_tokens": 20
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 2.645815208,
+      "error": "AssertionError: schema/argument mismatch: {'a': '15', 'b': '27'}",
+      "status": "failed"
+    },
+    "tool_streaming": {
+      "elapsed_seconds": 1.5043290420000006,
+      "error": "AssertionError: schema/argument mismatch: {'a': '15', 'b': '27'}",
+      "status": "failed"
+    }
+  },
+  "started_epoch": 1788413701.3521101,
+  "status": "failed"
+}
