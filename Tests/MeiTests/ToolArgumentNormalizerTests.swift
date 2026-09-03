@@ -169,4 +169,128 @@ final class ToolArgumentNormalizerTests: XCTestCase {
       arguments: arguments, parametersSchema: schema)
     XCTAssertEqual(try normalized.jsonString(), #"{"ambiguous":"27"}"#)
   }
+
+  // MARK: - Primitive numeric arrays
+
+  func testPrimitiveIntegerArrayCoercesElementStringsToNumbers() throws {
+    // `items: {type: integer}` arrays must coerce each *element's* numeric
+    // string, not just arrays of objects with nested properties.
+    let schema: MeiJSONValue = .object([
+      "type": .string("object"),
+      "properties": .object([
+        "values": .object([
+          "type": .string("array"),
+          "items": .object(["type": .string("integer")]),
+        ])
+      ]),
+    ])
+    let arguments: MeiJSONValue =
+      .object(["values": .array([.string("1"), .string("2"), .string("3")])])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: schema)
+    XCTAssertEqual(try normalized.jsonString(), #"{"values":[1,2,3]}"#)
+    guard case .object(let object) = normalized else { return XCTFail("expected object") }
+    guard case .array(let values) = object["values"] else { return XCTFail("expected array") }
+    // Each element must be a JSON number, not a string.
+    for element in values {
+      guard case .number = element else { return XCTFail("array element must be a JSON number") }
+    }
+  }
+
+  func testPrimitiveNumberArrayCoercesElementStringsToNumbers() throws {
+    let schema: MeiJSONValue = .object([
+      "type": .string("object"),
+      "properties": .object([
+        "values": .object([
+          "type": .string("array"),
+          "items": .object(["type": .string("number")]),
+        ])
+      ]),
+    ])
+    let arguments: MeiJSONValue =
+      .object(["values": .array([.string("1.5"), .string("2")])])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: schema)
+    XCTAssertEqual(try normalized.jsonString(), #"{"values":[1.5,2]}"#)
+  }
+
+  func testArrayOfStringItemsStaysStrings() throws {
+    // A primitive string array must NOT be coerced, even when elements look
+    // numeric — the schema types them string.
+    let schema: MeiJSONValue = .object([
+      "type": .string("object"),
+      "properties": .object([
+        "values": .object([
+          "type": .string("array"),
+          "items": .object(["type": .string("string")]),
+        ])
+      ]),
+    ])
+    let arguments: MeiJSONValue =
+      .object(["values": .array([.string("1"), .string("2"), .string("42")])])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: schema)
+    XCTAssertEqual(try normalized.jsonString(), #"{"values":["1","2","42"]}"#)
+  }
+
+  // MARK: - Non-finite numeric conversions
+
+  func testNaNStringInNumericFieldStaysString() throws {
+    // `Double("nan")` is not nil, but NaN is not a valid JSON number and would
+    // make jsonString() throw, silently dropping all args to "{}". Reject it so
+    // the original string survives.
+    let arguments: MeiJSONValue = .object([
+      "a": .string("nan"),
+      "b": .string("27"),
+    ])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: addSchema())
+    XCTAssertEqual(
+      try normalized.jsonString(), #"{"a":"nan","b":27}"#,
+      "non-finite numeric string must be preserved, not coerced to NaN")
+  }
+
+  func testInfStringInNumericFieldStaysString() throws {
+    let arguments: MeiJSONValue = .object([
+      "a": .string("inf"),
+      "b": .string("27"),
+    ])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: addSchema())
+    XCTAssertEqual(
+      try normalized.jsonString(), #"{"a":"inf","b":27}"#,
+      "infinity numeric string must be preserved, not coerced to a double")
+  }
+
+  func testPrimitiveNumericArrayWithNonFiniteElementsStaysString() throws {
+    // The non-finite guard must also hold inside primitive numeric arrays, so
+    // a NaN element cannot poison serialization and drop the whole argument.
+    let schema: MeiJSONValue = .object([
+      "type": .string("object"),
+      "properties": .object([
+        "values": .object([
+          "type": .string("array"),
+          "items": .object(["type": .string("number")]),
+        ])
+      ]),
+    ])
+    let arguments: MeiJSONValue =
+      .object(["values": .array([.string("1"), .string("nan"), .string("inf")])])
+    let normalized = ToolArgumentNormalizer.normalize(
+      arguments: arguments, parametersSchema: schema)
+    XCTAssertEqual(
+      try normalized.jsonString(), #"{"values":[1,"nan","inf"]}"#,
+      "non-finite array elements must be preserved verbatim")
+  }
+
+  func testParseNumericRejectsNonFinite() {
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("nan"), nil)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("inf"), nil)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("infinity"), nil)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("-inf"), nil)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("1e999"), nil, "overflow to +inf must be rejected")
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("NaN"), nil)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("15"), 15)
+    XCTAssertEqual(ToolArgumentNormalizer.parseNumeric("1.5"), 1.5)
+  }
 }

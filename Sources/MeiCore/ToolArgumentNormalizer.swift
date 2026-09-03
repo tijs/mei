@@ -16,8 +16,11 @@ import Foundation
 ///     the field `number` or `integer`;
 ///   - leaves `string` and `boolean` fields untouched, even numeric-looking
 ///     strings;
-///   - recurses into `object`/`array` fields whose schema declares nested
-///     `properties`, coercing only the fields the nested schema types numeric.
+///   - recurses into `object` fields whose schema declares nested
+///     `properties`, and into `array` fields per their `items` schema —
+///     coercing numeric strings in object properties and in primitive numeric
+///     arrays (`items: {type: integer|number}`), while string-typed items and
+///     properties pass through untouched.
 ///
 /// A field with no schema entry, and a property with no `type`, is never
 /// guessed at: it passes through verbatim. So legitimate strings are never
@@ -77,17 +80,16 @@ public enum ToolArgumentNormalizer {
       return value
     }
     if types.contains("array") {
+      // Recurse every element against the `items` schema. This covers both
+      // arrays of objects (whose nested numeric properties coerce) and arrays
+      // of primitives (`items: {type: integer|number}`), whose numeric strings
+      // coerce — while string-typed items still pass through untouched.
       if case .array(let elements) = value,
-        case .object(let items)? = propertySchema["items"],
-        case .object(let itemProperties)? = items["properties"]
+        case .object(let items)? = propertySchema["items"]
       {
-        return .array(
-          elements.map { element in
-            if case .object(let elementObject) = element {
-              return .object(normalizeObject(elementObject, properties: itemProperties))
-            }
-            return element
-          })
+        return .array(elements.map { element in
+          normalizeValue(element, propertySchema: items)
+        })
       }
       return value
     }
@@ -113,11 +115,15 @@ public enum ToolArgumentNormalizer {
 
   /// Parse a string as a JSON number (int or float), returning nil when the
   /// string is not fully numeric. Only whole numeric strings qualify — an
-  /// empty string, whitespace, or mixed text stays a string.
+  /// empty string, whitespace, mixed text, or a non-finite value (NaN,
+  /// ±infinity, overflow to infinity) stays a string. Rejecting non-finite
+  /// values is what keeps serialization from throwing on an invalid JSON
+  /// number (which would otherwise fall back to `{}` and drop every arg).
   static func parseNumeric(_ string: String) -> Double? {
     guard !string.isEmpty else { return nil }
     guard string == string.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
     guard let number = Double(string) else { return nil }
+    guard number.isFinite else { return nil }
     return number
   }
 }
