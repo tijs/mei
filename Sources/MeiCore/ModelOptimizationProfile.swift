@@ -20,6 +20,31 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         isOrnith ? 512 : 64
     }
 
+    /// Model types whose validated chunked-prefill step is 256. Measured
+    /// 2026-09-03 on mlx-community/gemma-4-26b-a4b-it-4bit (generic profile,
+    /// disk-KV default, 30k fresh fill, port 8024): step 256 fills at
+    /// 266.5/265.3/266.2 pps (3 cold repeats) vs 139 (mean of 64-step rows),
+    /// +91%; peak 27.23 GB unchanged vs the 64-step row; 30k loaded decode
+    /// unchanged (~7.4 t/s, attention-bound); probe_mei acceptance pass-set
+    /// identical to the 64-step baseline (only the pre-existing user-gated
+    /// Gemma string-args tool-schema mismatch fails). Evidence:
+    /// artifacts/probe-longctx-gemma4-pref{64,128,256,512}-*, probe-mei-gemma4-pref256-*,
+    /// artifacts/gemma4-prefill-step-sweep-20260903.md.
+    public static let prefill256ModelTypes: Set<String> = ["gemma4", "gemma4_text"]
+
+    /// Architecture-validated chunked-prefill step. The Ornith profile keeps
+    /// its validated 512; `gemma4`-lineage bundles default to the measured
+    /// 256; everything else stays on the conservative 64. An explicit
+    /// `--prefill-step-size` always wins.
+    public static func prefillStepSize(
+        modelDirectory: String, profile: ModelOptimizationProfile
+    ) -> Int {
+        if profile.isOrnith { return profile.defaultPrefillStepSize }
+        if !collectedModelTypes(in: modelDirectory)
+            .isDisjoint(with: prefill256ModelTypes) { return 256 }
+        return profile.defaultPrefillStepSize
+    }
+
     public static func resolve(
         requested: ModelOptimizationProfile,
         modelDirectory: String

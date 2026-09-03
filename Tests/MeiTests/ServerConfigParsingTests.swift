@@ -145,6 +145,48 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.prefillStepSize, 256)
     }
 
+    func testGemma4BundleDefaultsTo256Prefill() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-gemma4-step-\\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data(#"{"model_type":"gemma4"}"#.utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", directory.path, "--served-model-id", "mlx/gemma4"
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertEqual(config.prefillStepSize, 256)
+    }
+
+    func testExplicitPrefillWinsOverGemma4Default() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-gemma4-explicit-\\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data(#"{"model_type":"gemma4"}"#.utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", directory.path, "--served-model-id", "mlx/gemma4",
+            "--prefill-step-size", "128"
+        ])
+        XCTAssertEqual(config.prefillStepSize, 128)
+    }
+
+    func testDenseQwen35ProfileStaysAt64Prefill() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-profile-qwen35-step-\\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data(#"{"model_type":"qwen3_5"}"#.utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let config = try ServerConfig.parse(arguments: [
+            "--model-dir", directory.path, "--served-model-id", "mlx/qwen35"
+        ])
+        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertEqual(config.prefillStepSize, 64)
+    }
+
     func testUnknownOptimizationProfileRejected() {
         XCTAssertThrowsError(try parse(["--optimization-profile", "qwen"])) { error in
             guard case ConfigError.invalidValue(let message) = error else {

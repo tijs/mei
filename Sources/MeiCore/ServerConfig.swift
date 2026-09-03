@@ -242,7 +242,9 @@ public extension ServerConfig {
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
         if !prefillStepSizeExplicit {
-            config.prefillStepSize = config.optimizationProfile.defaultPrefillStepSize
+            config.prefillStepSize = ModelOptimizationProfile.prefillStepSize(
+                modelDirectory: config.modelDirectory,
+                profile: config.optimizationProfile)
         }
 
         // Model-aware safe default: dense qwen3_5/qwen3_8-style checkpoints
@@ -291,7 +293,8 @@ public extension ServerConfig {
       --context-cap TOKENS   Reject prompts beyond this many tokens (default 65536)
       --max-tokens TOKENS    Server-side per-request generation cap (default 32768)
       --prefill-step-size N  Chunked prefill window (default 64 for generic;
-                             auto Ornith profile uses validated 512)
+                             auto Ornith profile uses validated 512; gemma4
+                             bundles default to measured 256)
       --kv-bits N            Quantized KV cache bits (4 or 8; nil = fp16)
       --kv-group-size N      KV quantization group size (default 64)
       --quantized-kv-start N First layer index to quantize (default 0)

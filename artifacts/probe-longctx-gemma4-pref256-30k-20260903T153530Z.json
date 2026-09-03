@@ -1,0 +1,51 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "engine": "mei",
+  "finished_epoch": 1788449747.350653,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 7.436931322361633,
+      "elapsed_seconds": 5.643,
+      "failed_checks": {},
+      "memory_active_bytes": 25562825248,
+      "memory_peak_bytes": 26387105022,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 46217.024886861625,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 29999,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 7.163808140341708,
+      "elapsed_seconds": 5.988,
+      "failed_checks": {},
+      "memory_active_bytes": 25562661408,
+      "memory_peak_bytes": 26386777342,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 36253.77183906705,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788449730.973959,
+  "status": "passed"
+}

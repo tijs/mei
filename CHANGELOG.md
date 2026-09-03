@@ -33,6 +33,20 @@ release requires explicit user authorization.
   and script (`configs/release-allowlist.json`,
   `scripts/stage_release_candidate.sh`) and this release-notes file
   (`docs/RELEASE-0.2.0-alpha.1.md`).
+- Gemma 4 chunked-prefill default 64 → 256, arch-scoped
+  (`ModelOptimizationProfile.prefill256ModelTypes` = `gemma4`/`gemma4_text`;
+  Ornith stays 512, all other models stay 64, explicit `--prefill-step-size`
+  always wins, malformed metadata stays 64). Measured 2026-09-03 on
+  `mlx-community/gemma-4-26b-a4b-it-4bit`: 30k fresh fill 266.5/265.3/266.2
+  pps (3 cold repeats) vs ~139 baseline (+91%), peak 27.23 GB unchanged,
+  30k loaded decode unchanged (~7.4 t/s), acceptance pass-set identical to
+  the 64 baseline (only the pre-existing user-gated Gemma string-args tool
+  schema fails). The 30k-decode row closes the last measurable GGUF A/B gap
+  (GGUF 37.08 t/s, MLX 5.0x slower — dense/rotating-attention cost, recorded
+  as a measured constraint). Note: this change postdates the staged
+  v0.2.0-alpha.1 snapshot (2026-09-03T14:27Z); any future staging refresh
+  must re-run `scripts/stage_release_candidate.sh`. Evidence:
+  `artifacts/gemma4-prefill-step-sweep-20260903.md`.
 
 ### Fixed
 

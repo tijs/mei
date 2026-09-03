@@ -1,0 +1,216 @@
+{
+  "base_url": "http://127.0.0.1:8024/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1788450851.457728,
+  "model": "mlx-community/gemma-4-26b-a4b-it-4bit",
+  "probes": {
+    "cache_growing_turn1": {
+      "cached_tokens": 0,
+      "elapsed_seconds": 4.123430332634598,
+      "request_seconds": 4.1233827075921,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 11,
+        "generate_ms": 744.0440654754639,
+        "mei_memory_active_bytes": 24497409668,
+        "mei_memory_cache_bytes": 182026992,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 3188.8270378112793,
+        "prompt_tokens": 793,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 248.6807815529226,
+        "tokens_per_second": 14.784070608735664,
+        "total_tokens": 804
+      }
+    },
+    "cache_growing_turn2_reuses_slot": {
+      "cached_tokens": 786,
+      "elapsed_seconds": 1.172669833060354,
+      "request_seconds": 1.1726170829497278,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 5,
+        "generate_ms": 334.18405055999756,
+        "mei_memory_active_bytes": 24511336192,
+        "mei_memory_cache_bytes": 187433716,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 614.1469478607178,
+        "prompt_tokens": 824,
+        "prompt_tokens_details": {
+          "cached_tokens": 786
+        },
+        "prompt_tokens_per_second": 1341.6984369461927,
+        "tokens_per_second": 14.961815178257071,
+        "total_tokens": 829
+      }
+    },
+    "cache_repeat_1": {
+      "elapsed_seconds": 22.801407542079687,
+      "request_seconds": 22.801301625091583,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 312.8950595855713,
+        "mei_memory_active_bytes": 24929321504,
+        "mei_memory_cache_bytes": 336364274,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 22111.270904541016,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 279.2241127456875,
+        "tokens_per_second": 12.783838790225674,
+        "total_tokens": 6178
+      }
+    },
+    "cache_repeat_2": {
+      "elapsed_seconds": 0.7806389168836176,
+      "request_seconds": 0.7805186249315739,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 4,
+        "generate_ms": 314.1850233078003,
+        "mei_memory_active_bytes": 24929321504,
+        "mei_memory_cache_bytes": 972,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 374.7220039367676,
+        "prompt_tokens": 6174,
+        "prompt_tokens_details": {
+          "cached_tokens": 6167
+        },
+        "prompt_tokens_per_second": 16476.21419382095,
+        "tokens_per_second": 12.731351602591465,
+        "total_tokens": 6178
+      }
+    },
+    "context_exact_cap": {
+      "elapsed_seconds": 227.0366980410181,
+      "request_seconds": 227.03492520796135,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 3.113985061645508,
+        "mei_memory_active_bytes": 28612837920,
+        "mei_memory_cache_bytes": 1594491626,
+        "mei_memory_peak_bytes": 30207329546,
+        "prefill_ms": 219533.89394283295,
+        "prompt_tokens": 65536,
+        "prompt_tokens_details": {
+          "cached_tokens": 30001
+        },
+        "prompt_tokens_per_second": 298.52337979786256,
+        "tokens_per_second": 321.1319194548656,
+        "total_tokens": 65537
+      }
+    },
+    "context_over_cap_rejected": {
+      "elapsed_seconds": 1.8885445422492921,
+      "error": "HTTP 400: {\"error\":{\"code\":\"engine_error\",\"message\":\"request exceeded context cap: 65537 prompt tokens > 65536 allowed\",\"type\":\"invalid_request_error\"}}",
+      "rejected_as_expected": true,
+      "status": "passed"
+    },
+    "mei_status": {
+      "context_cap": null,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "elapsed_seconds": 0.0042811669409275055,
+      "memory": {
+        "activeBytes": 23909057052,
+        "cacheBytes": 2478047982,
+        "cacheLimitBytes": 32641751449,
+        "device": {
+          "architecture": "applegpu_g13s",
+          "memoryBytes": 34359738368
+        },
+        "memoryLimitBytes": 24051816857,
+        "peakBytes": 27230553354,
+        "recommendedWorkingSetBytes": 26800603136
+      },
+      "prefill_step_size": null,
+      "request_seconds": 0.0042436253279447556,
+      "status": "passed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.014775458257645369,
+      "request_seconds": 0.014673874713480473,
+      "served_ids": [
+        "mlx-community/gemma-4-26b-a4b-it-4bit"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 0.5392198748886585,
+      "nonstream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 57.71803855895996,
+        "mei_memory_active_bytes": 23981228660,
+        "mei_memory_cache_bytes": 70250936,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 239.35198783874512,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 87.73689405975605,
+        "tokens_per_second": 51.97681825128983,
+        "total_tokens": 24
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 3,
+        "generate_ms": 58.1740140914917,
+        "mei_memory_active_bytes": 23981720180,
+        "mei_memory_cache_bytes": 66713864,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 85.36791801452637,
+        "prompt_tokens": 21,
+        "prompt_tokens_details": {
+          "cached_tokens": 14
+        },
+        "prompt_tokens_per_second": 245.99405125970858,
+        "tokens_per_second": 51.56941715044498,
+        "total_tokens": 24
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 0.5108877918682992,
+      "request_seconds": 0.5108484169468284,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 1,
+        "generate_ms": 29.919981956481934,
+        "mei_memory_active_bytes": 23979803244,
+        "mei_memory_cache_bytes": 65377890,
+        "mei_memory_peak_bytes": 27230553354,
+        "prefill_ms": 386.46399974823,
+        "prompt_tokens": 19,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 49.163699626298815,
+        "tokens_per_second": 33.42248004876747,
+        "total_tokens": 20
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 2.2591987499035895,
+      "error": "AssertionError: schema/argument mismatch: {'b': '27', 'a': '15'}",
+      "status": "failed"
+    },
+    "tool_streaming": {
+      "elapsed_seconds": 1.5078436667099595,
+      "error": "AssertionError: schema/argument mismatch: {'a': '15', 'b': '27'}",
+      "status": "failed"
+    }
+  },
+  "started_epoch": 1788450585.0386062,
+  "status": "failed"
+}
