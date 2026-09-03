@@ -172,13 +172,48 @@ public final class Router: @unchecked Sendable {
             usage: usage)
     }
 
+    /// The JSON payloads for a streaming run's terminal frames: a
+    /// `finish_reason` chunk, then a usage chunk iff `includeUsage` (the
+    /// OpenAI `stream_options.include_usage` contract), then `[DONE]`.
+    /// Pure/static so unit tests can pin usage presence/absence and count
+    /// parity without a live engine.
+    public static func finishSSEData(
+        id: String,
+        run: GenerationRun,
+        model: String,
+        created: Int,
+        includeUsage: Bool
+    ) -> [String] {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let finishChunk = SSEChatChunk(
+            id: id, created: created, model: model,
+            choices: [.init(delta: .init(), finishReason: run.finishReason)],
+            usage: nil)
+        var frames: [String] = []
+        if let json = try? encoder.encode(finishChunk), let string = String(data: json, encoding: .utf8) {
+            frames.append(string)
+        }
+        if includeUsage {
+            let usageChunk = SSEChatChunk(
+                id: id, created: created, model: model,
+                choices: [], usage: Self.usage(run: run))
+            if let json = try? encoder.encode(usageChunk), let string = String(data: json, encoding: .utf8) {
+                frames.append(string)
+            }
+        }
+        frames.append("[DONE]")
+        return frames
+    }
+
     /// SSE frame for one stream event. Returns "" for events that should not
     /// produce visible frames.
     public func sseFrame(
         id: String,
         event: StreamEvent,
         model: String,
-        emitReasoning: Bool
+        emitReasoning: Bool,
+        includeUsage: Bool
     ) -> String {
         switch event {
         case .chunk(let text):
@@ -209,19 +244,11 @@ public final class Router: @unchecked Sendable {
         case .prefill:
             return ""
         case .finish(let run):
-            var lines: [String] = []
-            let finishChunk = SSEChatChunk(
-                id: id, created: Int(Date().timeIntervalSince1970), model: model,
-                choices: [.init(delta: .init(), finishReason: run.finishReason)],
-                usage: nil)
-            lines.append("data: \(serializer.json(finishChunk))")
-            let usage = Self.usage(run: run)
-            let usageChunk = SSEChatChunk(
-                id: id, created: Int(Date().timeIntervalSince1970), model: model,
-                choices: [], usage: usage)
-            lines.append("data: \(serializer.json(usageChunk))")
-            lines.append("data: [DONE]")
-            return lines.map { $0 + "\n\n" }.joined()
+            let frames = Self.finishSSEData(
+                id: id, run: run, model: model,
+                created: Int(Date().timeIntervalSince1970),
+                includeUsage: includeUsage)
+            return frames.map { "data: \($0)\n\n" }.joined()
         }
     }
 

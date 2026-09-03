@@ -243,16 +243,49 @@ public actor Engine {
 
 
     /// Serialize a parsed vmlx ToolCall's arguments to a compact JSON string,
-    /// preferring the exact protocol-bytes when the parser preserved them.
-    private static func toolArgumentsJSON(_ call: ToolCall) -> String {
-        if let raw = call.function.rawArgumentsJSON, !raw.isEmpty { return raw }
-        let anyDict = call.function.arguments.mapValues { $0.anyValue }
-        if let data = try? JSONSerialization.data(withJSONObject: anyDict),
-            let string = String(data: data, encoding: .utf8)
-        {
-            return string
+    /// applying schema-aware normalization so `number`/`integer` fields are
+    /// reported as JSON numbers even when the model emitted them as numeric
+    /// strings (Gemma-4). Builds from the parser's typed dictionary rather than
+    /// the verbatim raw bytes so numeric typing is deterministic across model
+    /// paths, and falls back to the raw protocol text only when the parser
+    /// produced no dict.
+    private static func toolArgumentsJSON(
+        _ call: ToolCall,
+        tools: [MeiJSONValue]?
+    ) -> String {
+        var parsed: MeiJSONValue
+        if !call.function.arguments.isEmpty {
+            let arguments = call.function.arguments.mapValues { MeiJSONValue.from($0.anyValue) }
+            parsed = .object(arguments)
+        } else if let raw = call.function.rawArgumentsJSON, !raw.isEmpty,
+            let rawParsed = MeiJSONValue.parseObject(from: raw) {
+            parsed = rawParsed
+        } else {
+            return "{}"
         }
-        return "{}"
+        let schema = Self.toolParametersSchema(for: call.function.name, tools: tools)
+        let normalized = ToolArgumentNormalizer.normalize(
+            arguments: parsed, parametersSchema: schema)
+        return (try? normalized.jsonString()) ?? "{}"
+    }
+
+    /// Look up a tool's `parameters` schema object by function name in the
+    /// request's `tools` array, so argument normalization is schema-driven.
+    private static func toolParametersSchema(
+        for name: String,
+        tools: [MeiJSONValue]?
+    ) -> MeiJSONValue? {
+        guard let tools else { return nil }
+        for tool in tools {
+            guard case .object(let toolObject) = tool,
+                case .object(let function)? = toolObject["function"],
+                case .string(let functionName)? = function["name"]
+            else { continue }
+            if functionName == name {
+                return function["parameters"]
+            }
+        }
+        return nil
     }
 
     private func renderChatTemplate(
@@ -333,7 +366,7 @@ public actor Engine {
                 run.toolCalls.append(.init(
                     id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                     name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call)))
+                    argumentsJSON: Self.toolArgumentsJSON(call, tools: tools)))
             case .toolCallProgress:
                 break  // assembled into .toolCall on envelope close
             case .prefillProgress(let progress):
@@ -436,7 +469,7 @@ public actor Engine {
                 let emitting = GenerationRun.ToolCallEmitting(
                     id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                     name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call))
+                    argumentsJSON: Self.toolArgumentsJSON(call, tools: request.tools))
                 run.toolCalls.append(emitting)
                 continuation.yield(.toolCall(emitting))
             case .toolCallProgress:
@@ -545,7 +578,7 @@ public actor Engine {
                 run.toolCalls.append(.init(
                     id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                     name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call)))
+                    argumentsJSON: Self.toolArgumentsJSON(call, tools: nil)))
             case .prefillProgress(let progress):
                 if config.logRequests {
                     logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")

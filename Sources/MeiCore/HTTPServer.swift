@@ -56,7 +56,8 @@ final class ResponseWriter: @unchecked Sendable {
                 let frame = router.sseFrame(
                     id: chunkID, event: event,
                     model: config.servedModelID,
-                    emitReasoning: config.emitReasoning)
+                    emitReasoning: config.emitReasoning,
+                    includeUsage: request.includeUsage)
                 if !frame.isEmpty {
                     body(frame)
                 }

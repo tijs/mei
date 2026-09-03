@@ -133,4 +133,91 @@ final class OpenAITypesTests: XCTestCase {
         let parsed = MeiJSONValue.parseObject(from: jsonString)
         XCTAssertEqual(parsed, .object(arguments))
     }
+
+    // MARK: - Usage contract
+
+    /// A run with every usage-relevant counter populated.
+    private func usageRun() -> GenerationRun {
+        var run = GenerationRun()
+        run.promptTokenCount = 10
+        run.completionTokenCount = 5
+        run.cachedTokenCount = 8
+        run.decodeTokensPerSecond = 47.5
+        run.promptTokensPerSecond = 300.1
+        // Leave perf fields intentionally; the contract keeps absent-perf nil.
+        return run
+    }
+
+    func testUsageContractFieldTypesAndArithmetic() throws {
+        let usage = Router.usage(run: usageRun())
+        XCTAssertEqual(usage.promptTokens, 10)
+        XCTAssertEqual(usage.completionTokens, 5)
+        XCTAssertEqual(usage.totalTokens, 15, "total_tokens must be prompt + completion")
+        XCTAssertEqual(usage.promptTokensDetails?.cachedTokens, 8)
+        XCTAssertEqual(usage.tokensPerSecond, 47.5)
+        XCTAssertEqual(usage.promptTokensPerSecond, 300.1)
+
+        let data = try JSONEncoder().encode(usage)
+        let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        // All count fields must be integral JSON numbers, not strings.
+        XCTAssertEqual(dict["prompt_tokens"] as? NSNumber, 10)
+        XCTAssertEqual(dict["completion_tokens"] as? NSNumber, 5)
+        XCTAssertEqual(dict["total_tokens"] as? NSNumber, 15)
+        let details = try XCTUnwrap(dict["prompt_tokens_details"] as? [String: Any])
+        XCTAssertEqual(details["cached_tokens"] as? NSNumber, 8)
+    }
+
+    func testNonStreamingResponsesAlwaysIncludeUsage() throws {
+        // /v1/chat/completions and /v1/completions both serialize through
+        // Router.completionResponse, so this single assertion pins the shared
+        // shape for both paths.
+        let response = Router.completionResponse(run: usageRun(), model: "m", emitReasoning: true)
+        let data = try JSONEncoder().encode(response)
+        let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let usage = try XCTUnwrap(dict["usage"] as? [String: Any])
+        XCTAssertEqual(usage["prompt_tokens"] as? NSNumber, 10)
+        XCTAssertEqual(usage["completion_tokens"] as? NSNumber, 5)
+        XCTAssertEqual(usage["total_tokens"] as? NSNumber, 15)
+        XCTAssertEqual(
+            (usage["prompt_tokens_details"] as? [String: Any])?["cached_tokens"] as? NSNumber, 8)
+    }
+
+    func testStreamingFinishUsageCountParityWithNonStreaming() throws {
+        let run = usageRun()
+        // Non-streaming response usage is the contract reference.
+        let nonStreaming = Router.completionResponse(run: run, model: "m", emitReasoning: true)
+        let nonStreamingData = try JSONEncoder().encode(nonStreaming)
+        let nonStreamingDict = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: nonStreamingData) as? [String: Any])
+        let nonStreamingUsage = try XCTUnwrap(nonStreamingDict["usage"] as? [String: Any])
+
+        // The same run through the streaming finish (include_usage: true) must
+        // emit a usage chunk whose counts are byte-identical in value.
+        let frames = Router.finishSSEData(
+            id: "chatcmpl-test", run: run, model: "m", created: 1_700_000_000,
+            includeUsage: true)
+        let usageFrame = try XCTUnwrap(
+            frames.first { frame in frame.contains("\"usage\":") },
+            "include_usage=true must emit a usage chunk")
+        let usageData = Data(usageFrame.utf8)
+        let usageDict = try XCTUnwrap(JSONSerialization.jsonObject(with: usageData) as? [String: Any])
+        let usage = try XCTUnwrap(usageDict["usage"] as? [String: Any])
+        XCTAssertEqual(usage["prompt_tokens"] as? NSNumber, nonStreamingUsage["prompt_tokens"] as? NSNumber)
+        XCTAssertEqual(usage["completion_tokens"] as? NSNumber, nonStreamingUsage["completion_tokens"] as? NSNumber)
+        XCTAssertEqual(usage["total_tokens"] as? NSNumber, nonStreamingUsage["total_tokens"] as? NSNumber)
+        XCTAssertEqual(
+            (usage["prompt_tokens_details"] as? [String: Any])?["cached_tokens"] as? NSNumber,
+            (nonStreamingUsage["prompt_tokens_details"] as? [String: Any])?["cached_tokens"] as? NSNumber)
+        XCTAssertEqual(usage["tokens_per_second"] as? NSNumber, nonStreamingUsage["tokens_per_second"] as? NSNumber)
+    }
+
+    func testStreamingUsageAbsentWhenIncludeUsageFalse() throws {
+        let frames = Router.finishSSEData(
+            id: "chatcmpl-test", run: usageRun(), model: "m", created: 1_700_000_000,
+            includeUsage: false)
+        XCTAssertFalse(
+            frames.contains { $0.contains("\"usage\":") },
+            "streaming without stream_options.include_usage must NOT emit a usage chunk")
+        XCTAssertEqual(frames.last, "[DONE]")
+    }
 }
