@@ -480,7 +480,22 @@ public actor Engine {
         // Raw completions participate in the same paged prefix cache as chat:
         // any request whose token stream extends a stored prefix resumes from
         // the coordinator's KV and only the new tokens are prefilled.
-        let input = LMInput(tokens: MLXArray(tokens), tokenIds: tokens)
+        //
+        // Emit the token array as `[1, T]` (batch-first), matching the shape
+        // the cache-restore path already rebuilds for VLM-routed bundles
+        // (vmlx Evaluate.swift "Rebuild inputForPrepare with tokens shaped as
+        // [1, T]"). A multimodal bundle such as mlx-community/Qwen3.8-27B-4bit
+        // (vision_config + processor files) routes to MLXVLM.Qwen35 through
+        // the loader's VLM-first factory registry, and its `prepare` reads
+        // `tokens.dim(1)` unconditionally — a 1-D token array dies there with
+        // `Fatal error: SmallVector out of range` (mlx/c/array.cpp:335) at ANY
+        // prompt length (measured 11/60/30k/65k tokens). Text-only bundles
+        // (Mei-produced 5-bit) load the rank-safe MLXLLM default prepare,
+        // which flattens and only rejects batch > 1, so [1, T] is safe for
+        // both model classes.
+        let input = LMInput(
+            tokens: MLXArray(tokens).expandedDimensions(axis: 0),
+            tokenIds: tokens)
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
             MeiBox(context.model)
