@@ -1,0 +1,51 @@
+{
+  "base_url": "http://127.0.0.1:8026/v1",
+  "engine": "mei",
+  "finished_epoch": 1788499727.123051,
+  "lengths": [
+    30000
+  ],
+  "min_decode_tps": 1.0,
+  "model": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+  "probes": {
+    "fill_30000_cache_reuse": {
+      "cached_tokens": 30000,
+      "checks": {
+        "decode_above_floor": true,
+        "full_prefix_cached": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 11.898737388904562,
+      "elapsed_seconds": 4.554,
+      "failed_checks": {},
+      "memory_active_bytes": 22591497622,
+      "memory_peak_bytes": 24712325282,
+      "prompt_tokens": 30001,
+      "prompt_tokens_per_second": 76615.46376554812,
+      "status": "passed"
+    },
+    "fill_30000_fresh": {
+      "cached_tokens": 0,
+      "checks": {
+        "decode_above_floor": true,
+        "http_ok": true,
+        "nonempty_completion": true,
+        "prompt_tokens_match": true
+      },
+      "completion_tokens": 32,
+      "decode_tokens_per_second": 11.828820445610013,
+      "elapsed_seconds": 537.232,
+      "failed_checks": {},
+      "memory_active_bytes": 22591104658,
+      "memory_peak_bytes": 24711817630,
+      "prompt_tokens": 30000,
+      "prompt_tokens_per_second": 56.23247121833359,
+      "status": "passed"
+    }
+  },
+  "started_epoch": 1788499181.217547,
+  "status": "passed"
+}
