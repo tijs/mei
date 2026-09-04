@@ -58,14 +58,33 @@ configs/model-lineup.json).
   env, MLXPress routing all stay default-off (each has a measured-recorded
   verdict). Gemma's arch-scoped prefill 256 default (2026-09-03) unchanged.
 
-## #14 readiness
+## #14 readiness (updated 2026-09-04 2nd pass)
 
 All four finalists pass correctness/provenance gates and have 3-repeat speed
 rows; optimization loop #12 per-model levers are closed with measured records
 (Ornith: wins documented; Qwen: ceiling accepted; Heretic: transfer accepted;
-Gemma: fuse-gate win + vmlx kernel residual blocker). The next unit is the
-complete four-model Mei-vs-GGUF benchmark (todo #14): identical suites/settings
-per model pair, results appended under local-model-bench results-mei/ (append
-only, never overwrite), hosted Luna kept as a separate reference set. Ornith
-bench row must use the -aligned dir + fuse-off env (config already updated
-this tick).
+Gemma: fuse-gate win + vmlx kernel residual blocker) — todo #12 CHECKED OFF this
+tick (Kiem note c8b1adcd; evidence spot-verified from raw probe files, see note).
+
+Concrete #14 run plan (8 configs, one server at a time, each a full
+sanity+hermes_ops+coding battery; rows append to local-model-bench
+results/log.jsonl, never overwrite; results-mei/ acceptance records live in
+~/.local/share/local-model-bench/results-mei/):
+
+1. Ornith-1.5-35B-A3B/mei.yaml (aligned dir + fuse-off env, port 8024)
+2. Ornith-1.5-35B-A3B/gguf.yaml (ornith-ai Q4_K_M, temp 0.6 — parity OK)
+3. Qwen3.8-27B/mei.yaml (4-bit, port 8025)
+4. Qwen3.8-27B/gguf-unsloth-ud-q5-64k.yaml (UD-Q5_K_M — quant-family caveat)
+5. Qwen3.8-27B-Uncensored/mei.yaml (Heretic 4-bit, port 8026)
+6. Qwen3.8-27B-Uncensored/gguf-heretic-q5.yaml (trohrbaugh Q5_K_M — same caveat)
+7. Gemma-4-26B-A4B/mei.yaml (fuse-off env, prefill 256, port 8027)
+8. Gemma-4-26B-A4B/gguf-apex-i-quality.yaml (mudler APEX-I-Quality — same base
+   model, DIFFERENT quant recipe from Mei 4-bit affine; call out in comparison)
+
+BLOCKER (2026-09-04): run_bench.py hard disk gate = 30 GB free
+(bench_common.MIN_FREE_DISK_GB_BEFORE_LAUNCH); measured 14.3 GB free (97% full).
+~16+ GB must be freed; safe candidates are documented-disposable Mei runtime
+scratch (mei-runtime/kv-cache* ≈ 25.4 GB, mei-runtime-* stage dumps ≈ 18.7 GB)
+— deletion is outside autonomous authority, awaiting Tijs go-ahead. GGUF cache
+blobs (75 GB) NOT candidates. Next tick: re-check df; if >= 30 GB free, launch
+config pair #1 (full Kiem note dbdd632a with commands and details).
