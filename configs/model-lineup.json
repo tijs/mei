@@ -13,7 +13,7 @@
       "role": "primary",
       "format": "mlx",
       "architecture": "qwen3_5_moe",
-      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched ornith-ai artifact; sidecar verify ok; Mei serves the byte-identical -aligned repack (see that entry)" },
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched ornith-ai artifact; sidecar verify ok; Mei serves the byte-identical -aligned repack (see that entry). Original unaligned root mei-models/Ornith-1.5-35B-A3B-MLX-4bit was removed 2026-09-04 after the -aligned repack was verified complete; local_staged_path now points to the -aligned dir." },
       "status": "loadable-accept-passed-fits-32gb-env-gated",
       "quantization": {
         "bits": 4,
@@ -23,7 +23,7 @@
       },
       "weight_bytes": 19509024201,
       "pinned_revision_hf_cache": "19504d912fa8fc7622bf6b1de3db5d5d890b1f02",
-      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
       "staged_complete": true,
       "gguf_reference": {
         "repository": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
