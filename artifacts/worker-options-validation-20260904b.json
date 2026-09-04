@@ -1,0 +1,75 @@
+{
+  "tool": "validate_worker_options.py",
+  "verdict": "PASS",
+  "profile": "/Users/tijs/.hermes/profiles/umans-coder/config.yaml",
+  "results": [
+    {
+      "candidate": "ornith35",
+      "expected_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "checks": {
+        "identity_lineup": "PASS",
+        "identity_bench": "PASS",
+        "checkpoint": "PASS",
+        "port_probe": "PASS_FAILCLOSED: port 8024 not reachable (URLError) \u2014 fail-closed behavior confirmed"
+      },
+      "port": 8024,
+      "source_port": "bench mei.yaml"
+    },
+    {
+      "candidate": "qwen38",
+      "expected_id": "mlx-community/Qwen3.8-27B-4bit",
+      "checks": {
+        "identity_lineup": "PASS",
+        "identity_bench": "PASS",
+        "checkpoint": "PASS",
+        "port_probe": "PASS_FAILCLOSED: port 8025 not reachable (URLError) \u2014 fail-closed behavior confirmed"
+      },
+      "port": 8025,
+      "source_port": "bench mei.yaml"
+    },
+    {
+      "candidate": "heretic",
+      "expected_id": "orcarouter/Qwen3.8-27B-Uncensored-MLX",
+      "checks": {
+        "identity_lineup": "PASS",
+        "identity_bench": "PASS",
+        "checkpoint": "PASS",
+        "port_probe": "PASS_FAILCLOSED: port 8026 not reachable (URLError) \u2014 fail-closed behavior confirmed"
+      },
+      "port": 8026,
+      "source_port": "bench mei.yaml"
+    },
+    {
+      "candidate": "gemma4",
+      "expected_id": "mlx-community/gemma-4-26b-a4b-it-4bit",
+      "checks": {
+        "identity_lineup": "PASS",
+        "identity_bench": "PASS",
+        "checkpoint": "PASS",
+        "port_probe": "PASS_FAILCLOSED: port 8027 not reachable (URLError) \u2014 fail-closed behavior confirmed"
+      },
+      "port": 8027,
+      "source_port": "bench mei.yaml"
+    },
+    {
+      "candidate": "ornith35",
+      "profile_option": "mei-ornith35",
+      "status": "PASS"
+    },
+    {
+      "candidate": "qwen38",
+      "profile_option": "mei-qwen38",
+      "status": "PASS"
+    },
+    {
+      "candidate": "heretic",
+      "profile_option": "mei-heretic",
+      "status": "PASS"
+    },
+    {
+      "candidate": "gemma4",
+      "profile_option": "mei-gemma4",
+      "status": "PASS"
+    }
+  ]
+}
