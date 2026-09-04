@@ -2,6 +2,30 @@
 
 All notable changes to Mei are documented here.
 
+## [Unreleased]
+
+Post-release (2026-09-04) lineage/documents work on top of the published
+`0.2.0-alpha.1` snapshot. No source or config-file default changed.
+
+### Removed
+
+- `ornith-ai/Ornith-1.5-9B-MLX-4bit` removed from the active model lineup
+  (`configs/model-lineup.json`): the upstream repository became unavailable
+  (2026-09-04), so the fallback option could never stage. Historical 9B
+  artifacts and benchmark rows are preserved in `artifacts/` and remain
+  untouched. The `mei-ornith9` worker option was dropped from
+  `docs/WORKER-MODEL-OPTIONS.md` (port 8028 is no longer a Mei backend port);
+  stale profile entries, if any, fail closed by connection refusal.
+
+### Docs
+
+- `README.md` Models section reconciled to the measured four-model state:
+  Ornith-35B 30k decode 47.5-50.3 t/s (3 repeats) with the fitted env-gated
+  config, Qwen3.8 30 t/s hardware-ceiling record, Gemma4 fuse-gate lever and
+  GGUF A/B result, Heretic 30k 3-repeat and GGUF A/B results — each citing
+  its committed artifact under `artifacts/` (see also the consolidated
+  `artifacts/four-model-gate-matrix-20260904.md`).
+
 ## [0.2.0-alpha.1] - 2026-09-03
 
 Source-first preview release candidate. Ships the verified Qwen3.8 / Gemma 4 /

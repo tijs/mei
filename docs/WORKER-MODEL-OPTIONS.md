@@ -13,7 +13,15 @@ required runtime artifact is unavailable.
 | secondary | `mlx-community/Qwen3.8-27B-4bit` | `Qwen3.8-27B-4bit` | 8025 | qwen3_5 |
 | secondary | `orcarouter/Qwen3.8-27B-Uncensored-MLX` | `Qwen3.8-27B-Uncensored-MLX-4bit` | 8026 | qwen3_5 |
 | secondary | `mlx-community/gemma-4-26b-a4b-it-4bit` | `gemma-4-26b-a4b-it-4bit` | 8027 | gemma4 |
-| fallback | `ornith-ai/Ornith-1.5-9B-MLX-4bit` | `Ornith-1.5-9B-MLX-4bit` | 8028 | qwen3_5 |
+
+The former `mei-ornith9` fallback option (port 8028) was DROPPED on
+2026-09-04 when its upstream checkpoint repository
+(`ornith-ai/Ornith-1.5-9B-MLX-4bit`) became unavailable and the lineup entry
+was removed; an option whose checkpoint can never exist adds no fail-closed
+value, and port 8028 is no longer a Mei backend port. A stale
+`mei-ornith9` provider left in the umans-coder profile (if present) is
+harmless: it fails closed by connection refusal like any other `mei-*`
+option with no server on its port.
 
 Ports 8024–8027 are the isolated Mei backend ports registered by
 `local-model-bench/configs/*/mei.yaml` (raw_port), never the shared bench
@@ -58,12 +66,6 @@ custom_providers:
     api_mode: chat_completions
     models:
       mlx-community/gemma-4-26b-a4b-it-4bit:
-        context_length: 65536
-  - name: mei-ornith9                # fallback proxy
-    base_url: http://127.0.0.1:8028/v1
-    api_mode: chat_completions
-    models:
-      ornith-ai/Ornith-1.5-9B-MLX-4bit:
         context_length: 65536
 ```
 

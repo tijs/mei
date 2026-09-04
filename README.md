@@ -152,23 +152,31 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
   `qwen3_5_moe` architecture (4-bit affine / group-64; mlp gates and
   shared-expert gates held at 8-bit; ~19.5 GB weights, staged complete
   under `mei-models/`). The >= 30 decode tok/s goal is defined against this
-  artifact on the 32 GB Sulaco machine. Its working set keeps it
-  blocked-on-memory while other engines are resident, so the 9B proxy below
-  exercises the identical Mei text path in that case.
-- **Documented fallback (same family, smaller)**: `ornith-ai/Ornith-1.5-9B-MLX-4bit`
-  — the official 9B dense `qwen3_5` 4-bit quant (5.0 GB, staged complete),
-  same 4-bit-affine/group-64 scheme, same chat template and
-  qwen3_coder-style tool-call format. Used to validate server correctness,
-  tool-call behavior, and the optimization matrix on hardware where the 35B
-  cannot be resident (e.g. while other engines hold Metal). It is a fallback,
-  never a silent substitution for the primary artifact.
+  artifact on the 32 GB Sulaco machine; it is EXCEEDED with the fitted
+  env-gated config (aligned repack dir + `VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`
+  + disk KV tier + prefill step 512): 30k loaded decode 47.5–50.3 t/s (3
+  repeats), short decode 55.0–55.9 t/s (3x), peak 25.73 GB @ 65k cap /
+  27.72 GB @ 90k / 28.19 GB @ 100k (evidence:
+  `artifacts/ornith-35B-fuse-gateup-eliminated-20260902.md`,
+  `artifacts/ornith-35B-compiled-decode-gate-20260902.md`,
+  `artifacts/ornith-35B-longctx-80k-90k-20260902.md`). Its ~26–28 GB working
+  set still prevents co-residency with other engines, so bench runs never
+  overlap servers.
+- The former `ornith-ai/Ornith-1.5-9B-MLX-4bit` proxy fallback is NOT in the
+  active lineup: its upstream repository became unavailable (2026-09-04) and
+  the lineup entry was removed (`configs/model-lineup.json`) so staging can
+  never silently substitute it. Historical 9B artifacts and benchmark rows
+  are preserved in `artifacts/` and are never rewritten.
 - **Secondary comparator — Qwen3.8 (dense qwen35)**: MLX candidate
   `mlx-community/Qwen3.8-27B-4bit` (regular 4-bit, `qwen3_5`,
   source `Qwen/Qwen3.8-27B`; staged at `mei-models/Qwen3.8-27B-4bit`, pinned
-  `3e6447f`; **loadable**: `probe_load` 3x PASS (~15.6 t/s short decode, peak
-  18.9 GB), `probe_mei` 10/12, `probe_coding` 4/4; the 0.1.0-era raw
-  `/v1/completions` crash is root-caused and fixed; decode ~15.7 t/s is
-  memory-constrained at the 65536 cap — see the lineup). GGUF
+  `3e6447f`; **loadable**: `probe_load` 3x PASS (15.66 t/s short decode mean,
+  sd 0.06, peak 18.87 GB), `probe_mei` 12/12 (rawfix), `probe_coding` 4/4;
+  the 0.1.0-era raw `/v1/completions` crash is root-caused and fixed; the
+  30 t/s decode target for this dense model is a documented HARDWARE CEILING
+  — 15.66 t/s is ~89% of the ~19–20 t/s pure-stream floor and the 4-bit
+  recipe is the fastest safe configuration (plan record 2026-09-02,
+  `artifacts/qwen38-4bit-5bit-ab-20260902.md`)). GGUF
   reference `unsloth/Qwen3.8-27B-GGUF` `UD-Q5_K_M` is cached complete and
   carries an MTP/Next-N head (compare without `--spec-type`). The MLX 4-bit
   is **not** UD-Q5 and must not be claimed as GGUF-UD equivalence; it is a
@@ -187,11 +195,19 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
   chat-prefill crash fixed; common matrix PASS. The tool strict-schema gate is
   **cleared** — schema-aware argument typing coerces Gemma's string-typed
   fields to JSON integers, so live tool calls return `{"a":15,"b":27}`.
+  The measured `VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0` env gate (carried by
+  the bench launcher env, NOT a Mei source default) lifts 30k loaded decode
+  from ~7.4 t/s to a 21.2 t/s mean (r2/r3 23.3) at 18.76 GB peak @ 30k, 3
+  repeats (`artifacts/gemma4-fuse-gate-ab-20260904.md`).
   GGUF
   reference `mudler/gemma-4-26B-A4B-it-APEX-GGUF` `APEX-I-Quality`
-  (arch `gemma4`, no MTP) is cached complete. Separate architecture from
-  qwen3_5; the VLM load/template/tool-call path is added only when required
-  by evidence.
+  (arch `gemma4`, no MTP) is cached complete. Same-suite GGUF A/B recorded
+  (`artifacts/gemma4-gguf-ab-20260903.md`): APEX-I-Quality reaches 37.08 t/s
+  @ 30k — the residual ~1.6x gap to Mei MLX 4-bit is a vmlx long-KV SDPA
+  kernel-efficiency blocker (recorded in
+  `artifacts/gemma4-30k-decode-lever-matrix-20260904.md`; fuse-ON was 5.0x).
+  Separate architecture from qwen3_5; the VLM load/template/tool-call path
+  is added only when required by evidence.
 - **Secondary comparator — Qwen3.8 Uncensored/Heretic (separate provenance)**:
   cached GGUF reference `trohrbaugh/Qwen3.8-27B-heretic-ara-gguf-Q5`
   `Q5_K_M` (qwen35, MTP present). The first-party MLX artifact in this
@@ -204,7 +220,10 @@ the OS temp directory; an explicit `--kv-cache-dir` always wins.
   `mei-models/Qwen3.8-27B-Uncensored-MLX-4bit` pinned `14963e70`
   (**loadable**: `probe_load` hello 15.07 / short 15.72 t/s, peak 18.98 GB;
   `probe_mei` 10/10 incl. tool stream+non-stream parity and KV reuse; 30k
-  long-context and the GGUF behavioral comparison pending todo 8). This
+  long-context 3 repeats: fresh 11.896 (sd 0.058) / reuse 11.842 (sd 0.054)
+  t/s, fill 56.2 pps, peak 24.71 GB —
+  `artifacts/heretic-30k-decode-3x-20260904.md`; same-suite GGUF Q5_K_M A/B:
+  MLX +1.55x @ 30k — `artifacts/heretic-gguf-ab-20260903.md`). This
   supersedes the earlier "2-bit only" claim.
 
 The machine-readable lineup is `configs/model-lineup.json` and is the source
