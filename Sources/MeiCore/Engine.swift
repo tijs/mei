@@ -42,7 +42,7 @@ public enum StreamEvent: Sendable {
     case chunk(String)
     case reasoning(String)
     case prefill(completed: Int, total: Int)
-    case toolCall(GenerationRun.ToolCallEmitting)
+    case toolCall(index: Int, call: GenerationRun.ToolCallEmitting)
     case finish(GenerationRun)
 }
 
@@ -470,8 +470,12 @@ public actor Engine {
                     id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                     name: call.function.name,
                     argumentsJSON: Self.toolArgumentsJSON(call, tools: request.tools))
+                // Distinct tool calls must stream under distinct OpenAI indexes;
+                // clients merge deltas keyed by index, so two calls at index 0
+                // would otherwise concatenate name/arguments.
+                let index = run.toolCalls.count
                 run.toolCalls.append(emitting)
-                continuation.yield(.toolCall(emitting))
+                continuation.yield(.toolCall(index: index, call: emitting))
             case .toolCallProgress:
                 break
             case .prefillProgress(let progress):

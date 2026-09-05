@@ -206,6 +206,30 @@ public final class Router: @unchecked Sendable {
         return frames
     }
 
+    /// Serialize one tool-call StreamEvent into a single SSE `data: {...}\n\n`
+    /// frame, exactly as the streaming handler ships over the wire. Static and
+    /// pure so it can be unit-tested without loading a model: the streaming
+    /// `.toolCall` case in `sseFrame` delegates here with the call's index.
+    public static func toolCallSSEData(
+        call: GenerationRun.ToolCallEmitting,
+        index: Int,
+        id: String,
+        model: String,
+        created: Int
+    ) -> String {
+        let chunk = SSEChatChunk(
+            id: id, created: created, model: model,
+            choices: [.init(delta: .init(toolCalls: [
+                .init(
+                    index: index,
+                    id: call.id,
+                    type: "function",
+                    function: .init(name: call.name, arguments: call.argumentsJSON))
+            ]))],
+            usage: nil)
+        return "data: \(ResponseSerializer().json(chunk))\n\n"
+    }
+
     /// SSE frame for one stream event. Returns "" for events that should not
     /// produce visible frames.
     public func sseFrame(
@@ -229,18 +253,10 @@ public final class Router: @unchecked Sendable {
                 choices: [.init(delta: .init(reasoningContent: reason))],
                 usage: nil)
             return "data: \(serializer.json(chunk))\n\n"
-        case .toolCall(let call):
-            let chunk = SSEChatChunk(
-                id: id, created: Int(Date().timeIntervalSince1970), model: model,
-                choices: [.init(delta: .init(toolCalls: [
-                    .init(
-                        index: 0,
-                        id: call.id,
-                        type: "function",
-                        function: .init(name: call.name, arguments: call.argumentsJSON))
-                ]))],
-                usage: nil)
-            return "data: \(serializer.json(chunk))\n\n"
+        case .toolCall(let index, let call):
+            return Self.toolCallSSEData(
+                call: call, index: index, id: id, model: model,
+                created: Int(Date().timeIntervalSince1970))
         case .prefill:
             return ""
         case .finish(let run):
