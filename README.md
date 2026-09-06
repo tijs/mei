@@ -23,13 +23,47 @@ Mei's source is MIT-licensed; model weights are not included. See
 [`NOTICE.md`](NOTICE.md) and [`docs/RELEASE-0.1.0.md`](docs/RELEASE-0.1.0.md)
 for dependency, patch-queue, checkpoint, and benchmark provenance.
 
+**Stable release:** `0.2.0` — a downloadable, prebuilt Apple Silicon
+CLI/runtime bundle with a Homebrew formula. See
+[`docs/RELEASE-0.2.0.md`](docs/RELEASE-0.2.0.md) for install paths, the
+weight-separation boundary, and the reproducible build/package path.
+
 **Preview release candidate:** `0.2.0-alpha.1` (source-first; **not tagged or
 published**). Packages the verified Qwen3.8 / Gemma 4 / Qwen3.8-Heretic
 runtime work on top of 0.1.0. See
 [`docs/RELEASE-0.2.0-alpha.1.md`](docs/RELEASE-0.2.0-alpha.1.md) for the
 explicit staging allowlist, model-weight separation, the un-pushed vMLX fork
-commit caveat, and the known blockers. Releasing a tag requires explicit user
-authorization.
+commit caveat, and the known blockers.
+
+## Install on Apple Silicon
+
+Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
+
+**Homebrew (recommended):**
+
+```bash
+brew install tijs/tap/mei
+mei --version     # -> mei 0.2.0
+```
+
+**Manual — release asset:**
+
+```bash
+curl -fLO https://github.com/tijs/mei/releases/download/v0.2.0/mei-0.2.0-macos-arm64.tar.gz
+shasum -a 256 -c mei-0.2.0-macos-arm64.tar.gz.sha256
+tar -xzf mei-0.2.0-macos-arm64.tar.gz
+./mei-0.2.0-macos-arm64/bin/mei --version
+```
+
+Point the server at locally staged MLX checkpoints:
+
+```bash
+mei --model-dir <dir> --served-model-id <id>
+```
+
+The bundle carries `mlx.metallib` beside the executable (vmlx loads it from the
+executable's directory first). Full install docs:
+[`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## Optimization profiles
 
@@ -68,6 +102,10 @@ scripts/start_mei_server.sh
 # Put the built CLI on your PATH (user-local, no package-manager/system dirs):
 scripts/prepare_metallib.sh .build/release   # Metal kernel lib the binary needs
 scripts/install_mei.sh                       # -> $HOME/.local/bin/mei
+
+# Build a downloadable Apple Silicon release bundle (dist/mei-<v>-macos-arm64.tar.gz + .sha256):
+scripts/package_release.sh 0.2.0 --skip-build
+scripts/test_package_release.sh              # packaging/install/version smoke checks
 ```
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for the installer's options

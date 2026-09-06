@@ -20,10 +20,11 @@ The fork's `main` contains five separate Mei-maintained commits ported from
 the former local patch queue. A sixth Mei-maintained commit
 (`318a4e68`, rotating/companion stripped-boundary reuse fix for Gemma 4)
 exists **only in the local fork checkout** and is not yet pushed; the
-`0.2.0-alpha.1` candidate consumes it via a local SwiftPM edit and is not
-fully source-reproducible until the fork advances. They remain clearly
-attributable to Mei and have not been represented as upstream-accepted
-changes. See [`docs/VMLX-FORK.md`](docs/VMLX-FORK.md) for the commit mapping
+`0.2.0` release's packaged binary includes it (built from a local SwiftPM edit),
+but an external source-only build of the tag is not fully source-reproducible
+until the fork advances. They remain clearly attributable to Mei and have not
+been represented as upstream-accepted changes. See
+[`docs/VMLX-FORK.md`](docs/VMLX-FORK.md) for the commit mapping
 and upstream PR workflow.
 
 The upstream vmlx-swift project is MIT-licensed; the fork retains that license

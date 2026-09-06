@@ -3,7 +3,7 @@
 # from the explicit allowlist and verify the staging boundary mechanically.
 #
 # Usage: scripts/stage_release_candidate.sh [VERSION]
-#   VERSION defaults to 0.2.0-alpha.1.
+#   VERSION defaults to 0.2.0.
 #
 # Produces dist/mei-<VERSION>-src/ (gitignored) with:
 #   - exactly the allowlisted files (configs/release-allowlist.json)
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-0.2.0-alpha.1}"
+VERSION="${1:-0.2.0}"
 ALLOWLIST="$REPO/configs/release-allowlist.json"
 STAGE_ROOT="$REPO/dist"
 STAGE_DIR="$STAGE_ROOT/mei-${VERSION}-src"
@@ -120,7 +120,7 @@ check "no weight blobs staged" \
   bash -c "cd '$STAGE_DIR' && ! find . -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \) | grep -q ."
 
 # 5. release version metadata consistent across the three locations
-check "version metadata consistent (0.2.0-alpha.1)" \
+check "version metadata consistent (0.2.0)" \
   bash -c "
 grep -q 'static let version = \"$VERSION\"' '$STAGE_DIR/Sources/MeiCore/ServerConfig.swift' &&
 grep -q '## \[$VERSION\]' '$STAGE_DIR/CHANGELOG.md' &&

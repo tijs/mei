@@ -2,6 +2,51 @@
 
 All notable changes to Mei are documented here.
 
+## [0.2.0] - 2026-09-06
+
+First **stable** Apple Silicon release: the prebuilt CLI/runtime bundle + a
+Homebrew formula, promoting the `0.2.0-alpha.1` runtime work to a downloadable,
+easy-to-install release. Built from `main` at `67e897e`.
+
+### Added
+
+- Reproducible packaging (`scripts/package_release.sh`): builds the release
+  binary, provisions the version-matched `mlx.metallib` (mlx 0.31.1) via
+  `scripts/prepare_metallib.sh`, assembles a `dist/mei-<version>-macos-arm64/`
+  CLI/runtime bundle (`bin/mei` + `bin/mlx.metallib` + provenance + docs), tars
+  it with a stable member order, and emits the SHA-256 checksum. Verifies the
+  binary is arm64 and reports exactly `mei <version>` before packaging.
+- Packaging smoke checks (`scripts/test_package_release.sh`): validates the
+  tarball + checksum round-trip, extracted structure, `bin/mei --version ==
+  "mei 0.2.0"` (the offline API/version identity proxy), Metal-library
+  presence, and that no weight blobs (`*.safetensors`/`*.gguf`/`*.bin`) are
+  bundled.
+- Homebrew formula `tijs/tap/mei` (`brew install tijs/tap/mei`): installs the
+  packaged `mei` binary + colocated Metal libraries from the anonymous GitHub
+  release-download URL, with a `test` block asserting version + Metal-library
+  presence.
+- Stable release notes: `docs/RELEASE-0.2.0.md` documents install paths
+  (Homebrew + manual download), the weight-separation boundary, and the
+  reproducible build path.
+
+### Changed
+
+- `ServerConfig.version`: `0.2.0-alpha.1` → `0.2.0` (`mei --version` now prints
+  `mei 0.2.0`).
+- `README.md`: install section now leads with the Homebrew formula and the
+  downloadable binary bundle.
+- This stable release is the `0.2.0-alpha.1` runtime plus the streaming
+  tool-call fix (commit `67e897e`, distinct SSE indexes for multiple tool
+  calls) — see `CHANGELOG.md` `[0.2.0-alpha.1]` for the full inherited runtime
+  work.
+
+### Release status
+
+Downloadable, prebuilt Apple Silicon release. Tag `v0.2.0`; Homebrew formula in
+the Tijs tap. Model weights are never bundled (see the weight-separation
+boundary in `docs/RELEASE-0.2.0.md`). Publishing (push/tag/release/tap update)
+is performed separately and requires explicit user authorization.
+
 ## [Unreleased]
 
 Post-release (2026-09-04) lineage/documents work on top of the published

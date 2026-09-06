@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "0.2.0-alpha.1",
+  "release": "0.2.0",
   "kind": "source-first",
   "description": "Explicit staging allowlist for the Mei source-first release candidate. Only the paths listed here may enter the candidate bundle. Historical benchmark evidence (artifacts/), git metadata, build products, prior bundles (dist/), and model weights/caches are excluded by construction.",
   "root_files": [
