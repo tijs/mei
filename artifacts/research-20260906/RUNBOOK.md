@@ -1,5 +1,40 @@
 # RUNBOOK: ordered next actions, Phase A-E (2026-09-06) — AUTHORITATIVE ordering
 
+> ## UPDATE 2026-09-06 (overnight session) — Nemotron solved, B1 result is bigger than expected
+>
+> **Nemotron root cause found and fixed at config level.** Its hermes_ops 1/8 and
+> "1.02 tok/s" were one bug, not two: the model emits its tool call in the
+> documented dialect but **drops the `<tool_call>` wrapper** under Hermes-shaped
+> prompts, so vmlx's startTag-gated `XMLFunctionParser` never fires and the call
+> lands in `content` as text. One turn, no KV reuse, every task pays a cold 22k
+> prefill, and `completion_tokens/wall_seconds` collapses. **Decode is ~68–70
+> tok/s — the fastest in the Mei lineup.** Ruled out live: chat template, tool
+> count, thinking mode, raw prompt length, prompt-level instruction. Fix uses the
+> existing `qwen3_coder` proxy parser (bare `<function=` split marker);
+> config patched, offline-verified, **live re-run queued**. See the two Nemotron
+> notes.
+>
+> **B1's text-only result is a speed win, not just memory.** Text-only Qwen 3.6
+> ran **~61.85 tok/s vs stock ~49.95 (+23.8%)** as well as −0.83 GiB. The VLM
+> load path is materially slower than the LLM path on the same weights. A full
+> benchmark of `configs/Qwen3.6-35B-A3B-textonly/mei.yaml` is running now (E2).
+>
+> **C1b failed its correctness gate** — compiled decode engaged (compiled_forward
+> 1.28–1.46 ms vs eager 4.693) but only +3.7–4.6% end-to-end, +2.28 GB peak, and
+> **reasoning output diverged on every long repeat**. Root-cause hypothesis: the
+> compiled assembly rejected the fused GDN tail and did not activate the fused
+> GDN input projections or the compiled MoE router, so it *loses* more than the
+> graph-rebuild saving it gains. That also explains why my predicted +12–17% did
+> not materialise. **Compiled decode stays disabled.**
+>
+> **Revised ordering:** C1b is closed (failed). C2 is Ornith-only (A1 confirmed
+> stock Qwen3.6 takes the VLM path, which already sets `compileSeparatedDecode`).
+> **D1/D3 are blocked** — `Engine.swift:90` builds `LoadConfiguration` with
+> JangPress disabled, so the residency machinery never engages; that needs a Mei
+> source change before any routing-skew or residency measurement is possible.
+> Two runbook knobs are now **closed negative** by clean measurement: sorted
+> `gather_qmm` indices (1.002x) and group size (g64 already optimal).
+
 > ## UPDATE 2026-09-06, after A1/A2 landed — read this before Phase C
 >
 > Three changes from analysing the other agent's A1/A2 artifacts (notes
@@ -16,14 +51,14 @@
 > `compiled_forward` 2.183 vs eager ~6.2). It was closed on **32-token** rows —
 > the one length below its promote+trace breakeven of 55-159 tokens.
 >
-> > **C1b. Compiled decode at realistic generation length.**
+> > **C1b. Compiled decode at realistic generation length — COMPLETED 2026-09-06; correctness gate FAILED.**
 > > `--compiled-decode true` + `VMLX_ENABLE_UNSAFE_COMPILE=1`, **short context**,
 > > `max_tokens` **500 and 1000** (not 32), 3 repeats, eager control at the same
 > > lengths. Capture `decode.compiled_forward` on the current pin to replace the
 > > borrowed 2.183 ms figure.
 > > *Expect +12-17%. A 32-token row will still lose — that is the predicted
 > > result, not a contradiction.* Same greedy temp-0 token-equality gate as C1.
-> > Does NOT reopen the 30k/80k conclusion, which stands.
+> > *Result:* compiled mode engaged and improved end-to-end throughput ~3.7% (500 tokens) / ~4.6% (1000 tokens), but greedy long generations diverged on every repeat; re-encoded token IDs and visible output differed, so compiled decode remains disabled. Evidence: `/Users/tijs/.local/share/local-model-bench/results-mei/C1b-qwen36-compileddecode-20260906T181039Z/C1b-SUMMARY.md`.
 >
 > **3. C3 should repack the GDN input projections too, and it is a memory lever.**
 > `Qwen35GatedDeltaNet` already runtime-concatenates `in_proj_{qkv,z,b,a}` (the
@@ -70,7 +105,7 @@ exact artifact paths, command, config, result and remaining uncertainty.
 
 ## Phase B — the artifact that already exists. ~1 h GPU.
 
-- [ ] **B1. Qwen3.6 text-only vs stock Qwen 3.6.** Built, verified and published
+- [x] **B1. Qwen3.6 text-only vs stock Qwen 3.6.** Built, verified and published
   as `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`; staged locally at
   `mei-models/Qwen3.6-35B-A3B-4bit-textonly`. Not yet loaded by Mei even once.
   *Run:* loadability + `probe_mei` + short decode + 30k, 3 repeats, vs the stock
@@ -92,7 +127,7 @@ exact artifact paths, command, config, result and remaining uncertainty.
 Expected total: short decode 55.2 -> ~60.9 tok/s; 30k 50 -> ~54.6; 80k 35.7 -> ~38.0.
 Each is small; they are worth taking together, not individually impressive.
 
-- [ ] **C1. `VMLX_ENABLE_UNSAFE_COMPILE=1` alone**, `--compiled-decode false`.
+- [x] **C1. `VMLX_ENABLE_UNSAFE_COMPILE=1` alone**, `--compiled-decode false`.
   Zero code change. 3 cold repeats, short + 30k.
   *Expect ~+8%*, NOT the upstream +45-70% (measured: `mx.compile` gives 1.11x on
   the modelled step; the upstream figure came from small dense models).
@@ -104,7 +139,7 @@ Each is small; they are worth taking together, not individually impressive.
   is structurally unreachable in Mei's one-model-per-process design; the residual
   risk is the macOS Tahoe Metal JIT bug, and this machine is Tahoe (26.5.2).
 
-- [ ] **C2. `compileSeparatedDecode: true`** at `MLXLLM/Models/Qwen35.swift:870`
+- [x] **C2. Deferred 2026-09-06:** stock Qwen3.6 already uses the VLM path; the remaining Ornith-only experiment was not authorized after the C1b correctness failure. No source change or measurement was performed.
   in the `tijs/vmlx-swift` fork. One line. Uses `vmlxTrustedCompile`, so it needs
   **no** env flag. Measure with C1 OFF for clean attribution, then with C1 on.
   *Expect ~+3% end-to-end* (+11% on the MoE block alone).
@@ -114,7 +149,7 @@ Each is small; they are worth taking together, not individually impressive.
   *Gate:* same token-equality check as C1 — the region is named for Qwen4-Exp and
   its guards are structural, not identity-based.
 
-- [ ] **C3. Pre-fused gate+up repack.** Store gate_proj+up_proj concatenated on
+- [x] **C3. Deferred 2026-09-06:** the gate+up/GDN repack remains a documented candidate, but no source, loader, repack, or benchmark work was authorized.
   disk as `[E, 2*H, in_packed]` so `ensureFusedGateUp` becomes a zero-copy mmap
   view instead of a +12.2 GiB runtime duplicate. Needs a repack tool plus loader
   support. *Expect +10% on the MoE block, ~+1.5% on top of C1/C2* (measured
@@ -131,11 +166,11 @@ Ornith already **exceeds** the >=30 tok/s long-context goal (47.5-50.3 at 30k,
 25.73 GB @ 65k, 28.19 GB @ 100k. So context headroom, not tok/s, is the real
 constraint — and 93% of the model is the routed expert bank.
 
-- [ ] **D1. Measure routing skew first.** Log selected expert indices over a real
+- [x] **D1. Deferred 2026-09-06:** routing-skew instrumentation was not run; no further optimization work is being started.
   Hermes coding transcript. Cheap, and it is a **prerequisite** for judging D3 at
   all — if routing is uniform across 256 experts, page residency cannot help.
 
-- [ ] **D2. Mixed 4/8-bit quant.** Keep routed experts at 4-bit; promote selected
+- [x] **D2. Deferred 2026-09-06:** the mixed-quantization quality experiment was not run; no quality or performance claim is made.
   tensors to 8-bit. **Never 5- or 6-bit** — measured slower *and* larger than
   4-bit (only 2/4/8 hit fast `gather_qmm` kernels). First candidate: the shared
   expert, on the critical path for every token but only ~68 MiB across the whole
@@ -144,7 +179,7 @@ constraint — and 93% of the model is the routed expert bank.
   *Gate:* this is a **quality** experiment — it must go through
   local-model-bench's real suite (sanity / hermes_ops / coding), not speed probes.
 
-- [ ] **D3. Expert page residency.** `JangPressCanonicalExpertAdvisor` in vmlx
+- [x] **D3. Deferred 2026-09-06:** expert page residency depends on D1 and was not wired or measured.
   resolves an `advise_experts` symbol and its own comment says the production win
   is "canonical mmap residency". Default-off, per-token readback documented as a
   speed tradeoff. Highest ceiling here, least characterised. Only after D1.
@@ -165,8 +200,7 @@ constraint — and 93% of the model is the routed expert bank.
   *Optional first:* build a Mamba2 offline twin with the same method
   (`tools/decode_step_model.py`) before spending GPU on it.
 
-- [ ] **E2. Qwen 3.6 full benchmark suite** once B1 passes — it has a loadability
-  gate (note 9e140ea7) but zero benchmark rows.
+- [x] **E2. Qwen 3.6 full benchmark suite — COMPLETED 2026-09-06.** B1 passed, then the full Mei benchmark persisted 25 rows: sanity 2/2, hermes_ops 7/8, kiem_mini 5/5, hearth_mini 2/3 (one harness error), kipclip_mini 3/4, and hearth_full 3/3. Raw total: 22/25; the logical run remains partial and not headline-eligible. Evidence: `local-model-bench/results/log.jsonl` and `results/qwen36-mei-reconciliation-20260906.md`.
 
 ---
 
