@@ -103,13 +103,15 @@ ALIGNED_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
 hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$RAW_DIR"
 
 # 2) One-time: fetch the pure-stdlib alignment helper and build the -aligned repack
-mkdir -p "$HOME/.cache/mei/tools"
-curl -fsSL -o "$HOME/.cache/mei/tools/align_safetensors.py" \
+ALIGN_TOOL="$HOME/.cache/mei/tools/align_safetensors.py"
+mkdir -p "$(dirname "$ALIGN_TOOL")"
+curl -fsSL -o "$ALIGN_TOOL" \
   https://raw.githubusercontent.com/tijs/mei/v0.2.0/tools/align_safetensors.py
-# verify the helper (FIPS-safe sha256 matches the 0.2.0 release):
-shasum -a 256 "$HOME/.cache/mei/tools/align_safetensors.py"
-#   expect 01a1acac45d1fb7f27693cd4ac104a22c9f7937a5802dd5ffadefcb447179b20
-python3 "$HOME/.cache/mei/tools/align_safetensors.py" "$RAW_DIR" "$ALIGNED_DIR"
+# Fail closed if the helper is not the v0.2.0 release tool:
+printf '%s  %s\n' \
+  01a1acac45d1fb7f27693cd4ac104a22c9f7937a5802dd5ffadefcb447179b20 \
+  "$ALIGN_TOOL" | shasum -a 256 -c -
+python3 "$ALIGN_TOOL" "$RAW_DIR" "$ALIGNED_DIR"
 
 # 3) Start the server from the ALIGNED directory (blocking; Ctrl-C stops it). Port 8024.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
@@ -243,8 +245,8 @@ primary: user-local `$HOME/.cache/mei/models/...`, port 8024, context cap
 > GatedDelta architectures. `VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0` disables
 > the fused gate/up cache on the validated Ornith/Qwen3.6 path. A user-local
 > `--kv-cache-dir` provides the on-disk KV tier those families need.
-> `--compiled-decode false` keeps the default (graph-traced) decode, avoiding
-> the multi-minute compile tax. These presets target **32 GB Apple Silicon**;
+> `--compiled-decode false` keeps graph-traced decode disabled (the default),
+> avoiding the multi-minute compile tax. These presets target **32 GB Apple Silicon**;
 > **16 GB machines likely cannot fit** these 30–35B checkpoints. Omitted
 > experimental knobs (`--max-kv-window`, `--ssm-anchor-boundaries`, KV
 > quantization) remain off and unvalidated.
