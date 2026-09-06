@@ -280,6 +280,30 @@
         "2026-09-02 (session N worker, Umans run): Qwen3.8 MLX PARITY COMPLETED on the proven safe generic config (4119ec5 disk-KV default, cap 65536, prefill 64, cache-reuse on, 3 cold server starts, port 8024; fork 91fed8be; artifacts/probe-mei-qwen38-5bit-20260902T150903Z.json, probe-longctx-qwen38-5bit-20260902T154139Z.json, probe-coding-qwen38-5bit-20260902T155730Z.json, probe-load-qwen38-5bit-r1/r2/r3-*.json). probe_mei acceptance 11/11 PASSED: models identity, mei_status, plain completion, tool NON-STREAMING add_numbers(15,27) exact, tool STREAMING same, streaming/non-streaming parity (identical content+usage), cache_repeat 6207/6212 cached, growing-transcript turn2 slot reuse, context_exact_cap 65536 FILLED (active 30.2 GB, peak 34.64 GB) + 65537 over-cap HTTP-400 rejected. Long-context 30000 fresh PASSED (55.1 pps prefill, decode 6.73 t/s at 30k loaded) + strict-extension 30001 cached=30000 restored in 7.9s (34k pps restore). Coding 4/4 PASSED with 1500-token budget (Swift fibonacci incl. func marker, Python json_sum, SQL users query, bash rename loop); first attempt at 512 max_tokens truncated mid-doc-comment (probe budget artifact, model output correct). Decode 3-repeat cold: hello 12.70/12.67/12.70 t/s (sd 0.01), short 13.09/13.11/13.11 t/s (sd 0.01), peak 21.83/21.93/21.83 GB; prefill pps 101/36/108 hello (short-prompt noise, not a perf signal). MEMORY CONSTRAINT at exact 65536 cap: active 30.2 GB / peak 34.64 GB EXCEEDS the 32 GB physical ceiling (survived via swap/compression; decode tps at cap ill-conditioned single-token 604 t/s). At 30k loaded the working set is 25.5 GB \u2014 clean fit. VERDICT: model is Mei-ready for short/medium context and 30k-loaded use; full-cap 65536 fills are memory-constrained on this 32 GB M1 Max (recorded constraint, not a crash/blocker); decode 13.1 t/s short / 6.7 t/s @30k loaded is below the 30 t/s primary-target goal \u2014 Qwen3.8-5bit stays a behavioral comparator, not a speed candidate.",
         "2026-09-02 (Umans worker): same-day 3x3 A/B control rows on the same proven config: 13.094/13.114/13.115 t/s (mean 13.108, sd 0.012), peak 21.86 GB (artifacts/probe-load-q38-5bit-r{1,2,3}-20260902T200{558,635,702}Z.json). The staged mlx-community 4-bit measured 15.656 t/s (sd 0.060), peak 18.87 GB (+19.4%, -3.0 GB). 5-bit remains the documented parity artifact (the full parity matrix ran on it); 4-bit is the fastest safe config and its correctness re-gate is queued under todo 7. Exhaustion acceptance for the 30 t/s speed gate recorded in plan 0b87b76a; see artifacts/qwen38-4bit-5bit-ab-20260902.md."
       ]
+    },
+    {
+      "id": "rapid-mlx/Ling-3.0-tiny-MLX-4bit",
+      "role": "experimental-post-four-model",
+      "format": "mlx",
+      "source_checkpoint": "inclusionAI/Ling-3.0-tiny",
+      "source_revision": "e3a47d5b986e7141b6efd62597d598ebb392060d",
+      "architecture": "bailing_hybrid",
+      "artifact_audit": { "class": "third-party-upstream", "audited_utc": "2026-09-05", "note": "THIRD-PARTY rapid-mlx repack of inclusionAI/Ling-3.0-tiny (BailingMoeV3ForCausalLM). NOT Mei-produced, NOT official. Metadata-only audit from HF model_info/repo tree: base_model tag DECLARED as inclusionAI/Ling-3.0-tiny, but that does NOT prove the repack was converted from the current official revision e3a47d5; actual conversion parent is unverified. Not staged, live loadability unverified." },
+      "status": "post-four-model-experimental-loadability-pending-not-staged",
+      "quantization": { "bits": 4, "note": "bits from artifact name/bytes (MLX-4bit); group_size/mode UNVERIFIED metadata-only, confirm from staged config.json after staging." },
+      "weight_bytes": 4447478988,
+      "pinned_revision": "328a497f3eb2cdd3d064f1da2b1084a2791387d5",
+      "local_staged_path": "~/.local/share/local-model-bench/mei-models/Ling-3.0-tiny-MLX-4bit",
+      "staged_complete": false,
+      "role_note": "EXPERIMENTAL post-four-model candidate, NOT part of (and NOT complete for) the four-model gate. No worker-model-option, no acceptance probe, no benchmark result. Durable setup so it can be staged and probed AFTER the four established Mei models.",
+      "test_phases": ["staging-compatibility", "load", "short", "tool", "long-context", "kv-reuse"],
+      "notes": [
+        "REQUESTED SOURCE model = inclusionAI/Ling-3.0-tiny (official full-precision, BailingMoeV3ForCausalLM / bailing_hybrid, max_position_embeddings 131072), current revision e3a47d5 recorded as a separate provenance reference, NOT the artifact loaded.",
+        "SELECTED MLX artifact to serve = rapid-mlx/Ling-3.0-tiny-MLX-4bit @ 328a497f (model.safetensors = 4,447,478,988 bytes; root-level config/tokenizer/model.safetensors; base_model tag -> inclusionAI/Ling-3.0-tiny). THIRD-PARTY repack - NOT Mei-produced, NOT official. Do not assert it derives from e3a47d5 unless converted source proves it.",
+        "NOT STAGED: staged_complete=false; the artifact is NOT present at local_staged_path and no staging/download step is added by any config. Manual CPU-side staging command (when approved): tools/stage_mlx_checkpoint.py --repo rapid-mlx/Ling-3.0-tiny-MLX-4bit --revision 328a497f3eb2cdd3d064f1da2b1084a2791387d5 --target ~/.local/share/local-model-bench/mei-models/Ling-3.0-tiny-MLX-4bit --expect-bytes 4447478988.",
+        "vmlx-swift pin 91fed8be has SOURCE-LEVEL BailingMoeV3 support (BailingMoeV3.swift + bailing_hybrid factory registration) - SOURCE-BACKED only. Live loadability, tool-call format, KV/reuse behavior, and model-specific launch flags are UNVERIFIED pending a clean-GPU loadability probe. Do not add speculative launcher flags until a gate requires them.",
+        "Benchmark config exists (local-model-bench/configs/Ling-3.0-tiny/mei.yaml, port 8028, orchestration.run_order=1 so it runs LAST in the four-model Mei sweep). No benchmark result recorded; running it before staging fails the identity/load gate honestly."
+      ]
     }
   ]
 }
