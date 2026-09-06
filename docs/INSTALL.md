@@ -1,13 +1,43 @@
 # Installing the Mei CLI
 
-Mei ships **source and tooling only** — no binary, no model weights. The
-installer copies the `mei` executable you have *already built* into a single,
-user-local destination directory. It never builds, downloads, or writes
-outside that directory.
+This document covers the **source-built / user-local path** — installing a
+`mei` binary you have *already built* into a single destination directory via
+[`scripts/install_mei.sh`](../scripts/install_mei.sh).
 
-> The installer is the recommended way to put a built `mei` on your `PATH`
-> without touching Homebrew, system directories, or anything managed by a
-> package manager.
+Most end users should instead install the **stable v0.2.0 prebuilt release:**
+
+- **Homebrew (recommended):**
+  ```bash
+  brew install tijs/tap/mei
+  mei --version     # -> mei 0.2.0
+  ```
+- **Manual — GitHub release asset:**
+  ```bash
+  curl -fLO https://github.com/tijs/mei/releases/download/v0.2.0/mei-0.2.0-macos-arm64.tar.gz
+  shasum -a 256 -c mei-0.2.0-macos-arm64.tar.gz.sha256
+  tar -xzf mei-0.2.0-macos-arm64.tar.gz
+  ./mei-0.2.0-macos-arm64/bin/mei --version
+  ```
+
+Both already carry the prebuilt `mei` binary and its `mlx.metallib` companion.
+You do **not** need to build anything for those paths.
+
+## About binaries and weights
+
+The **source tree** contains no binary and no model weights. That is unchanged
+whether you build from source or pull the release. The two differ in what the
+release bundle actually ships:
+
+- The **stable v0.2.0 release bundle includes the prebuilt binary** (and its
+  `mlx.metallib`) — download and run, no build step.
+- This **installer copies an already-built binary** into a single, user-local
+  destination directory. It never builds, downloads, or handles weights, and
+  it never writes outside that directory.
+
+> The installer is the recommended way to put a source-built `mei` on your
+> `PATH` without touching Homebrew, system directories, or anything managed by
+> a package manager. (It also supports copying a prebuilt binary already
+> present next to the installer — see the resolution order below.)
 
 ## Prerequisites
 
