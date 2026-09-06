@@ -28,12 +28,13 @@ CLI/runtime bundle with a Homebrew formula. See
 [`docs/RELEASE-0.2.0.md`](docs/RELEASE-0.2.0.md) for install paths, the
 weight-separation boundary, and the reproducible build/package path.
 
-**Preview release candidate:** `0.2.0-alpha.1` (source-first; **not tagged or
-published**). Packages the verified Qwen3.8 / Gemma 4 / Qwen3.8-Heretic
-runtime work on top of 0.1.0. See
+**Previous prerelease:** `0.2.0-alpha.1` — a source-first preview that was
+tagged and published as a GitHub prerelease on 2026-09-03; its verified
+Qwen3.8 / Gemma 4 / Qwen3.8-Heretic runtime work was promoted into the 0.2.0
+stable release below. See
 [`docs/RELEASE-0.2.0-alpha.1.md`](docs/RELEASE-0.2.0-alpha.1.md) for the
-explicit staging allowlist, model-weight separation, the un-pushed vMLX fork
-commit caveat, and the known blockers.
+original staging allowlist, model-weight separation, the then-current un-pushed
+vMLX fork commit caveat, and the known blockers.
 
 ## Install on Apple Silicon
 

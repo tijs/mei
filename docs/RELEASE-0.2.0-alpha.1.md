@@ -4,9 +4,10 @@ Source-first preview release candidate — 2026-09-03.
 
 This candidate packages the verified Qwen3.8 / Gemma 4 / Qwen3.8-Heretic
 runtime work on top of the 0.1.0 Ornith release into an inspectable,
-source-first release candidate. It is **not** tagged, pushed, or published:
-public release requires explicit user authorization, and pushing the vMLX fork
-commit below is a prerequisite for a fully source-reproducible tag.
+source-first preview. It was tagged `v0.2.0-alpha.1` (commit `23811db`) and
+published as a GitHub prerelease on 2026-09-03. Pushing the vMLX fork commit
+below remains a prerequisite for a fully source-reproducible build; the
+`0.2.0` stable release is the promoted successor of this candidate.
 
 The candidate's final implementation HEAD is `00418a5`, which stacks the
 tool-argument hardening (primitive numeric arrays + reject non-finite
@@ -220,6 +221,8 @@ same rollback env set as 0.1.0 (`MEI_OPTIMIZATION_PROFILE=generic`,
 
 ## Publication status
 
-NOT published. No tag, no push, no GitHub release, no upload. Remote fork
-push (B1) and release authorization are user decisions outside the autonomous
-worker's authority.
+Published. Tagged `v0.2.0-alpha.1` at `23811db` and released on GitHub as a
+prerelease on 2026-09-03
+(https://github.com/tijs/mei/releases/tag/v0.2.0-alpha.1). The remote vMLX
+fork push (blocker B1, commit `318a4e68`) remains a user decision and is still
+outstanding for full source-reproducibility of the Gemma 4 reuse behavior.

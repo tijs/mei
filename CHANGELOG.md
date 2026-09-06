@@ -6,7 +6,8 @@ All notable changes to Mei are documented here.
 
 First **stable** Apple Silicon release: the prebuilt CLI/runtime bundle + a
 Homebrew formula, promoting the `0.2.0-alpha.1` runtime work to a downloadable,
-easy-to-install release. Built from `main` at `67e897e`.
+easy-to-install release. Tagged `v0.2.0` at `6a53cb0` (2026-09-06), on top of
+the streaming tool-call fix `67e897e`.
 
 ### Added
 
@@ -40,18 +41,6 @@ easy-to-install release. Built from `main` at `67e897e`.
   calls) — see `CHANGELOG.md` `[0.2.0-alpha.1]` for the full inherited runtime
   work.
 
-### Release status
-
-Downloadable, prebuilt Apple Silicon release. Tag `v0.2.0`; Homebrew formula in
-the Tijs tap. Model weights are never bundled (see the weight-separation
-boundary in `docs/RELEASE-0.2.0.md`). Publishing (push/tag/release/tap update)
-is performed separately and requires explicit user authorization.
-
-## [Unreleased]
-
-Post-release (2026-09-04) lineage/documents work on top of the published
-`0.2.0-alpha.1` snapshot. No source or config-file default changed.
-
 ### Removed
 
 - `ornith-ai/Ornith-1.5-9B-MLX-4bit` removed from the active model lineup
@@ -71,12 +60,21 @@ Post-release (2026-09-04) lineage/documents work on top of the published
   its committed artifact under `artifacts/` (see also the consolidated
   `artifacts/four-model-gate-matrix-20260904.md`).
 
+### Release status
+
+Published. Tagged `v0.2.0` at `6a53cb0` (2026-09-06) and released as a public,
+non-preview GitHub release. The Homebrew formula `tijs/tap/mei` is live
+(`brew install tijs/tap/mei`) and the prebuilt Apple Silicon bundle is
+downloadable from the release assets. Model weights are never bundled (see the
+weight-separation boundary in `docs/RELEASE-0.2.0.md`).
+
 ## [0.2.0-alpha.1] - 2026-09-03
 
-Source-first preview release candidate. Ships the verified Qwen3.8 / Gemma 4 /
-Qwen3.8-Heretic runtime work on top of the 0.1.0 Ornith release and bumps the
-runtime version metadata. **Not tagged, not pushed, not published** — public
-release requires explicit user authorization.
+Source-first preview release candidate, tagged `v0.2.0-alpha.1` at `23811db`
+and published as a GitHub prerelease on 2026-09-03. Ships the verified Qwen3.8
+/ Gemma 4 / Qwen3.8-Heretic runtime work on top of the 0.1.0 Ornith release
+and bumps the runtime version metadata. Its runtime work was subsequently
+promoted into the `0.2.0` stable release.
 
 ### Added
 
@@ -214,10 +212,10 @@ Full list with measured evidence in `docs/RELEASE-0.2.0-alpha.1.md`; summary:
 
 ### Release status
 
-Source-first preview candidate. The validated runtime target is macOS 15+ on
-Apple Silicon with local MLX/Metal. Model weights are never bundled (see
-`docs/RELEASE-0.2.0-alpha.1.md` for the weight-separation boundary). No
-tag/release was created; publishing requires explicit user authorization.
+Source-first prerelease, tagged `v0.2.0-alpha.1` at `23811db` and published on
+GitHub as a prerelease on 2026-09-03. The validated runtime target is macOS 15+
+on Apple Silicon with local MLX/Metal. Model weights are never bundled (see
+`docs/RELEASE-0.2.0-alpha.1.md` for the weight-separation boundary).
 
 ## [0.1.0] - 2026-09-02
 
@@ -254,4 +252,6 @@ is macOS 15+ on Apple Silicon with the aligned Ornith 1.5 35B checkpoint. The
 model is not bundled. Full model/GPU acceptance requires the local MLX/Metal
 runtime and is not reproduced by every CI runner.
 
+[0.2.0]: https://github.com/tijs/mei/releases/tag/v0.2.0
+[0.2.0-alpha.1]: https://github.com/tijs/mei/releases/tag/v0.2.0-alpha.1
 [0.1.0]: https://github.com/tijs/mei/releases/tag/v0.1.0

@@ -4,18 +4,20 @@ First stable, downloadable Apple Silicon release — 2026-09-06.
 
 Mei 0.2.0 is the stable promotion of the `0.2.0-alpha.1` runtime work, plus the
 streaming tool-call fix, shipped as a **prebuilt Apple Silicon CLI/runtime
-bundle) — either via
+bundle** — either via
 Homebrew (`brew install tijs/tap/mei`) or by downloading the release asset. The
 server binary is a native Swift/MLX OpenAI-compatible local inference server;
 it never bundles model weights (see *Weight-separation boundary*).
 
-Implementation HEAD for this release:
+Implementation for this release:
 
+- Released publicly as `v0.2.0` on 2026-09-06; the tag `v0.2.0` points at
+  commit `6a53cb0` (the `release(0.2.0)` commit). Everything below is an
+  ancestor of that tag and is part of this release.
 - `67e897e` — `fix(tool-calls): stream multiple tool calls under distinct SSE
-  indexes`. This is the latest commit on `main` and is included in this release.
+  indexes`.
 - `00418a5` lineage (tool-argument typing + hardening), `9593126` (installer),
-  and the full `0.2.0-alpha.1` runtime work are ancestors of `67e897e` and are
-  therefore part of this release.
+  and the full `0.2.0-alpha.1` runtime work.
 
 The packaged binary is built from the commit tagged `v0.2.0` via
 [`scripts/package_release.sh`](../scripts/package_release.sh) (reproducible
@@ -63,7 +65,7 @@ mei --version        # -> mei 0.2.0
 
 ```bash
 # from the GitHub release page, or:
-curl -fL \
+curl -fLO \
   https://github.com/tijs/mei/releases/download/v0.2.0/mei-0.2.0-macos-arm64.tar.gz
 shasum -a 256 -c mei-0.2.0-macos-arm64.tar.gz.sha256   # optional integrity check
 tar -xzf mei-0.2.0-macos-arm64.tar.gz
