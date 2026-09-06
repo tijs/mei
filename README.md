@@ -65,13 +65,18 @@ source-built `scripts/install_mei.sh` installer. Release notes:
 
 Mei downloads its own **weights**, which are never bundled. The quickstarts use
 the Hugging Face `hf` CLI (`hf download REPO --local-dir DIR`). Install it once
-(any reasonable Python env; the binary itself is made available to your
-shell):
+into an isolated tool directory (bypassing macOS's PEP-668
+externally-managed-Python protection via Homebrew `uv`; the `hf` binary is made
+available on your PATH without touching your system Python):
 
 ```bash
-pip install -U "huggingface_hub[cli]"
-hf --version           # confirm it is on your PATH
+brew install uv                       # only if you don't already have `uv`
+uv tool install --upgrade huggingface_hub   # installs/updates the `hf` CLI
+hf --version                          # confirm it is on your PATH
 ```
+
+Already have `hf` on your PATH? **Skip all three lines.** The quickstarts below
+assume `hf` resolves in your shell.
 
 ## Quickstart: run the primary model (Ornith)
 
@@ -126,15 +131,73 @@ When done, press **Ctrl-C** in the server terminal.
 
 ## Other model quickstarts
 
-- **Qwen3.6** — [`mlx-community/Qwen3.6-35B-A3B-4bit`](docs/MODELS.md#qwen36-exploratory-candidate)
-  — exploratory; text/tool-only path validated, admission/provenance
-  reconciliation still open.
-- **Nemotron** — [`mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit`](docs/MODELS.md#nemotron-experimental-pending-gate)
-  — experimental; next gate, **not yet validated**.
+Two further candidates are tracked alongside the validated Ornith primary.
+Both serve user-local weights on port **8024** with context cap **65536** and
+use a model-appropriate optimization profile. Only **one** server runs at a
+time — **Ctrl-C** the current one before starting the next. Deeper status and
+provenance for each: **[docs/MODELS.md](docs/MODELS.md)**.
 
-Each quickstart in **[docs/MODELS.md](docs/MODELS.md)** is a standalone
-copy-paste block (user-local `$HOME/.cache/mei/models/...`, port 8024, context
-cap 65536, model-appropriate profile/prefill/KV setup).
+### Qwen3.6 — exploratory candidate
+
+```bash
+export MODEL_ID="mlx-community/Qwen3.6-35B-A3B-4bit"
+MODEL_DIR="$HOME/.cache/mei/models/Qwen3.6-35B-A3B-4bit"
+
+# 1) Download weights once into a user-local cache (repeat is resumable/no-op)
+hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+
+# 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
+mkdir -p "$HOME/.cache/mei/runtime/kv"
+VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
+  --model-dir        "$MODEL_DIR" \
+  --served-model-id  "$MODEL_ID" \
+  --optimization-profile auto \
+  --port 8024 \
+  --context-cap 65536 \
+  --prefill-step-size 512 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+```
+
+Smoke-test it exactly like Ornith above (`curl` the same
+`/v1/models` and `/v1/chat/completions` calls on port 8024).
+
+> **Status caveat.** Exploratory
+> ([`docs/MODELS.md#qwen36--exploratory-candidate`](docs/MODELS.md#qwen36--exploratory-candidate)):
+> the bounded Mei gate passed for the **text/tool-only path**; admission and
+> provenance reconciliation are still open, and no multimodal claim is made.
+
+### Nemotron — experimental, pending gate
+
+```bash
+export MODEL_ID="mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
+MODEL_DIR="$HOME/.cache/mei/models/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
+
+# 1) Download weights once into a user-local cache (repeat is resumable/no-op)
+hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+
+# 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
+mkdir -p "$HOME/.cache/mei/runtime/kv"
+mei \
+  --model-dir        "$MODEL_DIR" \
+  --served-model-id  "$MODEL_ID" \
+  --optimization-profile generic \
+  --port 8024 \
+  --context-cap 65536 \
+  --prefill-step-size 256 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+```
+
+Smoke-test it exactly like Ornith above (`curl` the same
+`/v1/models` and `/v1/chat/completions` calls on port 8024).
+
+> **Status caveat.** Experimental, pending gate
+> ([`docs/MODELS.md#nemotron--experimental-pending-gate`](docs/MODELS.md#nemotron--experimental-pending-gate)):
+> **not yet validated** — conservative `generic` profile, modest 256 prefill,
+> disk KV. Treat any run as exploratory.
+
+Each of these standalone blocks follows the same convention as the Ornith
+primary: user-local `$HOME/.cache/mei/models/...`, port 8024, context cap
+65536, model-appropriate profile/prefill/KV setup.
 
 ## Build
 

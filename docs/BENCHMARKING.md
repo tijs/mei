@@ -48,7 +48,10 @@ outputs under `artifacts/`). Backend ports 8024–8027 are the isolated Mei
 backend ports registered by `local-model-bench/configs/*/mei.yaml`; the
 `umans-coder` profile routes Mei's candidates exactly as served, one custom
 provider per port (see [`docs/WORKER-MODEL-OPTIONS.md`](WORKER-MODEL-OPTIONS.md)).
-Ornith's ~26–28 GB working set prevents co-residency with other
+Ornith's ~26–28 GB working set prevents co-residency with other models on the
+32 GB target, so exactly **one** Mei process — one model — runs at a time there
+unless a workflow explicitly configures otherwise (e.g. separate ports and
+`--kv-cache-dir`s for smaller candidates).
 
 ## Methodology
 
