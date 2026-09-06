@@ -1,3 +1,5 @@
+# BIGGEST LEVER: ~4.7ms/token of Swift-side graph rebuild = 1.32x if closed; compiled decode already removes most of it (2026-09-06)
+
 # The 4.7 ms/token CPU graph-build is Swift-side overhead, not inherent to MLX — and it is the single largest lever found (2026-09-06)
 
 GPU-free analysis (graph construction submits no GPU work, so this ran safely
@@ -90,5 +92,35 @@ generation length) is now the highest-value single experiment in the whole
 plan**, ahead of C1. It attacks this directly, needs no code change, and its
 only real risk is the silent-corruption correctness gate that C1 already
 requires.
+
+## Addendum — a concrete mechanism candidate in the Swift binding
+
+`Source/MLXNN/Module.swift:1518`:
+
+```swift
+@propertyWrapper public class ModuleInfo<T>: TypeErasedSetterProvider {
+    var module: T?
+    public var wrappedValue: T {
+        get {
+            if let module = module as? T { return module }   // dynamic cast, every access
+            else { return module! }
+        }
+```
+
+Two costs on **every** submodule access:
+1. `ModuleInfo` is a **class**, so each `@ModuleInfo` property is a heap box —
+   ARC retain/release traffic per access.
+2. `module as? T` is a **conditional dynamic cast on a generic type parameter**,
+   one of the more expensive Swift runtime operations (metadata lookup), not a
+   free unwrap.
+
+Every `self.gateProj`, `self.upProj`, `self.switchMLP`, `self.linearAttn`,
+`self.inProjQKV` … goes through this. Roughly 6 accesses per MoE block and ~8
+per GDN layer means several hundred dynamic casts per decode token.
+
+At a few hundred ns each this is on the order of 0.1-0.3 ms/token — real, but
+**not the whole ~4 ms**, so it is a contributor rather than the explanation.
+Recorded as the first concrete place to look, not as a diagnosis: nobody has
+profiled the Swift side yet, and that instrumentation is the actual next step.
 
 #proj/mei
