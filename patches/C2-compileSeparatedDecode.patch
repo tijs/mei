@@ -1,0 +1,24 @@
+Subject: [C2] Enable the trusted compiled routed-MoE region on the LLM qwen3_5_moe path
+
+`Qwen4ExpCompiledRoutedSwitchGLU` (SwitchLayers.swift:64-142) fuses all three
+routed `gatherQuantizedMM` calls plus silu and multiply into ONE compiled
+region. It is enabled by env default (`VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=1`)
+and built with `vmlxTrustedCompile`, so it compiles WITHOUT the
+`VMLX_ENABLE_UNSAFE_COMPILE` opt-in (Transforms+Compile.swift:301-318).
+
+It is reached only when `SwitchGLU.compileSeparatedDecode == true`
+(SwitchLayers.swift:400). That property defaults false and is passed true in
+exactly one place in the tree — MLXVLM/Models/Qwen35.swift:2184, the VLM twin.
+The LLM construction site that Ornith actually loads through omits it, so the
+region has never executed for LLM-path qwen3_5_moe bundles.
+
+--- a/Libraries/MLXLLM/Models/Qwen35.swift
++++ b/Libraries/MLXLLM/Models/Qwen35.swift
+@@ -868,7 +868,8 @@
+         _switchMLP.wrappedValue = SwitchGLU(
+             inputDims: args.hiddenSize,
+             hiddenDims: args.moeIntermediateSize,
+-            numExperts: args.numExperts
++            numExperts: args.numExperts,
++            compileSeparatedDecode: true
+         )
