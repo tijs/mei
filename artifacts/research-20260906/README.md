@@ -22,3 +22,14 @@ Tools (in `../../tools/`):
 
 Everything here is mirrored into Kiem under `proj/mei` so any agent can pick it
 up without this worktree.
+
+## Reading order (added 2026-09-06 after the recalibration)
+
+1. **`RUNBOOK.md`** — authoritative ordered actions, Phase A-E. Start here.
+2. `STATE-OF-PLAY.md` — consolidated evidence and current numbers.
+3. `decode-budget-and-ceilings.md` — the measurements that recalibrated the plan.
+4. `findings.md`, `experiment-plan.md`, `sequencing.md` — earlier notes. Their
+   mechanics/commands/gates remain correct; their **rankings are superseded** and
+   each carries a banner saying so. Do not act on their ordering.
+5. `nemotron-analysis.md`, `qwen36-vlm-path.md`, `qwen36-textonly-build.md` —
+   model-specific.

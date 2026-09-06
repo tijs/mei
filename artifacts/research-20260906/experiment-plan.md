@@ -1,3 +1,20 @@
+# Hybrid-MoE super-optimization: prioritized experiment plan P0-P6 (2026-09-06)
+
+> **[SUPERSEDED IN PART — 2026-09-06, same day]** The *ordering rationale* in
+> this note is stale. It ranks P1 (`VMLX_ENABLE_UNSAFE_COMPILE`) as the single
+> highest-value experiment on the strength of upstream's "+45-70%" claim. A
+> later offline measurement the same day **falsified that for this model class**:
+> `mx.compile` buys **1.11x on the modelled decode step (~+8% end-to-end)**, not
+> +45-70% — the upstream figure was measured on small dense models where
+> elementwise ops dominate, and does not transfer to a 35B MoE dominated by
+> quantized matmuls. Speculative decoding is now **closed** (caps at 1.60x with
+> perfect acceptance; nets ~1.1x). And because Ornith already exceeds the >=30
+> tok/s long-context goal, **memory levers now outrank speed levers**.
+>
+> The *mechanics, commands, preconditions and gates* below remain correct and
+> are still the reference. For the current ordering and expected values, follow
+> the RUNBOOK note ("RUNBOOK: ordered next actions") and the STATE OF PLAY note.
+
 # Hybrid-MoE super-optimization: prioritized experiment plan (queued 2026-09-06)
 
 Companion to the findings note ("Hybrid-MoE super-optimization research:

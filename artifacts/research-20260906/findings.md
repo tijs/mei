@@ -1,3 +1,16 @@
+# Hybrid-MoE super-optimization research: findings (2026-09-06)
+
+> **[PARTIALLY SUPERSEDED — 2026-09-06, same day]** F3 below quotes upstream's
+> "+45% to +70%" compile claim and calls the P1 A/B "the single highest-value
+> pending experiment". A later offline measurement the same day **falsified that
+> magnitude for this model class**: `mx.compile` buys **1.11x on the modelled
+> decode step (~+8% end-to-end)**. The upstream figure was measured on
+> gemma-4-e2b and small qwen models, where elementwise ops dominate; a 35B MoE
+> step is dominated by quantized matmuls, which compile does not accelerate.
+> Everything else in F1-F6 (architecture, bandwidth budget, the dead
+> `compileSeparatedDecode` path, memory structure) stands and was independently
+> confirmed. See the RUNBOOK and STATE OF PLAY notes for current ordering.
+
 # Hybrid-MoE super-optimization research — findings (2026-09-06)
 
 Scope: `qwen3_5_moe` hybrid MoE family on Sulaco (M1 Max, 32 GB). Targets:
