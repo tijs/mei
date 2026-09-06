@@ -9,6 +9,15 @@
 40 layers chained, one eval, same harness as moe_chain_bench.py.
 """
 import time, mlx.core as mx
+import subprocess as _sp, sys as _sys
+def _busy():
+    o=_sp.run(["ps","ax","-o","command"],capture_output=True,text=True).stdout
+    return [l for l in o.splitlines() if any(k in l for k in ("llama-server","/release/mei","probe_mei","mlx_lm")) and "grep" not in l]
+_b=_busy()
+if _b:
+    print("REFUSING: inference workload live:"); [print("  ",l[:100]) for l in _b[:3]]; _sys.exit(2)
+
+
 
 E, D, H, K, BITS, LAYERS = 256, 2048, 512, 8, 4, 40
 
@@ -78,3 +87,4 @@ for gs in (32, 64, 128):
     sb = E*(2*H*D + D*H)/gs*2*2*LAYERS/2**30
     print(f"{gs:10d} {sb:20.2f}G {ms:8.3f}" + (f" {base/ms:7.2f}x" if base else ""))
     del gw,gsc,gb,uw,usc,ub,dw,dsc,db; mx.clear_cache()
+print("\nworkload check after run:", "CONTENDED - discard" if _busy() else "clean")
