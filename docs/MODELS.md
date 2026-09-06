@@ -43,25 +43,56 @@ General rules for all three: weights go into a user-local
 `$HOME/.cache/mei/models/...` directory (never a system path), the server
 serves on **port 8024** with **context cap 65536**, and only **one** server
 should run at a time — press **Ctrl-C** in the server terminal to stop it.
-Each block is standalone copy-paste.
+Each block is standalone copy-paste. **These 30–35B presets target 32 GB Apple
+Silicon; 16 GB machines likely cannot fit them.**
 
 ### Ornith — validated primary
 
+The validated primary is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, pinned at
+revision `19504d9`. The measured path runs the **aligned repack** (byte-identical
+weights, naturally aligned for vmlx's zero-copy mmap loader); `hf download`
+alone gives the **raw** checkpoint, which is correctness-capable but **not**
+the measured >=30 tok/s path.
+
+**M1 / 32 GB launch settings (validated):** env
+`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--optimization-profile ornith`,
+`--context-cap 65536`, `--prefill-step-size 512`,
+`--memory-limit-bytes 30000000000` (explicitly above the ~22.4 GB MLX default,
+which can hang the 35B working set), user-local `--kv-cache-dir`,
+`--max-tokens 32768`, sampling `0.6/0.95/20`,
+`--emit-reasoning true --cache-reuse true --compiled-decode false`. Aligned
+repack 30k decode measured 47.5–50.3 t/s; long-context 80k/90k passed with peak
+<30 GB on the same memory/prefill/env/disk-KV settings.
+
 ```bash
 export MODEL_ID="ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"
-MODEL_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit"
+export MODEL_REVISION="19504d912fa8fc7622bf6b1de3db5d5d890b1f02"
+RAW_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-raw"
+ALIGNED_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
 
-hf download "$MODEL_ID" --local-dir "$MODEL_DIR"   # ~19 GB
+# 1) One-time: download the official pinned checkpoint to a -raw directory (~19 GB)
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$RAW_DIR"
 
+# 2) One-time: fetch the pure-stdlib alignment helper and build the -aligned repack
+mkdir -p "$HOME/.cache/mei/tools"
+curl -fsSL -o "$HOME/.cache/mei/tools/align_safetensors.py" \
+  https://raw.githubusercontent.com/tijs/mei/v0.2.0/tools/align_safetensors.py
+python3 "$HOME/.cache/mei/tools/align_safetensors.py" "$RAW_DIR" "$ALIGNED_DIR"
+
+# 3) Start the server from the ALIGNED directory (blocking; Ctrl-C stops it). Port 8024.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
-  --model-dir        "$MODEL_DIR" \
+  --model-dir        "$ALIGNED_DIR" \
   --served-model-id  "$MODEL_ID" \
   --optimization-profile ornith \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 Smoke test (second terminal, no `jq`):
@@ -75,21 +106,31 @@ curl -s http://127.0.0.1:8024/v1/chat/completions \
   | grep -o '"content":"[^"]*"' | head -1
 ```
 
-**Quantization / provenance:** 4-bit affine, group-64; mlp gate +
-shared-expert gate held at 8-bit (affine g64). ~19.5 GB weights. The official
-checkpoint `hf download` pulls is what runs here. **Performance caveat:** the
-validated >=30 tok/s path (measured 47.5–50.3 t/s @ 30k on the 32 GB machine)
-uses the byte-identical *aligned repack* plus `VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`
-+ 512 prefill + disk KV. The official download runs correctly but is not the
-measured performance path; the aligned repack is the validated one.
+**Raw vs aligned:** the raw checkpoint that `hf download` pulls is the plain
+4-bit MLX quant (4-bit affine, group-64; gate + shared-expert gate at 8-bit,
+~19.5 GB). It runs **correctly** (right output, tool-calling) but vmlx's mmap
+loader force-copies ~20 GB of the payload into anonymous RAM because tensor
+offsets aren't naturally aligned — so raw is **not** the measured performance
+path. The `-aligned` repack (a one-time step, needs extra disk) is
+byte-identical on the payload and is the validated >=30 tok/s path.
+Omitted experimental knobs (`--max-kv-window`, `--ssm-anchor-boundaries`, KV
+quantization) are **not** part of this preset and remain off/unvalidated.
 
 ### Qwen3.6 — exploratory candidate
 
+**M1 / 32 GB launch settings (measured candidate path):** env
+`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--optimization-profile auto`,
+`--prefill-step-size 512`, explicit `--memory-limit-bytes 30000000000` for the
+32 GB target, user-local `--kv-cache-dir`, `--max-tokens 32768`, sampling
+`0.6/0.95/20`, `--emit-reasoning true --cache-reuse true
+--compiled-decode false`. Pinned revision `38740b8`.
+
 ```bash
 export MODEL_ID="mlx-community/Qwen3.6-35B-A3B-4bit"
+export MODEL_REVISION="38740b847e4cb78f352aba30aa41c76e08e6eb46"
 MODEL_DIR="$HOME/.cache/mei/models/Qwen3.6-35B-A3B-4bit"
 
-hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
@@ -99,7 +140,11 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 > **Status caveat.** This is an **exploratory** candidate. The bounded Mei gate
@@ -107,15 +152,26 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
 > calls, KV reuse, and the exact 65536 context boundary. A full
 > `local-model-bench` run is recorded. But Mei lineup admission and provenance
 > reconciliation are still a **separate work item**, and only the text/tool
-> path is covered — no multimodal/impartial-image claim is made.
+> path is covered — **no multimodal or stable-lineup admission claim is made**.
+> Omitted experimental knobs remain off/unvalidated.
 
 ### Nemotron — experimental, pending gate
 
+**M1 / 32 GB launch settings (conservative gate baseline — NOT optimized or
+validated):** `--optimization-profile generic`, `--prefill-step-size 256`,
+user-local `--kv-cache-dir`, an explicit
+`--memory-limit-bytes 30000000000` allocator ceiling as a **guardrail**,
+`--max-tokens 32768`, sampling `0.6/0.95/20`, and
+`--emit-reasoning true --cache-reuse true --compiled-decode false`. No
+validated Mei run or optimal profile exists yet; these are starting guardrails
+pending the gate. Pinned revision `55ac8c8`.
+
 ```bash
 export MODEL_ID="mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
+export MODEL_REVISION="55ac8c89261109b36c04371cd3f479a4594208c8"
 MODEL_DIR="$HOME/.cache/mei/models/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
 
-hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 mei \
@@ -125,14 +181,20 @@ mei \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 256 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 > **Status caveat.** **Experimental and pending its gate**: this is the
 > *next* experimental evaluation, **not yet staged or validated under Mei's
 > acceptance/long-context checks**. It uses the conservative `generic` profile
-> with a modest prefill step of 256 and disk KV. **No validation claim is
-> made** for this model — treat any run as exploratory.
+> with a modest prefill step of 256, disk KV, and an explicit 30 GB allocator
+> ceiling as a guardrail. **No validation claim is made** for this model —
+> treat any run as exploratory. Omitted experimental knobs remain
+> off/unvalidated.
 
 ## Historical: the four-model comparator lineup
 

@@ -80,29 +80,51 @@ assume `hf` resolves in your shell.
 
 ## Quickstart: run the primary model (Ornith)
 
-The validated primary is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`. The steps
-below download ~19 GB of weights into a user-local directory (no system paths),
-start one server on port **8024**, and smoke-test it. Only **one** `mei` server
-should run at a time; press **Ctrl-C** in the server terminal to stop it.
+The validated primary is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, pinned at
+revision `19504d9`. Everything stays user-local (no system paths), and only
+**one** `mei` server should run at a time — press **Ctrl-C** in the server
+terminal to stop it.
+
+The measured performance path runs the **aligned repack** of this checkpoint —
+byte-identical weights, repacked so every tensor sits at a naturally aligned
+offset for vmlx's zero-copy mmap loader. The official raw directory vmlx maps
+is **correctness-capable** (correct output, tool-calling) but **not** the
+measured >=30 tok/s path: it force-copies ~20 GB of the payload into anonymous
+RAM instead of mapping it. Alignment is a **one-time** step that needs
+**extra disk** (roughly another copy of the shards).
 
 ```bash
 export MODEL_ID="ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"
+export MODEL_REVISION="19504d912fa8fc7622bf6b1de3db5d5d890b1f02"
+RAW_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-raw"
+ALIGNED_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
 
-# 1) Download weights once into a user-local cache (repeat steps are resumable/no-op)
-hf download "$MODEL_ID" --local-dir "$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit"
+# 1) One-time: download the official pinned checkpoint to a -raw directory (~19 GB)
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$RAW_DIR"
 
-# 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
-#    * env gate VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 disables the fused
-#      gate/up cache required for the validated >=30 tok/s perf path.
+# 2) One-time: fetch the pure-stdlib alignment helper and build the -aligned repack
+mkdir -p "$HOME/.cache/mei/tools"
+curl -fsSL -o "$HOME/.cache/mei/tools/align_safetensors.py" \
+  https://raw.githubusercontent.com/tijs/mei/v0.2.0/tools/align_safetensors.py
+# verify the helper (FIPS-safe sha256 matches the 0.2.0 release):
+shasum -a 256 "$HOME/.cache/mei/tools/align_safetensors.py"
+#   expect 01a1acac45d1fb7f27693cd4ac104a22c9f7937a5802dd5ffadefcb447179b20
+python3 "$HOME/.cache/mei/tools/align_safetensors.py" "$RAW_DIR" "$ALIGNED_DIR"
+
+# 3) Start the server from the ALIGNED directory (blocking; Ctrl-C stops it). Port 8024.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
-  --model-dir        "$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit" \
+  --model-dir        "$ALIGNED_DIR" \
   --served-model-id  "$MODEL_ID" \
   --optimization-profile ornith \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 In a second terminal, verify the server is up and answering (no `jq` needed):
@@ -122,12 +144,12 @@ curl -s http://127.0.0.1:8024/v1/chat/completions \
 
 When done, press **Ctrl-C** in the server terminal.
 
-> **Note on Ornith performance:** the >=30 tok/s path is validated with the
-> *aligned repack* of this checkpoint (byte-identical weights, aligned for
-> loading) plus the env gate above, 512 prefill, and the disk KV tier. The
-> official checkpoint that `hf download` pulls is the plain 4-bit MLX quant;
-> it runs correctly (correct output, tool-calling) but the aligned repack is
-> the measured performance path for the 32 GB machine.
+> **Why the aligned repack is the measured path:** `hf download` pulls the
+> plain 4-bit MLX quant. It runs correctly, but vmlx's mmap loader copies
+> ~20 GB into anonymous RAM instead of zero-copy mapping it (tensors aren't at
+> naturally aligned offsets), so the raw directory is not the validated >=30
+> tok/s path. The `-aligned` repack is byte-identical on the payload (verified
+> in its `MEI_ALIGN_MANIFEST.json`) and is the measured one on this 32 GB machine.
 
 ## Other model quickstarts
 
@@ -141,10 +163,11 @@ provenance for each: **[docs/MODELS.md](docs/MODELS.md)**.
 
 ```bash
 export MODEL_ID="mlx-community/Qwen3.6-35B-A3B-4bit"
+export MODEL_REVISION="38740b847e4cb78f352aba30aa41c76e08e6eb46"
 MODEL_DIR="$HOME/.cache/mei/models/Qwen3.6-35B-A3B-4bit"
 
 # 1) Download weights once into a user-local cache (repeat is resumable/no-op)
-hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 # 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
@@ -155,7 +178,11 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 Smoke-test it exactly like Ornith above (`curl` the same
@@ -170,12 +197,16 @@ Smoke-test it exactly like Ornith above (`curl` the same
 
 ```bash
 export MODEL_ID="mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
+export MODEL_REVISION="55ac8c89261109b36c04371cd3f479a4594208c8"
 MODEL_DIR="$HOME/.cache/mei/models/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
 
 # 1) Download weights once into a user-local cache (repeat is resumable/no-op)
-hf download "$MODEL_ID" --local-dir "$MODEL_DIR"
+hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 # 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
+#    Conservative 32 GB gate baseline, NOT an optimized/validated preset:
+#    no Mei run or optimal profile exists yet. --memory-limit-bytes 30000000000
+#    and prefill 256 are starting guardrails, not measured settings.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 mei \
   --model-dir        "$MODEL_DIR" \
@@ -184,7 +215,11 @@ mei \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 256 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv"
+  --memory-limit-bytes 30000000000 \
+  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
+  --max-tokens 32768 \
+  --temperature 0.6 --top-p 0.95 --top-k 20 \
+  --emit-reasoning true --cache-reuse true --compiled-decode false
 ```
 
 Smoke-test it exactly like Ornith above (`curl` the same
@@ -193,11 +228,26 @@ Smoke-test it exactly like Ornith above (`curl` the same
 > **Status caveat.** Experimental, pending gate
 > ([`docs/MODELS.md#nemotron--experimental-pending-gate`](docs/MODELS.md#nemotron--experimental-pending-gate)):
 > **not yet validated** — conservative `generic` profile, modest 256 prefill,
-> disk KV. Treat any run as exploratory.
+> disk KV, and an explicit allocator ceiling as a guardrail. Treat any run as
+> exploratory.
 
 Each of these standalone blocks follows the same convention as the Ornith
 primary: user-local `$HOME/.cache/mei/models/...`, port 8024, context cap
-65536, model-appropriate profile/prefill/KV setup.
+65536, and model-appropriate profile/prefill/KV setup.
+
+> **Why these M1 knobs (32 GB target).** `--memory-limit-bytes 30000000000`
+> (30 GB) raises the explicit MLX allocator ceiling above the ~22.4 GB default,
+> which is below the 30–35B working set and can hang at load; it fits the
+> 32 GB machines these presets target. `--prefill-step-size 512` (256 for the
+> conservative Nemotron block) is the chunked-prefill window for hybrid
+> GatedDelta architectures. `VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0` disables
+> the fused gate/up cache on the validated Ornith/Qwen3.6 path. A user-local
+> `--kv-cache-dir` provides the on-disk KV tier those families need.
+> `--compiled-decode false` keeps the default (graph-traced) decode, avoiding
+> the multi-minute compile tax. These presets target **32 GB Apple Silicon**;
+> **16 GB machines likely cannot fit** these 30–35B checkpoints. Omitted
+> experimental knobs (`--max-kv-window`, `--ssm-anchor-boundaries`, KV
+> quantization) remain off and unvalidated.
 
 ## Build
 
