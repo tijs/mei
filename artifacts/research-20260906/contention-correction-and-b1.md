@@ -1,3 +1,5 @@
+# CORRECTION: sorted-index and group-size 'findings' were contention artifacts; B1 confirms 0.83 GiB vision saving (2026-09-06)
+
 # CORRECTION: two apparent kernel-level findings were contention artifacts; plus B1's memory result (2026-09-06)
 
 Recording a near-miss honestly, because both numbers looked like real findings
@@ -89,5 +91,56 @@ observed. Two readings both fit 19.55 GB:
 whether C2 is Ornith-only or applies to both. **Cheapest possible resolution:
 one server start on the text-only build with `VMLX_MODEL_FACTORY_TRACE=1`** —
 about two minutes. Worth doing before C2 is scoped.
+
+## RESOLVED — clean paired re-run (3 reps, contention-verified before and after)
+
+`tools/moe_index_locality_bench.py`, 6 independent top-8 draws per rep, each
+timed unsorted **and** sorted (identical expert set, order only):
+
+| rep | unsorted mean | sorted mean | ratio |
+|---|---|---|---|
+| 3 (representative) | 5.543 ms | 5.533 ms | **1.002x** |
+
+Per-draw ratios: 1.02, 1.00, 1.00, 1.00, 1.00, 0.99. Pure noise (sd 0.058 /
+0.016). **Expert index ordering has no effect.** The residual 1.03x seen in the
+unpaired knob bench is index-*set* variance between different permutations, not
+sortedness — exactly the confound the paired design was built to remove.
+Sorted-indices item: **closed, negative.**
+
+Group size, second clean rep: g32 5.664, g64 5.672, g128 5.560 — all within 2%.
+Note g128 read 6.158 ms (0.91x) in the first clean rep and 5.560 ms (1.02x)
+here, a 10% swing **between clean runs**, so even that is noise rather than a
+small effect. Group size: **closed, no lever.** Keep g64.
+
+## NEW and more important: the locality references prove the MoE gather is not bandwidth-bound
+
+Same top-8 shape, varying only which experts are addressed:
+
+| index pattern | distinct experts read | ms |
+|---|---|---|
+| contiguous `0..7` | 8 | 5.531 / 5.554 |
+| stride-32 spread | 8 | 5.558 / 5.511 |
+| **all-same expert `[0]*8`** | **1** | **5.566 / 5.528** |
+
+Addressing **one** expert eight times instead of **eight distinct** experts —
+one eighth of the routed weight bytes — costs **exactly the same time**.
+
+This is a direct controlled falsification of the bandwidth hypothesis for this
+kernel, replacing the inference drawn in F2 from the 3.8x headroom figure. The
+`gather_qmm` cost at decode shapes is insensitive to how much expert weight it
+actually touches, so it is bound by per-kernel overhead, not by DRAM traffic.
+
+Two consequences:
+
+- It independently confirms the STATE OF PLAY conclusion that the remaining
+  headroom is **small-M quantized matmul kernel efficiency**, and does so by
+  experiment rather than by arithmetic on achieved GB/s.
+- It also means **no routing-side trick can help decode speed**. Expert
+  affinity, routing skew exploitation, hot-expert pinning, cache-friendly expert
+  layout — none of it can pay off in the speed dimension, because touching 1
+  expert costs the same as touching 8. That does **not** touch RUNBOOK D1/D3,
+  which are memory levers (keeping cold experts non-resident), but it does close
+  off the "exploit routing skew for throughput" framing entirely. D1 remains
+  worth doing for D3's sake; it is not a speed investigation.
 
 #proj/mei
