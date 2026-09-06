@@ -1,3 +1,37 @@
+# RUNBOOK: ordered next actions, Phase A-E (2026-09-06) — AUTHORITATIVE ordering
+
+> ## UPDATE 2026-09-06, after A1/A2 landed — read this before Phase C
+>
+> Three changes from analysing the other agent's A1/A2 artifacts (notes
+> "A1 load-path", "A2 ANALYSIS", "BIGGEST LEVER", "GDN input-projection fusion"):
+>
+> **1. Baseline moved: 61.70 tok/s, not 55.0.** The current pin has
+> `fused_gdn_decode_input_projections` active. Every "55 -> X" projection in this
+> runbook and in STATE OF PLAY is stale; the mechanisms are unchanged.
+>
+> **2. NEW C1b is now the highest-value single experiment in the plan — run it
+> before C1.** A2 showed `decode.model_forward` = 4.693 ms/token of CPU graph
+> rebuild with the GPU idle: 28.9% of the step, paid identically at every context
+> length. Compiled decode already removes ~4 ms of it (2026-09-02 measured
+> `compiled_forward` 2.183 vs eager ~6.2). It was closed on **32-token** rows —
+> the one length below its promote+trace breakeven of 55-159 tokens.
+>
+> > **C1b. Compiled decode at realistic generation length.**
+> > `--compiled-decode true` + `VMLX_ENABLE_UNSAFE_COMPILE=1`, **short context**,
+> > `max_tokens` **500 and 1000** (not 32), 3 repeats, eager control at the same
+> > lengths. Capture `decode.compiled_forward` on the current pin to replace the
+> > borrowed 2.183 ms figure.
+> > *Expect +12-17%. A 32-token row will still lose — that is the predicted
+> > result, not a contradiction.* Same greedy temp-0 token-equality gate as C1.
+> > Does NOT reopen the 30k/80k conclusion, which stands.
+>
+> **3. C3 should repack the GDN input projections too, and it is a memory lever.**
+> `Qwen35GatedDeltaNet` already runtime-concatenates `in_proj_{qkv,z,b,a}` (the
+> `groups=[4]` log line), holding a permanent **~407 MiB** duplicate with no
+> cache-limit env guard. Repacking those pre-fused on disk reclaims that outright
+> while keeping the measured win — alongside the MoE gate+up half. That makes C3
+> a memory lever, not a ~1.5% speed lever, so it belongs with Phase D priority.
+
 # RUNBOOK: ordered next actions for hybrid-MoE optimization (2026-09-06)
 
 **This is the authoritative ordering.** The P0-P6 plan note and the Stage 0-3
@@ -15,7 +49,7 @@ exact artifact paths, command, config, result and remaining uncertainty.
 
 ## Phase A — diagnostics. ~15 min GPU total. Do these first; they are cheap and they redirect everything after.
 
-- [ ] **A1. Settle the load path.** `VMLX_MODEL_FACTORY_TRACE=1` on a server
+- [x] **A1. Settle the load path.** `VMLX_MODEL_FACTORY_TRACE=1` on a server
   start for **both** Ornith and stock Qwen 3.6. Prints
   `[ModelFactory] <type> failed: ...` per declining factory, so the winner is
   unambiguous.
@@ -23,7 +57,7 @@ exact artifact paths, command, config, result and remaining uncertainty.
   `compileSeparatedDecode: true`, which would make C2 an Ornith-only change).
   *Blocks:* B1 interpretation and C2's entire premise.
 
-- [ ] **A2. Profile the unmodelled 22%.** `MLXPRESS_GENERATION_PROFILE=1` on a
+- [x] **A2. Profile the unmodelled 22%.** `MLXPRESS_GENERATION_PROFILE=1` on a
   short-decode leg (`tools/probe_load.py`), then read the stage rows in
   `~/.local/share/local-model-bench/mei-runtime/logs/server.log`.
   *Answers:* what the 4.04 ms/token outside the projection model is — GDN
@@ -119,7 +153,7 @@ constraint — and 93% of the model is the routed expert bank.
 
 ## Phase E — new model tracks (independent of A-D).
 
-- [ ] **E1. Nemotron-3.5-Lightning stage + gate.** Plan `0b87b76a`'s last open
+- [x] **E1. Nemotron-3.5-Lightning stage + gate.** Plan `0b87b76a`'s last open
   todo. Use `mlx-community/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit`.
   **C1-C3 do not transfer**: its routed experts are fc1/fc2 with no gate
   projection, so there is nothing to fuse, and its linear layers are Mamba2 not
