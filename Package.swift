@@ -15,10 +15,9 @@ let package = Package(
         .executable(name: "mei", targets: ["Mei"]),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "e37d1d5919c5bd9f0220ee05f3ee07285d8f11af"
-        ),
+        // research/c3-test: build against the local C3 worktree so the
+        // patched vmlx sources are guaranteed to reach the binary.
+        .package(path: "/Users/tijs/projects/c3-dep/vmlx-swift"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
     targets: [
