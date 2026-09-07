@@ -87,7 +87,22 @@ public actor Engine {
         let container = try await loadModelContainer(
             from: directory,
             using: #huggingFaceTokenizerLoader(),
-            loadConfiguration: LoadConfiguration(useMmapSafetensors: config.useMmapSafetensors)
+            loadConfiguration: LoadConfiguration(
+                // MLXPress axis E (cold-weight tier). `.default` is
+                // `.auto(envFallback: true)`: it honours an explicit `MLXPRESS=N`
+                // (`0` disables; N in [0,95] sets coldFraction N/100) and otherwise
+                // self-enables at coldFraction 0.70 only when the bundle is routed
+                // (MoE) AND its raw bytes exceed 50% of physical memory — which is
+                // exactly the 32 GB host / ~18 GiB qwen3_5_moe case.
+                //
+                // This was previously the init default `.disabled`, which
+                // short-circuits before any environment lookup — so `MLXPRESS=…`
+                // was silently inert on every Mei build to date.
+                //
+                // Runtime lifetime is handled: `ModelContext` stores
+                // `jangPressRuntime`, so holding the container holds the tiers.
+                jangPress: .default,
+                useMmapSafetensors: config.useMmapSafetensors)
         )
         // In-process multi-tier KV reuse (the benchmark's growing-transcript
         // pattern): the coordinator owns prefix matching, block hashing, and
