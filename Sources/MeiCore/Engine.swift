@@ -646,16 +646,31 @@ public actor Engine {
         guard k > 0 else { return [] }
         let tokenizer = await container.tokenizer
         let templateTools = MessageMapping.templateTools(tools)
+        let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
+        if trace {
+            let roles = template.map { ($0["role"] as? String) ?? "<\(type(of: $0["role"] as Any))>" }
+            print("mei: [anchor-trace] k=\(k) full=\(fullTokenCount) roles=\(roles) tools=\(templateTools?.count ?? -1)")
+            fflush(stdout)
+        }
         let result = try SSMAnchorBoundaries.compute(
             template: template,
             fullTokenCount: fullTokenCount,
             k: k
         ) { prefixCount in
-            try tokenizer.applyChatTemplate(
+            let n = try tokenizer.applyChatTemplate(
                 messages: Array(template.prefix(prefixCount)),
                 tools: templateTools,
                 additionalContext: context
             ).count
+            if trace {
+                print("mei: [anchor-trace] prefix(\(prefixCount)) -> \(n) tokens")
+                fflush(stdout)
+            }
+            return n
+        }
+        if trace {
+            print("mei: [anchor-trace] result offsets=\(result.offsets) warning=\(result.warning ?? "nil")")
+            fflush(stdout)
         }
         if let warning = result.warning {
             print("mei: ssm-anchor-boundaries disabled for this transcript: \(warning)")
