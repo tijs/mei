@@ -2,6 +2,62 @@
 
 All notable changes to Mei are documented here.
 
+## [0.3.0] - 2026-09-07
+
+Re-pins vmlx-swift onto the Mei fork synced with 37 upstream commits, and makes
+the MLXPress cold-weight tier reachable. Measured on the two active
+`qwen3_5_moe` targets (Ornith 1.5 35B-A3B, Qwen 3.6 35B-A3B).
+
+### Changed
+
+- **vmlx-swift re-pinned** `91fed8be` -> `e37d1d59`: the fork's `main` merged
+  with 37 upstream commits (clean, zero conflicts, all six fork commits
+  preserved). Measured against the old pin on Ornith: short decode neutral
+  (66.59 -> 66.28 tok/s), **30k decode +3.0%** (40.40 -> 41.63), peak +0.30 GB;
+  four 700-token greedy temp-0 generations token-for-token identical.
+  Taken primarily for the correctness fixes it carries, not the speed:
+  - `a6252bc1` cache restore fails closed when attention and recurrent offsets
+    disagree with the matched boundary — the upstream fix for **Ornith loops**
+  - `2c036567` / `45bcb1de` DiskCache publishes rows atomically, fails closed on
+    a short file, and never stores or restores NaN/Inf — our KV disk tier
+  - `36b7396f` the safetensors healer is opt-in and no longer rewrites a user's
+    original model files by default (it had been mutating staged checkpoints)
+  - `5a63b9be` / `97676e19` wire a loaded model's weights so big bundles stop
+    swapping, but only when the model fits a safe physical-RAM reserve
+
+### Added
+
+- `Engine` now passes `jangPress: .default` to `LoadConfiguration`, making
+  MLXPress axis E (the routed cold-weight tier) reachable. `LoadConfiguration`
+  defaults `jangPress` to `.disabled`, which short-circuits before any
+  environment lookup, so **`MLXPRESS=N` was silently inert on every previous
+  Mei build**. Verified engaged: `MLXPRESS=70` advises 10.5 GiB cold, `95`
+  advises 14.2 GiB, and the mmap tier indexes 10,240 experts across 40 layers.
+  No throughput cost (64.0-67.4 tok/s short, 40.4-40.6 at 30k across settings).
+
+  It reclaims **nothing** on this configuration, and that is worth stating: a
+  19.5 GB mmap'd model shows only ~150 MB `phys_footprint` and ~1.1 GB RSS, so
+  the weights are clean file-backed pages macOS already evicts without any
+  `madvise` help. RSS is flat across `MLXPRESS=0` vs `95` in both soft and force
+  modes. Shipped because it makes the tier reachable at all — for a future model
+  or host where weights are not mmap-clean — not because it helps here.
+
+### Notes for operators
+
+- `VMLX_ENABLE_UNSAFE_COMPILE=1` measures **+9%** short decode on both targets
+  (Ornith 66.36 -> 72.32, Qwen 3.6 66.65 -> 73.21) with token-for-token
+  identical greedy output, and is re-verified against this pin. It is **not**
+  enabled by Mei; it is set per-deployment. Mei's one-model-per-server-process
+  design makes the Osaurus #1173 model-switch corruption that gates it off
+  structurally unreachable, but the macOS Tahoe Metal JIT bug
+  (MLX #3329/#3201/#3256) is a separate live risk — **re-verify token equality
+  after any vmlx re-pin before relying on it**.
+- Two optimizations were implemented, measured, and **rejected**: enabling the
+  compiled routed-MoE region on the LLM path (`compileSeparatedDecode: true`)
+  costs **-9.7%** short decode and -4.9% at 30k, and graph-traced compiled
+  decode fails a greedy token-equality gate outright. Neither is in this
+  release.
+
 ## [0.2.0] - 2026-09-06
 
 First **stable** Apple Silicon release: the prebuilt CLI/runtime bundle + a

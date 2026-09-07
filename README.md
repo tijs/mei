@@ -19,7 +19,13 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.2.0**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.3.0**.
+
+**0.3.0 (2026-09-07)** re-pins vmlx-swift onto the fork synced with 37 upstream
+commits — carrying the upstream fix for Ornith cache-restore loops, DiskCache
+atomicity, and an opt-in safetensors healer — and makes the MLXPress
+cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
+30k decode +3.0% with token-for-token identical greedy output.
 
 ## How it works (high level)
 
@@ -41,7 +47,7 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.2.0)
+## Install on Apple Silicon (stable 0.3.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -49,17 +55,18 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.2.0
+mei --version     # -> mei 0.3.0
 ```
 
-**Manual — release asset:** download `mei-0.2.0-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.3.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
 
 See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
 source-built `scripts/install_mei.sh` installer. Release notes:
-[`docs/RELEASE-0.2.0.md`](docs/RELEASE-0.2.0.md).
+[`docs/RELEASE-0.2.0.md`](docs/RELEASE-0.2.0.md); 0.3.0's changes are in
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## One-time prerequisite: `hf`
 
