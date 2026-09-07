@@ -1,5 +1,78 @@
 # RUNBOOK: ordered next actions, Phase A-E (2026-09-06) — AUTHORITATIVE ordering
 
+> ## UPDATE 2026-09-07 (late) — D3 answered, and the memory framing was wrong
+>
+> **D3 DONE.** `jangPress: .default` at `Engine.swift:90` (branch
+> `research/d3-mlxpress`, commit `86d4503`) makes the MLXPress cold tier engage
+> for the first time — `MLXPRESS=N` was silently inert on every prior build.
+> Verified live: 10.5 GiB advised cold at 70, 14.2 at 95, mmap tier correctly
+> indexing 10,240 experts / 40 layers. **No throughput cost** (64–67 tok/s short,
+> 40.4–40.6 at 30k across all settings). **But it reclaims nothing**, and the
+> reason matters more than the result.
+>
+> **THE EXPERT-BANK MEMORY FRAMING (F6 / P5 / STATE OF PLAY) IS WRONG.** A 19.5 GB
+> mmap'd model shows **143–156 MB phys_footprint** and ~1.1 GB RSS after a 30k
+> request. The weights are clean file-backed pages that macOS evicts freely with
+> no `madvise` help. So "93% of the model is the routed expert bank, therefore
+> memory wins must come from there" is true of **weight bytes** and false of
+> **resident cost** — the bank is ~0% of physical footprint.
+>
+> Consequences for this plan:
+> - **D3: closed, redundant on this configuration.** Keep the change (it makes the
+>   tier reachable for future models/hosts), don't enable it by default.
+> - **D2: its memory rationale is void.** Lowering routed-expert precision shrinks
+>   the file, not the resident cost. Its *quality* question stays open and
+>   legitimate — just don't sell it as a memory lever.
+> - **C3 SURVIVES and is now the best memory lever left**: the 407 MiB GDN
+>   input-projection duplicate and the 12.2 GiB fused gate+up bank are
+>   runtime-materialised **dirty** allocations, not file-backed — exactly the
+>   category that does cost real memory. Pre-fusing them on disk turns dirty
+>   allocation into clean mmap.
+> - What actually constrains context: KV cache + SSM companion state (Ornith 30k
+>   moves MLX-allocator active 18.79 → 21.77 GB) and Metal compute buffers.
+>   Levers that shrink *those* have headroom.
+>
+> **Methodological correction worth keeping:** `mei_memory_active_bytes` / `peak`
+> are MLX **allocator** numbers, not OS memory pressure. Every "peak 25.73 GB @
+> 65k" figure in these notes is an allocator number. For host memory, measure RSS
+> or phys_footprint.
+>
+> **Remaining open:** C2 (patch + test plan prepared in the research worktree;
+> needs a fork re-pin and full acceptance re-run — the largest remaining unit),
+> C3 (repack, now higher value), D2 quality-only.
+
+> ## UPDATE 2026-09-07 (overnight results) — two claims of mine falsified, one harness defect found
+>
+> **E2 DONE. Qwen3.6 text-only: 24/25** (sanity 2/2, hermes_ops 8/8, coding 14/15).
+> The speed claim needs care: hermes_ops tok/s is **not comparable across these
+> two runs** because they took different agent trajectories (stock generated
+> 16,094 completion tokens vs text-only 6,665), and the sign flips with pooling
+> method. The defensible number is the **sanity rows only** (fixed prompt,
+> near-fixed output): **1.31–1.32x**, matching B1's controlled 1.24x. The
+> 24-vs-22 quality gap is **noise** — the text tensors are bit-identical, so it
+> cannot be a real difference; treat it as a calibration of single-trial variance.
+>
+> **Nemotron proxy fix FALSIFIED.** Live re-run gave hermes_ops **1/8, identical**
+> to before. The proxy ran correctly; under the real Hermes prompt shape the model
+> emits **no tool-call syntax at all**, so nothing exists to recover. Config
+> reverted to `needs_proxy: false`. Nemotron final: **7/25**. Its failure is a
+> model capability limit at ~22k tokens of tool payload (threshold ~5–6k with
+> realistic content), not a parser bug. Only untested lever left: shrink Hermes's
+> tool payload.
+>
+> **HARNESS DEFECT — the speed gate is not reproducible.** Same config, same
+> prompts, byte-identical outputs: **1.02 tok/s (cold) vs 32.74 tok/s (warm)**,
+> ttft 84.6 s vs 1.8 s, flipping the 4.0 viability gate from fail to pass. Cause:
+> every Mei config uses a **persistent** `--kv-cache-dir`, so a second run is
+> served from the disk KV tier. Affects all cross-run comparisons, not just
+> Nemotron. Fix: clear the KV dir before a gated run, or record cache state on the
+> gate row so cold and warm are never compared.
+>
+> **D3 IN PROGRESS.** `Engine.swift:90` now passes `jangPress: .default` on branch
+> `research/d3-mlxpress` (worktree `~/projects/mei-d3`), building to
+> `mei-build-d3`. Next: `MLXPRESS=0/70/95` sweep judged on **resident footprint
+> and peak**, with tok/s only as a no-regression check.
+
 > ## UPDATE 2026-09-06 (overnight session) — Nemotron solved, B1 result is bigger than expected
 >
 > **Nemotron root cause found and fixed at config level.** Its hermes_ops 1/8 and
