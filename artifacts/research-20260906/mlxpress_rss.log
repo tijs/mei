@@ -1,0 +1,27 @@
+===== MLXPRESS=0 forceMode=soft =====
+  after load : RSS=227520KB  footprint=    phys_footprint: 143 MB
+  30k request done
+  after 30k  : RSS=1151472KB
+  after 20s  : RSS=1143504KB   (quiesce window for the cold tier)
+===== MLXPRESS=0 forceMode=force =====
+  after load : RSS=248000KB  footprint=    phys_footprint: 156 MB
+  30k request done
+  after 30k  : RSS=1183344KB
+  after 20s  : RSS=1144896KB   (quiesce window for the cold tier)
+mei: prefix cache enabled (paged in-memory + disk at /tmp/mlxpress_rss/kv-0-force); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed
+===== MLXPRESS=95 forceMode=soft =====
+  after load : RSS=245488KB  footprint=    phys_footprint: 150 MB
+  30k request done
+  after 30k  : RSS=1147056KB
+  after 20s  : RSS=1147440KB   (quiesce window for the cold tier)
+[MLXPress] advised 15288238080 canonical mmap routed bytes cold (pct=95)
+[MLXPressMmapTier] index: descriptors=1757 parsed=120 missingDesc=0 stacked=120 whole=0 experts=10240 layers=40 routedBytes=16106127360
+===== MLXPRESS=95 forceMode=force =====
+  after load : RSS=244624KB  footprint=    phys_footprint: 149 MB
+  30k request done
+  after 30k  : RSS=1185216KB
+  after 20s  : RSS=1185232KB   (quiesce window for the cold tier)
+[MLXPress] advised 15288238080 canonical mmap routed bytes cold (pct=95)
+[MLXPressMmapTier] index: descriptors=1757 parsed=120 missingDesc=0 stacked=120 whole=0 experts=10240 layers=40 routedBytes=16106127360
+mei: prefix cache enabled (paged in-memory + disk at /tmp/mlxpress_rss/kv-95-force); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed
+RSS_SWEEP_COMPLETE

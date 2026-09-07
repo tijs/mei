@@ -1,0 +1,29 @@
+===== MLXPRESS=0 =====
+MLXPRESS=0 short r1: tok/s=64.0391780211454 active=18.793GB peak=18.853GB
+MLXPRESS=0 short r2: tok/s=65.94430407609224 active=18.793GB peak=18.853GB
+MLXPRESS=0 short r3: tok/s=65.7816211214432 active=18.793GB peak=18.853GB
+MLXPRESS=0 30k: prompt=52020 wall=164.5s tok/s=40.55295489403889 active=21.770GB peak=23.268GB
+[MLXPressRouter] enabled=false async=true warmAdvice=false hotPerLayer=77 maxIndices=32 maxPending=512 symbol=missing
+mei: prefix cache enabled (paged in-memory + disk at /tmp/mlxpress_sweep/kv-0); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed
+mei: memory after load: active 19551131108 cache 0 peak 0 bytes; limit 30000000000 cache-limit 32641751449
+===== MLXPRESS=70 =====
+MLXPRESS=70 short r1: tok/s=66.09330728688339 active=18.793GB peak=18.853GB
+MLXPRESS=70 short r2: tok/s=66.54314743210595 active=18.793GB peak=18.853GB
+MLXPRESS=70 short r3: tok/s=66.94070893914487 active=18.793GB peak=18.853GB
+MLXPRESS=70 30k: prompt=52020 wall=163.8s tok/s=40.597407693232654 active=21.770GB peak=23.268GB
+[MLXPress] advised 11261706240 canonical mmap routed bytes cold (pct=70)
+[MLXPressRouter] enabled=false async=true warmAdvice=false hotPerLayer=77 maxIndices=32 maxPending=512 symbol=missing
+[MLXPressMmapTier] index: descriptors=1757 parsed=120 missingDesc=0 stacked=120 whole=0 experts=10240 layers=40 routedBytes=16106127360
+mei: prefix cache enabled (paged in-memory + disk at /tmp/mlxpress_sweep/kv-70); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed
+mei: memory after load: active 19551131108 cache 0 peak 0 bytes; limit 30000000000 cache-limit 32641751449
+===== MLXPRESS=95 =====
+MLXPRESS=95 short r1: tok/s=66.47678609857819 active=18.793GB peak=18.853GB
+MLXPRESS=95 short r2: tok/s=66.467815156721 active=18.793GB peak=18.853GB
+MLXPRESS=95 short r3: tok/s=67.37509669458866 active=18.793GB peak=18.853GB
+MLXPRESS=95 30k: prompt=52020 wall=163.7s tok/s=40.40918504563879 active=21.770GB peak=23.268GB
+[MLXPress] advised 15288238080 canonical mmap routed bytes cold (pct=95)
+[MLXPressRouter] enabled=false async=true warmAdvice=false hotPerLayer=32 maxIndices=32 maxPending=512 symbol=missing
+[MLXPressMmapTier] index: descriptors=1757 parsed=120 missingDesc=0 stacked=120 whole=0 experts=10240 layers=40 routedBytes=16106127360
+mei: prefix cache enabled (paged in-memory + disk at /tmp/mlxpress_sweep/kv-95); topology layers=40 kvLayers=10 mambaLayers=30 companion=ssm restore=disk-backed
+mei: memory after load: active 19551131108 cache 0 peak 0 bytes; limit 30000000000 cache-limit 32641751449
+MLXPRESS_SWEEP_COMPLETE
