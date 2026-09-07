@@ -82,4 +82,53 @@ public enum SSMAnchorBoundaries {
         let sorted = offsets.filter { seen.insert($0).inserted }.sorted()
         return Result(offsets: sorted, warning: nil)
     }
+
+    /// Divergence-based anchor computation (2026-09-07).
+    ///
+    /// `compute` assumes a prefix-additive renderer: the render of
+    /// `messages[0..<i]` must be a token prefix of the full render. Qwen 3.5/3.6
+    /// templates violate this at the system boundary — rendering the system
+    /// message ALONE (with tools) yields MORE tokens than the full
+    /// system+user render (measured 21,834 vs 20,394 on the Hermes prompt), so
+    /// the only anchor that matters, the end of the shared system+tools
+    /// prefix, was silently dropped and the disk tier never restored it.
+    ///
+    /// This variant makes no additivity assumption. For each of the first `k`
+    /// user messages it renders the FULL template with that message's content
+    /// replaced by a sentinel and takes the longest common token prefix with
+    /// the real render. Every offset it returns is, by construction, a
+    /// position up to which the real token sequence is shared with a prompt
+    /// that differs only from that message on — exactly what a later
+    /// conversation with the same system prompt looks like.
+    public static func computeByDivergence(
+        template: [[String: any Sendable]],
+        fullTokens: [Int],
+        k: Int,
+        renderFull: ([[String: any Sendable]]) throws -> [Int]
+    ) rethrows -> Result {
+        guard k > 0, !template.isEmpty, !fullTokens.isEmpty else {
+            return Result(offsets: [], warning: nil)
+        }
+        let userIndices = template.indices.filter {
+            template[$0]["role"] as? String == "user"
+        }
+        guard !userIndices.isEmpty else {
+            return Result(offsets: [], warning: nil)
+        }
+        var offsets: [Int] = []
+        for idx in userIndices.prefix(k) {
+            var variant = template
+            variant[idx]["content"] = "\u{1F}mei-anchor-divergence-probe\u{1F} 0123456789"
+            let alt = try renderFull(variant)
+            let n = min(alt.count, fullTokens.count)
+            var lcp = 0
+            while lcp < n && alt[lcp] == fullTokens[lcp] { lcp += 1 }
+            if lcp > 0 && lcp < fullTokens.count {
+                offsets.append(lcp)
+            }
+        }
+        var seen = Set<Int>()
+        let sorted = offsets.filter { seen.insert($0).inserted }.sorted()
+        return Result(offsets: sorted, warning: nil)
+    }
 }

@@ -234,7 +234,7 @@ public actor Engine {
             toolChoice: request.toolChoice)
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
-            context: context, fullTokenCount: tokens.count)
+            context: context, tokens: tokens)
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
@@ -432,7 +432,7 @@ public actor Engine {
             toolChoice: request.toolChoice)
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
-            context: context, fullTokenCount: tokens.count)
+            context: context, tokens: tokens)
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
@@ -640,12 +640,27 @@ public actor Engine {
         template: [[String: any Sendable]],
         tools: [MeiJSONValue]?,
         context: [String: any Sendable]?,
-        fullTokenCount: Int
+        tokens: [Int]
     ) async throws -> [Int] {
         let k = config.ssmAnchorBoundaryCount
         guard k > 0 else { return [] }
+        let fullTokenCount = tokens.count
         let tokenizer = await container.tokenizer
         let templateTools = MessageMapping.templateTools(tools)
+        // Divergence method first: exact, template-agnostic (see
+        // SSMAnchorBoundaries.computeByDivergence). The additive method
+        // below stays as the fallback and as the self-checked reference.
+        let divergent = try SSMAnchorBoundaries.computeByDivergence(
+            template: template, fullTokens: tokens, k: k
+        ) { variant in
+            try tokenizer.applyChatTemplate(
+                messages: variant, tools: templateTools, additionalContext: context)
+        }
+        if !divergent.offsets.isEmpty {
+            print("mei: ssm anchor boundaries (k=\(k), divergence): \(divergent.offsets)")
+            fflush(stdout)
+            return divergent.offsets
+        }
         let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
         if trace {
             let roles = template.map { ($0["role"] as? String) ?? "<\(type(of: $0["role"] as Any))>" }
