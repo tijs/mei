@@ -337,9 +337,20 @@ public actor Engine {
         // 2026-09-03, 19-token chat prompt). Text-only models take the
         // rank-safe LLM default prepare, which flattens [1, T] and only
         // rejects batch > 1, so [1, T] is safe for every model class.
+        // SSM anchor offsets are the stable system+tools prefix boundaries
+        // (see ssmAnchorOffsets). vmlx's post-answer boundary store loop
+        // iterates `cachePrefixTokenCounts`, and for a hybrid cache it stores
+        // ONLY boundaries also listed in `cacheStablePrefixTokenCounts` — the
+        // field documented as "deliberately persisted for reuse by unrelated
+        // new chat sessions". Passing neither is why every new conversation
+        // re-prefilled the whole shared prefix: the only stored boundary was
+        // the generation-stripped one, which already contains this turn's own
+        // user tokens, so its key never matched another conversation.
         let input = LMInput(
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
+            cachePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
             toolSchemas: MessageMapping.templateTools(tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
@@ -438,9 +449,13 @@ public actor Engine {
             context: context, anchorOffsets: anchors)
         // Batch-first `[1, T]` tokens like generateLocked and the raw path — see
         // the comment there; Gemma4's VLM prepare crashed on 1-D chat tokens.
+        // See the note in generateLocked: these two fields are what let the
+        // shared system+tools prefix be stored for other conversations.
         let input = LMInput(
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
+            cachePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
