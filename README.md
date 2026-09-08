@@ -19,7 +19,14 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.3.0**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.0**.
+
+**0.4.0 (2026-09-08)** adds opt-in cross-conversation prefix reuse
+(`--ssm-anchor-boundaries K`), which takes a warm agent turn on a shared 20k
+system+tools prefix from ~62 s to ~1.8 s on Ornith and Qwen 3.6 with output
+byte-identical to cold; removes a per-turn boundary re-derive that cost ~60 s
+on every warm request for MambaCache hybrids; and adds Laguna XS 2.1 MLX
+support. See the changelog.
 
 **0.3.0 (2026-09-07)** re-pins vmlx-swift onto the fork synced with 37 upstream
 commits — carrying the upstream fix for Ornith cache-restore loops, DiskCache
@@ -47,7 +54,7 @@ cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.3.0)
+## Install on Apple Silicon (stable 0.4.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -55,10 +62,10 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.3.0
+mei --version     # -> mei 0.4.0
 ```
 
-**Manual — release asset:** download `mei-0.3.0-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.4.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.

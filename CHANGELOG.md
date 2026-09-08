@@ -2,6 +2,91 @@
 
 All notable changes to Mei are documented here.
 
+## [0.4.0] - 2026-09-08
+
+Prefix reuse across conversations, Laguna XS 2.1 support, and the end of a
+per-turn re-derive that was costing ~60 s on every warm request.
+
+### Cross-conversation prefix reuse (opt-in, `--ssm-anchor-boundaries K`)
+
+An agent harness sends the same large system prompt and tool schemas on every
+turn of every conversation. That shared prefix was re-prefilled from cold every
+single time: measured 60.7 s for a 20,394-token Hermes prompt, on every request,
+in every session. Three defects, all fixed here:
+
+- **The anchor offsets were always empty.** `SSMAnchorBoundaries.compute`
+  requires a prefix-additive chat template — rendering `messages[0..<i]` must
+  produce a token prefix of the full render. Qwen 3.5/3.6 violates this at the
+  system boundary: the system message rendered alone *with tools* is 21,834
+  tokens against 20,394 for the full system+user render. The additivity
+  self-check therefore returned `[]` (correctly, given its contract) and the
+  feature was inert on exactly the prompt shape it was built for. Added
+  `SSMAnchorBoundaries.computeByDivergence`, which renders the full template with
+  one message substituted and takes the longest common token prefix. It assumes
+  nothing about the template. `compute` remains the fallback.
+- **Mei never declared the boundary reusable.** vmlx's post-answer store loop
+  iterates `LMInput.cachePrefixTokenCounts` and, for a hybrid cache, persists
+  only boundaries also listed in `cacheStablePrefixTokenCounts` — the field
+  documented as "deliberately persisted for reuse by unrelated new chat
+  sessions". Mei passed neither, so the only stored boundary was the
+  generation-stripped one, which already contains the current turn's user
+  tokens; its content key never matched another conversation.
+- **Every warm turn re-derived a boundary already on disk.** See below.
+
+Measured on both production targets, real 20k-token Hermes prompt:
+
+| | Ornith 1.5 35B-A3B | Qwen 3.6 35B-A3B text-only |
+|---|---|---|
+| cold, first ever | 122.9 s | 120.3 s |
+| second conversation | **1.75 s** | **1.78 s** |
+| new process, same KV dir | **1.79 s** | **1.82 s** |
+
+The cold request is a one-time cost per unique prefix and is amortised across
+every later conversation, including across process restarts.
+
+**Correctness gated.** Restored output is byte-identical to cold on content,
+`reasoning_content` and `tool_calls`, on every restoring row — after a
+determinism baseline proved two identical cold servers agree byte-for-byte.
+
+Default-off. `--ssm-anchor-boundaries 0` (the default) is unchanged behaviour.
+
+### `hasDurableDiskEntry` no longer demands a companion that is never written
+
+For disk-only MambaCache hybrids (Ornith, Qwen 3.5/3.6 GDN MoE, Qwen 3.8-27B)
+the recurrent state round-trips inside the v2 payload as `mamba_{i}_state0/1`.
+`storeAfterGeneration` deliberately writes no separate SSM sidecar for them, and
+`hasRequiredHybridSSM` accepts a fetched entry without one for the same reason —
+but `hasDurableDiskEntry` demanded a *validated* sidecar regardless. The check
+was therefore permanently false on those models, and the post-answer store loop
+re-derived every boundary on every warm turn, replaying the whole prefix through
+the model after the answer had already streamed. The disk write that followed
+was then correctly skipped as already-validated, so the work produced nothing.
+Measured ~60 s per turn on a 20k prefix. Now gated on the same flag the store
+and fetch paths use. (vmlx `654eb455`.)
+
+### Laguna XS 2.1 MLX support
+
+- Unwrap a leading `language_model.` prefix in sanitize.
+- Normalize the routed gate layout before load dequantization, fixing
+  `Unhandled keys [e_score_correction_bias, proj]`.
+- Compile the routed SwitchGLU separated decode for the exact affine S-2.1 XS
+  MoE topology only; other model families are unaffected. Focused regression
+  coverage added.
+
+### Diagnostics
+
+- `MEI_ANCHOR_TRACE=1` prints the anchor computation: message roles, per-prefix
+  token counts, and the resulting offsets or the reason they were rejected.
+
+### vmlx
+
+Re-pinned to `654eb455` (`mei/0.4.0` = the 0.3.0 pin plus the three Laguna fixes
+and the durability fix above). The C3 checkpoint-fused `gate_up_proj` experiment
+is deliberately **not** included: it loads at zero memory cost and is
+token-identical, but measured -2.9% short decode and neutral prefill, so one
+wider gather loses to two narrower ones on this hardware.
+
+
 ## [0.3.0] - 2026-09-07
 
 Re-pins vmlx-swift onto the Mei fork synced with 37 upstream commits, and makes
