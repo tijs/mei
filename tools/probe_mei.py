@@ -132,10 +132,29 @@ def exact_prompt(tokenizer_path: Path, target: int) -> str:
     unit = " hello"
     if len(tokenizer.encode(unit, add_special_tokens=False)) != 1:
         raise RuntimeError("the exact-token prompt unit is not one token for this tokenizer")
-    prompt = unit * target
-    measured = len(tokenizer.encode(prompt, add_special_tokens=False))
+
+    # Count the way the SERVER counts, which is with special tokens. This used
+    # to build and verify with add_special_tokens=False, so for any tokenizer
+    # that prepends a BOS the server saw target+1 and the exact-cap probe failed
+    # on a prompt the harness believed was exactly at the cap.
+    #
+    # Measured 2026-09-09: Ornith 1.5 and Qwen 3.6 text-only add nothing
+    # (100 -> 100), Laguna XS 2.1 adds one (100 -> 101). So the probe passed
+    # 12/12 on the first two and reported a false failure on Laguna, where the
+    # server had correctly rejected 65537 tokens against a 65536 cap. The server
+    # was right every time; the harness was measuring a different quantity.
+    overhead = len(tokenizer.encode(unit, add_special_tokens=True)) - 1
+    units = target - overhead
+    if units < 1:
+        raise RuntimeError(
+            f"context cap {target} is too small for this tokenizer's "
+            f"{overhead}-token special-token overhead")
+    prompt = unit * units
+    measured = len(tokenizer.encode(prompt, add_special_tokens=True))
     if measured != target:
-        raise RuntimeError(f"exact-token prompt measured {measured}, expected {target}")
+        raise RuntimeError(
+            f"exact-token prompt measured {measured} with special tokens, "
+            f"expected {target} (special-token overhead {overhead})")
     return prompt
 
 
