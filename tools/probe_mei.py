@@ -277,6 +277,53 @@ def main() -> int:
 
     probe("tool_streaming", result, stream_tool)
 
+    # A prior assistant tool_call REPLAYED IN HISTORY, which is what every
+    # multi-turn agent turn actually sends. The two probes above only test the
+    # model EMITTING a call; neither ever feeds one back, and that blind spot
+    # let a model through the gate 10/10 and then score 2/8 on hermes_ops.
+    #
+    # Laguna XS 2.1 (2026-09-09): its chat template throws
+    # "Runtime error: Cannot iterate over non-iterable value" on ANY request
+    # whose history contains an assistant message carrying tool_calls — with or
+    # without a following tool result. Every task needing a second turn
+    # therefore returned an empty response and was graded as a model failure.
+    # Ornith on the same build handles 19-message tool-call histories fine, so
+    # this is a per-model template defect that only a history-replay probe can
+    # see. Cheap to run, and it fails loudly instead of silently costing a
+    # whole benchmark.
+    history_payload = {
+        "model": args.model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant with access to one tool."},
+            {"role": "user", "content": "What is 15 + 27? You must use add_numbers to compute it."},
+            {"role": "assistant", "content": "", "tool_calls": [{
+                "id": "call_probe_0001", "type": "function",
+                "function": {"name": "add_numbers", "arguments": "{\"a\": 15, \"b\": 27}"},
+            }]},
+            {"role": "tool", "tool_call_id": "call_probe_0001", "name": "add_numbers", "content": "42"},
+        ],
+        "tools": tools,
+        "temperature": 0,
+        "max_tokens": 128,
+        "stream": False,
+    }
+
+    def tool_history_replay() -> dict[str, Any]:
+        response, elapsed = request_json(chat_url, history_payload, timeout=args.timeout)
+        choice = (response.get("choices") or [{}])[0]
+        message = choice.get("message") or {}
+        content = (message.get("content") or "").strip()
+        if not content:
+            raise AssertionError(
+                "empty response to a replayed tool_call history "
+                f"(finish_reason={choice.get('finish_reason')!r}, usage={response.get('usage')!r}) — "
+                "the model produced nothing when its own prior tool call was sent back")
+        if "42" not in content:
+            raise AssertionError(f"tool result was not used in the answer: {content[:200]!r}")
+        return {"content": content[:300], "usage": response.get("usage"), "request_seconds": elapsed}
+
+    probe("tool_call_history_replay", result, tool_history_replay)
+
     # Streaming/non-streaming parity on plain text: same request both ways,
     # both must produce non-empty identical content and identical usage.
     parity_payload = {
