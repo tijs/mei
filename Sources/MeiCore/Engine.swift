@@ -691,13 +691,21 @@ public actor Engine {
     ) async -> [Int] {
         guard !anchors.isEmpty else { return [] }
         let tokenizer = await container.tokenizer
-        let boundaries = canonicalChatCacheBoundaries(
+        // Deliberately NOT canonicalChatCacheBoundaries(): that helper derives
+        // several boundaries (static-system hints, trailing-continuation and
+        // assistant-continuation probes) and renders the whole transcript four
+        // or more times to do it. Measured on a 40k-token conversation, calling
+        // it added 4.4 s to every turn -- the per-turn interval went from 1.45 s
+        // to 5.8 s. Only ONE of its boundaries is needed here: the canonical
+        // no-generation-prompt history boundary, which is a single render plus
+        // the same exact-token-prefix proof the helper applies.
+        let boundaries = Self.historyBoundary(
             tokenizer: tokenizer,
             messages: template,
             tools: MessageMapping.templateTools(tools),
             additionalContext: context,
             promptTokens: tokens)
-        if boundaries.all.isEmpty {
+        if boundaries.isEmpty {
             // No advancing boundary available: the tokenizer cannot render
             // without a generation prompt, or the template is not
             // prefix-additive. Anchors alone would freeze the stored boundary,
@@ -707,7 +715,34 @@ public actor Engine {
             fflush(stdout)
             return anchors
         }
-        return Set(anchors + boundaries.all).sorted()
+        return Set(anchors + boundaries).sorted()
+    }
+
+    /// The canonical no-generation-prompt history boundary, or `[]`.
+    ///
+    /// Renders the active transcript once with the assistant generation rail
+    /// suppressed and keeps the result only if it is a genuine token prefix of
+    /// the real prompt. A template that reorders or rewrites its history fails
+    /// that check and contributes nothing, which is the same fail-closed
+    /// contract vmlx applies.
+    private static func historyBoundary(
+        tokenizer: any MLXLMCommon.Tokenizer,
+        messages: [[String: any Sendable]],
+        tools: [[String: any Sendable]]?,
+        additionalContext: [String: any Sendable]?,
+        promptTokens: [Int]
+    ) -> [Int] {
+        guard let controllable = tokenizer as? any GenerationPromptControllableTokenizer,
+            let rendered = try? controllable.applyChatTemplate(
+                messages: messages,
+                tools: tools,
+                additionalContext: additionalContext,
+                addGenerationPrompt: false),
+            !rendered.isEmpty,
+            rendered.count < promptTokens.count,
+            promptTokens.prefix(rendered.count).elementsEqual(rendered)
+        else { return [] }
+        return [rendered.count]
     }
 
     private func ssmAnchorOffsets(
