@@ -60,6 +60,14 @@ public actor Engine {
     // state (Ornith GatedDelta), with the chat template's generation-prompt
     // suffix stripped at store time so growing transcripts hit.
     private var queueTail: Task<Void, Never>?
+    /// The tokens this chat template appends after the history to open the
+    /// assistant turn, learned from the first request that renders both forms.
+    /// Lets every later turn find its history boundary with array work instead
+    /// of a second full render. See `historyBoundary`.
+    private var generationPromptSuffix: [Int] = []
+    /// Memo for `ssmAnchorOffsets`, keyed by the token prefix the offsets were
+    /// derived from, so a continuing conversation never recomputes them.
+    private var anchorMemo: (prefixLength: Int, hash: Int, offsets: [Int])?
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -699,7 +707,7 @@ public actor Engine {
         // to 5.8 s. Only ONE of its boundaries is needed here: the canonical
         // no-generation-prompt history boundary, which is a single render plus
         // the same exact-token-prefix proof the helper applies.
-        let boundaries = Self.historyBoundary(
+        let boundaries = historyBoundary(
             tokenizer: tokenizer,
             messages: template,
             tools: MessageMapping.templateTools(tools),
@@ -720,18 +728,39 @@ public actor Engine {
 
     /// The canonical no-generation-prompt history boundary, or `[]`.
     ///
-    /// Renders the active transcript once with the assistant generation rail
-    /// suppressed and keeps the result only if it is a genuine token prefix of
-    /// the real prompt. A template that reorders or rewrites its history fails
-    /// that check and contributes nothing, which is the same fail-closed
-    /// contract vmlx applies.
-    private static func historyBoundary(
+    /// The boundary is the prompt minus whatever the template appends to open
+    /// the assistant turn. The obvious way to find it is to render the
+    /// transcript a second time with that rail suppressed, and that is what
+    /// this did at first — but a render plus tokenize of a growing transcript
+    /// is not cheap. Measured on a 40k-token conversation, the interval between
+    /// one answer and the next request reaching the engine scaled almost
+    /// exactly linearly with the number of full renders per turn: 0.49 s with
+    /// none, 1.95 s with one, 5.75 s with four, i.e. ~1.45 s per render.
+    ///
+    /// So render only ONCE, on the first request, and learn the suffix from the
+    /// difference. Every later turn just checks whether the prompt ends with
+    /// that same suffix and subtracts its length.
+    ///
+    /// The tail check is the proof, and it is re-done on every turn: a template
+    /// that renders a different rail for some turn shape simply fails it and
+    /// falls back to rendering. Nothing is assumed about the template, and a
+    /// wrong boundary could at worst cost a cache miss, never a bad restore —
+    /// the stored KV state is a snapshot taken at that position of THIS prompt
+    /// and is keyed by exactly those tokens, so it always describes itself.
+    private func historyBoundary(
         tokenizer: any MLXLMCommon.Tokenizer,
         messages: [[String: any Sendable]],
         tools: [[String: any Sendable]]?,
         additionalContext: [String: any Sendable]?,
         promptTokens: [Int]
     ) -> [Int] {
+        if !generationPromptSuffix.isEmpty,
+            promptTokens.count > generationPromptSuffix.count,
+            promptTokens.suffix(generationPromptSuffix.count)
+                .elementsEqual(generationPromptSuffix)
+        {
+            return [promptTokens.count - generationPromptSuffix.count]
+        }
         guard let controllable = tokenizer as? any GenerationPromptControllableTokenizer,
             let rendered = try? controllable.applyChatTemplate(
                 messages: messages,
@@ -742,6 +771,7 @@ public actor Engine {
             rendered.count < promptTokens.count,
             promptTokens.prefix(rendered.count).elementsEqual(rendered)
         else { return [] }
+        generationPromptSuffix = Array(promptTokens.suffix(promptTokens.count - rendered.count))
         return [rendered.count]
     }
 
@@ -753,6 +783,41 @@ public actor Engine {
     ) async throws -> [Int] {
         let k = config.ssmAnchorBoundaryCount
         guard k > 0 else { return [] }
+
+        // Reuse the offsets when this prompt still begins with the exact token
+        // prefix they were derived from.
+        //
+        // Anchors mark the shared system+tools prefix, which cannot move while
+        // a conversation grows -- but computing them renders the whole chat
+        // template once per anchor, and that is not free on a long transcript.
+        // Measured on a 40k-token conversation, the interval between one answer
+        // and the next request reaching the engine was 0.50 s with anchors off,
+        // 1.00 s at k=1 and 1.49 s at k=2: about 0.49 s per render, paid again
+        // on every single turn.
+        //
+        // The key is the token prefix itself, not a message count or a session
+        // id, so an unrelated conversation with a different system prompt
+        // cannot collide with it -- it simply fails the comparison and
+        // recomputes. Hashing 40k integers costs microseconds against ~0.5 s
+        // per render.
+        //
+        // A side effect worth stating: the declared list stops growing when a
+        // second user message appears (k=2 used to publish a second anchor
+        // then). That anchor sat after the first user turn of THIS
+        // conversation, so no other conversation could ever match it -- it was
+        // cost without benefit. Keeping the list stable across a conversation
+        // is also what the store path wants.
+        func prefixHash(_ length: Int) -> Int {
+            var hasher = Hasher()
+            for token in tokens.prefix(length) { hasher.combine(token) }
+            return hasher.finalize()
+        }
+        if let memo = anchorMemo, tokens.count > memo.prefixLength,
+            prefixHash(memo.prefixLength) == memo.hash
+        {
+            return memo.offsets
+        }
+
         let fullTokenCount = tokens.count
         let tokenizer = await container.tokenizer
         let templateTools = MessageMapping.templateTools(tools)
@@ -768,6 +833,9 @@ public actor Engine {
         if !divergent.offsets.isEmpty {
             print("mei: ssm anchor boundaries (k=\(k), divergence): \(divergent.offsets)")
             fflush(stdout)
+            if let longest = divergent.offsets.max(), longest > 0, longest < tokens.count {
+                anchorMemo = (longest, prefixHash(longest), divergent.offsets)
+            }
             return divergent.offsets
         }
         let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
