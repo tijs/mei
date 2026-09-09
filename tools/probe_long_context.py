@@ -62,6 +62,9 @@ def main() -> int:
     parser.add_argument("--lengths", type=int, nargs="+", default=[30000, 80000])
     parser.add_argument("--max-tokens", type=int, default=32)
     parser.add_argument("--min-decode-tps", type=float, default=1.0)
+    parser.add_argument("--context-cap", type=int, default=None,
+                        help="server context cap; shifts a probe down by one when the "
+                             "strict-extension round would exceed it")
     parser.add_argument("--timeout", type=float, default=3600)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -78,12 +81,26 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     completions_url = f"{args.base_url.rstrip('/')}/completions"
 
-    for length in args.lengths:
+    for requested_length in args.lengths:
+        # Round 2 must strictly EXTEND round 1 by one token to be eligible for
+        # Mei's exact-extension KV slot. That makes the PAIR occupy
+        # `length + 1` tokens, so probing at exactly the context cap asks the
+        # server for cap+1 and is refused — correctly. Shift the pair down by
+        # one so `--lengths <cap>` tests the boundary it is obviously meant to
+        # test, instead of reporting a failure for the server doing its job.
+        #
+        # This bit three separate times on 2026-09-09: the prefill-step 65k gate
+        # reported ALL step sizes as failing, including the incumbent, purely
+        # because of this. Probing at cap-1 gave a clean pass for every one.
+        length = requested_length
+        if args.context_cap and requested_length + 1 > args.context_cap:
+            length = args.context_cap - 1
+            print(f"[probe_long_context] --lengths {requested_length} needs "
+                  f"{requested_length + 1} tokens for the strict-extension round, "
+                  f"over the {args.context_cap} cap; probing at {length} instead",
+                  file=sys.stderr)
         for round_trip, label, sent_length in (
             (1, "fresh", length),
-            # Round 2 must strictly EXTEND round 1 (one more token) to be
-            # eligible for Mei's exact-extension KV slot; the cached prefix
-            # then covers round 1's full prompt.
             (2, "cache_reuse", length + 1),
         ):
             name = f"fill_{length}_{label}"
