@@ -17,6 +17,14 @@ struct MeiMain {
             exit(2)
         }
 
+        if !config.requestLogPath.isEmpty {
+            RequestLog.configure(path: config.requestLogPath)
+            if RequestLog.isEnabled {
+                print("mei: request log at \(config.requestLogPath)")
+                fflush(stdout)
+            }
+        }
+
         config.optimizationProfile.applyRuntimeEnvironment(
             force: config.requestedOptimizationProfile == .ornith)
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
