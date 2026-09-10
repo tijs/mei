@@ -68,6 +68,13 @@ public actor Engine {
     /// Memo for `ssmAnchorOffsets`, keyed by the token prefix the offsets were
     /// derived from, so a continuing conversation never recomputes them.
     private var anchorMemo: (prefixLength: Int, hash: Int, offsets: [Int])?
+    /// The previous request's prompt tokens, kept so the next request can find
+    /// the prefix the two actually share. See `adaptiveStableBoundary`.
+    private var previousPromptTokens: [Int] = []
+    /// A boundary must cover at least this many tokens to be worth storing: the
+    /// snapshot costs disk and a store, and reusing a short prefix saves less
+    /// than the bookkeeping costs.
+    private static let adaptiveStableMinimumTokens = 1024
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -240,9 +247,19 @@ public actor Engine {
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
             toolChoice: request.toolChoice)
-        let anchors = try await ssmAnchorOffsets(
+        var anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
+        // Offer the prefix this prompt shares with the previous one as an extra
+        // stable boundary, so a client that varies its system-prompt tail per
+        // session still gets cross-session reuse. See adaptiveStableBoundary.
+        if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
+            anchors = (anchors + [shared]).sorted()
+            if config.logRequests {
+                print("mei: adaptive stable boundary \(shared) (prompt \(tokens.count))")
+                fflush(stdout)
+            }
+        }
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
@@ -455,9 +472,19 @@ public actor Engine {
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
             toolChoice: request.toolChoice)
-        let anchors = try await ssmAnchorOffsets(
+        var anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
+        // Offer the prefix this prompt shares with the previous one as an extra
+        // stable boundary, so a client that varies its system-prompt tail per
+        // session still gets cross-session reuse. See adaptiveStableBoundary.
+        if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
+            anchors = (anchors + [shared]).sorted()
+            if config.logRequests {
+                print("mei: adaptive stable boundary \(shared) (prompt \(tokens.count))")
+                fflush(stdout)
+            }
+        }
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
@@ -773,6 +800,46 @@ public actor Engine {
         else { return [] }
         generationPromptSuffix = Array(promptTokens.suffix(promptTokens.count - rendered.count))
         return [rendered.count]
+    }
+
+    /// The longest prefix this prompt shares with the previous one, when that
+    /// is worth storing a snapshot for.
+    ///
+    /// WHY THIS EXISTS. Anchors are derived by divergence across message
+    /// variants WITHIN one request, so the boundary always lands after the
+    /// whole system message. When a client varies the TAIL of its system
+    /// prompt per session — hermes appends `cwd` and `session_id` after its
+    /// stable section — every new session's prompt shares a long head with the
+    /// last one but hashes differently at the anchor, so nothing is ever
+    /// reused. Measured on the coding suites: 16 cache misses, one per task,
+    /// ~5,700 tokens each, 46.7% of all prefill time.
+    ///
+    /// The obvious fix — match the longest common prefix at fetch time and trim
+    /// the stored state down to it — is impossible for this topology. Trimming
+    /// means rewinding, and the 30 GatedDelta layers hold a recurrent state
+    /// that is not invertible: `BaseKVCache.isTrimmable` is false and neither
+    /// `ArraysCache` nor `MambaCache` overrides it. The state has to be STORED
+    /// at a boundary later prompts will share, which means discovering that
+    /// boundary before storing rather than after.
+    ///
+    /// So: compare against the previous prompt and offer their common prefix as
+    /// an extra stable boundary. The first pair of sessions still pays a cold
+    /// prefill — nothing is stored there yet — and every session after reuses.
+    /// The split is discovered, not declared, so no client cooperation is
+    /// needed.
+    private func adaptiveStableBoundary(tokens: [Int]) -> Int? {
+        defer { previousPromptTokens = tokens }
+        guard !previousPromptTokens.isEmpty else { return nil }
+        var shared = 0
+        let limit = min(previousPromptTokens.count, tokens.count)
+        while shared < limit, previousPromptTokens[shared] == tokens[shared] {
+            shared += 1
+        }
+        // A proper prefix only: at `tokens.count` the boundary is the whole
+        // prompt, which the exact-match tier already covers.
+        guard shared >= Self.adaptiveStableMinimumTokens, shared < tokens.count
+        else { return nil }
+        return shared
     }
 
     private func ssmAnchorOffsets(
