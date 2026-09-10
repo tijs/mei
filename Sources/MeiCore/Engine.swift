@@ -95,6 +95,13 @@ public actor Engine {
     /// earlier version of this never fire: EVERY cold prefill in a traced run
     /// was immediately preceded by a request of 470-516 tokens.
     private static let adaptiveStableFloorTokens = 2048
+    /// The adaptive boundary already written to the cache. Re-offering it for
+    /// STORING is very expensive: a restoring request starts prefill AT the
+    /// boundary, so the prefill capture never crosses it, and the post-answer
+    /// store falls back to rederiving it — measured at 9.8 s per task on a
+    /// 3,072-token boundary, against the 7.2 s of prefill the restore saved.
+    /// It stays in the FETCH list so later conversations still find it.
+    private var storedAdaptiveBoundary: Int?
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -270,13 +277,24 @@ public actor Engine {
         var anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
-        // Offer the prefix this prompt shares with the previous one as an extra
-        // stable boundary, so a client that varies its system-prompt tail per
-        // session still gets cross-session reuse. See adaptiveStableBoundary.
+        // Offer the prefix this prompt shares with earlier ones as an extra
+        // boundary, so a client that varies its system-prompt tail per session
+        // still gets cross-session reuse. See adaptiveStableBoundary.
+        //
+        // It goes in the FETCH list every time, but in the STORE list only
+        // until it has actually been written once. Re-offering it for storing
+        // costs a rederive on every later conversation — a restoring request
+        // begins prefill at the boundary, so the prefill capture never crosses
+        // it — measured at 9.8 s per task against the 7.2 s the restore saved.
+        var adaptiveBoundary: Int? = nil
+        var adaptiveNeedsStore = false
         if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
             anchors = (anchors + [shared]).sorted()
+            adaptiveBoundary = shared
+            adaptiveNeedsStore = (shared != storedAdaptiveBoundary)
             if config.logRequests {
-                print("mei: adaptive stable boundary \(shared) (prompt \(tokens.count))")
+                print("mei: adaptive boundary \(shared) (prompt \(tokens.count)"
+                    + ", store=\(adaptiveNeedsStore))")
                 fflush(stdout)
             }
         }
@@ -290,11 +308,16 @@ public actor Engine {
             print("mei: chat request tokens \(tokens.count)")
             fflush(stdout)
         }
+        // Drop the adaptive boundary from the STORE list once it is written.
+        let stableCounts: [Int]? = (adaptiveBoundary != nil && !adaptiveNeedsStore)
+            ? anchors.filter { $0 != adaptiveBoundary! } : nil
+        if adaptiveNeedsStore { storedAdaptiveBoundary = adaptiveBoundary }
         let run = try await generateLocked(
             tokens: tokens,
             parameters: parameters,
             tools: request.tools,
-            cachePrefixCounts: prefixCounts)
+            cachePrefixCounts: prefixCounts,
+            stablePrefixCounts: stableCounts)
         return run
     }
 
@@ -375,7 +398,8 @@ public actor Engine {
         tokens: [Int],
         parameters: GenerateParameters,
         tools: [MeiJSONValue]?,
-        cachePrefixCounts: [Int]? = nil
+        cachePrefixCounts: [Int]? = nil,
+        stablePrefixCounts: [Int]? = nil
     ) async throws -> GenerationRun {
         // Emit the token array as `[1, T]` (batch-first), matching the raw
         // completions path and the vmlx cache-restore rebuild. A multimodal
@@ -400,7 +424,7 @@ public actor Engine {
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
             cachePrefixTokenCounts: cachePrefixCounts ?? parameters.ssmAnchorBoundaries,
-            cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cacheStablePrefixTokenCounts: stablePrefixCounts ?? parameters.ssmAnchorBoundaries,
             toolSchemas: MessageMapping.templateTools(tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
@@ -495,13 +519,24 @@ public actor Engine {
         var anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
-        // Offer the prefix this prompt shares with the previous one as an extra
-        // stable boundary, so a client that varies its system-prompt tail per
-        // session still gets cross-session reuse. See adaptiveStableBoundary.
+        // Offer the prefix this prompt shares with earlier ones as an extra
+        // boundary, so a client that varies its system-prompt tail per session
+        // still gets cross-session reuse. See adaptiveStableBoundary.
+        //
+        // It goes in the FETCH list every time, but in the STORE list only
+        // until it has actually been written once. Re-offering it for storing
+        // costs a rederive on every later conversation — a restoring request
+        // begins prefill at the boundary, so the prefill capture never crosses
+        // it — measured at 9.8 s per task against the 7.2 s the restore saved.
+        var adaptiveBoundary: Int? = nil
+        var adaptiveNeedsStore = false
         if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
             anchors = (anchors + [shared]).sorted()
+            adaptiveBoundary = shared
+            adaptiveNeedsStore = (shared != storedAdaptiveBoundary)
             if config.logRequests {
-                print("mei: adaptive stable boundary \(shared) (prompt \(tokens.count))")
+                print("mei: adaptive boundary \(shared) (prompt \(tokens.count)"
+                    + ", store=\(adaptiveNeedsStore))")
                 fflush(stdout)
             }
         }
@@ -512,6 +547,12 @@ public actor Engine {
         // the comment there; Gemma4's VLM prepare crashed on 1-D chat tokens.
         // See the note in generateLocked: these two fields are what let the
         // shared system+tools prefix be stored for other conversations.
+        // Same rule as the non-streaming path: keep the adaptive boundary for
+        // fetching, drop it from the store list once written.
+        let streamStableCounts: [Int] = (adaptiveBoundary != nil && !adaptiveNeedsStore)
+            ? parameters.ssmAnchorBoundaries.filter { $0 != adaptiveBoundary! }
+            : parameters.ssmAnchorBoundaries
+        if adaptiveNeedsStore { storedAdaptiveBoundary = adaptiveBoundary }
         let streamPrefixCounts = await canonicalPrefixBoundaries(
             template: template, tools: request.tools, context: context,
             tokens: tokens, anchors: parameters.ssmAnchorBoundaries)
@@ -519,7 +560,7 @@ public actor Engine {
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
             cachePrefixTokenCounts: streamPrefixCounts,
-            cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cacheStablePrefixTokenCounts: streamStableCounts,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         let modelBox: MeiBox<any LanguageModel> = await container.perform { context in
