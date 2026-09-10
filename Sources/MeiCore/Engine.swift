@@ -68,8 +68,8 @@ public actor Engine {
     /// Memo for `ssmAnchorOffsets`, keyed by the token prefix the offsets were
     /// derived from, so a continuing conversation never recomputes them.
     private var anchorMemo: (prefixLength: Int, hash: Int, offsets: [Int])?
-    /// The previous request's prompt tokens, kept so the next request can find
-    /// the prefix the two actually share. See `adaptiveStableBoundary`.
+    /// The longest prefix every sizeable prompt so far has agreed on. Converges
+    /// to the caller's stable header. See `adaptiveStableBoundary`.
     private var previousPromptTokens: [Int] = []
     /// A boundary must cover at least this many tokens to be worth storing: the
     /// snapshot costs disk and a store, and reusing a short prefix saves less
@@ -89,7 +89,12 @@ public actor Engine {
     /// one. Only needs to exceed the chat template's generation-prompt suffix
     /// (5 tokens on Ornith); 64 leaves room without risking a real divergence
     /// being read as a continuation.
-    private static let continuationMargin = 64
+    /// Prompts below this are ignored when converging the candidate. Between
+    /// coding tasks hermes issues a ~500-token call of its own, and comparing
+    /// against that instead of the previous real conversation is what made an
+    /// earlier version of this never fire: EVERY cold prefill in a traced run
+    /// was immediately preceded by a request of 470-516 tokens.
+    private static let adaptiveStableFloorTokens = 2048
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -843,46 +848,44 @@ public actor Engine {
     /// The split is discovered, not declared, so no client cooperation is
     /// needed.
     private func adaptiveStableBoundary(tokens: [Int]) -> Int? {
-        defer { previousPromptTokens = tokens }
-        guard !previousPromptTokens.isEmpty else { return nil }
+        // Ignore the small interleaved calls a client makes between
+        // conversations; they share almost nothing and would collapse the
+        // candidate to nothing.
+        guard tokens.count >= Self.adaptiveStableFloorTokens else { return nil }
+
+        if previousPromptTokens.isEmpty {
+            previousPromptTokens = tokens
+            return nil
+        }
+
+        // Intersect: the candidate can only ever shrink, so it converges on the
+        // prefix EVERY sizeable prompt agrees about — the caller's stable
+        // header. Continuations of a conversation share that header and leave
+        // it untouched, so intra-task turns cost nothing and cannot drag the
+        // boundary along with the growing transcript.
         var shared = 0
         let limit = min(previousPromptTokens.count, tokens.count)
         while shared < limit, previousPromptTokens[shared] == tokens[shared] {
             shared += 1
         }
-        // A proper prefix only: at `tokens.count` the boundary is the whole
-        // prompt, which the exact-match tier already covers.
-        // Only a NEW conversation is interesting. Within one conversation each
-        // turn extends the last, so the shared prefix is essentially the whole
-        // previous prompt — measured live as a boundary that climbed 5722,
-        // 5820, 6152, 6313, 8657 … one per turn, re-deriving the
-        // growing-transcript boundary the strip machinery already stores and
-        // overwriting the one comparison that matters before it can be used.
-        //
-        // Detect that by SHAPE, not by inspecting roles: a continuation shares
-        // nearly all of the previous prompt, a new conversation shares only the
-        // head. An earlier attempt tested for an "assistant" role in the
-        // rendered template and silently never fired, because
-        // renderChatTemplate appends the assistant generation prompt — so every
-        // request looked like a continuation and no boundary was ever produced.
-        // A CONTINUATION extends the previous prompt, so it shares all of it bar
-        // the generation-prompt suffix: `shared` lands within a few tokens of
-        // `previousPromptTokens.count`. A NEW conversation diverges somewhere
-        // earlier. Requiring a margin separates the two without inspecting
-        // roles, and without assuming anything about how much the two share —
-        // an earlier "shares less than half" test rejected everything, because
-        // two conversations differing only in a system-prompt tail still share
-        // nearly all of it.
-        guard shared + Self.continuationMargin < previousPromptTokens.count
-        else { return nil }
+        if shared < previousPromptTokens.count {
+            previousPromptTokens = Array(previousPromptTokens[..<shared])
+        }
 
         // Round DOWN, never up: the boundary must stay inside the prefix the
-        // two prompts actually share, or the stored content will not match what
-        // a later probe hashes. Rounding down also makes the result transitive
-        // — if every consecutive pair agrees on at least Q tokens, every prompt
-        // in the chain agrees on the same first Q — which is what lets one
-        // stored entry serve every later task.
+        // prompts actually share, or the stored content will not match what a
+        // later probe hashes. Rounding down also makes the result transitive —
+        // if every prompt agrees on at least Q tokens, they all agree on the
+        // same first Q — which is what lets one stored entry serve every later
+        // conversation. Measured across 14 real task transitions the shared
+        // prefix was 5663-6216 tokens, no two identical; at 512 thirteen of the
+        // fourteen collapse onto 5632.
         let quantized = (shared / Self.adaptiveStableQuantum) * Self.adaptiveStableQuantum
+        if config.logRequests {
+            print("mei: [adaptive] prompt=\(tokens.count) shared=\(shared) "
+                + "quantized=\(quantized) candidate=\(previousPromptTokens.count)")
+            fflush(stdout)
+        }
         guard quantized >= Self.adaptiveStableMinimumTokens, quantized < tokens.count
         else { return nil }
         return quantized
