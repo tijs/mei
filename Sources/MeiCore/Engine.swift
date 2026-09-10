@@ -75,6 +75,21 @@ public actor Engine {
     /// snapshot costs disk and a store, and reusing a short prefix saves less
     /// than the bookkeeping costs.
     private static let adaptiveStableMinimumTokens = 1024
+    /// Boundaries are rounded DOWN to a multiple of this so that prompts whose
+    /// shared prefixes differ slightly still agree on one boundary. Measured on
+    /// the coding suites, the longest common prefix at consecutive task
+    /// transitions was 5770, 5681, 5752, 6216, 5729, 5670, 5718, 5674, 5663,
+    /// 5683, 5756 — every pair genuinely shares over 5.6k tokens, but no two
+    /// agree on the exact number, so an unrounded boundary is stored at one
+    /// offset and probed at another and never matches. At 512, ten of those
+    /// eleven collapse onto 5632.
+    private static let adaptiveStableQuantum = 512
+    /// How far short of the previous prompt the shared prefix must fall before
+    /// this counts as a new conversation rather than another turn of the same
+    /// one. Only needs to exceed the chat template's generation-prompt suffix
+    /// (5 tokens on Ornith); 64 leaves room without risking a real divergence
+    /// being read as a continuation.
+    private static let continuationMargin = 64
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -837,9 +852,40 @@ public actor Engine {
         }
         // A proper prefix only: at `tokens.count` the boundary is the whole
         // prompt, which the exact-match tier already covers.
-        guard shared >= Self.adaptiveStableMinimumTokens, shared < tokens.count
+        // Only a NEW conversation is interesting. Within one conversation each
+        // turn extends the last, so the shared prefix is essentially the whole
+        // previous prompt — measured live as a boundary that climbed 5722,
+        // 5820, 6152, 6313, 8657 … one per turn, re-deriving the
+        // growing-transcript boundary the strip machinery already stores and
+        // overwriting the one comparison that matters before it can be used.
+        //
+        // Detect that by SHAPE, not by inspecting roles: a continuation shares
+        // nearly all of the previous prompt, a new conversation shares only the
+        // head. An earlier attempt tested for an "assistant" role in the
+        // rendered template and silently never fired, because
+        // renderChatTemplate appends the assistant generation prompt — so every
+        // request looked like a continuation and no boundary was ever produced.
+        // A CONTINUATION extends the previous prompt, so it shares all of it bar
+        // the generation-prompt suffix: `shared` lands within a few tokens of
+        // `previousPromptTokens.count`. A NEW conversation diverges somewhere
+        // earlier. Requiring a margin separates the two without inspecting
+        // roles, and without assuming anything about how much the two share —
+        // an earlier "shares less than half" test rejected everything, because
+        // two conversations differing only in a system-prompt tail still share
+        // nearly all of it.
+        guard shared + Self.continuationMargin < previousPromptTokens.count
         else { return nil }
-        return shared
+
+        // Round DOWN, never up: the boundary must stay inside the prefix the
+        // two prompts actually share, or the stored content will not match what
+        // a later probe hashes. Rounding down also makes the result transitive
+        // — if every consecutive pair agrees on at least Q tokens, every prompt
+        // in the chain agrees on the same first Q — which is what lets one
+        // stored entry serve every later task.
+        let quantized = (shared / Self.adaptiveStableQuantum) * Self.adaptiveStableQuantum
+        guard quantized >= Self.adaptiveStableMinimumTokens, quantized < tokens.count
+        else { return nil }
+        return quantized
     }
 
     private func ssmAnchorOffsets(
