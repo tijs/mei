@@ -19,7 +19,9 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.0**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.1**.
+
+**0.4.1 (2026-09-11)** fixes prefix-reuse correctness and removes the flags you needed to know about. A restored prefix now reproduces cold output byte-for-byte; before, it restored from re-derived state that could change the answer. `mei --model-dir DIR` is now a complete command — the profile applies the measured-best settings for the model it detects and reports them, and any setting that will not apply to the loaded topology says so.
 
 **0.4.0 (2026-09-08)** adds opt-in cross-conversation prefix reuse
 (`--ssm-anchor-boundaries K`), which takes a warm agent turn on a shared 20k
@@ -54,7 +56,7 @@ cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.4.0)
+## Install on Apple Silicon (stable 0.4.1)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -62,10 +64,10 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.4.0
+mei --version     # -> mei 0.4.1
 ```
 
-**Manual — release asset:** download `mei-0.4.0-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.4.1-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.

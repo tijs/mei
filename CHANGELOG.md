@@ -2,6 +2,68 @@
 
 All notable changes to Mei are documented here.
 
+## [0.4.1] - 2026-09-11
+
+A correctness fix to prefix reuse, and an end to needing flags to get good
+behaviour.
+
+### Prefix reuse restores faithfully now
+
+0.4.0 shipped cross-conversation prefix reuse, but the prefill boundary capture
+almost never produced a usable snapshot, so the post-answer store fell back to
+`cacheSnapshotForBoundary` — which replays the prefix through the model for any
+topology it cannot trim. Restoring that re-derived state **changes greedy
+output**. Three linked defects, all fixed in vmlx `4a1069a4`:
+
+- the capture asked `boundarySplit` for a boundary that helper rebases itself,
+  so every capture landed `promptCount - headCount` tokens short (5 on Ornith,
+  this template's generation-prompt suffix) and the store was correctly refused
+  for an offset mismatch;
+- captured snapshots were keyed by the head's *local* length, which equals the
+  absolute boundary only when the cache started empty;
+- the inner capture filtered stable boundaries against that same local length,
+  so after a restore every boundary beyond the remaining slice was skipped.
+
+**Measured.** A restored prefix now reproduces cold output byte-for-byte — 5 of
+5 prompts identical in text, tool calls and completion tokens, with the cold leg
+asserted at `cached_tokens` 0 and the restored leg at 20,375, fresh server and
+KV directory per leg. It stays exact with 422 tokens of tail.
+
+A restoring request also no longer pays a post-answer re-derive: on a 20k shared
+prefix the first restoring conversation goes **53.4 s → 1.7 s**, and eight
+conversations sharing a system prompt go 117.7 s → 65.4 s. That cost is paid
+once per stored boundary, so it is a one-time saving per cache rather than per
+turn.
+
+### `mei --model-dir DIR` is now a complete command
+
+The operator should not have to know a flag exists to get good behaviour.
+
+- `--served-model-id` is optional, defaulting to the bundle's directory name and
+  reporting it at startup.
+- The `ornith` profile applies the settings this project measured as best:
+  `VMLX_ENABLE_UNSAFE_COMPILE=1` (+9.0% short decode on Ornith, +9.8% on Qwen3.6
+  text-only, gated on token equality because that flag fails silently rather
+  than loudly) and a `--max-tokens` of 8192 (the 32768 default let one
+  degenerate request generate 32,768 tokens over 1,156 s, burning 19.3 of a
+  run's 40.1 minutes).
+- `--ssm-anchor-boundaries` implies a durable KV tier. It previously did nothing
+  at all on `qwen3_5_moe` bundles unless `--kv-cache-dir` was also passed —
+  silently, with the startup line still reporting the cache as enabled.
+- Startup names any setting that will not apply to the loaded topology:
+  `--kv-bits` on recurrent topologies, anchors without a durable tier.
+
+Explicit settings always win; every automatic choice is printed.
+
+### Prefill step is chosen from available memory
+
+The `ornith` profile took 512 while 1024 was measured faster. Now it picks from
+the device's recommended working set. Measured at 54,016 tokens: 512 gives
+311 tok/s prefill at 22.72 GB peak, 1024 gives 337 tok/s (+8.4%) at 23.77 GB. At
+the full 65,536-token cap that lands near 26.2 GB against a 26.8 GB recommended
+set — it fits a 32 GB machine with about 0.6 GB to spare and nothing smaller,
+so it is a device check rather than an unconditional default.
+
 ## [0.4.0] - 2026-09-08
 
 Prefix reuse across conversations, Laguna XS 2.1 support, and the end of a
