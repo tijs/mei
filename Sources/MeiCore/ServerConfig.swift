@@ -14,6 +14,9 @@ public struct ServerConfig: Sendable {
     public var port: Int = 8024
     public var contextCap: Int = 65_536
     public var maxTokensDefault: Int = 32_768
+    /// Set when --max-tokens was given, so a profile default never
+    /// overrides an explicit operator choice.
+    public var maxTokensExplicit: Bool = false
     public var prefillStepSize: Int = 64
     /// KV cache quantization: nil = fp16, else bits (4 or 8).
     public var kvBits: Int? = nil
@@ -169,6 +172,7 @@ public extension ServerConfig {
                 config.contextCap = try parseInt(flag, value())
             case "--max-tokens":
                 config.maxTokensDefault = try parseInt(flag, value())
+                config.maxTokensExplicit = true
             case "--prefill-step-size":
                 config.prefillStepSize = try parseInt(flag, value())
                 prefillStepSizeExplicit = true
@@ -264,6 +268,14 @@ public extension ServerConfig {
                modelDirectory: config.modelDirectory) {
             config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
                 servedModelID: config.servedModelID)
+        }
+
+        // Architecture-validated generation cap. An explicit --max-tokens
+        // always wins; see ModelOptimizationProfile.defaultMaxTokens for the
+        // runaway evidence behind the ornith value.
+        if !config.maxTokensExplicit,
+           let profileMax = config.optimizationProfile.defaultMaxTokens {
+            config.maxTokensDefault = profileMax
         }
 
         // Cross-conversation prefix reuse needs somewhere durable to keep the

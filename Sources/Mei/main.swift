@@ -20,6 +20,15 @@ struct MeiMain {
         config.optimizationProfile.applyRuntimeEnvironment(
             force: config.requestedOptimizationProfile == .ornith)
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
+        // If the operator sets no flags, the profile is choosing for them — so
+        // say what it chose. Silent auto-tuning is only an improvement if it is
+        // visible when something looks wrong.
+        if config.optimizationProfile.isOrnith {
+            let compile = ProcessInfo.processInfo.environment["VMLX_ENABLE_UNSAFE_COMPILE"] ?? "unset"
+            let fused = ProcessInfo.processInfo.environment["VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES"] ?? "unset"
+            print("mei: profile applied max-tokens \(config.maxTokensDefault)"
+                + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
+        }
         fflush(stdout)
         if config.autoEnabledAnchorKVCacheDir {
             // Say it out loud: the operator asked for anchors, not for a cache
