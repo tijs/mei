@@ -42,6 +42,8 @@ public struct ServerConfig: Sendable {
     public var maxCacheSlotTokens: Int = 131_072
     public var cacheReuse: Bool = true
     public var logRequests: Bool = false
+    /// Path for the per-request JSONL log (`--request-log`). Empty disables it.
+    public var requestLogPath: String = ""
     /// Explicit MLX allocator limits in bytes (0 = MLX default: 1.5x the
     /// Metal recommended working set). A default limit below the model's
     /// working set makes MLX malloc calls WAIT on scheduled tasks — the
@@ -211,6 +213,8 @@ public extension ServerConfig {
                 config.cacheReuse = try parseBool(flag, value())
             case "--log-requests":
                 config.logRequests = try parseBool(flag, value())
+            case "--request-log":
+                config.requestLogPath = try value()
             case "--memory-limit-bytes":
                 config.memoryLimitBytes = try parseInt(flag, value())
             case "--cache-limit-bytes":
@@ -381,6 +385,11 @@ public extension ServerConfig {
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)
+      --request-log PATH   Append one JSON line per generation run to PATH:
+                              prompt/cached/completion tokens, prefill_ms,
+                              generate_ms, wall_ms and tok/s. Covers every
+                              response path, including streaming turns that
+                              never ask for a usage block.
       --compiled-decode BOOL  Graph-traced compiled decode (default false)
       --compiled-decode-threshold N  Skip compiled promote+trace when the
                               prefill offset exceeds N tokens (nil = no
