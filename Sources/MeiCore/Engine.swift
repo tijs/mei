@@ -291,7 +291,15 @@ public actor Engine {
         if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
             anchors = (anchors + [shared]).sorted()
             adaptiveBoundary = shared
-            adaptiveNeedsStore = (shared != storedAdaptiveBoundary)
+            // ALWAYS keep it in the stable list. vmlx both stores AND probes
+            // only boundaries listed there, so dropping it after the first
+            // write silently disabled the FETCH: a coding stage went from 2
+            // cold prefills to 17, worse than having no adaptive boundary at
+            // all. The dedupe existed to avoid a rederive on every later
+            // conversation, and vmlx 6c807ec6 removed that cost by making the
+            // capture fire after a restore — so there is nothing left to
+            // dedupe.
+            adaptiveNeedsStore = true
             if config.logRequests {
                 print("mei: adaptive boundary \(shared) (prompt \(tokens.count)"
                     + ", store=\(adaptiveNeedsStore))")
@@ -533,7 +541,15 @@ public actor Engine {
         if let shared = adaptiveStableBoundary(tokens: tokens), !anchors.contains(shared) {
             anchors = (anchors + [shared]).sorted()
             adaptiveBoundary = shared
-            adaptiveNeedsStore = (shared != storedAdaptiveBoundary)
+            // ALWAYS keep it in the stable list. vmlx both stores AND probes
+            // only boundaries listed there, so dropping it after the first
+            // write silently disabled the FETCH: a coding stage went from 2
+            // cold prefills to 17, worse than having no adaptive boundary at
+            // all. The dedupe existed to avoid a rederive on every later
+            // conversation, and vmlx 6c807ec6 removed that cost by making the
+            // capture fire after a restore — so there is nothing left to
+            // dedupe.
+            adaptiveNeedsStore = true
             if config.logRequests {
                 print("mei: adaptive boundary \(shared) (prompt \(tokens.count)"
                     + ", store=\(adaptiveNeedsStore))")
