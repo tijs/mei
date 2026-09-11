@@ -60,6 +60,14 @@ public actor Engine {
     // state (Ornith GatedDelta), with the chat template's generation-prompt
     // suffix stripped at store time so growing transcripts hit.
     private var queueTail: Task<Void, Never>?
+    /// The tokens this chat template appends after the history to open the
+    /// assistant turn, learned from the first request that renders both forms.
+    /// Lets every later turn find its history boundary with array work instead
+    /// of a second full render. See `historyBoundary`.
+    private var generationPromptSuffix: [Int] = []
+    /// Memo for `ssmAnchorOffsets`, keyed by the token prefix the offsets were
+    /// derived from, so a continuing conversation never recomputes them.
+    private var anchorMemo: (prefixLength: Int, hash: Int, offsets: [Int])?
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
@@ -258,6 +266,9 @@ public actor Engine {
         let parameters = try await makeParameters(
             tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
+        let prefixCounts = await canonicalPrefixBoundaries(
+            template: template, tools: request.tools, context: context,
+            tokens: tokens, anchors: parameters.ssmAnchorBoundaries)
         if config.logRequests {
             print("mei: chat request tokens \(tokens.count)")
             fflush(stdout)
@@ -265,7 +276,8 @@ public actor Engine {
         let run = try await generateLocked(
             tokens: tokens,
             parameters: parameters,
-            tools: request.tools)
+            tools: request.tools,
+            cachePrefixCounts: prefixCounts)
         return run
     }
 
@@ -345,7 +357,8 @@ public actor Engine {
     private func generateLocked(
         tokens: [Int],
         parameters: GenerateParameters,
-        tools: [MeiJSONValue]?
+        tools: [MeiJSONValue]?,
+        cachePrefixCounts: [Int]? = nil
     ) async throws -> GenerationRun {
         // Emit the token array as `[1, T]` (batch-first), matching the raw
         // completions path and the vmlx cache-restore rebuild. A multimodal
@@ -369,7 +382,7 @@ public actor Engine {
         let input = LMInput(
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
-            cachePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cachePrefixTokenCounts: cachePrefixCounts ?? parameters.ssmAnchorBoundaries,
             cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
             toolSchemas: MessageMapping.templateTools(tools))
 
@@ -443,6 +456,7 @@ public actor Engine {
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
+        RequestLog.record(run, kind: "chat")
 
         if config.logRequests {
             print("mei: run tokens \(run.promptTokenCount) cached \(run.cachedTokenCount) decode \(String(format: "%.1f", run.decodeTokensPerSecond)) tok/s")
@@ -471,10 +485,13 @@ public actor Engine {
         // the comment there; Gemma4's VLM prepare crashed on 1-D chat tokens.
         // See the note in generateLocked: these two fields are what let the
         // shared system+tools prefix be stored for other conversations.
+        let streamPrefixCounts = await canonicalPrefixBoundaries(
+            template: template, tools: request.tools, context: context,
+            tokens: tokens, anchors: parameters.ssmAnchorBoundaries)
         let input = LMInput(
             tokens: MLXArray(tokens).expandedDimensions(axis: 0),
             tokenIds: tokens,
-            cachePrefixTokenCounts: parameters.ssmAnchorBoundaries,
+            cachePrefixTokenCounts: streamPrefixCounts,
             cacheStablePrefixTokenCounts: parameters.ssmAnchorBoundaries,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
@@ -557,6 +574,7 @@ public actor Engine {
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
+        RequestLog.record(run, kind: "chat_stream")
 
         continuation.yield(.finish(run))
         continuation.finish()
@@ -660,6 +678,7 @@ public actor Engine {
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
         run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
+        RequestLog.record(run, kind: "completion")
         return run
     }
 
@@ -671,6 +690,111 @@ public actor Engine {
     /// same additional context — so the additivity self-check inside
     /// `SSMAnchorBoundaries.compute` reproduces the request tokens
     /// exactly. Non-additive transcripts fall back to [] (always correct).
+    /// The advancing per-turn history boundary, merged with the fixed SSM
+    /// anchors, for `LMInput.cachePrefixTokenCounts`.
+    ///
+    /// vmlx documents two distinct lists. `cacheStablePrefixTokenCounts` is the
+    /// FIXED system+tools prefix a different conversation can reuse. The other,
+    /// `cachePrefixTokenCounts`, must contain the canonical no-generation-prompt
+    /// history boundary of THIS turn, because `hybridStripBoundaryIndex` takes
+    /// its maximum as the boundary to store after the answer.
+    ///
+    /// Mei passed the anchor list to both. The anchor never moves, so from the
+    /// second turn on the stored boundary froze at the anchor and every
+    /// subsequent turn re-prefilled the whole growing tail: measured on a
+    /// 40k-token conversation, prefill 5.4 s, 10.0 s, 15.0 s, 20.1 s, 25.1 s,
+    /// 30.7 s on turns 2-7, against a flat 5.4 s with anchors off. That is the
+    /// multi-turn regression that kept `--ssm-anchor-boundaries` from being
+    /// adopted, and it was never a trade-off — just this contract violation.
+    ///
+    /// Every boundary vmlx returns here is proven by token equality to be a
+    /// real prefix of the active prompt, so a template that reorders or
+    /// rewrites its history fails closed and contributes nothing.
+    private func canonicalPrefixBoundaries(
+        template: [[String: any Sendable]],
+        tools: [MeiJSONValue]?,
+        context: [String: any Sendable]?,
+        tokens: [Int],
+        anchors: [Int]
+    ) async -> [Int] {
+        guard !anchors.isEmpty else { return [] }
+        let tokenizer = await container.tokenizer
+        // Deliberately NOT canonicalChatCacheBoundaries(): that helper derives
+        // several boundaries (static-system hints, trailing-continuation and
+        // assistant-continuation probes) and renders the whole transcript four
+        // or more times to do it. Measured on a 40k-token conversation, calling
+        // it added 4.4 s to every turn -- the per-turn interval went from 1.45 s
+        // to 5.8 s. Only ONE of its boundaries is needed here: the canonical
+        // no-generation-prompt history boundary, which is a single render plus
+        // the same exact-token-prefix proof the helper applies.
+        let boundaries = historyBoundary(
+            tokenizer: tokenizer,
+            messages: template,
+            tools: MessageMapping.templateTools(tools),
+            additionalContext: context,
+            promptTokens: tokens)
+        if boundaries.isEmpty {
+            // No advancing boundary available: the tokenizer cannot render
+            // without a generation prompt, or the template is not
+            // prefix-additive. Anchors alone would freeze the stored boundary,
+            // so say so rather than silently regressing every later turn.
+            print("mei: no canonical history boundary for this transcript; "
+                + "anchors will not advance across turns")
+            fflush(stdout)
+            return anchors
+        }
+        return Set(anchors + boundaries).sorted()
+    }
+
+    /// The canonical no-generation-prompt history boundary, or `[]`.
+    ///
+    /// The boundary is the prompt minus whatever the template appends to open
+    /// the assistant turn. The obvious way to find it is to render the
+    /// transcript a second time with that rail suppressed, and that is what
+    /// this did at first — but a render plus tokenize of a growing transcript
+    /// is not cheap. Measured on a 40k-token conversation, the interval between
+    /// one answer and the next request reaching the engine scaled almost
+    /// exactly linearly with the number of full renders per turn: 0.49 s with
+    /// none, 1.95 s with one, 5.75 s with four, i.e. ~1.45 s per render.
+    ///
+    /// So render only ONCE, on the first request, and learn the suffix from the
+    /// difference. Every later turn just checks whether the prompt ends with
+    /// that same suffix and subtracts its length.
+    ///
+    /// The tail check is the proof, and it is re-done on every turn: a template
+    /// that renders a different rail for some turn shape simply fails it and
+    /// falls back to rendering. Nothing is assumed about the template, and a
+    /// wrong boundary could at worst cost a cache miss, never a bad restore —
+    /// the stored KV state is a snapshot taken at that position of THIS prompt
+    /// and is keyed by exactly those tokens, so it always describes itself.
+    private func historyBoundary(
+        tokenizer: any MLXLMCommon.Tokenizer,
+        messages: [[String: any Sendable]],
+        tools: [[String: any Sendable]]?,
+        additionalContext: [String: any Sendable]?,
+        promptTokens: [Int]
+    ) -> [Int] {
+        if !generationPromptSuffix.isEmpty,
+            promptTokens.count > generationPromptSuffix.count,
+            promptTokens.suffix(generationPromptSuffix.count)
+                .elementsEqual(generationPromptSuffix)
+        {
+            return [promptTokens.count - generationPromptSuffix.count]
+        }
+        guard let controllable = tokenizer as? any GenerationPromptControllableTokenizer,
+            let rendered = try? controllable.applyChatTemplate(
+                messages: messages,
+                tools: tools,
+                additionalContext: additionalContext,
+                addGenerationPrompt: false),
+            !rendered.isEmpty,
+            rendered.count < promptTokens.count,
+            promptTokens.prefix(rendered.count).elementsEqual(rendered)
+        else { return [] }
+        generationPromptSuffix = Array(promptTokens.suffix(promptTokens.count - rendered.count))
+        return [rendered.count]
+    }
+
     private func ssmAnchorOffsets(
         template: [[String: any Sendable]],
         tools: [MeiJSONValue]?,
@@ -679,6 +803,41 @@ public actor Engine {
     ) async throws -> [Int] {
         let k = config.ssmAnchorBoundaryCount
         guard k > 0 else { return [] }
+
+        // Reuse the offsets when this prompt still begins with the exact token
+        // prefix they were derived from.
+        //
+        // Anchors mark the shared system+tools prefix, which cannot move while
+        // a conversation grows -- but computing them renders the whole chat
+        // template once per anchor, and that is not free on a long transcript.
+        // Measured on a 40k-token conversation, the interval between one answer
+        // and the next request reaching the engine was 0.50 s with anchors off,
+        // 1.00 s at k=1 and 1.49 s at k=2: about 0.49 s per render, paid again
+        // on every single turn.
+        //
+        // The key is the token prefix itself, not a message count or a session
+        // id, so an unrelated conversation with a different system prompt
+        // cannot collide with it -- it simply fails the comparison and
+        // recomputes. Hashing 40k integers costs microseconds against ~0.5 s
+        // per render.
+        //
+        // A side effect worth stating: the declared list stops growing when a
+        // second user message appears (k=2 used to publish a second anchor
+        // then). That anchor sat after the first user turn of THIS
+        // conversation, so no other conversation could ever match it -- it was
+        // cost without benefit. Keeping the list stable across a conversation
+        // is also what the store path wants.
+        func prefixHash(_ length: Int) -> Int {
+            var hasher = Hasher()
+            for token in tokens.prefix(length) { hasher.combine(token) }
+            return hasher.finalize()
+        }
+        if let memo = anchorMemo, tokens.count > memo.prefixLength,
+            prefixHash(memo.prefixLength) == memo.hash
+        {
+            return memo.offsets
+        }
+
         let fullTokenCount = tokens.count
         let tokenizer = await container.tokenizer
         let templateTools = MessageMapping.templateTools(tools)
@@ -694,6 +853,9 @@ public actor Engine {
         if !divergent.offsets.isEmpty {
             print("mei: ssm anchor boundaries (k=\(k), divergence): \(divergent.offsets)")
             fflush(stdout)
+            if let longest = divergent.offsets.max(), longest > 0, longest < tokens.count {
+                anchorMemo = (longest, prefixHash(longest), divergent.offsets)
+            }
             return divergent.offsets
         }
         let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
