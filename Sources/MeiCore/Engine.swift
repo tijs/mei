@@ -932,7 +932,7 @@ public actor Engine {
         if let penalty = request.frequencyPenalty ?? config.frequencyPenalty.map(Double.init) {
             parameters.frequencyPenalty = Float(penalty)
         }
-        if let seed = request.seed {
+        if let seed = request.seed ?? config.seed {
             parameters.randomSeed = seed
         }
         if let stop = request.stop, !stop.isEmpty {
@@ -977,7 +977,7 @@ public actor Engine {
         if let penalty = request.frequencyPenalty ?? config.frequencyPenalty.map(Double.init) {
             parameters.frequencyPenalty = Float(penalty)
         }
-        if let seed = request.seed {
+        if let seed = request.seed ?? config.seed {
             parameters.randomSeed = seed
         }
         if let stop = request.stop, !stop.isEmpty {

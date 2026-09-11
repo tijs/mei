@@ -14,6 +14,26 @@ final class ServerConfigParsingTests: XCTestCase {
         try ServerConfig.parse(arguments: base + extra)
     }
 
+    func testSeedDefaultsToNilSoTheEngineKeepsItsOwnDefault() throws {
+        XCTAssertNil(try parse([]).seed)
+    }
+
+    func testSeedParsesAndSurvivesLargeValues() throws {
+        XCTAssertEqual(try parse(["--seed", "0"]).seed, 0)
+        XCTAssertEqual(try parse(["--seed", "42"]).seed, 42)
+        // UInt64.max: the whole point is a wide space to sample from, so the
+        // top of the range must not silently truncate through Int.
+        XCTAssertEqual(try parse(["--seed", "18446744073709551615"]).seed,
+                       UInt64.max)
+    }
+
+    func testSeedRejectsNonIntegerAndNegativeValues() {
+        for bad in ["-1", "abc", "1.5", ""] {
+            XCTAssertThrowsError(try parse(["--seed", bad]),
+                                 "--seed \(bad) should be rejected")
+        }
+    }
+
     func testForkFlagDefaultsMatchRollbackConfiguration() throws {
         let config = try parse([])
         XCTAssertNil(config.kvBits)

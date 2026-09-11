@@ -28,6 +28,16 @@ public struct ServerConfig: Sendable {
     public var temperature: Float = 0.6
     public var topP: Float = 0.95
     public var topK: Int = 20
+
+    /// Default sampling seed, used when a request does not carry its own.
+    ///
+    /// Without this the seed is fixed, which makes a run reproducible but also
+    /// makes a whole benchmark suite a SINGLE trajectory sample: any change
+    /// that perturbs numerics reshuffles every trajectory at once, and one run
+    /// per build cannot distinguish "this build is worse" from "this build
+    /// drew worse". Setting a different seed per run turns that into a
+    /// sampleable distribution.
+    public var seed: UInt64?
     public var minP: Float = 0.0
     public var repetitionPenalty: Float? = nil
     public var presencePenalty: Float? = nil
@@ -193,6 +203,8 @@ public extension ServerConfig {
                 config.topP = try parseFloat(flag, value())
             case "--top-k":
                 config.topK = try parseInt(flag, value())
+            case "--seed":
+                config.seed = try parseUInt64(flag, value())
             case "--min-p":
                 config.minP = try parseFloat(flag, value())
             case "--repetition-penalty":
@@ -356,6 +368,9 @@ public extension ServerConfig {
     Sampling defaults (per-request override wins):
       --temperature F --top-p F --top-k N --min-p F
       --repetition-penalty F --presence-penalty F --frequency-penalty F
+      --seed N               Default sampling seed when a request omits one.
+                             Vary it across runs to sample trajectories rather
+                             than measuring a single one.
 
     Reasoning:
       --emit-reasoning BOOL     Expose reasoning_content (default true)
@@ -410,6 +425,13 @@ public extension ServerConfig {
     private static func parseInt(_ flag: String, _ raw: String) throws -> Int {
         guard let value = Int(raw) else {
             throw ConfigError.invalidValue("\(flag) expects an integer, got '\(raw)'")
+        }
+        return value
+    }
+
+    private static func parseUInt64(_ flag: String, _ raw: String) throws -> UInt64 {
+        guard let value = UInt64(raw) else {
+            throw ConfigError.invalidValue("\(flag) expects a non-negative integer, got '\(raw)'")
         }
         return value
     }

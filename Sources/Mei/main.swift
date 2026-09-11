@@ -37,6 +37,12 @@ struct MeiMain {
             print("mei: profile applied max-tokens \(config.maxTokensDefault)"
                 + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
         }
+        if let seed = config.seed {
+            // A fixed seed makes every run of a suite the same trajectory. Say
+            // so, because a run that silently reused the default seed and one
+            // that set it are not the same measurement.
+            print("mei: default sampling seed \(seed) (requests may override)")
+        }
         fflush(stdout)
         if config.servedModelIDWasDefaulted {
             print("mei: no --served-model-id given; serving as "
