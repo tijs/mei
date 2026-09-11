@@ -6,6 +6,9 @@ public struct ServerConfig: Sendable {
     public static let version = "0.4.0"
     public var modelDirectory: String
     public var servedModelID: String
+    /// Set when --served-model-id was omitted and defaulted from the
+    /// bundle directory name, so startup can report the chosen ID.
+    public var servedModelIDWasDefaulted: Bool = false
     /// Requested profile from the operator. `auto` is resolved from config.json.
     public var requestedOptimizationProfile: ModelOptimizationProfile = .auto
     /// Effective profile used by this process after model metadata detection.
@@ -14,6 +17,9 @@ public struct ServerConfig: Sendable {
     public var port: Int = 8024
     public var contextCap: Int = 65_536
     public var maxTokensDefault: Int = 32_768
+    /// Set when --max-tokens was given, so a profile default never
+    /// overrides an explicit operator choice.
+    public var maxTokensExplicit: Bool = false
     public var prefillStepSize: Int = 64
     /// KV cache quantization: nil = fp16, else bits (4 or 8).
     public var kvBits: Int? = nil
@@ -49,6 +55,9 @@ public struct ServerConfig: Sendable {
     /// qwen3_5/qwen3_8 and gemma4 checkpoints get a disposable default when
     /// the flag is omitted and cache reuse is on (see parse below).
     public var kvCacheDir: String = ""
+    /// Set when `--ssm-anchor-boundaries` caused a disposable KV directory to
+    /// be created that the operator did not ask for, so startup can say so.
+    public var autoEnabledAnchorKVCacheDir: Bool = false
     /// True when the operator passed `--kv-cache-dir` (even an empty value):
     /// an explicit choice always wins over the model-aware safe default.
     public private(set) var kvCacheDirExplicit = false
@@ -166,6 +175,7 @@ public extension ServerConfig {
                 config.contextCap = try parseInt(flag, value())
             case "--max-tokens":
                 config.maxTokensDefault = try parseInt(flag, value())
+                config.maxTokensExplicit = true
             case "--prefill-step-size":
                 config.prefillStepSize = try parseInt(flag, value())
                 prefillStepSizeExplicit = true
@@ -232,11 +242,22 @@ public extension ServerConfig {
         guard let modelDirectory else {
             throw ConfigError.missingRequired("--model-dir")
         }
-        guard let servedModelID else {
-            throw ConfigError.missingRequired("--served-model-id")
-        }
+        // The served ID is a contract with clients, not a tuning knob: it is
+        // whatever they will put in the "model" field. When the operator does
+        // not state one they have no expectation to violate, so default to the
+        // bundle's directory name and say so at startup.
+        //
+        // Deliberately NOT inferred from the bundle: config.json carries no
+        // name or path field, and a README's front-matter names the base model
+        // rather than the artifact — checked across every model in the bench
+        // repo, where served IDs are HF-style org/name while directories carry
+        // only the name (and one has `-aligned` appended). Guessing the org
+        // would produce confidently wrong IDs.
+        let resolvedServedModelID = servedModelID
+            ?? URL(fileURLWithPath: modelDirectory).lastPathComponent
+        config.servedModelIDWasDefaulted = (servedModelID == nil)
         config.modelDirectory = modelDirectory
-        config.servedModelID = servedModelID
+        config.servedModelID = resolvedServedModelID
         config.requestedOptimizationProfile = requestedOptimizationProfile
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
@@ -261,6 +282,35 @@ public extension ServerConfig {
                modelDirectory: config.modelDirectory) {
             config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
                 servedModelID: config.servedModelID)
+        }
+
+        // Architecture-validated generation cap. An explicit --max-tokens
+        // always wins; see ModelOptimizationProfile.defaultMaxTokens for the
+        // runaway evidence behind the ornith value.
+        if !config.maxTokensExplicit,
+           let profileMax = config.optimizationProfile.defaultMaxTokens {
+            config.maxTokensDefault = profileMax
+        }
+
+        // Cross-conversation prefix reuse needs somewhere durable to keep the
+        // boundary snapshot. `needsDiskKVTier` deliberately excludes
+        // qwen3_5_moe so the cache stays operator-controlled for ordinary
+        // serving — but that lineage's hybrid cache (MambaCache on the
+        // GatedDelta layers, RotatingKVCache on the rest) cannot restore from
+        // the paged in-memory tier at all: the paged store writes zero blocks
+        // and every turn cold-prefills.
+        //
+        // So `--ssm-anchor-boundaries K` without `--kv-cache-dir` did exactly
+        // nothing on those models, silently — no error, no warning, and the
+        // headline 0.4.0 feature simply inert. Asking for anchors IS the
+        // operator opting in, so honour it with the same disposable cache the
+        // other affected lineages already get. Explicit --kv-cache-dir still
+        // wins; --cache-reuse false still disables caching entirely.
+        if !config.kvCacheDirExplicit, config.cacheReuse,
+           config.ssmAnchorBoundaryCount > 0, config.kvCacheDir.isEmpty {
+            config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
+                servedModelID: config.servedModelID)
+            config.autoEnabledAnchorKVCacheDir = true
         }
 
         guard config.prefillStepSize > 0 else {

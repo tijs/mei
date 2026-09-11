@@ -129,11 +129,49 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         #if canImport(Darwin)
         let hasExplicitOverride = getenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES") != nil
             || getenv("BENCH_NO_FUSED_GATE_UP") != nil
-        guard force || !hasExplicitOverride else { return }
-        setenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES", "0", 1)
-        setenv("BENCH_NO_FUSED_GATE_UP", "1", 1)
+        if force || !hasExplicitOverride {
+            setenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES", "0", 1)
+            setenv("BENCH_NO_FUSED_GATE_UP", "1", 1)
+        }
+
+        // vmlx's shapeless micro-fusions (compiledSwiGLU/GeGLU/SigmoidGate plus
+        // the Qwen35 helpers) are gated off by
+        // HardwareInfo.isCompiledDecodeSupported. On this lineage they are a
+        // free win and the operator should not have to know the env var exists.
+        //
+        // MEASURED, same binary both legs, round-robin, warm-up, n=10, quiet
+        // machine: Ornith short decode 66.36 -> 72.32 tok/s (+9.0%), 30k
+        // 40.36 -> 41.45 (+2.7%); Qwen3.6 text-only 66.65 -> 73.21 (+9.8%),
+        // 30k 41.93 -> 43.38 (+3.5%).
+        //
+        // CORRECTNESS GATE, the one that matters because the documented failure
+        // mode is silent numerical corruption rather than a crash: four
+        // 700-token greedy temp-0 generations token-for-token identical with
+        // the flag on and off, plus an identical native tool call. Re-verified
+        // on this exact vmlx pin.
+        //
+        // Its upstream default-off reason is Osaurus #1173 — decode corruption
+        // after switching models inside one process. Mei is
+        // one-model-per-server-process, so that is structurally unreachable
+        // here. An explicit setting always wins, so anyone who distrusts it can
+        // export VMLX_ENABLE_UNSAFE_COMPILE=0.
+        if getenv("VMLX_ENABLE_UNSAFE_COMPILE") == nil {
+            setenv("VMLX_ENABLE_UNSAFE_COMPILE", "1", 1)
+        }
         #endif
     }
+
+    /// Server-side generation cap for this lineage.
+    ///
+    /// The global default of 32768 lets a degenerate turn run away: one request
+    /// in a benchmark run generated 32,768 tokens and hit the cap after 1,156 s,
+    /// burning 19.3 of that run's 40.1 minutes of generation on its own. Across
+    /// all coding rows that cost 14.5% of total wall against llama.cpp's 0.7%.
+    ///
+    /// 8192 cannot truncate legitimate work here: per request p99 is 2,933
+    /// tokens and the largest non-degenerate completion observed was 4,674. It
+    /// only bounds callers that send no max_tokens of their own.
+    public var defaultMaxTokens: Int? { isOrnith ? 8192 : nil }
 
     private static func collectModelTypes(
         in value: Any,
