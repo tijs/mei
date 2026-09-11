@@ -356,7 +356,7 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertFalse(config.kvCacheDirExplicit)
     }
 
-    func testOrnithMoeModelKeepsKVCacheDirEmptyDefault() throws {
+    func testOrnithMoeModelGetsDisposableDiskKVDefault() throws {
         let dir = try makeModelDir(modelType: "qwen3_5_moe")
         defer { try? FileManager.default.removeItem(at: dir) }
         let config = try ServerConfig.parse(arguments: [
@@ -365,8 +365,16 @@ final class ServerConfigParsingTests: XCTestCase {
         ])
         XCTAssertEqual(config.optimizationProfile, .ornith)
         XCTAssertEqual(config.prefillStepSize, 512)
-        // Ornith behavior preserved: no implicit disk-KV default.
-        XCTAssertEqual(config.kvCacheDir, "")
+        // 0.4.2 (f1ba4af) deliberately reversed the old "no implicit disk-KV
+        // default" contract for this family: the qwen3_5_moe hybrid cannot
+        // restore from the paged in-memory tier, so without a disk tier every
+        // turn of a bare `mei --model-dir X` cold-prefills. Measured bare over
+        // four turns: 246 s -> 66 s. The default must therefore be a real
+        // disposable directory, not "".
+        XCTAssertFalse(config.kvCacheDir.isEmpty,
+                       "qwen3_5_moe needs a disk KV tier for ordinary reuse")
+        XCTAssertTrue(config.kvCacheDir.contains("mei-kv-cache"),
+                      "expected a disposable cache dir, got \(config.kvCacheDir)")
     }
 
     func testUnrelatedGenericModelKeepsKVCacheDirEmptyDefault() throws {
