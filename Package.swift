@@ -17,7 +17,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "4a1069a472748fee76d3315c44c62e9c5b8f2537"
+            revision: "44461ffdf8dca836b624b2d0d268c800dedea05e"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
