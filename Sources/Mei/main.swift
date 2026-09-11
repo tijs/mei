@@ -30,6 +30,11 @@ struct MeiMain {
                 + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
         }
         fflush(stdout)
+        if config.servedModelIDWasDefaulted {
+            print("mei: no --served-model-id given; serving as "
+                + "\(config.servedModelID) (clients must use this exact id)")
+            fflush(stdout)
+        }
         if config.autoEnabledAnchorKVCacheDir {
             // Say it out loud: the operator asked for anchors, not for a cache
             // directory, and without one the feature would have done nothing.

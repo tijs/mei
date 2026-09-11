@@ -6,6 +6,9 @@ public struct ServerConfig: Sendable {
     public static let version = "0.4.0"
     public var modelDirectory: String
     public var servedModelID: String
+    /// Set when --served-model-id was omitted and defaulted from the
+    /// bundle directory name, so startup can report the chosen ID.
+    public var servedModelIDWasDefaulted: Bool = false
     /// Requested profile from the operator. `auto` is resolved from config.json.
     public var requestedOptimizationProfile: ModelOptimizationProfile = .auto
     /// Effective profile used by this process after model metadata detection.
@@ -239,11 +242,22 @@ public extension ServerConfig {
         guard let modelDirectory else {
             throw ConfigError.missingRequired("--model-dir")
         }
-        guard let servedModelID else {
-            throw ConfigError.missingRequired("--served-model-id")
-        }
+        // The served ID is a contract with clients, not a tuning knob: it is
+        // whatever they will put in the "model" field. When the operator does
+        // not state one they have no expectation to violate, so default to the
+        // bundle's directory name and say so at startup.
+        //
+        // Deliberately NOT inferred from the bundle: config.json carries no
+        // name or path field, and a README's front-matter names the base model
+        // rather than the artifact — checked across every model in the bench
+        // repo, where served IDs are HF-style org/name while directories carry
+        // only the name (and one has `-aligned` appended). Guessing the org
+        // would produce confidently wrong IDs.
+        let resolvedServedModelID = servedModelID
+            ?? URL(fileURLWithPath: modelDirectory).lastPathComponent
+        config.servedModelIDWasDefaulted = (servedModelID == nil)
         config.modelDirectory = modelDirectory
-        config.servedModelID = servedModelID
+        config.servedModelID = resolvedServedModelID
         config.requestedOptimizationProfile = requestedOptimizationProfile
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
