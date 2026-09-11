@@ -81,10 +81,32 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     ///   evidence 2026-09-03, mlx-community/gemma-4-26b-a4b-it-4bit) —
     ///   reuse rides the disk tier for this architecture too.
     ///
-    /// The MoE/hybrid qwen3_5_moe family is intentionally NOT in the set:
-    /// Ornith runs keep their operator-controlled cache configuration.
+    /// The qwen3_5_moe family is here too, as of 0.4.2. It was previously
+    /// excluded to keep Ornith runs on an operator-controlled cache, and that
+    /// exclusion silently cost every bare invocation its prefix reuse —
+    /// including WITHIN a single conversation, which is the ordinary chat case
+    /// and has nothing to do with the opt-in cross-conversation feature.
+    ///
+    /// That lineage's hybrid cache (MambaCache on the GatedDelta layers,
+    /// RotatingKVCache on the rest) cannot restore from the paged in-memory
+    /// tier at all — the paged store writes zero blocks — so with no disk tier
+    /// there is nowhere for a turn boundary to live and every turn re-prefills
+    /// the whole transcript.
+    ///
+    /// MEASURED on Ornith 1.5, growing conversation, no anchors, 0.4.1 build:
+    ///   turn   bare                  with --kv-cache-dir
+    ///   1      61.55 s  cached 0     61.90 s  cached 0
+    ///   2      61.35 s  cached 0      1.68 s  cached 20,385
+    ///   3      61.72 s  cached 0      1.60 s  cached 20,407
+    ///   4      61.62 s  cached 0      1.69 s  cached 20,441
+    ///   total  246 s                  67 s
+    /// 3.7x over four turns, widening with conversation length. An explicit
+    /// --kv-cache-dir still wins, and --cache-reuse false still disables
+    /// caching entirely, so operator control is preserved where it is asked
+    /// for rather than assumed by omission.
     public static let diskKVRequiredModelTypes: Set<String> =
-        ["qwen3_5", "qwen3_5_text", "gemma4", "gemma4_text"]
+        ["qwen3_5", "qwen3_5_text", "gemma4", "gemma4_text",
+         "qwen3_5_moe", "qwen3_5_moe_text"]
 
     /// True when the bundle's metadata contains any model_type that needs
     /// the disk KV tier for prefix reuse. Missing/malformed metadata returns
