@@ -83,7 +83,17 @@ public actor Engine {
     /// agree on the exact number, so an unrounded boundary is stored at one
     /// offset and probed at another and never matches. At 512, ten of those
     /// eleven collapse onto 5632.
-    private static let adaptiveStableQuantum = 512
+    /// EXPERIMENT (2026-09-11): 1 disables quantization.
+    ///
+    /// Quantization was added so that store and probe agreed despite the
+    /// longest-common-prefix differing per PAIR (5770, 5681, 5752 … at real
+    /// task transitions). Converging a candidate across all prompts already
+    /// stabilises that value, so the rounding may now be redundant — and it is
+    /// the step that moves the boundary off the point where content actually
+    /// diverges and onto an arbitrary offset. Arbitrary boundaries restore
+    /// unfaithfully (0/5) while structural ones do not (5/5, and still exact
+    /// with 422 tokens of tail), so the rounding is the prime suspect.
+    private static let adaptiveStableQuantum = 1
     /// How far short of the previous prompt the shared prefix must fall before
     /// this counts as a new conversation rather than another turn of the same
     /// one. Only needs to exceed the chat template's generation-prompt suffix
