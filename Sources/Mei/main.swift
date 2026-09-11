@@ -21,6 +21,14 @@ struct MeiMain {
             force: config.requestedOptimizationProfile == .ornith)
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
         fflush(stdout)
+        if config.autoEnabledAnchorKVCacheDir {
+            // Say it out loud: the operator asked for anchors, not for a cache
+            // directory, and without one the feature would have done nothing.
+            print("mei: --ssm-anchor-boundaries needs a durable KV tier; "
+                + "using disposable cache at \(config.kvCacheDir) "
+                + "(pass --kv-cache-dir to keep it across restarts)")
+            fflush(stdout)
+        }
         print("mei: loading model from \(config.modelDirectory) (served id: \(config.servedModelID))...")
         fflush(stdout)
         let engine: Engine

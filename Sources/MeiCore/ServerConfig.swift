@@ -49,6 +49,9 @@ public struct ServerConfig: Sendable {
     /// qwen3_5/qwen3_8 and gemma4 checkpoints get a disposable default when
     /// the flag is omitted and cache reuse is on (see parse below).
     public var kvCacheDir: String = ""
+    /// Set when `--ssm-anchor-boundaries` caused a disposable KV directory to
+    /// be created that the operator did not ask for, so startup can say so.
+    public var autoEnabledAnchorKVCacheDir: Bool = false
     /// True when the operator passed `--kv-cache-dir` (even an empty value):
     /// an explicit choice always wins over the model-aware safe default.
     public private(set) var kvCacheDirExplicit = false
@@ -261,6 +264,27 @@ public extension ServerConfig {
                modelDirectory: config.modelDirectory) {
             config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
                 servedModelID: config.servedModelID)
+        }
+
+        // Cross-conversation prefix reuse needs somewhere durable to keep the
+        // boundary snapshot. `needsDiskKVTier` deliberately excludes
+        // qwen3_5_moe so the cache stays operator-controlled for ordinary
+        // serving — but that lineage's hybrid cache (MambaCache on the
+        // GatedDelta layers, RotatingKVCache on the rest) cannot restore from
+        // the paged in-memory tier at all: the paged store writes zero blocks
+        // and every turn cold-prefills.
+        //
+        // So `--ssm-anchor-boundaries K` without `--kv-cache-dir` did exactly
+        // nothing on those models, silently — no error, no warning, and the
+        // headline 0.4.0 feature simply inert. Asking for anchors IS the
+        // operator opting in, so honour it with the same disposable cache the
+        // other affected lineages already get. Explicit --kv-cache-dir still
+        // wins; --cache-reuse false still disables caching entirely.
+        if !config.kvCacheDirExplicit, config.cacheReuse,
+           config.ssmAnchorBoundaryCount > 0, config.kvCacheDir.isEmpty {
+            config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
+                servedModelID: config.servedModelID)
+            config.autoEnabledAnchorKVCacheDir = true
         }
 
         guard config.prefillStepSize > 0 else {
