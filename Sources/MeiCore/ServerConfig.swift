@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
@@ -267,9 +268,14 @@ public extension ServerConfig {
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
         if !prefillStepSizeExplicit {
+            // Pass the device's recommended working set so the ornith profile
+            // can take the faster 1024 step only where it fits. See
+            // ModelOptimizationProfile.prefill1024MinimumWorkingSetBytes.
             config.prefillStepSize = ModelOptimizationProfile.prefillStepSize(
                 modelDirectory: config.modelDirectory,
-                profile: config.optimizationProfile)
+                profile: config.optimizationProfile,
+                recommendedWorkingSetBytes: GPU.maxRecommendedWorkingSetBytes()
+                    .map { Int($0) })
         }
 
         // Model-aware safe default: dense qwen3_5/qwen3_8-style checkpoints

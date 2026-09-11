@@ -36,10 +36,33 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// its validated 512; `gemma4`-lineage bundles default to the measured
     /// 256; everything else stays on the conservative 64. An explicit
     /// `--prefill-step-size` always wins.
+    /// Recommended working set below which the ornith profile keeps the
+    /// conservative 512 rather than the faster 1024.
+    ///
+    /// MEASURED on the release pin, 54,016-token prompt, cache reuse off:
+    ///   512  -> 311 tok/s prefill, MLX peak 22.72 GB
+    ///   1024 -> 337 tok/s prefill (+8.4%), MLX peak 23.77 GB
+    /// So 1024 buys ~8% for about 1.05 GB of peak. At the full 65,536-token cap
+    /// that lands near 26.2 GB against a 26.8 GB recommended working set — it
+    /// fits on a 32 GB machine, with roughly 0.6 GB to spare, and does not fit
+    /// comfortably anywhere smaller. Hence a device check rather than an
+    /// unconditional default: the win is real but the margin is thin, and
+    /// running out of working set is a far worse outcome than an 8% slower
+    /// prefill.
+    public static let prefill1024MinimumWorkingSetBytes = 26_000_000_000
+
     public static func prefillStepSize(
-        modelDirectory: String, profile: ModelOptimizationProfile
+        modelDirectory: String,
+        profile: ModelOptimizationProfile,
+        recommendedWorkingSetBytes: Int? = nil
     ) -> Int {
-        if profile.isOrnith { return profile.defaultPrefillStepSize }
+        if profile.isOrnith {
+            if let ws = recommendedWorkingSetBytes,
+               ws >= prefill1024MinimumWorkingSetBytes {
+                return 1024
+            }
+            return profile.defaultPrefillStepSize
+        }
         if !collectedModelTypes(in: modelDirectory)
             .isDisjoint(with: prefill256ModelTypes) { return 256 }
         return profile.defaultPrefillStepSize
