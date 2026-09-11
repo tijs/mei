@@ -132,6 +132,26 @@ public actor Engine {
             let topology = await container.cacheTopologySnapshot()
             let tier = diskEnabled ? "disk at \(config.kvCacheDir)" : "no disk"
             print("mei: prefix cache enabled (paged in-memory + \(tier)); topology \(topology.topologyTags.joined(separator: " "))")
+
+            // Report settings that this topology will ignore. A flag that is
+            // accepted, passed through and then silently dropped is the worst
+            // kind: it looks configured and is not. Two known cases, both
+            // measured: KV quantization is a no-op wherever recurrent
+            // (Mamba/GatedDelta) layers are present, and cross-conversation
+            // anchors need a durable tier the paged in-memory one cannot
+            // provide for those same topologies.
+            let tags = topology.topologyTags.joined(separator: " ")
+            let hasRecurrentLayers = tags.contains("mambaLayers")
+                && !tags.contains("mambaLayers=0")
+            if hasRecurrentLayers, config.kvBits != nil {
+                print("mei: NOTE --kv-bits is ignored on this topology "
+                    + "(recurrent layers present); KV stays fp16")
+            }
+            if !diskEnabled, config.ssmAnchorBoundaryCount > 0, hasRecurrentLayers {
+                print("mei: NOTE --ssm-anchor-boundaries cannot take effect "
+                    + "without a durable KV tier on this topology; pass "
+                    + "--kv-cache-dir")
+            }
         } else {
             print("mei: prefix cache disabled (--cache-reuse false)")
         }
