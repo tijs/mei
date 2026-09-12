@@ -88,10 +88,26 @@ tensors unable to be mmap'd, so MLX copies them into anonymous RAM at load —
 80k-context prefill**. The entire difference is a few bytes of padding per
 shard's JSON header, and none of it is visible from the outside.
 
-### Upstream vmlx sync
+### The upstream vmlx sync is NOT in this release
 
-Re-pinned to `23551729`: the fork's prefix-capture work with 30 upstream
-commits merged in.
+0.5.0 stays on `44461ffd`, the same engine revision 0.4.2 shipped.
+
+The sync (`23551729` — that same capture work plus 30 upstream commits) was
+prepared for this release and pulled back out of it. On the coding and tool
+suites it costs `hermes_ops-multi-step-chain`, a task that does not otherwise
+vary: two independent runs on that pin, from different configs on different
+days, produced **byte-identical** failing trajectories — the same 15 tool calls
+in the same order. Scored against this model's measured noise floor that is
+18/19 stable tasks against 17/19, and 8 of the 10 tasks whose output is recorded
+generate differently under it.
+
+Nothing was given up by holding it back. `44461ffd` is the tip of the
+prefix-capture work and a strict ancestor of the sync, so every cache fix
+`--ssm-anchor-boundaries` depends on is present. The 30 upstream commits are
+MTP, Flash-attention, Spark2.5 and MiniCPM5 work that no model Mei has a profile
+for uses.
+
+It will land when the regression is understood, not before.
 
 ### Removed
 
