@@ -19,9 +19,11 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.1**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.2**.
 
-**0.4.1 (2026-09-11)** fixes prefix-reuse correctness and removes the flags you needed to know about. A restored prefix now reproduces cold output byte-for-byte; before, it restored from re-derived state that could change the answer. `mei --model-dir DIR` is now a complete command — the profile applies the measured-best settings for the model it detects and reports them, and any setting that will not apply to the loaded topology says so.
+**0.4.2 (2026-09-12)** makes `mei --model-dir DIR` reuse its cache without being told to: the hybrid topology could not restore from the in-memory tier, so a bare server silently re-read the whole conversation every turn — measured bare over four turns, 246 s becomes 66 s. Adds `--request-log`, one JSON line per generation run, which is what turned "where does a turn's time go" into a measurement rather than an argument.
+
+**0.4.1 (2026-09-11)** fixes prefix-reuse correctness and removes the flags you needed to know about. A restored prefix now reproduces byte-for-byte what the same configuration produces cold; before, it restored from re-derived state that could change the answer even against itself. Note the comparison: this does **not** mean enabling prefix reuse leaves your answers unchanged. Capturing a reusable boundary splits the prefill, and on this hybrid architecture a split prefill does not produce bit-identical state to a continuous one, so `--ssm-anchor-boundaries` on and off can give different output. `mei --model-dir DIR` is now a complete command — the profile applies the measured-best settings for the model it detects and reports them, and any setting that will not apply to the loaded topology says so.
 
 **0.4.0 (2026-09-08)** adds opt-in cross-conversation prefix reuse
 (`--ssm-anchor-boundaries K`), which takes a warm agent turn on a shared 20k
@@ -56,7 +58,7 @@ cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.4.1)
+## Install on Apple Silicon (stable 0.4.2)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -64,10 +66,10 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.4.1
+mei --version     # -> mei 0.4.2
 ```
 
-**Manual — release asset:** download `mei-0.4.1-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.4.2-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
@@ -96,54 +98,37 @@ assume `hf` resolves in your shell.
 
 ## Quickstart: run the primary model (Ornith)
 
-The validated primary is `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, pinned at
-revision `19504d9`. Everything stays user-local (no system paths), and only
-**one** `mei` server should run at a time — press **Ctrl-C** in the server
-terminal to stop it.
+The validated primary is **[`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`](https://huggingface.co/Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned)**
+— the official `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` weights, bit-identical,
+repacked so every tensor sits at a naturally aligned offset.
 
-The measured performance path runs the **aligned repack** of this checkpoint —
-byte-identical weights, repacked so every tensor sits at a naturally aligned
-offset for vmlx's zero-copy mmap loader. The official raw directory vmlx maps
-is **correctness-capable** (correct output, tool-calling) but **not** the
-measured >=30 tok/s path: it force-copies ~20 GB of the payload into anonymous
-RAM instead of mapping it. Alignment is a **one-time** step that needs
-**extra disk** (roughly another copy of the shards).
+Download that one, not the official checkpoint. The published layout leaves
+1,421 of 1,757 tensors unable to be mmap'd, so MLX copies them into anonymous
+RAM at load: **24.28 GB resident instead of 19.55, and 117.6 s instead of 36.7 s
+for a fresh 80k-context prefill**. The entire difference is a few bytes of
+padding in each shard's JSON header, and nothing about it is visible from the
+outside. (Earlier versions of this guide had you download the raw checkpoint and
+repack it yourself; the repack is published now, so that step is gone.)
 
 ```bash
-export MODEL_ID="ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"
-export MODEL_REVISION="19504d912fa8fc7622bf6b1de3db5d5d890b1f02"
-RAW_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-raw"
-ALIGNED_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+MODEL_DIR="$HOME/.cache/mei/models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
 
-# 1) One-time: download the official pinned checkpoint to a -raw directory (~19 GB)
-hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$RAW_DIR"
+# One-time download (~19 GB)
+hf download Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned --local-dir "$MODEL_DIR"
 
-# 2) One-time: fetch the pure-stdlib alignment helper and build the -aligned repack
-ALIGN_TOOL="$HOME/.cache/mei/tools/align_safetensors.py"
-mkdir -p "$(dirname "$ALIGN_TOOL")"
-curl -fsSL -o "$ALIGN_TOOL" \
-  https://raw.githubusercontent.com/tijs/mei/v0.2.0/tools/align_safetensors.py
-# Fail closed if the helper is not the v0.2.0 release tool:
-printf '%s  %s\n' \
-  01a1acac45d1fb7f27693cd4ac104a22c9f7937a5802dd5ffadefcb447179b20 \
-  "$ALIGN_TOOL" | shasum -a 256 -c -
-python3 "$ALIGN_TOOL" "$RAW_DIR" "$ALIGNED_DIR"
-
-# 3) Start the server from the ALIGNED directory (blocking; Ctrl-C stops it). Port 8024.
-mkdir -p "$HOME/.cache/mei/runtime/kv"
-VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
-  --model-dir        "$ALIGNED_DIR" \
-  --served-model-id  "$MODEL_ID" \
-  --optimization-profile ornith \
-  --port 8024 \
-  --context-cap 65536 \
-  --prefill-step-size 512 \
-  --memory-limit-bytes 30000000000 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
-  --max-tokens 32768 \
-  --temperature 0.6 --top-p 0.95 --top-k 20 \
-  --emit-reasoning true --cache-reuse true --compiled-decode false
+# Run it. Blocking; Ctrl-C stops it. One mei server at a time.
+mei --model-dir "$MODEL_DIR" \
+    --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit
 ```
+
+That is the whole command. Mei detects the architecture and applies the
+measured-best settings for it — prefill step, generation cap, the environment
+the MoE needs — and prints what it chose at startup. Anything you pass
+explicitly still wins.
+
+If you want to check the weights are the ones you think, the repo ships
+`MEI_ALIGN_MANIFEST.json` with a per-shard payload hash; the model card has a
+short script that verifies it.
 
 In a second terminal, verify the server is up and answering (no `jq` needed):
 
@@ -188,19 +173,7 @@ MODEL_DIR="$HOME/.cache/mei/models/Qwen3.6-35B-A3B-4bit"
 hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 # 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
-mkdir -p "$HOME/.cache/mei/runtime/kv"
-VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
-  --model-dir        "$MODEL_DIR" \
-  --served-model-id  "$MODEL_ID" \
-  --optimization-profile auto \
-  --port 8024 \
-  --context-cap 65536 \
-  --prefill-step-size 512 \
-  --memory-limit-bytes 30000000000 \
-  --kv-cache-dir "$HOME/.cache/mei/runtime/kv" \
-  --max-tokens 32768 \
-  --temperature 0.6 --top-p 0.95 --top-k 20 \
-  --emit-reasoning true --cache-reuse true --compiled-decode false
+mei --model-dir "$MODEL_DIR" --served-model-id "$MODEL_ID"
 ```
 
 Smoke-test it exactly like Ornith above (`curl` the same
