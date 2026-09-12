@@ -40,18 +40,25 @@ cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 
 ## Supported models
 
-Mei ships measured settings for the models it supports. Pass the profile name
-and it loads them:
+Pick by what you care about, then pass the name:
 
-```
-mei --model-dir /path/to/model --model-profile qwen3.6-35b-a3b-text
+| you want | model | `--model-profile` | weights |
+|---|---|---|---|
+| the validated default — best measured coding quality | Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | ~19 GB |
+| text and tools only, fastest prefill | Qwen3.6 35B-A3B text-only | `qwen3.6-35b-a3b-text` | ~19 GB |
+| images as well as text | Qwen3.6 35B-A3B (vision) | `qwen3.6-35b-a3b` | ~19 GB |
+
+All three are MoE models that run in about 20 GB of unified memory and were
+measured on a 32 GB machine at a 65,536-token context.
+
+```bash
+mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
+mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
+    --model-profile qwen3.6-35b-a3b-text
 ```
 
-| model | `--model-profile` |
-|---|---|
-| `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly` | `qwen3.6-35b-a3b-text` |
-| [`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`](https://huggingface.co/Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned) | `ornith-1.5-35b-a3b` |
-| `mlx-community/Qwen3.6-35B-A3B-4bit` (vision) | `qwen3.6-35b-a3b` |
+`mei pull <profile> --dry-run` shows you what it would fetch and where, without
+downloading anything.
 
 The profile sets the chunked-prefill step, cross-conversation anchor
 boundaries, the generation cap and the architecture handling together — these

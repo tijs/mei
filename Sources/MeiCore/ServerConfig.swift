@@ -363,6 +363,12 @@ public extension ServerConfig {
     Required:
       --model-dir DIR        Local directory with model config + safetensors
       --served-model-id ID   Exact model ID served by GET /v1/models
+    Fetching a model:
+      mei pull <profile> [--dest DIR]
+                             Download the exact repo and revision this profile
+                             was measured on, then verify the weights are
+                             naturally aligned. Uses the `hf` CLI.
+
       --model-profile NAME   Serve a supported model with its MEASURED settings:
                              ornith-1.5-35b-a3b | qwen3.6-35b-a3b-text | qwen3.6-35b-a3b
                              Selects architecture handling, prefill step, anchor

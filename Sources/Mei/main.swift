@@ -9,6 +9,25 @@ struct MeiMain {
             print("mei \(ServerConfig.version)")
             return
         }
+
+        // `mei pull <profile> [--dest DIR]` — fetch the exact artifact this
+        // profile's settings were measured on, then verify it. Handled before
+        // ServerConfig.parse because it is a subcommand, not a server run.
+        let args = Array(CommandLine.arguments.dropFirst())
+        if args.first == "pull" {
+            guard args.count >= 2 else {
+                FileHandle.standardError.write(Data((
+                    "usage: mei pull <profile> [--dest DIR] [--dry-run]\nprofiles: "
+                    + ModelTuningRegistry.names.joined(separator: ", ") + "\n").utf8))
+                exit(2)
+            }
+            var dest: String?
+            if let i = args.firstIndex(of: "--dest"), i + 1 < args.count {
+                dest = args[i + 1]
+            }
+            exit(ModelPull.run(profileName: args[1], destination: dest,
+                               dryRun: args.contains("--dry-run")))
+        }
         let config: ServerConfig
         do {
             config = try ServerConfig.parse()
