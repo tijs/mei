@@ -67,6 +67,15 @@ boundaries, the generation cap and the architecture handling together — these
 have different optima per model, so one flag selects the whole set. Any flag you
 pass explicitly still wins.
 
+Every number in a profile is the number it was **measured** at, so naming a
+model gives the same answers on any machine that can afford them. One setting
+can be walked back: a 1024-token prefill step needs about 26 GB of recommended
+working set, and on a smaller device Mei drops to 512 and says so at startup.
+It says so because the two are not simply a fast and a slow setting — chunked
+prefill is not answer-invariant on this architecture, so a clamped server can
+generate different text than the numbers here were measured on. Pass
+`--prefill-step-size` yourself to override the clamp in either direction.
+
 **Why you name the model instead of Mei detecting it.** The supported models are
 not distinguishable from their metadata — Ornith 1.5 and Qwen3.6 text-only
 report the same `model_type`, the same architecture and the same layer topology.
