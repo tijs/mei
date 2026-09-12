@@ -31,6 +31,10 @@ final class ServerConfigParsingTests: XCTestCase {
         // Anchors OFF on Ornith: they cost hermes_ops-multi-step-chain 0/3.
         XCTAssertEqual(ornith.ssmAnchorBoundaryCount, 0)
         XCTAssertEqual(ornith.maxTokensDefault, 8192)
+        // 1024, not the .ornith architecture default of 512: every Ornith
+        // number we quote was measured at 1024, and chunked prefill changes
+        // what this architecture writes, so the two are not interchangeable.
+        XCTAssertEqual(ornith.prefillStepSize, 1024)
 
         // The vision variant was A/B'd separately, not inherited from its
         // sibling: 3 prompt pairs and 3 coding pairs, all zero cost.
@@ -42,6 +46,19 @@ final class ServerConfigParsingTests: XCTestCase {
         // Anchors ON here: -52% prefill, zero task cost across three pairs.
         XCTAssertEqual(text.ssmAnchorBoundaryCount, 2)
         XCTAssertEqual(text.prefillStepSize, 1024)
+    }
+
+    /// A profile with no prefill step falls through to the ARCHITECTURE
+    /// default, which is a different number chosen for a different reason.
+    /// That is how `ornith-1.5-35b-a3b` silently resolved to 512 while every
+    /// measurement behind it ran at 1024. Curated profiles state their step.
+    func testEveryProfilePinsItsPrefillStepRatherThanInheritingOne() {
+        for tuning in ModelTuningRegistry.all {
+            XCTAssertNotNil(tuning.prefillStepSize,
+                            "\(tuning.name) leaves prefillStepSize nil, so it "
+                            + "inherits the architecture default instead of the "
+                            + "step it was measured at")
+        }
     }
 
     func testModelProfileIsCaseInsensitiveAndNamesAreStable() throws {
@@ -187,7 +204,8 @@ final class ServerConfigParsingTests: XCTestCase {
         let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
         XCTAssertEqual(ornith.requestedOptimizationProfile, .ornith)
         XCTAssertEqual(ornith.optimizationProfile, .ornith)
-        XCTAssertEqual(ornith.prefillStepSize, 512)
+        // The profile's own step, not the .ornith architecture default of 512.
+        XCTAssertEqual(ornith.prefillStepSize, 1024)
 
         // An explicit flag still beats the profile's own prefill.
         let pinned = try parse([

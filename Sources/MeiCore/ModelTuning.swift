@@ -66,15 +66,21 @@ public enum ModelTuningRegistry {
             name: "ornith-1.5-35b-a3b",
             model: "ornith-ai/Ornith-1.5-35B-A3B (MLX 4-bit)",
             optimizationProfile: .ornith,
-            prefillStepSize: nil,   // device-aware; see prefillStepSize(modelDirectory:)
+            prefillStepSize: 1024,
             ssmAnchorBoundaries: 0,
             maxTokens: 8192,
             provenance: """
                 Anchors OFF. They cut prefill 4.64 -> 2.82 s/turn, but on this \
                 model they also cost hermes_ops-multi-step-chain, reproducibly \
                 (0/3 across three run pairs), where the model stops calling \
-                search_files/read_file/patch. Prefill step is device-aware \
-                (512, or 1024 where the working set allows). max-tokens 8192 \
+                search_files/read_file/patch. Prefill step 1024: on the real \
+                20k system+tools prompt 512 prefills at 340 tok/s, 1024 at \
+                389, and 1024 survived the 65k context gate. It is also what \
+                every measurement behind these numbers ran at, which matters \
+                because chunked prefill is NOT answer-invariant on this \
+                architecture (step 1024 and step 32 emit different token \
+                counts from the same 43-token prompt at temperature 0). \
+                max-tokens 8192 \
                 bounds a runaway turn that once burned 19.3 of a run's 40.1 \
                 generating minutes. The pinned repo is the naturally-aligned
                 repack: the published checkpoint is 97% misaligned, which costs
