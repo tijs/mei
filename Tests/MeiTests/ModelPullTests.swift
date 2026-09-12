@@ -49,3 +49,55 @@ final class ModelPullTests: XCTestCase {
                        "a dry run must not create the destination")
     }
 }
+
+final class ModelArtifactCheckTests: XCTestCase {
+    /// safetensors: 8-byte little-endian header length, then the JSON header,
+    /// then the data segment. Alignment is a property of `8 + headerLength`.
+    private func makeShard(inDirectory dir: URL, headerLength: Int) throws {
+        let header = Data(String(repeating: " ", count: headerLength).utf8)
+        var out = Data()
+        withUnsafeBytes(of: UInt64(headerLength).littleEndian) { out.append(contentsOf: $0) }
+        out.append(header)
+        out.append(Data([0, 1, 2, 3]))
+        try out.write(to: dir.appendingPathComponent("model-00001-of-00001.safetensors"))
+    }
+
+    func testAlignedShardIsRecognised() throws {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("align-ok-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try makeShard(inDirectory: dir, headerLength: 56)   // 8 + 56 = 64
+        XCTAssertEqual(ModelArtifactCheck.alignment(ofModelDirectory: dir.path), .aligned)
+    }
+
+    func testUnalignedShardIsCaught() throws {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("align-bad-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try makeShard(inDirectory: dir, headerLength: 53)   // 8 + 53 = 61, not 8-aligned
+        XCTAssertEqual(ModelArtifactCheck.alignment(ofModelDirectory: dir.path),
+                       .unaligned(unalignedShards: 1, totalShards: 1))
+    }
+
+    func testManifestShortCircuitsTheCheck() throws {
+        // Our repack ships a manifest; trust it rather than re-reading shards.
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("align-man-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try Data("{}".utf8).write(to: dir.appendingPathComponent("MEI_ALIGN_MANIFEST.json"))
+        XCTAssertEqual(ModelArtifactCheck.alignment(ofModelDirectory: dir.path), .aligned)
+    }
+
+    func testEmptyDirectoryIsUnknownNotAligned() throws {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("align-empty-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        if case .unknown = ModelArtifactCheck.alignment(ofModelDirectory: dir.path) {} else {
+            XCTFail("an empty directory must not report as aligned")
+        }
+    }
+}

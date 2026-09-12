@@ -67,6 +67,25 @@ struct MeiMain {
         }
         if let tuning = config.modelTuning {
             print("mei: model profile \(tuning.name) — \(tuning.model)")
+            // Naming a profile promises the settings it measured. Those were
+            // measured on a specific artifact, so check the weights on disk
+            // really are that artifact — otherwise the promise is hollow and
+            // the shortfall is invisible: 4.7 GB of memory and 3.2x on an 80k
+            // prefill, with no symptom to search for.
+            if tuning.requiresAlignedWeights {
+                switch ModelArtifactCheck.alignment(ofModelDirectory: config.modelDirectory) {
+                case .aligned:
+                    break
+                case .unaligned(let bad, let total):
+                    print("mei: WARNING \(bad) of \(total) weight shards are not "
+                        + "naturally aligned. This profile's settings were measured "
+                        + "on the aligned repack \(tuning.repo); serving these "
+                        + "weights costs memory and long-context prefill speed. "
+                        + "Fetch the measured artifact with: mei pull \(tuning.name)")
+                case .unknown:
+                    break   // never block a server start on an unreadable check
+                }
+            }
         }
         fflush(stdout)
         if config.servedModelIDWasDefaulted {
