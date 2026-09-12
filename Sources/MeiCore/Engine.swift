@@ -795,6 +795,40 @@ public actor Engine {
         return [rendered.count]
     }
 
+    /// Round anchor offsets DOWN to a multiple of the prefill step size.
+    ///
+    /// Hypothesis under test (Kiem 3c8ac194). Halving the prefill step size
+    /// (1024 -> 512) changes generation on 1 of 10 token-recorded tasks and
+    /// costs no stable task, because every boundary still lands on the regular
+    /// chunk grid. Enabling anchors changes 9 of 10 and reliably breaks one,
+    /// because the anchor sits at an arbitrary structural position (20,375 on
+    /// Ornith) and the split therefore creates an odd-sized chunk the grid
+    /// never produces.
+    ///
+    /// If that is the cause, aligning the split to the grid should remove the
+    /// divergence. The cost is the remainder given back as reuse — at step 1024
+    /// an anchor at 20,375 becomes 19,456, so ~919 tokens are re-prefilled
+    /// against a 52.6 s cold prefill saved. The aligned position is still
+    /// inside the shared system+tools prefix, so it stays valid across
+    /// conversations.
+    ///
+    /// Env-gated so one build can A/B both ways.
+    private func alignAnchorOffsets(_ offsets: [Int]) -> [Int] {
+        guard ProcessInfo.processInfo.environment["MEI_ANCHOR_ALIGN"] == "1" else {
+            return offsets
+        }
+        let step = config.prefillStepSize
+        guard step > 1 else { return offsets }
+        let aligned = offsets.map { ($0 / step) * step }.filter { $0 > 0 }
+        let unique = Array(Set(aligned)).sorted()
+        if unique != offsets {
+            print("mei: ssm anchor boundaries aligned to step \(step): "
+                + "\(offsets) -> \(unique)")
+            fflush(stdout)
+        }
+        return unique
+    }
+
     private func ssmAnchorOffsets(
         template: [[String: any Sendable]],
         tools: [MeiJSONValue]?,
@@ -853,10 +887,11 @@ public actor Engine {
         if !divergent.offsets.isEmpty {
             print("mei: ssm anchor boundaries (k=\(k), divergence): \(divergent.offsets)")
             fflush(stdout)
-            if let longest = divergent.offsets.max(), longest > 0, longest < tokens.count {
-                anchorMemo = (longest, prefixHash(longest), divergent.offsets)
+            let aligned = alignAnchorOffsets(divergent.offsets)
+            if let longest = aligned.max(), longest > 0, longest < tokens.count {
+                anchorMemo = (longest, prefixHash(longest), aligned)
             }
-            return divergent.offsets
+            return aligned
         }
         let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
         if trace {
@@ -890,7 +925,7 @@ public actor Engine {
             print("mei: ssm anchor boundaries (k=\(k)): \(result.offsets)")
         }
         fflush(stdout)
-        return result.offsets
+        return alignAnchorOffsets(result.offsets)
     }
 
     private func makeParameters(
