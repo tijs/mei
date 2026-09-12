@@ -20,6 +20,11 @@ public struct ServerConfig: Sendable {
     /// Set when --max-tokens was given, so a profile default never
     /// overrides an explicit operator choice.
     public var maxTokensExplicit: Bool = false
+
+    /// The named model tuning selected with `--model-profile`, if any.
+    /// Nil means no per-model tuning was requested: architecture detection
+    /// still applies, but none of the measured per-model numbers do.
+    public private(set) var modelTuning: ModelTuning?
     public var prefillStepSize: Int = 64
     /// KV cache quantization: nil = fp16, else bits (4 or 8).
     public var kvBits: Int? = nil
@@ -148,6 +153,7 @@ public extension ServerConfig {
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
         var prefillStepSizeExplicit = false
+        var ssmAnchorBoundariesExplicit = false
         var config = ServerConfig(modelDirectory: "", servedModelID: "")
 
         var index = 0
@@ -163,13 +169,6 @@ public extension ServerConfig {
             switch flag {
             case "--model-dir": modelDirectory = try value()
             case "--served-model-id": servedModelID = try value()
-            case "--optimization-profile":
-                let raw = try value().lowercased()
-                guard let profile = ModelOptimizationProfile(rawValue: raw) else {
-                    throw ConfigError.invalidValue(
-                        "--optimization-profile expects auto, generic, or ornith, got '\(raw)'")
-                }
-                requestedOptimizationProfile = profile
             case "--host": config.host = try value()
             case "--port":
                 config.port = try parseInt(flag, value())
@@ -230,8 +229,19 @@ public extension ServerConfig {
                 config.compiledDecodeMaxPromptOffset = try parseInt(flag, value())
             case "--max-kv-window":
                 config.maxKVWindowSize = try parseInt(flag, value())
+            case "--model-profile":
+                let raw = try value()
+                guard let tuning = ModelTuningRegistry.named(raw) else {
+                    throw ConfigError.invalidValue(
+                        "--model-profile '\(raw)' is not a supported model. "
+                        + "Known profiles: "
+                        + ModelTuningRegistry.names.joined(separator: ", ")
+                        + ". Omit the flag to run on architecture defaults.")
+                }
+                config.modelTuning = tuning
             case "--ssm-anchor-boundaries":
                 config.ssmAnchorBoundaryCount = try parseInt(flag, value())
+                ssmAnchorBoundariesExplicit = true
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
             case "-h", "--help":
@@ -262,6 +272,25 @@ public extension ServerConfig {
         config.servedModelIDWasDefaulted = (servedModelID == nil)
         config.modelDirectory = modelDirectory
         config.servedModelID = resolvedServedModelID
+
+        // A named model profile supplies the numbers we MEASURED for that
+        // model. An explicit flag still wins — the operator asked for it.
+        if let tuning = config.modelTuning {
+            // Naming the model selects its architecture handling too, so there
+            // is no separate --optimization-profile to keep in sync.
+            requestedOptimizationProfile = tuning.optimizationProfile
+            if !prefillStepSizeExplicit, let step = tuning.prefillStepSize {
+                config.prefillStepSize = step
+                prefillStepSizeExplicit = true   // keep detection from re-deriving
+            }
+            if !ssmAnchorBoundariesExplicit, let anchors = tuning.ssmAnchorBoundaries {
+                config.ssmAnchorBoundaryCount = anchors
+            }
+            if !config.maxTokensExplicit, let cap = tuning.maxTokens {
+                config.maxTokensDefault = cap
+                config.maxTokensExplicit = true
+            }
+        }
         config.requestedOptimizationProfile = requestedOptimizationProfile
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
@@ -334,9 +363,13 @@ public extension ServerConfig {
     Required:
       --model-dir DIR        Local directory with model config + safetensors
       --served-model-id ID   Exact model ID served by GET /v1/models
-      --optimization-profile auto|generic|ornith
-                              auto detects validated qwen3_5_moe metadata;
-                              unknown/malformed metadata stays generic
+      --model-profile NAME   Serve a supported model with its MEASURED settings:
+                             ornith-1.5-35b-a3b | qwen3.6-35b-a3b-text | qwen3.6-35b-a3b
+                             Selects architecture handling, prefill step, anchor
+                             boundaries and max-tokens together. Omit it and Mei
+                             falls back to architecture defaults detected from
+                             config.json, which are safe but not tuned. Explicit
+                             flags always win over the profile.
       --version               Print the Mei release version
 
     Network:

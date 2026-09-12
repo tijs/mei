@@ -36,6 +36,39 @@ atomicity, and an opt-in safetensors healer — and makes the MLXPress
 cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 30k decode +3.0% with token-for-token identical greedy output.
 
+## Supported models
+
+Mei ships measured settings for the models it supports. Pass the profile name
+and it loads them:
+
+```
+mei --model-dir /path/to/model --model-profile qwen3.6-35b-a3b-text
+```
+
+| model | `--model-profile` |
+|---|---|
+| `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly` | `qwen3.6-35b-a3b-text` |
+| `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` | `ornith-1.5-35b-a3b` |
+| `mlx-community/Qwen3.6-35B-A3B-4bit` (vision) | `qwen3.6-35b-a3b` |
+
+The profile sets the chunked-prefill step, cross-conversation anchor
+boundaries, the generation cap and the architecture handling together — these
+have different optima per model, so one flag selects the whole set. Any flag you
+pass explicitly still wins.
+
+**Why you name the model instead of Mei detecting it.** The supported models are
+not distinguishable from their metadata — Ornith 1.5 and Qwen3.6 text-only
+report the same `model_type`, the same architecture and the same layer topology.
+Telling them apart would mean keying behaviour off incidental fields like
+`transformers_version`, which breaks the moment an upstream re-export changes
+them. Mei still detects the *architecture* from `config.json`, which is what
+keeps an unnamed or unknown model safe; it just will not guess which specific
+model you have.
+
+Serving a model with no profile works fine — you get architecture defaults
+rather than tuned ones, and Mei says so at startup.
+
+
 ## How it works (high level)
 
 - **One native process.** `mei` is a single Swift/MLX server binary

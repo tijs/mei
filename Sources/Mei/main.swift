@@ -37,6 +37,18 @@ struct MeiMain {
             print("mei: profile applied max-tokens \(config.maxTokensDefault)"
                 + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
         }
+        if config.modelTuning == nil, config.optimizationProfile.isOrnith {
+            // Detection knows the ARCHITECTURE, never which model this is —
+            // the supported models are indistinguishable from their metadata.
+            // So point at the lookup rather than pretending to recognise it.
+            print("mei: no --model-profile given; serving on architecture "
+                + "defaults, which are safe but not tuned. If this is a "
+                + "supported model, naming it loads its measured settings: "
+                + ModelTuningRegistry.names.joined(separator: ", "))
+        }
+        if let tuning = config.modelTuning {
+            print("mei: model profile \(tuning.name) — \(tuning.model)")
+        }
         fflush(stdout)
         if config.servedModelIDWasDefaulted {
             print("mei: no --served-model-id given; serving as "

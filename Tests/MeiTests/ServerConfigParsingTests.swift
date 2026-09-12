@@ -14,6 +14,54 @@ final class ServerConfigParsingTests: XCTestCase {
         try ServerConfig.parse(arguments: base + extra)
     }
 
+    func testModelProfileSelectsTheMeasuredSettingsForThatModel() throws {
+        let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
+        XCTAssertEqual(ornith.optimizationProfile, .ornith)
+        // Anchors OFF on Ornith: they cost hermes_ops-multi-step-chain 0/3.
+        XCTAssertEqual(ornith.ssmAnchorBoundaryCount, 0)
+        XCTAssertEqual(ornith.maxTokensDefault, 8192)
+
+        let text = try parse(["--model-profile", "qwen3.6-35b-a3b-text"])
+        XCTAssertEqual(text.optimizationProfile, .ornith)
+        // Anchors ON here: -52% prefill, zero task cost across three pairs.
+        XCTAssertEqual(text.ssmAnchorBoundaryCount, 2)
+        XCTAssertEqual(text.prefillStepSize, 1024)
+    }
+
+    func testModelProfileIsCaseInsensitiveAndNamesAreStable() throws {
+        XCTAssertEqual(try parse(["--model-profile", "Ornith-1.5-35B-A3B"])
+                        .modelTuning?.name, "ornith-1.5-35b-a3b")
+        // These names are a documented lookup key in the README; renaming one
+        // silently breaks every operator command line that uses it.
+        XCTAssertEqual(ModelTuningRegistry.names,
+                       ["ornith-1.5-35b-a3b", "qwen3.6-35b-a3b-text",
+                        "qwen3.6-35b-a3b"])
+    }
+
+    func testUnknownModelProfileIsRejectedAndListsTheKnownOnes() {
+        XCTAssertThrowsError(try parse(["--model-profile", "llama-3"])) { error in
+            let text = "\(error)"
+            XCTAssertTrue(text.contains("ornith-1.5-35b-a3b"),
+                          "the error must list what IS supported, got: \(text)")
+        }
+    }
+
+    func testExplicitFlagsStillBeatTheProfile() throws {
+        // Naming a model supplies measured defaults; it must not override an
+        // operator who asked for something specific.
+        let c = try parse(["--model-profile", "qwen3.6-35b-a3b-text",
+                           "--ssm-anchor-boundaries", "0",
+                           "--prefill-step-size", "256"])
+        XCTAssertEqual(c.ssmAnchorBoundaryCount, 0)
+        XCTAssertEqual(c.prefillStepSize, 256)
+    }
+
+    func testNoProfileLeavesPerModelTuningUnapplied() throws {
+        let c = try parse([])
+        XCTAssertNil(c.modelTuning)
+        XCTAssertEqual(c.ssmAnchorBoundaryCount, 0)
+    }
+
     func testForkFlagDefaultsMatchRollbackConfiguration() throws {
         let config = try parse([])
         XCTAssertNil(config.kvBits)
@@ -111,23 +159,25 @@ final class ServerConfigParsingTests: XCTestCase {
             .appendingPathComponent("mei-profile-unknown-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: unknown, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: unknown) }
-        try Data("{\"model_type\":\"gemma4\"}".utf8)
+        try Data("{\"model_type\":\"llama\"}".utf8)
             .write(to: unknown.appendingPathComponent("config.json"))
         XCTAssertEqual(ModelOptimizationProfile.detect(modelDirectory: unknown.path), .generic)
     }
 
-    func testExplicitProfilesOverrideAutoDetection() throws {
-        let ornith = try parse(["--optimization-profile", "ornith"])
+    func testNamedProfileOverridesArchitectureDetection() throws {
+        // The base model dir carries generic metadata, so detection alone would
+        // say .generic. Naming a model must win — that is the point of selecting
+        // by name rather than inferring.
+        let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
         XCTAssertEqual(ornith.requestedOptimizationProfile, .ornith)
         XCTAssertEqual(ornith.optimizationProfile, .ornith)
         XCTAssertEqual(ornith.prefillStepSize, 512)
 
-        let generic = try parse([
-            "--optimization-profile", "generic", "--prefill-step-size", "128"
+        // An explicit flag still beats the profile's own prefill.
+        let pinned = try parse([
+            "--model-profile", "ornith-1.5-35b-a3b", "--prefill-step-size", "128"
         ])
-        XCTAssertEqual(generic.requestedOptimizationProfile, .generic)
-        XCTAssertEqual(generic.optimizationProfile, .generic)
-        XCTAssertEqual(generic.prefillStepSize, 128)
+        XCTAssertEqual(pinned.prefillStepSize, 128)
     }
 
     func testExplicitPrefillWinsOverOrnithProfile() throws {
@@ -145,33 +195,7 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.prefillStepSize, 256)
     }
 
-    func testGemma4BundleDefaultsTo256Prefill() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("mei-profile-gemma4-step-\\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data(#"{"model_type":"gemma4"}"#.utf8)
-            .write(to: directory.appendingPathComponent("config.json"))
-        let config = try ServerConfig.parse(arguments: [
-            "--model-dir", directory.path, "--served-model-id", "mlx/gemma4"
-        ])
-        XCTAssertEqual(config.optimizationProfile, .generic)
-        XCTAssertEqual(config.prefillStepSize, 256)
-    }
 
-    func testExplicitPrefillWinsOverGemma4Default() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("mei-profile-gemma4-explicit-\\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data(#"{"model_type":"gemma4"}"#.utf8)
-            .write(to: directory.appendingPathComponent("config.json"))
-        let config = try ServerConfig.parse(arguments: [
-            "--model-dir", directory.path, "--served-model-id", "mlx/gemma4",
-            "--prefill-step-size", "128"
-        ])
-        XCTAssertEqual(config.prefillStepSize, 128)
-    }
 
     func testDenseQwen35ProfileStaysAt64Prefill() throws {
         let directory = FileManager.default.temporaryDirectory
@@ -187,12 +211,12 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.prefillStepSize, 64)
     }
 
-    func testUnknownOptimizationProfileRejected() {
-        XCTAssertThrowsError(try parse(["--optimization-profile", "qwen"])) { error in
+    func testUnknownModelProfileRejected() {
+        XCTAssertThrowsError(try parse(["--model-profile", "qwen"])) { error in
             guard case ConfigError.invalidValue(let message) = error else {
                 return XCTFail("expected invalidValue, got \(error)")
             }
-            XCTAssertTrue(message.contains("optimization-profile"))
+            XCTAssertTrue(message.contains("model-profile"))
         }
     }
 
@@ -223,19 +247,17 @@ final class ServerConfigParsingTests: XCTestCase {
         }
     }
 
-    // MARK: - Disk-KV safety default (0.1.0 release fix + gemma4 extension)
+    // MARK: - Disk-KV safety default (0.1.0 release fix)
     // Dense qwen3_5/qwen3_8-style checkpoints crash the in-memory-only paged
     // KV tier (vmlx array.cpp:335 SmallVector crash; trigger isolated
     // 2026-09-02 by the 2x2 evidence: cells A/C (in-memory) crash, cells
-    // B/D (disk) pass) and gemma4 bundles never restore exact-repeat
     // prefixes on it (cached=0; disk tier restores 6173/6174, 2026-09-03
     // evidence) — so cache-reuse on without an explicit --kv-cache-dir must
     // default both families to a disposable on-disk cache.
     //
     // Fan-out: qwen3_5 / qwen3_5_text are the dense Qwen3.5/Qwen3.8 MLX
     // model_type values (verified on Qwen3.8-27B-4bit and the Heretic
-    // variant); gemma4 / gemma4_text are the Gemma 4 text model_type values
-    // (root + nested text_config of mlx-community/gemma-4-26b-a4b-it-4bit).
+    // (root + nested text_config of mlx-community/some-unknown-model).
     // The MoE/hybrid qwen3_5_moe family keeps operator-controlled cache
     // configuration (Ornith behavior preserved).
 
@@ -277,38 +299,23 @@ final class ServerConfigParsingTests: XCTestCase {
             modelDir: dir, servedModelID: "mlx-community/Qwen3.8-27B-4bit")
     }
 
-    func testExplicitGenericProfileWithDenseQwen35StillGetsDiskDefault() throws {
+    func testDenseQwen35GetsDiskDefaultWithoutAnyNamedProfile() throws {
+        // Architecture detection still protects a model nobody named: this
+        // topology cannot restore from the paged tier, so it needs a disk KV
+        // dir whether or not the operator knew to ask.
         let dir = try makeModelDir(modelType: "qwen3_5_text")
         defer { try? FileManager.default.removeItem(at: dir) }
         let config = try ServerConfig.parse(arguments: [
             "--model-dir", dir.path,
             "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
-            "--optimization-profile", "generic",
         ])
-        XCTAssertEqual(config.optimizationProfile, .generic)
+        XCTAssertNil(config.modelTuning, "no profile was named")
         XCTAssertEqual(
             config.kvCacheDir,
             ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
     }
 
-    func testGemma4DefaultsDisposableDiskKVWhenReuseOnAndNoExplicitDir() throws {
-        let dir = try makeModelDir(modelType: "gemma4")
-        defer { try? FileManager.default.removeItem(at: dir) }
-        try assertDisposableDiskKVDefault(
-            modelDir: dir, servedModelID: "mlx-community/gemma-4-26b-a4b-it-4bit")
-    }
 
-    func testGemma4TextNestedModelTypeDefaultsDisposableDiskKV() throws {
-        // Mirrors the staged bundle: model_type lives in the nested
-        // text_config while the root carries the multimodal gemma4 value.
-        let dir = try makeModelDir(config: [
-            "model_type": "gemma4",
-            "text_config": ["model_type": "gemma4_text"],
-        ])
-        defer { try? FileManager.default.removeItem(at: dir) }
-        try assertDisposableDiskKVDefault(
-            modelDir: dir, servedModelID: "mlx-community/gemma-4-26b-a4b-it-4bit")
-    }
 
     func testExplicitKVCacheDirWinsOverDenseQwen35Default() throws {
         let dir = try makeModelDir(modelType: "qwen3_5")

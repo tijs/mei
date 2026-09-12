@@ -20,28 +20,13 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         isOrnith ? 512 : 64
     }
 
-    /// Model types whose validated chunked-prefill step is 256. Measured
-    /// 2026-09-03 on mlx-community/gemma-4-26b-a4b-it-4bit (generic profile,
-    /// disk-KV default, 30k fresh fill, port 8024): step 256 fills at
-    /// 266.5/265.3/266.2 pps (3 cold repeats) vs 139 (mean of 64-step rows),
-    /// +91%; peak 27.23 GB unchanged vs the 64-step row; 30k loaded decode
-    /// unchanged (~7.4 t/s, attention-bound); probe_mei acceptance pass-set
-    /// identical to the 64-step baseline (only the pre-existing user-gated
-    /// Gemma string-args tool-schema mismatch fails). Evidence:
-    /// artifacts/probe-longctx-gemma4-pref{64,128,256,512}-*, probe-mei-gemma4-pref256-*,
-    /// artifacts/gemma4-prefill-step-sweep-20260903.md.
-    public static let prefill256ModelTypes: Set<String> = ["gemma4", "gemma4_text"]
 
     /// Architecture-validated chunked-prefill step. The Ornith profile keeps
-    /// its validated 512; `gemma4`-lineage bundles default to the measured
     /// 256; everything else stays on the conservative 64. An explicit
     /// `--prefill-step-size` always wins.
     public static func prefillStepSize(
         modelDirectory: String, profile: ModelOptimizationProfile
     ) -> Int {
-        if profile.isOrnith { return profile.defaultPrefillStepSize }
-        if !collectedModelTypes(in: modelDirectory)
-            .isDisjoint(with: prefill256ModelTypes) { return 256 }
         return profile.defaultPrefillStepSize
     }
 
@@ -75,10 +60,8 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     ///   SmallVector out of range`, vmlx mlx/c/array.cpp:335; trigger isolated
     ///   by the 2026-09-02 bounded 2x2 — prefill step excluded, KV tier
     ///   implicated).
-    /// - Gemma 4 bundles (`gemma4`/`gemma4_text`) do NOT crash but their
     ///   exact-repeat restore returns cached=0 on the paged in-memory tier;
     ///   the same requests restore 6173/6174 cached on the disk tier (probe
-    ///   evidence 2026-09-03, mlx-community/gemma-4-26b-a4b-it-4bit) —
     ///   reuse rides the disk tier for this architecture too.
     ///
     /// The qwen3_5_moe family is here too, as of 0.4.2. It was previously
@@ -105,7 +88,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// caching entirely, so operator control is preserved where it is asked
     /// for rather than assumed by omission.
     public static let diskKVRequiredModelTypes: Set<String> =
-        ["qwen3_5", "qwen3_5_text", "gemma4", "gemma4_text",
+        ["qwen3_5", "qwen3_5_text",
          "qwen3_5_moe", "qwen3_5_moe_text"]
 
     /// True when the bundle's metadata contains any model_type that needs
@@ -117,7 +100,6 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
             .isDisjoint(with: diskKVRequiredModelTypes)
     }
 
-    /// @deprecated — use `diskKVRequiredModelTypes` (renamed when the gemma4
     /// lineage joined the disk-tier-required set; kept as an alias so
     /// external consumers of the 0.1.0 public API keep compiling).
     public static let denseQwen35KVUnsafeModelTypes: Set<String> = diskKVRequiredModelTypes
