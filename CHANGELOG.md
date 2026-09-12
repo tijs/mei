@@ -2,6 +2,42 @@
 
 All notable changes to Mei are documented here.
 
+## [0.4.2] - 2026-09-12
+
+Out-of-the-box prefix reuse, and instrumentation to prove where a turn's time
+actually goes.
+
+### `mei --model-dir DIR` now reuses its cache without being told to
+
+The qwen3_5_moe hybrid cannot restore from the paged in-memory tier, so a bare
+server re-read the whole conversation on every turn while reporting cache
+reuse as enabled. It now gets a disposable disk KV tier by default, like the
+other topologies that need one. Measured bare, four turns of a growing
+conversation: **246 s -> 66 s**. The acceptance probe reaches 13/13 on a bare
+server where it previously needed an explicit `--kv-cache-dir`.
+
+### `--request-log` — one JSON line per generation run
+
+Records prompt and cached token counts, prefill and generate milliseconds,
+peak memory and the finish reason. `runner/analyze_request_log.py` in the
+benchmark repo turns it into a per-turn decomposition of prefill, generation,
+server gap and the interval between turns.
+
+This is what made the per-turn overhead question answerable rather than
+arguable. On the shipped configuration it showed prefill at 4.64 s/turn against
+a server gap of 0.26 s — the gap was never the problem — and that eight cold
+prefills of the ~20k system+tools preamble accounted for 46% of all prefill
+time, 18.6% of the suite's wall clock, in eight requests.
+
+### Fixed
+
+- A restored cache no longer freezes its stored boundary at the SSM anchor.
+- The advancing boundary costs one template render per turn instead of the
+  full canonical set (~4.4 s/turn on a long transcript).
+- `testOrnithMoeModelKeepsKVCacheDirEmptyDefault` asserted the exact contract
+  this release reverses; it was never updated and `swift test` was red on the
+  branch. No gate ran unit tests, so it would have shipped.
+
 ## [0.4.1] - 2026-09-11
 
 A correctness fix to prefix reuse, and an end to needing flags to get good
