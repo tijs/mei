@@ -21,7 +21,7 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 **License:** MIT. Model weights are never bundled; see
 [`NOTICE.md`](NOTICE.md). Current stable release: **0.4.1**.
 
-**0.4.1 (2026-09-11)** fixes prefix-reuse correctness and removes the flags you needed to know about. A restored prefix now reproduces cold output byte-for-byte; before, it restored from re-derived state that could change the answer. `mei --model-dir DIR` is now a complete command — the profile applies the measured-best settings for the model it detects and reports them, and any setting that will not apply to the loaded topology says so.
+**0.4.1 (2026-09-11)** fixes prefix-reuse correctness and removes the flags you needed to know about. A restored prefix now reproduces byte-for-byte what the same configuration produces cold; before, it restored from re-derived state that could change the answer even against itself. Note the comparison: this does **not** mean enabling prefix reuse leaves your answers unchanged. Capturing a reusable boundary splits the prefill, and on this hybrid architecture a split prefill does not produce bit-identical state to a continuous one, so `--ssm-anchor-boundaries` on and off can give different output. `mei --model-dir DIR` is now a complete command — the profile applies the measured-best settings for the model it detects and reports them, and any setting that will not apply to the loaded topology says so.
 
 **0.4.0 (2026-09-08)** adds opt-in cross-conversation prefix reuse
 (`--ssm-anchor-boundaries K`), which takes a warm agent turn on a shared 20k
