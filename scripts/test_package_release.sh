@@ -21,7 +21,11 @@
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
-VERSION="${1:-0.2.0}"
+VERSION="${1:-}"
+if [[ -z "$VERSION" ]]; then
+  VERSION="$(sed -n 's/.*static let version = "\([^"]*\)".*/\1/p' \
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/Sources/MeiCore/ServerConfig.swift" | head -1)"
+fi
 PACKAGER="$SCRIPT_DIR/package_release.sh"
 
 PASS=0; FAIL=0

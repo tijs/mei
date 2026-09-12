@@ -14,7 +14,7 @@
 # staged/downloaded separately). No GPG/signing claim is made.
 #
 # Usage: scripts/package_release.sh [VERSION] [--binary PATH] [--skip-build]
-#   VERSION       defaults to 0.2.0 and MUST equal ServerConfig.version.
+#   VERSION       defaults to ServerConfig.version, and MUST equal it.
 #   --binary PATH use a prebuilt mei executable instead of building.
 #   --skip-build  use .build/release/mei if present; error if missing.
 #
@@ -26,7 +26,12 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="0.2.0"
+# Default to whatever the tree actually declares, resolved after REPO is known
+# (see below). A hardcoded default is guaranteed wrong from the next release
+# onward: this sat at 0.2.0 through 0.3.0, 0.4.0, 0.4.1 and 0.4.2, so the bare
+# command could only ever fail, and scripts/test_package_release.sh inherited
+# the same default and failed with it.
+VERSION=""
 SKIP_BUILD=0
 BINARY_ARG=""
 while [[ $# -gt 0 ]]; do
@@ -41,6 +46,13 @@ while [[ $# -gt 0 ]]; do
       VERSION="$1"; shift ;;
   esac
 done
+
+if [[ -z "$VERSION" ]]; then
+  VERSION="$(sed -n 's/.*static let version = "\([^"]*\)".*/\1/p' \
+    "$REPO/Sources/MeiCore/ServerConfig.swift" | head -1)"
+  [[ -n "$VERSION" ]] || { echo "FATAL: could not read ServerConfig.version" >&2; exit 1; }
+  echo "== version not given; using ServerConfig.version = $VERSION =="
+fi
 
 DIST="$REPO/dist"
 BUNDLE_DIR="$DIST/mei-${VERSION}-macos-arm64"
