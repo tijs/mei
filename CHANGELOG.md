@@ -2,6 +2,62 @@
 
 All notable changes to Mei are documented here.
 
+## [0.5.0] - unreleased
+
+Pick your model by name and get the settings we measured for it.
+
+### `--model-profile` — one flag selects everything for a supported model
+
+```
+mei --model-dir DIR --model-profile qwen3.6-35b-a3b-text
+```
+
+The profile carries the chunked-prefill step, cross-conversation anchor
+boundaries, the generation cap and the architecture handling together, because
+those have different optima per model. Every value is traceable to a
+measurement recorded in the profile's own `provenance` string.
+
+Profiles also pin the HuggingFace repo and an exact revision — not `main` —
+because the settings are calibrated to one artifact, and an upstream re-export
+that silently invalidates them would be miserable to debug later.
+
+### Why you name the model instead of Mei detecting it
+
+The supported models are not distinguishable from their metadata. Ornith 1.5
+and Qwen3.6 text-only report the same `model_type`, the same architecture and
+the same layer topology. Telling them apart would mean keying behaviour off
+incidental fields like `transformers_version`, which breaks the moment an
+upstream re-export changes them.
+
+Mei still detects the *architecture*, which is what keeps an unnamed or unknown
+model safe — it simply will not guess which specific model you have, and says
+so at startup when it is serving an architecture it has profiles for.
+
+### Ornith now points at a published aligned repack
+
+`ornith-1.5-35b-a3b` pins
+[`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`](https://huggingface.co/Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned):
+the official weights, bit-identical, repacked so every tensor starts at a
+naturally aligned offset. The published checkpoint leaves 1,421 of 1,757
+tensors unable to be mmap'd, so MLX copies them into anonymous RAM at load —
+**24.28 GB resident instead of 19.55, and 117.6 s instead of 36.7 s for a fresh
+80k-context prefill**. The entire difference is a few bytes of padding per
+shard's JSON header, and none of it is visible from the outside.
+
+### Upstream vmlx sync
+
+Re-pinned to `23551729`: the fork's prefix-capture work with 30 upstream
+commits merged in.
+
+### Removed
+
+- **`--optimization-profile`.** Naming the model selects its architecture too,
+  and two flags to keep in sync was the confusion this replaces.
+  Migrate: `--optimization-profile ornith` → `--model-profile ornith-1.5-35b-a3b`.
+  Omitting it entirely is also fine — you get architecture defaults.
+- **Gemma 4 special-casing.** That model was discarded as a candidate, so its
+  prefill-256 rule and disk-KV entries went with it. No compatibility shim.
+
 ## [0.4.2] - 2026-09-12
 
 Out-of-the-box prefix reuse, and instrumentation to prove where a turn's time
