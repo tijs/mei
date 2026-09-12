@@ -21,6 +21,22 @@ Profiles also pin the HuggingFace repo and an exact revision — not `main` —
 because the settings are calibrated to one artifact, and an upstream re-export
 that silently invalidates them would be miserable to debug later.
 
+### Anchors are on for both Qwen3.6 variants, off for Ornith
+
+Cross-conversation prefix anchors cut the cold prefill of the shared
+system+tools preamble. Measured on every supported model, same protocol:
+
+| model | prefill/turn | quality cost |
+|---|---|---|
+| Ornith 1.5 | 4.64 → 2.82 s (−39%) | **1 stable task**, 3/3 pairs |
+| Qwen3.6 text-only | 4.60 → 2.23 s (−52%) | zero, 4 comparisons |
+| Qwen3.6 vision | 3.81 → 1.79 s (−53%) | zero, 6 comparisons |
+
+All three change what the model writes — chunked prefill is not bit-reproducible
+on a GPU, so splitting it to capture a boundary shifts the last bits. Only
+Ornith pays a task for it, which is why this is a per-model setting and not a
+global default.
+
 ### Why you name the model instead of Mei detecting it
 
 The supported models are not distinguishable from their metadata. Ornith 1.5

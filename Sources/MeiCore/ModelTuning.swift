@@ -104,11 +104,16 @@ public enum ModelTuningRegistry {
             model: "mlx-community/Qwen3.6-35B-A3B-4bit (with vision tower)",
             optimizationProfile: .ornith,
             prefillStepSize: 1024,
-            ssmAnchorBoundaries: 0,
+            ssmAnchorBoundaries: 2,
             maxTokens: 8192,
             provenance: """
-                Anchors OFF pending measurement: this variant has not been \
-                A/B'd. Defaults otherwise follow the text-only sibling.
+                Anchors ON. Measured, not inherited from the text-only sibling: \
+                three prompt-suite pairs and three coding pairs, all zero cost \
+                on this model's own stable tasks, with prefill 3.81 -> 1.79 s \
+                per run (-53%) and cold >15k prefills 8 -> 1. Two coding pairs \
+                first looked like a -1 and a -2; both were tasks that flip \
+                within their own arm here. This model's noise floor is 8 of 25 \
+                tasks, and it shares only two of them with Ornith.
                 """,
             repo: "mlx-community/Qwen3.6-35B-A3B-4bit",
             revision: "38740b847e4cb78f352aba30aa41c76e08e6eb46"),

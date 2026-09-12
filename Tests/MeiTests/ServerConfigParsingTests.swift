@@ -32,6 +32,11 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(ornith.ssmAnchorBoundaryCount, 0)
         XCTAssertEqual(ornith.maxTokensDefault, 8192)
 
+        // The vision variant was A/B'd separately, not inherited from its
+        // sibling: 3 prompt pairs and 3 coding pairs, all zero cost.
+        let vision = try parse(["--model-profile", "qwen3.6-35b-a3b"])
+        XCTAssertEqual(vision.ssmAnchorBoundaryCount, 2)
+
         let text = try parse(["--model-profile", "qwen3.6-35b-a3b-text"])
         XCTAssertEqual(text.optimizationProfile, .ornith)
         // Anchors ON here: -52% prefill, zero task cost across three pairs.
