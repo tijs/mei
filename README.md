@@ -48,7 +48,7 @@ mei --model-dir /path/to/model --model-profile qwen3.6-35b-a3b-text
 | model | `--model-profile` |
 |---|---|
 | `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly` | `qwen3.6-35b-a3b-text` |
-| `ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit` | `ornith-1.5-35b-a3b` |
+| [`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`](https://huggingface.co/Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned) | `ornith-1.5-35b-a3b` |
 | `mlx-community/Qwen3.6-35B-A3B-4bit` (vision) | `qwen3.6-35b-a3b` |
 
 The profile sets the chunked-prefill step, cross-conversation anchor
@@ -67,6 +67,15 @@ model you have.
 
 Serving a model with no profile works fine — you get architecture defaults
 rather than tuned ones, and Mei says so at startup.
+
+**Pull the repo the profile names, not a lookalike.** Ornith's profile points at
+an *aligned repack* rather than the published checkpoint. The two have
+bit-identical weights; they differ only in a few bytes of padding in each
+shard's JSON header. That padding is worth 4.7 GB of memory and a 3.2× faster
+80k-context prefill, because the published layout leaves 1,421 of 1,757 tensors
+unable to be mmap'd and MLX copies them into anonymous RAM at load. Nothing
+about that is visible from the outside, which is why the profile pins an exact
+repo and revision.
 
 
 ## How it works (high level)

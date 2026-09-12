@@ -76,10 +76,13 @@ public enum ModelTuningRegistry {
                 search_files/read_file/patch. Prefill step is device-aware \
                 (512, or 1024 where the working set allows). max-tokens 8192 \
                 bounds a runaway turn that once burned 19.3 of a run's 40.1 \
-                generating minutes.
+                generating minutes. The pinned repo is the naturally-aligned
+                repack: the published checkpoint is 97% misaligned, which costs
+                4.7 GB of memory and 3.2x on an 80k prefill, and these settings
+                were measured on the aligned copy.
                 """,
-            repo: "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
-            revision: "19504d912fa8fc7622bf6b1de3db5d5d890b1f02",
+            repo: "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+            revision: "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
             requiresAlignedWeights: true),
         ModelTuning(
             name: "qwen3.6-35b-a3b-text",
