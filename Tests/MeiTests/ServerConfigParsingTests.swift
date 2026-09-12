@@ -14,6 +14,17 @@ final class ServerConfigParsingTests: XCTestCase {
         try ServerConfig.parse(arguments: base + extra)
     }
 
+    func testEveryProfilePinsARevisionAndNamesItsRepo() {
+        for tuning in ModelTuningRegistry.all {
+            XCTAssertFalse(tuning.repo.isEmpty, "\(tuning.name) has no repo")
+            // 40-char commit, never a branch: settings are calibrated to one
+            // artifact, and an upstream re-export must not silently apply.
+            XCTAssertEqual(tuning.revision.count, 40,
+                           "\(tuning.name) revision must be a full commit sha")
+            XCTAssertNotEqual(tuning.revision, "main")
+        }
+    }
+
     func testModelProfileSelectsTheMeasuredSettingsForThatModel() throws {
         let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
         XCTAssertEqual(ornith.optimizationProfile, .ornith)

@@ -30,11 +30,23 @@ public struct ModelTuning: Sendable, Equatable {
     public let maxTokens: Int?
     /// Why these values. Every number here should be traceable to a measurement.
     public let provenance: String
+    /// Settings were measured on a repacked, naturally-aligned copy of the
+    /// weights. The published checkpoint is not that copy.
+    public let requiresAlignedWeights: Bool
+
+    /// HuggingFace repo these settings were measured on.
+    public let repo: String
+    /// Pinned revision. Not `main`: the settings are calibrated to a specific
+    /// artifact, and an upstream re-export that silently invalidates them is
+    /// miserable to debug months later.
+    public let revision: String
 
     public init(name: String, model: String,
                 optimizationProfile: ModelOptimizationProfile,
                 prefillStepSize: Int?,
-                ssmAnchorBoundaries: Int?, maxTokens: Int?, provenance: String) {
+                ssmAnchorBoundaries: Int?, maxTokens: Int?, provenance: String,
+                repo: String, revision: String,
+                requiresAlignedWeights: Bool = false) {
         self.name = name
         self.model = model
         self.optimizationProfile = optimizationProfile
@@ -42,6 +54,9 @@ public struct ModelTuning: Sendable, Equatable {
         self.ssmAnchorBoundaries = ssmAnchorBoundaries
         self.maxTokens = maxTokens
         self.provenance = provenance
+        self.repo = repo
+        self.revision = revision
+        self.requiresAlignedWeights = requiresAlignedWeights
     }
 }
 
@@ -62,7 +77,10 @@ public enum ModelTuningRegistry {
                 (512, or 1024 where the working set allows). max-tokens 8192 \
                 bounds a runaway turn that once burned 19.3 of a run's 40.1 \
                 generating minutes.
-                """),
+                """,
+            repo: "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+            revision: "19504d912fa8fc7622bf6b1de3db5d5d890b1f02",
+            requiresAlignedWeights: true),
         ModelTuning(
             name: "qwen3.6-35b-a3b-text",
             model: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
@@ -75,7 +93,9 @@ public enum ModelTuningRegistry {
                 cost across three run pairs on the prompt suite — including \
                 hermes_ops-multi-step-chain, which anchors break on Ornith. \
                 Same architecture as Ornith, different trajectory.
-                """),
+                """,
+            repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+            revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56"),
         ModelTuning(
             name: "qwen3.6-35b-a3b",
             model: "mlx-community/Qwen3.6-35B-A3B-4bit (with vision tower)",
@@ -86,7 +106,9 @@ public enum ModelTuningRegistry {
             provenance: """
                 Anchors OFF pending measurement: this variant has not been \
                 A/B'd. Defaults otherwise follow the text-only sibling.
-                """),
+                """,
+            repo: "mlx-community/Qwen3.6-35B-A3B-4bit",
+            revision: "38740b847e4cb78f352aba30aa41c76e08e6eb46"),
     ]
 
     public static func named(_ name: String) -> ModelTuning? {
