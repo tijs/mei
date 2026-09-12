@@ -129,6 +129,45 @@ Then confirm the release is actually reachable:
 brew update && brew info tijs/tap/mei    # must show the new version
 ```
 
+## 7b. Merge the release back to `main` — THE OTHER STEP THAT GETS FORGOTTEN
+
+```bash
+git checkout main && git merge release/<version> && git push origin main
+```
+
+The tag is not the merge. On 2026-09-12 `main` was found 19 commits behind and
+0 ahead: 0.4.1 and 0.4.2 were both tagged, published and live in the Homebrew
+tap, while anyone cloning the repo got pre-0.4.1 code that reported an old
+version. Releases had been cut from a research branch and left there.
+
+## Publishing model artifacts
+
+If a release depends on a prepared artifact — a repack, a requantisation —
+publish it rather than documenting the preparation. A step a user must perform
+themselves is a step most will skip, and the failure is silent: they get a
+working server with worse numbers and nothing to search for.
+
+Before uploading weights:
+
+- **Check the licence on the SOURCE.** The base model's licence governs a
+  derivative. Mirror it and attribute both the original and any intermediate
+  (e.g. whoever did the quantisation).
+- **Verify what you are about to publish**, not what you think you built. Hash
+  each shard's payload against its manifest and confirm the claimed property
+  actually holds.
+- **Verify what landed**, not the tool's success message. Query the repo for
+  file count and sizes. "UPLOAD DONE" cannot distinguish a real transfer from a
+  metadata-only commit.
+
+### HF token gotcha
+
+`HF_TOKEN` in the environment **shadows** `~/.cache/huggingface/token`, and
+`whoami` reports whichever is winning, not which tokens exist. A read-only env
+token made a write-scoped file token invisible and produced a convincing
+`403 … don't have the rights to create a model` — which reads as "this token
+lacks scope" rather than "you are using the wrong token". Enumerate the stores
+before concluding anything about permissions.
+
 ## 8. Record it
 
 - Kiem `proj/mei`: a note with the version, what shipped, the measured numbers,
