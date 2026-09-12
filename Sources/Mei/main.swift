@@ -67,6 +67,10 @@ struct MeiMain {
         }
         if let tuning = config.modelTuning {
             print("mei: model profile \(tuning.name) — \(tuning.model)")
+            if let clamped = config.prefillStepClampedFrom {
+                print(ModelOptimizationProfile.prefillClampMessage(
+                    from: clamped, to: config.prefillStepSize))
+            }
             // Naming a profile promises the settings it measured. Those were
             // measured on a specific artifact, so check the weights on disk
             // really are that artifact — otherwise the promise is hollow and
@@ -126,7 +130,7 @@ struct MeiMain {
             FileHandle.standardError.write(Data("mei: failed to bind \(config.host):\(config.port): \(error.localizedDescription)\n".utf8))
             exit(1)
         }
-        print("mei: listening on http://\(config.host):\(config.port) (context cap \(config.contextCap), prefill step \(config.prefillStepSize), kv-bits \(config.kvBits.map(String.init) ?? "none"))")
+        print("mei: listening on http://\(config.host):\(config.port) (context cap \(config.contextCap), prefill step \(config.prefillStepSize), max-tokens \(config.maxTokensDefault), kv-bits \(config.kvBits.map(String.init) ?? "none"))")
         fflush(stdout)
 
         do {

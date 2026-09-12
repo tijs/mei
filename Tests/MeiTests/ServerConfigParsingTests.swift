@@ -10,8 +10,15 @@ import XCTest
 final class ServerConfigParsingTests: XCTestCase {
     let base = ["--model-dir", "/tmp/model", "--served-model-id", "mei/model"]
 
-    private func parse(_ extra: [String]) throws -> ServerConfig {
-        try ServerConfig.parse(arguments: base + extra)
+    /// Machines this project has measured on report ~26.8 GB recommended
+    /// working set. Tests pin it rather than asking the GPU, so a result does
+    /// not depend on which machine runs the suite.
+    static let measuredWorkingSetBytes = 26_800_603_136
+
+    private func parse(_ extra: [String],
+                       workingSet: Int? = measuredWorkingSetBytes) throws -> ServerConfig {
+        try ServerConfig.parse(arguments: base + extra,
+                               recommendedWorkingSetBytes: workingSet)
     }
 
     func testEveryProfilePinsARevisionAndNamesItsRepo() {
@@ -59,6 +66,77 @@ final class ServerConfigParsingTests: XCTestCase {
                             + "inherits the architecture default instead of the "
                             + "step it was measured at")
         }
+    }
+
+    /// 0.4.1's CHANGELOG describes choosing the prefill step from available
+    /// memory. The commit that implemented it (93f9588) reached no tag: the
+    /// threshold constant appears zero times in `v0.4.1:ModelOptimizationProfile
+    /// .swift` while the section appears in `v0.4.1:CHANGELOG.md`. So the check
+    /// below is new behaviour wearing an old release note.
+    ///
+    /// It is also a different SHAPE than 0.4.1 proposed. A profile states the
+    /// step it was measured at, so naming a model gives the same answers
+    /// everywhere it fits; where it does not fit, the step is reduced and the
+    /// reduction is announced. Silently picking between two answer-distinct
+    /// configurations is the wrong shape for a setting that changes generated
+    /// output.
+    func testProfilePrefillStepIsClampedOnDevicesThatCannotAffordIt() throws {
+        let roomy = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
+        XCTAssertEqual(roomy.prefillStepSize, 1024)
+        XCTAssertNil(roomy.prefillStepClampedFrom,
+                     "a device above the threshold gets the measured step")
+
+        let cramped = try parse(["--model-profile", "ornith-1.5-35b-a3b"],
+                                workingSet: 16_000_000_000)
+        XCTAssertEqual(cramped.prefillStepSize, 512)
+        XCTAssertEqual(cramped.prefillStepClampedFrom, 1024,
+                       "the original is kept so startup can name what was lost")
+
+        // Unknown is not treated as generous: we cannot ask every device.
+        let unknown = try parse(["--model-profile", "ornith-1.5-35b-a3b"],
+                                workingSet: nil)
+        XCTAssertEqual(unknown.prefillStepSize, 512)
+        XCTAssertEqual(unknown.prefillStepClampedFrom, 1024)
+
+        // An explicit flag still wins, clamp or no clamp — the operator asked.
+        let forced = try parse(
+            ["--model-profile", "ornith-1.5-35b-a3b", "--prefill-step-size", "1024"],
+            workingSet: 16_000_000_000)
+        XCTAssertEqual(forced.prefillStepSize, 1024)
+        XCTAssertNil(forced.prefillStepClampedFrom)
+    }
+
+    /// The same device check with no profile named — the path 0.4.1 documented.
+    func testArchitectureDefaultPrefillIsDeviceAwareWithoutAProfile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mei-devaware-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("{\"model_type\":\"qwen3_5_moe\"}".utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let args = ["--model-dir", directory.path, "--served-model-id", "ornith/test"]
+
+        let roomy = try ServerConfig.parse(
+            arguments: args,
+            recommendedWorkingSetBytes: Self.measuredWorkingSetBytes)
+        XCTAssertEqual(roomy.prefillStepSize, 1024)
+
+        let cramped = try ServerConfig.parse(
+            arguments: args, recommendedWorkingSetBytes: 16_000_000_000)
+        XCTAssertEqual(cramped.prefillStepSize, 512)
+    }
+
+    /// No machine this project owns can reach the clamp branch, so the one
+    /// thing that can go wrong in its message — the two step sizes swapped —
+    /// is checked here rather than discovered by whoever first runs Mei on a
+    /// smaller device.
+    func testClampMessageNamesTheStepGivenUpAndTheOneInUse() {
+        let message = ModelOptimizationProfile.prefillClampMessage(from: 1024, to: 512)
+        XCTAssertTrue(message.contains("reduced 1024 -> 512"), message)
+        // The override hint must offer the step that was LOST, not the one
+        // already in effect, which would be advice to change nothing.
+        XCTAssertTrue(message.contains("--prefill-step-size 1024"), message)
+        XCTAssertTrue(message.contains("answer-invariant"), message)
     }
 
     func testModelProfileIsCaseInsensitiveAndNamesAreStable() throws {
@@ -165,7 +243,7 @@ final class ServerConfigParsingTests: XCTestCase {
         }
     }
 
-    func testAutoDetectsNestedOrnithModelAndUses512Prefill() throws {
+    func testAutoDetectsNestedOrnithModelFromTextConfigMetadata() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("mei-profile-ornith-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -173,10 +251,12 @@ final class ServerConfigParsingTests: XCTestCase {
         let metadata = "{\"model_type\":\"qwen3_5_moe\",\"text_config\":{\"model_type\":\"qwen3_5_moe_text\"}}"
         try Data(metadata.utf8).write(to: directory.appendingPathComponent("config.json"))
 
-        let config = try ServerConfig.parse(arguments: [
-            "--model-dir", directory.path, "--served-model-id", "ornith/test"
-        ])
+        let config = try ServerConfig.parse(
+            arguments: ["--model-dir", directory.path, "--served-model-id", "ornith/test"],
+            recommendedWorkingSetBytes: 16_000_000_000)
         XCTAssertEqual(config.optimizationProfile, .ornith)
+        // Pinned below the 1024 threshold so this asserts DETECTION, not which
+        // machine ran the suite. The device-aware step has its own test.
         XCTAssertEqual(config.prefillStepSize, 512)
     }
 
@@ -380,12 +460,12 @@ final class ServerConfigParsingTests: XCTestCase {
     func testOrnithMoeModelGetsDisposableDiskKVDefault() throws {
         let dir = try makeModelDir(modelType: "qwen3_5_moe")
         defer { try? FileManager.default.removeItem(at: dir) }
-        let config = try ServerConfig.parse(arguments: [
-            "--model-dir", dir.path,
-            "--served-model-id", "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
-        ])
+        let config = try ServerConfig.parse(
+            arguments: ["--model-dir", dir.path,
+                        "--served-model-id", "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"],
+            recommendedWorkingSetBytes: 16_000_000_000)
         XCTAssertEqual(config.optimizationProfile, .ornith)
-        XCTAssertEqual(config.prefillStepSize, 512)
+        XCTAssertEqual(config.prefillStepSize, 512)   // device-pinned; see above
         // 0.4.2 (f1ba4af) deliberately reversed the old "no implicit disk-KV
         // default" contract for this family: the qwen3_5_moe hybrid cannot
         // restore from the paged in-memory tier, so without a disk tier every

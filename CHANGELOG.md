@@ -37,6 +37,34 @@ on a GPU, so splitting it to capture a boundary shifts the last bits. Only
 Ornith pays a task for it, which is why this is a per-model setting and not a
 global default.
 
+### Prefill step, for real this time
+
+0.4.1's notes described choosing the prefill step from the device's recommended
+working set. That never shipped (see the correction under 0.4.1). It ships now,
+in a different shape.
+
+A profile states the step it was **measured** at, so naming a model gives the
+same answers on every machine that can afford it. Where a device cannot, the
+step is reduced to 512 **and the reduction is printed**, naming what was given
+up and how to override it:
+
+```
+mei: WARNING prefill step reduced 1024 -> 512. This device reports a
+recommended working set below 26000000000 bytes, so the 1024-token step this
+model profile was measured at does not fit.
+```
+
+Announcing it matters more than it might look. Chunked prefill is not
+answer-invariant on this architecture, so the two steps are two different
+configurations, not a fast one and a slow one — an operator comparing output
+against our published numbers needs to know which they are running. 0.4.1's
+design chose silently.
+
+`ornith-1.5-35b-a3b` also now pins its step explicitly at 1024. It had been left
+unset, which meant it inherited the architecture default of 512 — while every
+Ornith measurement this project publishes, including the ones quoted in that
+profile's own description, was taken at 1024.
+
 ### Why you name the model instead of Mei detecting it
 
 The supported models are not distinguishable from their metadata. Ornith 1.5
@@ -164,6 +192,16 @@ The operator should not have to know a flag exists to get good behaviour.
 Explicit settings always win; every automatic choice is printed.
 
 ### Prefill step is chosen from available memory
+
+> **Correction (2026-09-12): this did not ship in 0.4.1, and did not ship in
+> 0.4.2 either.** The implementing commit reached a release-candidate branch and
+> no tag — `git show v0.4.1:Sources/MeiCore/ModelOptimizationProfile.swift`
+> contains no working-set logic at all, while this section is present in
+> `v0.4.1:CHANGELOG.md`. In both releases the `ornith` profile took a flat 512.
+> The device check is real as of 0.5.0, in the clamped form described in that
+> release's notes. The section is corrected rather than deleted, because the
+> published notes claimed it and readers of those tags deserve to find out why
+> their prefill step never changed.
 
 The `ornith` profile took 512 while 1024 was measured faster. Now it picks from
 the device's recommended working set. Measured at 54,016 tokens: 512 gives

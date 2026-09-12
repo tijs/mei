@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
@@ -26,6 +27,10 @@ public struct ServerConfig: Sendable {
     /// still applies, but none of the measured per-model numbers do.
     public private(set) var modelTuning: ModelTuning?
     public var prefillStepSize: Int = 64
+    /// Set when a named profile's prefill step did not fit this device's
+    /// recommended working set and was reduced. Carries the ORIGINAL value so
+    /// startup can name what was given up.
+    public var prefillStepClampedFrom: Int?
     /// KV cache quantization: nil = fp16, else bits (4 or 8).
     public var kvBits: Int? = nil
     public var kvGroupSize: Int = 64
@@ -148,7 +153,13 @@ public enum ConfigError: LocalizedError, CustomStringConvertible {
 }
 
 public extension ServerConfig {
-    static func parse(arguments: [String] = Array(CommandLine.arguments.dropFirst())) throws -> ServerConfig {
+    /// - Parameter recommendedWorkingSetBytes: the device's Metal recommended
+    ///   working set, injected so tests can exercise both sides of the
+    ///   affordability check. Defaults to asking the GPU.
+    static func parse(
+        arguments: [String] = Array(CommandLine.arguments.dropFirst()),
+        recommendedWorkingSetBytes: Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) }
+    ) throws -> ServerConfig {
         var modelDirectory: String?
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
@@ -280,7 +291,21 @@ public extension ServerConfig {
             // is no separate --optimization-profile to keep in sync.
             requestedOptimizationProfile = tuning.optimizationProfile
             if !prefillStepSizeExplicit, let step = tuning.prefillStepSize {
-                config.prefillStepSize = step
+                // A profile states the step it was MEASURED at, so naming a
+                // model gives the same answers on every machine that can
+                // afford it. Where the device cannot, a thin working-set
+                // margin is not worth defending: clamp down and say so, rather
+                // than run out of working set mid-prefill. 0.4.1 made this
+                // choice silently and invisibly; the operator is told now,
+                // because prefill chunking changes what the model writes.
+                if step > 512,
+                   !ModelOptimizationProfile.canAffordPrefill1024(
+                       recommendedWorkingSetBytes: recommendedWorkingSetBytes) {
+                    config.prefillStepClampedFrom = step
+                    config.prefillStepSize = 512
+                } else {
+                    config.prefillStepSize = step
+                }
                 prefillStepSizeExplicit = true   // keep detection from re-deriving
             }
             if !ssmAnchorBoundariesExplicit, let anchors = tuning.ssmAnchorBoundaries {
@@ -296,9 +321,13 @@ public extension ServerConfig {
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
         if !prefillStepSizeExplicit {
+            // No named profile: the architecture default, device-aware for
+            // the ornith family. Restores behaviour 0.4.1 shipped and the
+            // 0.5.0 branch lost (commit 93f9588 is not in this history).
             config.prefillStepSize = ModelOptimizationProfile.prefillStepSize(
                 modelDirectory: config.modelDirectory,
-                profile: config.optimizationProfile)
+                profile: config.optimizationProfile,
+                recommendedWorkingSetBytes: recommendedWorkingSetBytes)
         }
 
         // Model-aware safe default: dense qwen3_5/qwen3_8-style checkpoints

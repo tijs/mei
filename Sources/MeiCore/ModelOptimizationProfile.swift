@@ -21,12 +21,57 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     }
 
 
-    /// Architecture-validated chunked-prefill step. The Ornith profile keeps
-    /// 256; everything else stays on the conservative 64. An explicit
-    /// `--prefill-step-size` always wins.
+    /// Recommended working set below which a 1024-token prefill step is not
+    /// affordable, and the conservative 512 is used instead.
+    ///
+    /// MEASURED on the release pin, 54,016-token prompt, cache reuse off:
+    ///   512  -> 311 tok/s prefill, MLX peak 22.72 GB
+    ///   1024 -> 337 tok/s prefill (+8.4%), MLX peak 23.77 GB
+    /// So 1024 buys ~8% for about 1.05 GB of peak. At the full 65,536-token cap
+    /// that lands near 26.2 GB against a 26.8 GB recommended working set — it
+    /// fits a 32 GB machine with roughly 0.6 GB to spare, and does not fit
+    /// comfortably anywhere smaller. Running out of working set is a far worse
+    /// outcome than an 8% slower prefill, so this is a device check rather than
+    /// an unconditional default.
+    public static let prefill1024MinimumWorkingSetBytes = 26_000_000_000
+
+    /// Whether this device can afford a 1024-token prefill step. A nil working
+    /// set means we could not ask, and we do not assume the generous answer.
+    public static func canAffordPrefill1024(
+        recommendedWorkingSetBytes: Int?
+    ) -> Bool {
+        guard let ws = recommendedWorkingSetBytes else { return false }
+        return ws >= prefill1024MinimumWorkingSetBytes
+    }
+
+    /// Operator-facing explanation for a clamped prefill step.
+    ///
+    /// Lives here, not at the print site, so its content is assertable without
+    /// a low-memory device — the numbers in it are easy to get backwards, and
+    /// no machine this project owns can reach the branch that emits it.
+    public static func prefillClampMessage(from original: Int, to clamped: Int) -> String {
+        """
+        mei: WARNING prefill step reduced \(original) -> \(clamped). This \
+        device reports a recommended working set below \
+        \(prefill1024MinimumWorkingSetBytes) bytes, so the \(original)-token \
+        step this model profile was measured at does not fit. Expect roughly \
+        8% slower prefill. Note also that chunked prefill is not \
+        answer-invariant on this architecture, so generated output may differ \
+        from the profile's measurements. Pass --prefill-step-size \(original) \
+        to override.
+        """
+    }
+
+    /// Architecture-validated chunked-prefill step, for when no named profile
+    /// supplies one. An explicit `--prefill-step-size` always wins.
     public static func prefillStepSize(
-        modelDirectory: String, profile: ModelOptimizationProfile
+        modelDirectory: String, profile: ModelOptimizationProfile,
+        recommendedWorkingSetBytes: Int? = nil
     ) -> Int {
+        if profile.isOrnith,
+           canAffordPrefill1024(recommendedWorkingSetBytes: recommendedWorkingSetBytes) {
+            return 1024
+        }
         return profile.defaultPrefillStepSize
     }
 
