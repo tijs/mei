@@ -19,7 +19,9 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.4.2**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.5.0**.
+
+**0.5.0 (2026-09-12)** adds `--model-profile`: name a supported model and Mei loads the settings measured for it — architecture handling, prefill step, anchor boundaries and the generation cap together, because those have different optima per model. Profiles pin an exact HuggingFace revision, `mei pull <profile>` fetches it and verifies the weights are the artifact the settings were measured on, and Ornith now points at a published aligned repack worth 4.7 GB of memory and a 3.2x faster 80k prefill. Replaces `--optimization-profile`.
 
 **0.4.2 (2026-09-12)** makes `mei --model-dir DIR` reuse its cache without being told to: the hybrid topology could not restore from the in-memory tier, so a bare server silently re-read the whole conversation every turn — measured bare over four turns, 246 s becomes 66 s. Adds `--request-log`, one JSON line per generation run, which is what turned "where does a turn's time go" into a measurement rather than an argument.
 
@@ -107,7 +109,7 @@ repo and revision.
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.4.2)
+## Install on Apple Silicon (stable 0.5.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -115,10 +117,10 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.4.2
+mei --version     # -> mei 0.5.0
 ```
 
-**Manual — release asset:** download `mei-0.4.2-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.5.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.

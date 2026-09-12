@@ -2,7 +2,7 @@
 
 All notable changes to Mei are documented here.
 
-## [0.5.0] - unreleased
+## [0.5.0] - 2026-09-12
 
 Pick your model by name and get the settings we measured for it.
 
