@@ -237,14 +237,15 @@ MODEL_DIR="$HOME/.cache/mei/models/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-4bit"
 hf download "$MODEL_ID" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
 
 # 2) Start the server (blocking; Ctrl-C stops it). Port 8024.
-#    Conservative 32 GB gate baseline, NOT an optimized/validated preset:
-#    no Mei run or optimal profile exists yet. --memory-limit-bytes 30000000000
-#    and prefill 256 are starting guardrails, not measured settings.
+#    Conservative 32 GB gate baseline, NOT an optimized/validated preset.
+#    There is no --model-profile for this model because nobody has measured
+#    one; Mei falls back to architecture defaults. --memory-limit-bytes
+#    30000000000 and prefill 256 are starting guardrails, not measured
+#    settings.
 mkdir -p "$HOME/.cache/mei/runtime/kv"
 mei \
   --model-dir        "$MODEL_DIR" \
   --served-model-id  "$MODEL_ID" \
-  --optimization-profile generic \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 256 \
