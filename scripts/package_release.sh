@@ -81,6 +81,25 @@ else
   BINARY="$REPO/.build/release/mei"
 fi
 [[ -f "$BINARY" ]] || { echo "FATAL: release binary not found: $BINARY" >&2; exit 1; }
+
+# Refuse a binary older than the sources it claims to be built from.
+#
+# --skip-build reuses .build/release/mei whatever its age, and the version
+# invariant above cannot catch a stale one: a binary built right after a
+# version bump but before every content change in the release still reports the
+# right version. During 0.5.0 this packaged a binary from the previous day that
+# contained neither the release's headline change nor its vmlx rollback, and
+# printed "packaging OK". It was caught by comparing sha256 against the build
+# that had actually been probed, which is not a step anyone should have to
+# remember.
+NEWER="$(find "$REPO/Sources" "$REPO/Package.swift" "$REPO/Package.resolved" \
+           -newer "$BINARY" -print -quit 2>/dev/null || true)"
+if [[ -n "$NEWER" ]]; then
+  echo "FATAL: $BINARY is older than the sources it would ship." >&2
+  echo "       newer than the binary: $NEWER" >&2
+  echo "       Rebuild, or pass --binary PATH pointing at the build you verified." >&2
+  exit 1
+fi
 BIN_DIR="$(cd "$(dirname "$BINARY")" && pwd)"
 BINARY="$(cd "$(dirname "$BINARY")" && pwd)/$(basename "$BINARY")"
 
