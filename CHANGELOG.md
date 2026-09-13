@@ -21,16 +21,32 @@ Profiles also pin the HuggingFace repo and an exact revision — not `main` —
 because the settings are calibrated to one artifact, and an upstream re-export
 that silently invalidates them would be miserable to debug later.
 
-### Anchors are on for both Qwen3.6 variants, off for Ornith
+### Anchors ship on for one model of three
 
 Cross-conversation prefix anchors cut the cold prefill of the shared
 system+tools preamble. Measured on every supported model, same protocol:
 
-| model | prefill/turn | quality cost |
-|---|---|---|
-| Ornith 1.5 | 4.64 → 2.82 s (−39%) | **1 stable task**, 3/3 pairs |
-| Qwen3.6 text-only | 4.60 → 2.23 s (−52%) | zero, 4 comparisons |
-| Qwen3.6 vision | 3.81 → 1.79 s (−53%) | zero, 6 comparisons |
+| model | prefill/turn | quality cost | anchors |
+|---|---|---|---|
+| Qwen3.6 text-only | 5.20 → 3.04 s (−42%) | none, across all 25 tasks | **on** |
+| Ornith 1.5 | 4.64 → 2.82 s (−39%) | 2 stable tasks | off |
+| Qwen3.6 vision | 4.36 → 3.40 s (−22%) | 1 stable task, both pairs | off |
+
+Every figure above is measured cold, with each arm on its own cleared KV cache,
+and scored against a noise floor derived from repeats of the *same* config.
+
+An earlier version of this table said anchors were free on both Qwen3.6
+variants. That came from A/Bs whose two arms shared one never-cleared cache —
+which is precisely the defect that produces "no difference between the arms".
+Re-measured, the vision variant costs `hermes_ops-targeted-edit` in two
+independent pairs, deterministically: 272 completion tokens and a successful
+`patch` call without anchors, 2401 tokens and an empty tool-call list with them.
+Its prefill benefit is also less than half what was claimed.
+
+Where anchors hurt, they do not produce a worse answer — they stop the model
+calling tools at all. Ornith and Qwen3.6 vision both fail that way. The
+text-only build of the same checkpoint, with the vision tower removed, shows no
+cost on any task, and has the largest benefit of the three.
 
 All three change what the model writes — chunked prefill is not bit-reproducible
 on a GPU, so splitting it to capture a boundary shifts the last bits. Only

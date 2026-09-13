@@ -43,14 +43,19 @@ final class ServerConfigParsingTests: XCTestCase {
         // what this architecture writes, so the two are not interchangeable.
         XCTAssertEqual(ornith.prefillStepSize, 1024)
 
-        // The vision variant was A/B'd separately, not inherited from its
-        // sibling: 3 prompt pairs and 3 coding pairs, all zero cost.
+        // The vision variant ships anchors OFF. Its original "zero cost"
+        // A/B had both arms sharing one never-cleared KV cache, which is the
+        // defect that manufactures exactly that result. Re-measured cold, two
+        // independent pairs, anchors cost hermes_ops-targeted-edit in both --
+        // deterministically: 272 completion tokens and a successful `patch`
+        // call without them, 2401 tokens and an empty tool-call list with.
         let vision = try parse(["--model-profile", "qwen3.6-35b-a3b"])
-        XCTAssertEqual(vision.ssmAnchorBoundaryCount, 2)
+        XCTAssertEqual(vision.ssmAnchorBoundaryCount, 0)
 
         let text = try parse(["--model-profile", "qwen3.6-35b-a3b-text"])
         XCTAssertEqual(text.optimizationProfile, .ornith)
-        // Anchors ON here: -52% prefill, zero task cost across three pairs.
+        // The ONLY profile that keeps anchors: -42% prefill and zero
+        // differences across all 25 tasks, on two cold pairs.
         XCTAssertEqual(text.ssmAnchorBoundaryCount, 2)
         XCTAssertEqual(text.prefillStepSize, 1024)
     }
@@ -137,6 +142,16 @@ final class ServerConfigParsingTests: XCTestCase {
         // already in effect, which would be advice to change nothing.
         XCTAssertTrue(message.contains("--prefill-step-size 1024"), message)
         XCTAssertTrue(message.contains("answer-invariant"), message)
+    }
+
+    /// Anchors are a measured per-model exception, not a default. They cost a
+    /// stable task on Ornith and on Qwen3.6 vision — both by tool-calling
+    /// collapse, not by a worse answer — and only the vision-stripped
+    /// text-only build pays nothing. If this count ever rises, a cold A/B with
+    /// per-arm KV caches has to justify it.
+    func testExactlyOneProfileShipsAnchorsOn() {
+        let on = ModelTuningRegistry.all.filter { ($0.ssmAnchorBoundaries ?? 0) > 0 }
+        XCTAssertEqual(on.map(\.name), ["qwen3.6-35b-a3b-text"])
     }
 
     func testModelProfileIsCaseInsensitiveAndNamesAreStable() throws {

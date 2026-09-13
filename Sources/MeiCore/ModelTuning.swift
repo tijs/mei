@@ -70,10 +70,12 @@ public enum ModelTuningRegistry {
             ssmAnchorBoundaries: 0,
             maxTokens: 8192,
             provenance: """
-                Anchors OFF. They cut prefill 4.64 -> 2.82 s/turn, but on this \
-                model they also cost hermes_ops-multi-step-chain, reproducibly \
-                (0/3 across three run pairs), where the model stops calling \
-                search_files/read_file/patch. Prefill step 1024: on the real \
+                Anchors OFF. They cut prefill 4.64 -> 2.82 s/turn (verified \
+                from this pair's own request logs), but cost TWO stable tasks \
+                on that pair -- hermes_ops-multi-step-chain, where the model \
+                stops calling search_files/read_file/patch, and \
+                hearth_mini-testwrite. The same tool-calling collapse the \
+                vision variant shows. Prefill step 1024: on the real \
                 20k system+tools prompt 512 prefills at 340 tok/s, 1024 at \
                 389, and 1024 survived the 65k context gate. It is also what \
                 every measurement behind these numbers ran at, which matters \
@@ -98,10 +100,13 @@ public enum ModelTuningRegistry {
             ssmAnchorBoundaries: 2,
             maxTokens: 8192,
             provenance: """
-                Anchors ON. Prefill 4.60 -> 2.23 s/turn (-52%), and zero task \
-                cost across three run pairs on the prompt suite — including \
-                hermes_ops-multi-step-chain, which anchors break on Ornith. \
-                Same architecture as Ornith, different trajectory.
+                Anchors ON -- the only profile that keeps them. Re-measured \
+                cold after the shared-cache defect invalidated the original \
+                A/B: prefill 5.20 -> 3.04 s/turn (-42%), and zero differences \
+                across ALL 25 tasks, with nothing excluded, including the \
+                tasks that anchors break on Ornith and on the vision variant \
+                of this same checkpoint. The largest benefit of the three \
+                models and the only one with no measured cost.
                 """,
             repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
             revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56"),
@@ -110,16 +115,24 @@ public enum ModelTuningRegistry {
             model: "mlx-community/Qwen3.6-35B-A3B-4bit (with vision tower)",
             optimizationProfile: .ornith,
             prefillStepSize: 1024,
-            ssmAnchorBoundaries: 2,
+            ssmAnchorBoundaries: 0,
             maxTokens: 8192,
             provenance: """
-                Anchors ON. Measured, not inherited from the text-only sibling: \
-                three prompt-suite pairs and three coding pairs, all zero cost \
-                on this model's own stable tasks, with prefill 3.81 -> 1.79 s \
-                per run (-53%) and cold >15k prefills 8 -> 1. Two coding pairs \
-                first looked like a -1 and a -2; both were tasks that flip \
-                within their own arm here. This model's noise floor is 8 of 25 \
-                tasks, and it shares only two of them with Ornith.
+                Anchors OFF, reversed on cold measurement. The earlier "zero \
+                cost" result came from an A/B whose two arms shared one \
+                never-cleared KV cache, which is the defect that manufactures \
+                exactly that result. Re-measured with each arm on its own cold \
+                cache, two independent pairs: anchors cost \
+                hermes_ops-targeted-edit in BOTH, and the failure is \
+                deterministic rather than statistical -- 272 completion tokens \
+                and a passing `patch` call without them, 2401 tokens and an \
+                EMPTY tool-call list with them, identical across repeats. The \
+                benefit is also smaller than first reported: prefill \
+                4.36 -> 3.40 s/turn (-22%), not -53%. Scored against a noise \
+                floor measured from clean same-config repeats (4 tasks, not \
+                the 8 the contaminated runs implied). Same tool-calling \
+                collapse Ornith shows; the text-only sibling, with the vision \
+                tower stripped, shows neither.
                 """,
             repo: "mlx-community/Qwen3.6-35B-A3B-4bit",
             revision: "38740b847e4cb78f352aba30aa41c76e08e6eb46"),
