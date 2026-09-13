@@ -71,25 +71,37 @@ struct MeiMain {
                 print(ModelOptimizationProfile.prefillClampMessage(
                     from: clamped, to: config.prefillStepSize))
             }
-            // Naming a profile promises the settings it measured. Those were
-            // measured on a specific artifact, so check the weights on disk
-            // really are that artifact — otherwise the promise is hollow and
-            // the shortfall is invisible: 4.7 GB of memory and 3.2x on an 80k
-            // prefill, with no symptom to search for.
-            if tuning.requiresAlignedWeights {
-                switch ModelArtifactCheck.alignment(ofModelDirectory: config.modelDirectory) {
-                case .aligned:
-                    break
-                case .unaligned(let bad, let total):
-                    print("mei: WARNING \(bad) of \(total) weight shards are not "
-                        + "naturally aligned. This profile's settings were measured "
-                        + "on the aligned repack \(tuning.repo); serving these "
-                        + "weights costs memory and long-context prefill speed. "
-                        + "Fetch the measured artifact with: mei pull \(tuning.name)")
-                case .unknown:
-                    break   // never block a server start on an unreadable check
-                }
+        }
+        // Alignment is checked for EVERY model, not only profiles that declare
+        // requiresAlignedWeights. Misaligned tensors cannot be mmap'd, so MLX
+        // copies them into anonymous RAM at load, and the cost scales with how
+        // much of the weight data sits at bad offsets. Measured range: 4.7 GB
+        // on the Ornith checkpoint (survivable, invisible without measuring) up
+        // to a hard Metal OOM on a community Qwen3.6 mixed quant, where 18.2 GB
+        // of realignment on top of 20 GB of weights would not fit a 32 GB
+        // machine. That crash produced no explanation, because this warning was
+        // gated behind a profile flag the model's profile did not set.
+        //
+        // Nothing about a HuggingFace repo exposes this — not the size, not the
+        // config, not the card. So say it for every model, and say what to do.
+        switch ModelArtifactCheck.alignment(ofModelDirectory: config.modelDirectory) {
+        case .aligned:
+            break
+        case .unaligned(let bad, let total):
+            var message = "mei: WARNING \(bad) of \(total) weight shards are not "
+                + "naturally aligned. MLX must copy unaligned tensors into RAM at "
+                + "load; depending on how much of the checkpoint is affected this "
+                + "costs memory and long-context prefill speed, and can exhaust "
+                + "the GPU allocator outright. Repack with mei's "
+                + "tools/align_safetensors.py (payload is unchanged; only header "
+                + "padding differs)."
+            if let tuning = config.modelTuning, tuning.requiresAlignedWeights {
+                message += " This profile's settings were measured on the aligned "
+                    + "repack \(tuning.repo); fetch it with: mei pull \(tuning.name)"
             }
+            print(message)
+        case .unknown:
+            break   // never block a server start on an unreadable check
         }
         fflush(stdout)
         if config.servedModelIDWasDefaulted {
