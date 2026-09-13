@@ -65,6 +65,12 @@ Do not tag on "it builds". At minimum:
 - `tools/probe_mei.py` against a live server on a real staged model — streaming
   and non-streaming tool calls, cache reuse, the exact context-cap boundary.
   Expect 12/12.
+  Run it with an interpreter that has `transformers` installed — the exact
+  context-cap probe tokenizes locally and dies with `ModuleNotFoundError:
+  transformers` otherwise. The benchmark venv has it:
+  `~/projects/local-model-bench/.venv/bin/python tools/probe_mei.py ...`.
+  The "PyTorch was not found" notice it prints is expected and harmless; only
+  the tokenizer is used.
 - If the release changes cache, prefill, or decode behaviour: a correctness gate
   comparing generated output against a known-good configuration, greedy at
   temperature 0, byte-for-byte. **Run a determinism baseline first** — the same
@@ -109,9 +115,11 @@ Both assets. The tap needs the tarball URL and its checksum.
 
 ## 7. Update the Homebrew tap — THE STEP THAT GETS FORGOTTEN
 
-The tap is a separate repository: `https://github.com/tijs/homebrew-tap`,
-cloned at `tap/` inside this repo (untracked). The formula is
-`Formula/mei.rb`.
+The tap is a separate repository: `https://github.com/tijs/homebrew-tap`.
+The working clone is `~/projects/homebrew-tap`; older clones also exist at
+`~/projects/mei/tap` and `~/projects/mei-rc/tap`, which are NOT present in a
+fresh release worktree — do not assume a `tap/` directory next to the release
+branch. The formula is `Formula/mei.rb`.
 
 ```bash
 cd tap && git pull --ff-only
