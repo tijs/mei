@@ -140,6 +140,32 @@ brew update && brew info tijs/tap/mei    # must show the new version
 
 ## 7b. Merge the release back to `main` — THE OTHER STEP THAT GETS FORGOTTEN
 
+**Assert, do not observe.** Every verification in this runbook must end in a
+check that fails loudly, because the failure mode at release time is always a
+command reporting success for work it did not do. 0.5.0 hit this three times:
+
+- `package_release.sh --skip-build` packaged a binary from the previous day
+  that contained none of the release, and printed "packaging OK". The version
+  invariant passed because the stale binary was built after the version bump.
+  Now guarded by an mtime check; still confirm
+  `shasum -a 256 dist/<bundle>/bin/mei` equals the build you actually probed.
+- `git checkout main` FAILS inside a release worktree when `main` is checked
+  out elsewhere (`fatal: 'main' is already used by worktree at ...`). The
+  subsequent `git merge --ff-only release/<v>` then reports **"Already up to
+  date"** — because the branch is merging itself — and `git push origin main`
+  pushes the untouched local ref. Every message reads like success.
+- The same push looks clean whether or not it moved anything.
+
+So finish 7b with the assertion, not the merge output:
+
+```bash
+git merge-base --is-ancestor v<version> main && echo IN-MAIN || echo "*** NOT IN MAIN ***"
+```
+
+Run it from any worktree. If it says NOT IN MAIN, find the worktree that owns
+`main` (`git worktree list`) and merge there.
+
+
 ```bash
 git checkout main && git merge release/<version> && git push origin main
 ```
