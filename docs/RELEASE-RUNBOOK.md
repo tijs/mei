@@ -64,7 +64,8 @@ Do not tag on "it builds". At minimum:
 
 - `tools/probe_mei.py` against a live server on a real staged model — streaming
   and non-streaming tool calls, cache reuse, the exact context-cap boundary.
-  Expect 12/12.
+  Expect every probe to pass (13 as of 0.5.0; the count grows as probes are
+  added, so read the reported total rather than matching a number here).
   Run it with an interpreter that has `transformers` installed — the exact
   context-cap probe tokenizes locally and dies with `ModuleNotFoundError:
   transformers` otherwise. The benchmark venv has it:
