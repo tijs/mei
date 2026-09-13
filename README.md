@@ -44,14 +44,30 @@ cold-weight tier reachable (`MLXPRESS=N` was silently inert before). Measured
 
 Pick by what you care about, then pass the name:
 
-| you want | model | `--model-profile` | weights |
-|---|---|---|---|
-| the validated default — best measured coding quality | Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | ~19 GB |
-| text and tools only, fastest prefill | Qwen3.6 35B-A3B text-only | `qwen3.6-35b-a3b-text` | ~19 GB |
-| images as well as text | Qwen3.6 35B-A3B (vision) | `qwen3.6-35b-a3b` | ~19 GB |
+| you want | model | `--model-profile` | images | decode | reply latency |
+|---|---|---|---|---|---|
+| the fastest — lowest latency, quickest decode | Qwen3.6 35B-A3B text-only | `qwen3.6-35b-a3b-text` | no | **58 tok/s** | **1.05 s** |
+| the validated default — best measured coding quality | Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | no | 57 tok/s | 1.28 s |
+| images as well as text | Qwen3.6 35B-A3B (vision) | `qwen3.6-35b-a3b` | **yes** | 48 tok/s | 1.07 s |
 
-All three are MoE models that run in about 20 GB of unified memory and were
-measured on a 32 GB machine at a 65,536-token context.
+"Reply latency" is time-to-first-token on an ongoing conversation, which is what
+you feel while using an agent. All three take **about 50 s on the very first
+turn**, reading the ~20k-token system+tools prompt for the first time; after
+that a turn starts in about a second.
+
+**Memory does not distinguish them.** All three are 4-bit MoE checkpoints, ~19 GB
+on disk, peaking near **24 GB** in use. All three want a 32 GB machine and none
+fits a 16 GB one, so choose on images and speed instead.
+
+**The vision build costs about 18% of decode speed even on pure text** — 48
+against 58 tok/s, same architecture and quantisation. If you do not need image
+input, `qwen3.6-35b-a3b-text` is the one to take: fastest decode, lowest
+latency, and the only one of the three that also keeps its prefix across
+*separate* conversations, because it is the only model where cross-conversation
+anchors cost nothing on our suite.
+
+All figures measured over two cold runs of each shipped configuration on a
+32 GB M1, 65,536-token context.
 
 ```bash
 mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
