@@ -24,12 +24,16 @@ The black-box acceptance oracle lives in `Tests/MeiTests/MeiAcceptanceTests`:
 run RED against a missing server, go green once the server behaves; enabled
 via `MEI_ACCEPTANCE_BASE_URL` (default `http://127.0.0.1:8024/v1`).
 
+**The P0 compatibility contract** (what "OpenAI-compatible" means — the
+tested subset, deferred features, error envelope, `max_completion_tokens`
+policy): **[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md)**.
+
 Standalone drivers live in `tools/` (authoritative copies; the
 `local-model-bench/runner/probe_mei.py` mirrors `tools/probe_mei.py`):
 
 | Tool | Purpose |
 |---|---|
-| `tools/probe_mei.py` | acceptance/parity/tooling gate (`probe_load`, `probe_mei`, `probe_coding`) |
+| `tools/probe_mei.py` | acceptance + **P0 contract matrix** gate (`probe_load`, `probe_mei`, `probe_coding`) — `--skip-advanced` drops the P0 probes; `--skip-context`/`--skip-cache` as before; `--self-test` validates the probe's own assertion logic without a server. Run against one live server: `python3 tools/probe_mei.py --base-url http://127.0.0.1:8024/v1 --model <served-id> --tokenizer <model-dir> --context-cap N --output artifacts/p0-matrix-<ts>.json` |
 | `tools/probe_diverging_chat.py` | patch-0005 evidence probe: 5-turn tool-calling transcript, run A = strict growth, run B diverges at turn 5 (`place_order` → `cancel_order`); records `cached_tokens`/`prefill_ms`/TTFT per request + deterministic transcript/schema/output checks (`--self-test` validates without a server) |
 | `tools/probe_long_context.py` | chunked-prefill survival at 30K/80K |
 | `tools/bench_mei.py` | full benchmark rows (short, tool, 45K-loaded fresh + reuse, 40K chat) with engine-reported tok/s, TTFT/prefill ms, allocator bytes; artifact-only output under `artifacts/` |
@@ -38,6 +42,15 @@ Standalone drivers live in `tools/` (authoritative copies; the
 | `tools/convert_mlx_quant.py` | Mei-owned reproducible source→MLX quant wrapper (`mlx_lm.convert` 0.31.3), enforces a 20 GiB free-disk floor, writes `<name>.provenance.json` (schema v1) only after success, never claims UD/GGUF equivalence, `--dry-run` plans without downloading |
 | `tools/validate_worker_options.py` | re-checks the served-id identity contract against the lineup, cross-checks the four `mei.yaml` backend registrations (read-only), verifies staged checkpoint completeness, probes each option's port |
 | `tools/mei_disk_guard.py` | 20 GiB free-space floor before a server/measurement cycle starts; protects weights, artifacts, and recent-model caches from auto-cleanup |
+
+The deterministic half of the P0 matrix lives in the Swift unit suites
+(`OpenAIRequestValidationTests`, `GenerationControlSelectionTests`,
+`OpenAIResponseShapeTests`, `RouterSSEFrameTests`, plus the existing
+`OpenAITypesTests`/`RouterSSEToolCallIndexingTests`) and runs without any
+model. The live half is the probe matrix above. Both halves are pinned in
+docs/OPENAI-COMPATIBILITY.md §8, including the known Xcode-27 flaky
+type-check caveat on the pinned vmlx dependency (report any such failure
+separately from Mei failures).
 
 ## `local-model-bench` integration
 

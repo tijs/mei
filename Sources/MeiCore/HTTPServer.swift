@@ -63,10 +63,10 @@ final class ResponseWriter: @unchecked Sendable {
                 }
             }
         } catch {
-            var buffer = channel.allocator.buffer(capacity: 256)
-            buffer.writeString(
-                "data: \(router.serializer.errorPayload(error.localizedDescription, code: "stream_error"))\n\n")
-            write(.body(.byteBuffer(buffer)))
+            // Mid-stream error contract: one terminal error frame, then the
+            // stream ends — no finish frame, no usage chunk, no [DONE].
+            // Router.errorSSEFrame is the single seam for that frame.
+            body(router.errorSSEFrame(message: error.localizedDescription))
         }
         end()
         close()
@@ -135,7 +135,14 @@ public final class MeiHTTPHandler: ChannelInboundHandler, @unchecked Sendable {
             writer.jsonResponse(status: status, contentType: contentType, body: body)
             writer.close()
         case .stream(let request):
-            await writer.streamSSE(request: request, engine: router.engine, config: config)
+            guard let engine = router.engine else {
+                writer.jsonResponse(
+                    status: .internalServerError, contentType: "application/json",
+                    body: router.serializer.errorPayload("engine is not loaded", type: "engine_error", code: "engine_error"))
+                writer.close()
+                return
+            }
+            await writer.streamSSE(request: request, engine: engine, config: config)
         case .notFound:
             writer.jsonResponse(
                 status: .notFound, contentType: "application/json",

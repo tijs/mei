@@ -29,12 +29,15 @@ public final class ResponseSerializer: @unchecked Sendable {
 /// OpenAI-shape API router. Pure request→response mapping; the engine owns
 /// all inference state.
 public final class Router: @unchecked Sendable {
-    public let engine: Engine
+    /// Optional so unit tests can exercise the pure routing/serialization
+    /// seams without a model; the HTTP server always wires a loaded engine.
+    /// `route()` fails closed with a 500 when nil.
+    public let engine: Engine?
     public let config: ServerConfig
     public let serializer = ResponseSerializer()
     public let startedAt: Date
 
-    public init(engine: Engine, config: ServerConfig) {
+    public init(engine: Engine?, config: ServerConfig) {
         self.engine = engine
         self.config = config
         self.startedAt = Date()
@@ -49,17 +52,22 @@ public final class Router: @unchecked Sendable {
     /// Synchronous dispatch for non-streaming routes. Streaming routes
     /// return `.stream` immediately; the HTTP handler feeds them.
     public func route(method: HTTPMethod, uri: String, body: Data) async -> RouteResult {
+        guard let engine else {
+            return .plain(
+                status: .internalServerError, contentType: "application/json",
+                body: serializer.errorPayload("engine is not loaded", type: "engine_error", code: "engine_error"))
+        }
         switch (method, uri) {
         case (.GET, "/v1/models"), (.GET, "/v1/models/"):
             return models()
         case (.GET, "/healthz"), (.GET, "/health"):
             return .plain(status: .ok, contentType: "application/json", body: #"{"status":"ok"}"#)
         case (.GET, "/v1/mei/status"):
-            return await status()
+            return await status(engine: engine)
         case (.POST, "/v1/chat/completions"):
-            return await chat(body: body)
+            return await chat(body: body, engine: engine)
         case (.POST, "/v1/completions"):
-            return await completion(body: body)
+            return await completion(body: body, engine: engine)
         default:
             return .notFound
         }
@@ -72,7 +80,7 @@ public final class Router: @unchecked Sendable {
         return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
     }
 
-    private func status() async -> RouteResult {
+    private func status(engine: Engine) async -> RouteResult {
         let report = Engine.liveMemoryReport()
         let cache = await engine.cacheStats().map { stats in
             MeiCacheStatus(
@@ -98,10 +106,15 @@ public final class Router: @unchecked Sendable {
         return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
     }
 
-    private func chat(body: Data) async -> RouteResult {
+    private func chat(body: Data, engine: Engine) async -> RouteResult {
         do {
             let request = try ChatRequest(json: body)
             if request.stream {
+                // Validate BEFORE the SSE response starts: a request that can
+                // never generate (over context cap, template-rejected
+                // message) must fail with a clean JSON 400, not an error
+                // frame after the 200 headers are on the wire.
+                try await engine.preflightChat(request: request)
                 return .stream(request: request)
             }
             let run = try await engine.chatRun(request: request)
@@ -109,27 +122,35 @@ public final class Router: @unchecked Sendable {
                 status: .ok, contentType: "application/json",
                 body: serializer.json(Self.completionResponse(run: run, model: config.servedModelID, emitReasoning: config.emitReasoning)))
         } catch let error as EngineError {
-            return .plain(status: errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
+            return .plain(status: Self.errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
         } catch {
             return .plain(status: .badRequest, contentType: "application/json", body: serializer.errorPayload(error.localizedDescription))
         }
     }
 
-    private func completion(body: Data) async -> RouteResult {
+    private func completion(body: Data, engine: Engine) async -> RouteResult {
         do {
             let request = try CompletionRequest(json: body)
+            if request.stream {
+                // The minimal legacy path is non-streaming only. Accepting
+                // stream=true and answering with a plain JSON response would
+                // be exactly the silent semantic drift the P0 contract
+                // forbids, so it is a loud 400 instead.
+                throw APIRequestError.invalidField(
+                    "stream: streaming is not supported on /v1/completions in the Mei P0 contract")
+            }
             let run = try await engine.completionRun(request: request)
             return .plain(
                 status: .ok, contentType: "application/json",
-                body: serializer.json(Self.completionResponse(run: run, model: config.servedModelID, emitReasoning: config.emitReasoning)))
+                body: serializer.json(Self.legacyCompletionResponse(run: run, model: config.servedModelID)))
         } catch let error as EngineError {
-            return .plain(status: errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
+            return .plain(status: Self.errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
         } catch {
             return .plain(status: .badRequest, contentType: "application/json", body: serializer.errorPayload(error.localizedDescription))
         }
     }
 
-    public func errorStatus(_ error: EngineError) -> HTTPResponseStatus {
+    public static func errorStatus(_ error: EngineError) -> HTTPResponseStatus {
         switch error {
         case .overContextCap: return .badRequest
         case .modelDirectoryMissing, .modelNotLoaded, .generationFailed: return .internalServerError
@@ -170,6 +191,17 @@ public final class Router: @unchecked Sendable {
             model: model,
             choices: [.init(message: message, finishReason: run.finishReason)],
             usage: usage)
+    }
+
+    /// The minimal legacy /v1/completions response: OpenAI `text_completion`
+    /// shape with the same usage block the chat path reports.
+    public static func legacyCompletionResponse(run: GenerationRun, model: String) -> TextCompletionResponse {
+        TextCompletionResponse(
+            id: "cmpl-\(UUID().uuidString.lowercased().prefix(24))",
+            created: Int(Date().timeIntervalSince1970),
+            model: model,
+            choices: [.init(text: run.text, finishReason: run.finishReason)],
+            usage: Self.usage(run: run))
     }
 
     /// The JSON payloads for a streaming run's terminal frames: a
@@ -241,9 +273,13 @@ public final class Router: @unchecked Sendable {
     ) -> String {
         switch event {
         case .chunk(let text):
+            // role rides on content deltas. OpenAI emits it once, on the
+            // first chunk; Mei repeats it because the router is stateless and
+            // every streaming client merges the role idempotently. The
+            // contract documents this repetition.
             let chunk = SSEChatChunk(
                 id: id, created: Int(Date().timeIntervalSince1970), model: model,
-                choices: [.init(delta: .init(role: nil, content: text))],
+                choices: [.init(delta: .init(role: "assistant", content: text))],
                 usage: nil)
             return "data: \(serializer.json(chunk))\n\n"
         case .reasoning(let reason):
@@ -275,5 +311,16 @@ public final class Router: @unchecked Sendable {
         headers.add(name: "connection", value: "keep-alive")
         headers.add(name: "x-accel-buffering", value: "no")
         return headers
+    }
+
+    /// The terminal frame of a stream that failed mid-generation: a single
+    /// `data:` frame carrying the error envelope (`code: "stream_error"`).
+    /// Pinned contract: an errored stream emits NO finish frame, NO usage
+    /// chunk, and NO `[DONE]` — `[DONE]` is the success terminator only
+    /// (`finishSSEData`), so clients treat the error frame (or EOF without
+    /// `[DONE]`) as the end of a failed stream. Pinned by
+    /// RouterSSEFrameTests and probe_mei.py --self-test.
+    public func errorSSEFrame(message: String) -> String {
+        "data: \(serializer.errorPayload(message, code: "stream_error"))\n\n"
     }
 }

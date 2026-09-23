@@ -46,6 +46,7 @@ let package = Package(
                 "MeiCore",
                 .product(name: "MLX", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
             ]
         ),
     ]

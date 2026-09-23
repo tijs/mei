@@ -39,6 +39,15 @@ swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
 scripts/start_mei_server.sh
 ```
 
+Known toolchain caveat: with Xcode 27's Swift 6.4, the pinned vmlx dependency
+occasionally fails debug builds with "unable to type-check this expression"
+at `Libraries/MLXLMCommon/Evaluate.swift:3398` (a pre-existing diagnostic
+string inside the fork, unrelated to Mei sources). It is load-dependent and
+flaky: retrying the build usually clears it, and release builds
+(`swift build -c release`) are not affected. See also
+[`docs/OPENAI-COMPATIBILITY.md`](OPENAI-COMPATIBILITY.md) for the tested
+API-subset contract and the exact test commands.
+
 `Package.resolved` is committed. Re-pinning or changing the fork revision is a
 deliberate decision that must re-run the whole acceptance suite.
 

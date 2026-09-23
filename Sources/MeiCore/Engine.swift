@@ -282,10 +282,43 @@ public actor Engine {
     }
 
     private func requestEnableThinking(_ request: ChatRequest) -> Bool? {
-        if let reasoningEffort = request.reasoningEffort, config.enableThinking == nil {
+        Self.resolveEnableThinking(
+            request: request, configEnableThinking: config.enableThinking)
+    }
+
+    /// The effective `enable_thinking` for a request: a per-request
+    /// `reasoning_effort` overrides the template default when the server flag
+    /// is unset (effort "none" disables thinking; any other effort keeps the
+    /// model's thinking on). An explicit server `--enable-thinking` always
+    /// wins. Pure so the reasoning-precedence rules are unit-tested without a
+    /// model.
+    public static func resolveEnableThinking(
+        request: ChatRequest,
+        configEnableThinking: Bool?
+    ) -> Bool? {
+        if let reasoningEffort = request.reasoningEffort, configEnableThinking == nil {
             return reasoningEffort != "none"
         }
-        return config.enableThinking
+        return configEnableThinking
+    }
+
+    /// Render-and-check pass for a chat request, run by the router BEFORE the
+    /// SSE response starts. A request that can never generate (over the
+    /// context cap, or a message shape the template rejects) must fail with a
+    /// clean JSON 400 instead of an error frame appearing mid-stream after
+    /// the 200 headers are already on the wire. The subsequent run re-renders
+    /// the same deterministic template, so the check cannot disagree with the
+    /// generation path about whether the prompt fits.
+    public func preflightChat(request: ChatRequest) async throws {
+        let (_, tokens, _) = try await renderChatTemplate(
+            messages: request.messages,
+            tools: request.tools,
+            enableThinking: requestEnableThinking(request),
+            reasoningEffort: request.reasoningEffort,
+            toolChoice: request.toolChoice)
+        guard tokens.count <= config.contextCap else {
+            throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
+        }
     }
 
 
@@ -919,28 +952,28 @@ public actor Engine {
             parameters.kvGroupSize = config.kvGroupSize
             parameters.quantizedKVStart = config.quantizedKVStart
         }
-        parameters.temperature = Float(request.temperature ?? Double(config.temperature))
-        parameters.topP = Float(request.topP ?? Double(config.topP))
-        parameters.topK = request.topK ?? config.topK
-        parameters.minP = Float(request.minP ?? Double(config.minP))
-        if let penalty = request.repetitionPenalty ?? config.repetitionPenalty.map(Double.init) {
-            parameters.repetitionPenalty = Float(penalty)
+        let controls = GenerationControlSelection.resolve(
+            request: request, config: config, promptTokenCount: tokens.count)
+        parameters.temperature = controls.temperature
+        parameters.topP = controls.topP
+        parameters.topK = controls.topK
+        parameters.minP = controls.minP
+        if let penalty = controls.repetitionPenalty {
+            parameters.repetitionPenalty = penalty
         }
-        if let penalty = request.presencePenalty ?? config.presencePenalty.map(Double.init) {
-            parameters.presencePenalty = Float(penalty)
+        if let penalty = controls.presencePenalty {
+            parameters.presencePenalty = penalty
         }
-        if let penalty = request.frequencyPenalty ?? config.frequencyPenalty.map(Double.init) {
-            parameters.frequencyPenalty = Float(penalty)
+        if let penalty = controls.frequencyPenalty {
+            parameters.frequencyPenalty = penalty
         }
-        if let seed = request.seed {
+        if let seed = controls.randomSeed {
             parameters.randomSeed = seed
         }
-        if let stop = request.stop, !stop.isEmpty {
+        if let stop = controls.extraStopStrings {
             parameters.extraStopStrings = stop
         }
-        let requestedMax = request.maxTokens ?? config.maxTokensDefault
-        let capacity = config.maxKVSize - tokens.count
-        parameters.maxTokens = min(requestedMax, max(1, capacity))
+        parameters.maxTokens = controls.maxTokens
         return parameters
     }
 
@@ -964,28 +997,28 @@ public actor Engine {
             parameters.kvGroupSize = config.kvGroupSize
             parameters.quantizedKVStart = config.quantizedKVStart
         }
-        parameters.temperature = Float(request.temperature ?? Double(config.temperature))
-        parameters.topP = Float(request.topP ?? Double(config.topP))
-        parameters.topK = request.topK ?? config.topK
-        parameters.minP = Float(request.minP ?? Double(config.minP))
-        if let penalty = request.repetitionPenalty ?? config.repetitionPenalty.map(Double.init) {
-            parameters.repetitionPenalty = Float(penalty)
+        let controls = GenerationControlSelection.resolve(
+            request: request, config: config, promptTokenCount: tokens.count)
+        parameters.temperature = controls.temperature
+        parameters.topP = controls.topP
+        parameters.topK = controls.topK
+        parameters.minP = controls.minP
+        if let penalty = controls.repetitionPenalty {
+            parameters.repetitionPenalty = penalty
         }
-        if let penalty = request.presencePenalty ?? config.presencePenalty.map(Double.init) {
-            parameters.presencePenalty = Float(penalty)
+        if let penalty = controls.presencePenalty {
+            parameters.presencePenalty = penalty
         }
-        if let penalty = request.frequencyPenalty ?? config.frequencyPenalty.map(Double.init) {
-            parameters.frequencyPenalty = Float(penalty)
+        if let penalty = controls.frequencyPenalty {
+            parameters.frequencyPenalty = penalty
         }
-        if let seed = request.seed {
+        if let seed = controls.randomSeed {
             parameters.randomSeed = seed
         }
-        if let stop = request.stop, !stop.isEmpty {
+        if let stop = controls.extraStopStrings {
             parameters.extraStopStrings = stop
         }
-        let requestedMax = request.maxTokens ?? config.maxTokensDefault
-        let capacity = config.maxKVSize - tokens.count
-        parameters.maxTokens = min(requestedMax, max(1, capacity))
+        parameters.maxTokens = controls.maxTokens
         return parameters
     }
 

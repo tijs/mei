@@ -155,14 +155,26 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   sends `role: "assistant"` in the first chunk) — a known cosmetic deviation.
 - Terminal sequence (`Router.finishSSEData`, `Router.swift:180-207`): a finish
   chunk `delta: {}` + `finish_reason`, then — iff `stream_options.include_usage`
-  — a usage chunk with `choices: []`, then `data: [DONE]`.
+  — a usage chunk with `choices: []`, then `data: [DONE]`. The `data: [DONE]`
+  event is emitted on **every successful stream**, with or without
+  `stream_options` (the terminator is the data payload of the final event,
+  never a bare `[DONE]` line).
 - Streaming usage counts are byte-identical in value to the non-streaming
   response for the same run: pinned by
   `OpenAItypesTests.testStreamingFinishUsageCountParityWithNonStreaming` and
   `testStreamingUsageAbsentWhenIncludeUsageFalse`.
-- A generation error after headers are sent is emitted as an SSE `data:` frame
-  carrying the error envelope with `code: "stream_error"`; the HTTP status
-  stays 200 (`HTTPServer.swift:66-70`).
+- A generation error after headers are sent is emitted as a single SSE
+  `data:` frame carrying the error envelope with `code: "stream_error"`; the
+  HTTP status stays 200 (`Router.errorSSEFrame`, used by
+  `HTTPServer.swift`). **Defined error-stream behavior:** that error frame is
+  terminal — no finish frame, no usage chunk, and **no `data: [DONE]`** follow
+  it. `[DONE]` is the success terminator only; its absence after an error
+  frame is correct behavior (clients treat the error frame, or EOF without
+  `[DONE]`, as the end of a failed stream), and a `[DONE]` after an error
+  frame is itself a contract violation. Pinned by `RouterSSEFrameTests`
+  (`testErrorStreamFrameShape`, `testErrorStreamTerminalFrameIsNotDone`,
+  `testErrorFrameAndSuccessTerminationAreDistinct`) and by
+  `probe_mei.py --self-test`.
 
 ### Other routes
 
@@ -192,7 +204,7 @@ Envelope shape — `APIErrorEnvelope`, `OpenAITypes.swift:523-531`:
 | Status | When | Envelope details | Source |
 |---|---|---|---|
 | 200 | Success (all JSON routes and streams) | n/a | `Router.swift:53-128` |
-| 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:66-70` |
+| 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"`; terminal frame — no `[DONE]` follows | `Router.errorSSEFrame` (`HTTPServer.swift`) |
 | 400 | JSON decode failure (missing `model`/`messages`, malformed body) | `type: invalid_request_error`, no code | `Router.swift:113-115` |
 | 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112`, `EngineError.emptyPrompt` (`Engine.swift:29,594`) |
 | 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:132-138`), `Engine.swift:903-904,951-952` |

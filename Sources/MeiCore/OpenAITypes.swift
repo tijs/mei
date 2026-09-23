@@ -156,28 +156,55 @@ public struct CompletionRequest: Sendable {
 
 // MARK: - Decoding
 
+/// `content` in its two P0 shapes: a plain string, or an array of text parts.
+/// Decoding is strict by contract: a part that is not `type: "text"` is a
+/// deferred multimodal feature and is rejected loudly instead of being
+/// silently dropped from the prompt (silent dropping changed the request's
+/// semantics while the field looked accepted).
 private struct FlexibleString: Decodable {
     let value: String?
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let string = try? container.decode(String.self) {
+        if container.decodeNil() {
+            // content: null is legal (assistant messages carrying tool_calls)
+            value = nil
+        } else if let string = try? container.decode(String.self) {
             value = string
         } else if let array = try? container.decode([ContentPart].self) {
+            for part in array {
+                guard let type = part.type, type == "text" else {
+                    if let type = part.type {
+                        throw APIRequestError.deferred(
+                            "content part type '\(type)' is deferred in the Mei P0 "
+                                + "contract — only text parts are supported (multimodal input "
+                                + "is not implemented)")
+                    }
+                    throw APIRequestError.invalidField(
+                        "content part must declare \"type\": \"text\" in the Mei P0 contract")
+                }
+                guard part.text != nil else {
+                    throw APIRequestError.invalidField(
+                        "content part of type 'text' must carry a text value")
+                }
+            }
             value = array.compactMap { $0.text }.joined(separator: "\n")
         } else {
-            value = nil
+            throw APIRequestError.invalidField(
+                "message content must be a string or an array of text parts")
         }
     }
 }
 
 private struct ContentPart: Decodable {
+    let type: String?
     let text: String?
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try? container.decode(String.self, forKey: .type)
         text = try? container.decode(String.self, forKey: .text)
     }
     private enum CodingKeys: String, CodingKey {
-        case text
+        case type, text
     }
 }
 
@@ -219,13 +246,14 @@ extension ChatRequest {
     public init(json: Data) throws {
         let decoder = JSONDecoder()
         struct Raw: Decodable {
-            let model: String
-            let messages: [RawMessage]
+            let model: String?
+            let messages: [RawMessage]?
             let temperature: Double?
             let topP: Double?
             let topK: FlexibleInt?
             let minP: Double?
             let maxTokens: FlexibleInt?
+            let maxCompletionTokens: FlexibleInt?
             let stream: Bool?
             let stop: FlexibleStop?
             let tools: [MeiJSONValue]?
@@ -242,6 +270,7 @@ extension ChatRequest {
                 case topK = "top_k"
                 case minP = "min_p"
                 case maxTokens = "max_tokens"
+                case maxCompletionTokens = "max_completion_tokens"
                 case toolChoice = "tool_choice"
                 case repetitionPenalty = "repetition_penalty"
                 case presencePenalty = "presence_penalty"
@@ -273,14 +302,33 @@ extension ChatRequest {
             }
         }
 
-        let raw = try decoder.decode(Raw.self, from: json)
-        self.model = raw.model
-        self.messages = raw.messages.map { message in
-            let toolCalls = message.toolCalls?.compactMap { call -> APIMessage.APIToolCall? in
-                guard let name = call.function?.name else { return nil }
-                return APIMessage.APIToolCall(
+        let raw: Raw
+        let root: [String: Any]
+        do {
+            root = (try JSONSerialization.jsonObject(with: json) as? [String: Any]) ?? [:]
+            raw = try decoder.decode(Raw.self, from: json)
+        } catch let error as APIRequestError {
+            throw error
+        } catch {
+            throw APIRequestError.invalidBody(
+                "request body is not a valid /v1/chat/completions payload: \(error.localizedDescription)")
+        }
+
+        guard let model = raw.model, !model.isEmpty else {
+            throw APIRequestError.invalidField("model is required")
+        }
+        guard let messages = raw.messages, !messages.isEmpty else {
+            throw APIRequestError.invalidField("messages is required and must not be empty")
+        }
+        let endpoint = "/v1/chat/completions"
+        // Map first (tolerantly: a missing function name/arguments becomes an
+        // empty string), then validate the mapped messages — validation sees
+        // exactly the shape that reaches the template.
+        let mappedMessages = messages.map { message in
+            let toolCalls = message.toolCalls?.map { call -> APIMessage.APIToolCall in
+                APIMessage.APIToolCall(
                     id: call.id,
-                    name: name,
+                    name: call.function?.name ?? "",
                     argumentsJSON: call.function?.arguments ?? "{}"
                 )
             }
@@ -292,25 +340,90 @@ extension ChatRequest {
                 reasoningContent: message.reasoningContent
             )
         }
+        try APIValidation.validateMessageArray(mappedMessages)
+        try APIValidation.validateSampling(
+            temperature: raw.temperature,
+            topP: raw.topP,
+            topK: raw.topK?.value,
+            minP: raw.minP,
+            repetitionPenalty: raw.repetitionPenalty,
+            presencePenalty: raw.presencePenalty,
+            frequencyPenalty: raw.frequencyPenalty)
+        if let effort = raw.reasoningEffort {
+            guard APIValidation.reasoningEffortValues.contains(effort) else {
+                throw APIRequestError.invalidField(
+                    "reasoning_effort: '\(effort)' is not a supported value "
+                        + "(low, medium, high, none) in the Mei P0 contract")
+            }
+        }
+        // Deferred platform fields reject loudly (see APIValidation):
+        for (field, reason) in APIValidation.deferredChatFields where root[field] != nil {
+            throw APIRequestError.deferred(field + ": " + reason)
+        }
+        if root["n"] != nil {
+            guard let n = root["n"] as? NSNumber, n.doubleValue == 1 else {
+                throw APIRequestError.deferred(
+                    "n: only n=1 is supported in the Mei P0 contract (multiple choices are deferred)")
+            }
+        }
+        if let parallel = root["parallel_tool_calls"] as? Bool, !parallel {
+            throw APIRequestError.deferred(
+                "parallel_tool_calls=false is not supported in the Mei P0 contract: Mei always "
+                    + "allows multiple tool calls per turn (the platform default). Send the "
+                    + "field only with value true, or omit it.")
+        }
+        // stream_options: the only recognized option is include_usage, and it
+        // requires a stream. Unknown option keys reject (a future platform
+        // option must never be accepted and then dropped).
+        let stream = raw.stream ?? false
+        var includeUsage = false
+        if let rawOptions = root["stream_options"] {
+            guard let options = rawOptions as? [String: Any] else {
+                throw APIRequestError.invalidField("stream_options must be an object")
+            }
+            let unknown = Set(options.keys).subtracting(["include_usage"])
+            if !unknown.isEmpty {
+                throw APIRequestError.invalidField(
+                    "stream_options: unsupported option(s) \(unknown.sorted().joined(separator: ", ")) "
+                        + "in the Mei P0 contract (only include_usage is supported)")
+            }
+            guard stream else {
+                throw APIRequestError.invalidField(
+                    "stream_options requires stream=true in the Mei P0 contract")
+            }
+            if let include = options["include_usage"] {
+                guard let include = include as? Bool else {
+                    throw APIRequestError.invalidField(
+                        "stream_options.include_usage must be a boolean")
+                }
+                includeUsage = include
+            }
+        }
+        let maxTokens = try APIValidation.resolveMaxTokens(
+            maxTokens: raw.maxTokens?.value,
+            maxCompletionTokens: raw.maxCompletionTokens?.value,
+            endpoint: endpoint)
+        let toolChoice = raw.toolChoice
+        try APIValidation.validateTools(raw.tools, endpoint: endpoint)
+        try APIValidation.validateToolChoice(toolChoice)
+
+        self.model = model
+        self.messages = mappedMessages
         self.temperature = raw.temperature
         self.topP = raw.topP
         self.topK = raw.topK?.value
         self.minP = raw.minP
-        self.maxTokens = raw.maxTokens?.value
-        self.stream = raw.stream ?? false
+        self.maxTokens = maxTokens
+        self.stream = stream
         self.stop = raw.stop?.strings
         self.tools = raw.tools
-        self.toolChoice = raw.toolChoice
+        self.toolChoice = toolChoice
         self.repetitionPenalty = raw.repetitionPenalty
         self.presencePenalty = raw.presencePenalty
         self.frequencyPenalty = raw.frequencyPenalty
         self.seed = raw.seed
         self.reasoningEffort = raw.reasoningEffort
-        // stream_options.include_usage lives at the top level of the payload,
-        // not inside messages; pull it via a raw JSON probe.
-        let root = try JSONSerialization.jsonObject(with: json) as? [String: Any]
-        let options = root?["stream_options"] as? [String: Any]
-        self.includeUsage = (options?["include_usage"] as? Bool) ?? false
+        self.includeUsage = includeUsage
     }
 }
 
@@ -318,13 +431,14 @@ extension CompletionRequest {
     public init(json: Data) throws {
         let decoder = JSONDecoder()
         struct Raw: Decodable {
-            let model: String
-            let prompt: String
+            let model: String?
+            let prompt: String?
             let temperature: Double?
             let topP: Double?
             let topK: FlexibleInt?
             let minP: Double?
             let maxTokens: FlexibleInt?
+            let maxCompletionTokens: FlexibleInt?
             let stream: Bool?
             let stop: FlexibleStop?
             let repetitionPenalty: Double?
@@ -338,28 +452,69 @@ extension CompletionRequest {
                 case topK = "top_k"
                 case minP = "min_p"
                 case maxTokens = "max_tokens"
+                case maxCompletionTokens = "max_completion_tokens"
                 case repetitionPenalty = "repetition_penalty"
                 case presencePenalty = "presence_penalty"
                 case frequencyPenalty = "frequency_penalty"
             }
         }
-        let raw = try decoder.decode(Raw.self, from: json)
-        self.model = raw.model
-        self.prompt = raw.prompt
+
+        let raw: Raw
+        let root: [String: Any]
+        do {
+            root = (try JSONSerialization.jsonObject(with: json) as? [String: Any]) ?? [:]
+            raw = try decoder.decode(Raw.self, from: json)
+        } catch let error as APIRequestError {
+            throw error
+        } catch {
+            throw APIRequestError.invalidBody(
+                "request body is not a valid /v1/completions payload: \(error.localizedDescription)")
+        }
+
+        let endpoint = "/v1/completions"
+        guard let model = raw.model, !model.isEmpty else {
+            throw APIRequestError.invalidField("model is required")
+        }
+        guard let prompt = raw.prompt else {
+            throw APIRequestError.invalidField("prompt is required")
+        }
+        for (field, reason) in APIValidation.deferredCompletionFields where root[field] != nil {
+            throw APIRequestError.deferred(field + ": " + reason)
+        }
+        if root["n"] != nil {
+            guard let n = root["n"] as? NSNumber, n.doubleValue == 1 else {
+                throw APIRequestError.deferred(
+                    "n: only n=1 is supported in the Mei P0 contract (multiple choices are deferred)")
+            }
+        }
+        let stream = raw.stream ?? false
+        let maxTokens = try APIValidation.resolveMaxTokens(
+            maxTokens: raw.maxTokens?.value,
+            maxCompletionTokens: raw.maxCompletionTokens?.value,
+            endpoint: endpoint)
+        try APIValidation.validateSampling(
+            temperature: raw.temperature,
+            topP: raw.topP,
+            topK: raw.topK?.value,
+            minP: raw.minP,
+            repetitionPenalty: raw.repetitionPenalty,
+            presencePenalty: raw.presencePenalty,
+            frequencyPenalty: raw.frequencyPenalty)
+
+        self.model = model
+        self.prompt = prompt
         self.temperature = raw.temperature
         self.topP = raw.topP
         self.topK = raw.topK?.value
         self.minP = raw.minP
-        self.maxTokens = raw.maxTokens?.value
-        self.stream = raw.stream ?? false
+        self.maxTokens = maxTokens
+        self.stream = stream
         self.stop = raw.stop?.strings
         self.repetitionPenalty = raw.repetitionPenalty
         self.presencePenalty = raw.presencePenalty
         self.frequencyPenalty = raw.frequencyPenalty
         self.seed = raw.seed
-        let root = try JSONSerialization.jsonObject(with: json) as? [String: Any]
-        let options = root?["stream_options"] as? [String: Any]
-        self.includeUsage = (options?["include_usage"] as? Bool) ?? false
+        self.includeUsage = false
     }
 }
 
@@ -495,6 +650,35 @@ public struct SSEChatChunk: Encodable, Sendable {
         public struct Function: Encodable, Sendable {
             public var name: String?
             public var arguments: String?
+        }
+    }
+
+    public enum CodingKeys: String, CodingKey {
+        case id, object, created, model, choices, usage
+    }
+}
+
+/// Minimal legacy `/v1/completions` response in the OpenAI `text_completion`
+/// shape: one choice carrying `text` instead of a chat `message`. The usage
+/// block is byte-identical to the chat usage block (same `Router.usage`), so
+/// the benchmark's context/admission probes read either endpoint the same way.
+public struct TextCompletionResponse: Encodable, Sendable {
+    public var id: String
+    public var object = "text_completion"
+    public var created: Int
+    public var model: String
+    public var choices: [Choice]
+    public var usage: ChatCompletionResponse.Usage?
+
+    public struct Choice: Encodable, Sendable {
+        public var text: String
+        public var index = 0
+        public var logprobs: Int? = nil
+        public var finishReason: String?
+
+        public enum CodingKeys: String, CodingKey {
+            case text, index, logprobs
+            case finishReason = "finish_reason"
         }
     }
 

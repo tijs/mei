@@ -112,9 +112,14 @@ pull` handles this; details in [docs/MODELS.md](docs/MODELS.md).
 - **One native process.** `mei` is a single Swift/MLX server binary
   (arm64). No Python glue, no model orchestrator — the fork-pinned vmlx engine
   loads one checkpoint and serves it.
-- **OpenAI-compatible API.** `POST /v1/chat/completions` (streaming and
-  non-streaming), `GET /v1/models` identity, `reasoning_content` for
-  thinking models. Default `http://127.0.0.1:8024/v1`.
+- **OpenAI-compatible API (tested P0 subset).** `POST /v1/chat/completions`
+  (streaming and non-streaming), the minimal legacy `POST /v1/completions`,
+  `GET /v1/models` identity, `reasoning_content` for thinking models.
+  "OpenAI-compatible" means exactly the frozen, tested subset in
+  **[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)** — not the
+  whole OpenAI platform; deferred fields (structured outputs, logprobs,
+  `n > 1`, multimodal, developer messages, ...) are rejected loudly. Default
+  `http://127.0.0.1:8024/v1`.
 - **Chunked prefill.** Prefill runs in bounded windows (`--prefill-step-size`),
   the long-context safeguard for hybrid (GatedDelta) architectures.
 - **KV/prefix reuse.** vmlx's `CacheCoordinator` reuses the in-process KV/prefix
@@ -204,6 +209,11 @@ installer both assume an already-built (or prebuilt) binary.
 
 ## The docs
 
+- **[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)** — the
+  frozen P0 compatibility contract: supported/deferred field matrix, error
+  envelope, `max_completion_tokens` vs `max_tokens` policy, streaming
+  framing, and the exact test commands (authoritative meaning of
+  "OpenAI-compatible").
 - **[docs/MODELS.md](docs/MODELS.md)** — candidate status, provenance and
   quantization; the historical four-model comparator lineup; per-model
   quickstarts.

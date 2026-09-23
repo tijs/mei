@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import MeiCore
 
 /// Black-box acceptance oracle for the Mei server (Phase 1, ported from
 /// local-model-bench's runner/probe_omlx.py semantics).
@@ -173,52 +174,35 @@ final class MeiAcceptanceTests: XCTestCase {
         XCTAssertEqual(choices.first?["finish_reason"] as? String, "tool_calls")
     }
 
-    /// Reassemble an SSE body into a single completion-shaped dictionary.
+    /// Reassemble an SSE body into a single completion-shaped dictionary,
+    /// delegating to the deterministic `SSEFrameParser` (the same merge the
+    /// unit tests pin: index-keyed tool-call fragments, role/content
+    /// accumulation, usage capture).
     func assembleSSE(_ data: Data) throws -> [String: Any] {
-        let text = String(data: data, encoding: .utf8) ?? ""
-        var content = ""
-        var toolCalls: [Int: [String: Any]] = [:]
-        var finishReason: String?
-        var usage: [String: Any]?
-        for rawLine in text.split(separator: "\n", omittingEmptySubsequences: false) {
-            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard line.hasPrefix("data:") else { continue }
-            let encoded = line.dropFirst(5).trimmingCharacters(in: .whitespacesAndNewlines)
-            guard encoded != "[DONE]", let event = try? JSONSerialization.jsonObject(with: Data(encoded.utf8)) as? [String: Any] else {
-                continue
-            }
-            if let u = event["usage"] as? [String: Any] { usage = u }
-            for choice in event["choices"] as? [[String: Any]] ?? [] {
-                let delta = choice["delta"] as? [String: Any] ?? [:]
-                if let c = delta["content"] as? String { content += c }
-                for part in delta["tool_calls"] as? [[String: Any]] ?? [] {
-                    let index = part["index"] as? Int ?? 0
-                    var call: [String: Any]
-                    if let existing = toolCalls[index] {
-                        call = existing
-                    } else {
-                        call = ["type": "function", "function": ["name": "", "arguments": ""]]
-                        if let id = part["id"] as? String { call["id"] = id }
-                    }
-                    let function = (call["function"] as? [String: Any]) ?? [:]
-                    var name = function["name"] as? String ?? ""
-                    var arguments = function["arguments"] as? String ?? ""
-                    let partFunction = part["function"] as? [String: Any] ?? [:]
-                    name += partFunction["name"] as? String ?? ""
-                    arguments += partFunction["arguments"] as? String ?? ""
-                    call["function"] = ["name": name, "arguments": arguments]
-                    toolCalls[index] = call
-                }
-                if let fr = choice["finish_reason"] as? String { finishReason = fr }
-            }
-        }
+        let result = SSEFrameParser.parse(data)
         var message: [String: Any] = ["role": "assistant"]
-        if !content.isEmpty { message["content"] = content }
-        if !toolCalls.isEmpty {
-            message["tool_calls"] = toolCalls.sorted { $0.key < $1.key }.map { $0.value }
+        if !result.content.isEmpty { message["content"] = result.content }
+        if !result.toolCalls.isEmpty {
+            message["tool_calls"] = result.toolCalls.map { call in
+                var part: [String: Any] = [
+                    "type": "function",
+                    "function": ["name": call.name, "arguments": call.arguments],
+                ]
+                if let id = call.id { part["id"] = id }
+                return part
+            }
         }
-        var body: [String: Any] = ["choices": [["message": message, "finish_reason": finishReason ?? "stop"]]]
-        if let usage { body["usage"] = usage }
+        var body: [String: Any] = [
+            "choices": [["message": message, "finish_reason": result.finishReason ?? "stop"]],
+        ]
+        if let usage = result.usage {
+            body["usage"] = [
+                "prompt_tokens": usage.promptTokens,
+                "completion_tokens": usage.completionTokens,
+                "total_tokens": usage.totalTokens,
+                "prompt_tokens_details": ["cached_tokens": usage.cachedTokens ?? 0],
+            ]
+        }
         return body
     }
 
