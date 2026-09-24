@@ -45,12 +45,20 @@ Standalone drivers live in `tools/` (authoritative copies; the
 
 The deterministic half of the P0 matrix lives in the Swift unit suites
 (`OpenAIRequestValidationTests`, `GenerationControlSelectionTests`,
-`OpenAIResponseShapeTests`, `RouterSSEFrameTests`, plus the existing
-`OpenAITypesTests`/`RouterSSEToolCallIndexingTests`) and runs without any
-model. The live half is the probe matrix above. Both halves are pinned in
+`OpenAIResponseShapeTests`, `RouterSSEFrameTests`, `MessageMappingTests`,
+`ToolArgumentNormalizerTests`, plus the existing
+`OpenAITypesTests`/`RouterSSEToolCallIndexingTests`/`CacheRestoreTrackerTests`)
+and runs without any model:
+`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --skip MeiAcceptanceTests`.
+The live half is the probe matrix above. Both halves are pinned in
 docs/OPENAI-COMPATIBILITY.md §8, including the known Xcode-27 flaky
 type-check caveat on the pinned vmlx dependency (report any such failure
-separately from Mei failures).
+separately from Mei failures). The published matrix evidence
+(`artifacts/p0-matrix-qwen36-text-20260922T201844Z.json`) is kept as a
+historical record — the two probe-side failures it shows are fixed in
+`probe_mei.py` since `1e2f7a7` and covered by `--self-test`; a clean passing
+full-matrix re-run against a live server is the remaining P0 gate (plan
+unit 6), see OPENAI-COMPATIBILITY.md §8.
 
 ## `local-model-bench` integration
 

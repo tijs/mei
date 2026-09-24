@@ -33,11 +33,16 @@ drivers to `local-model-bench/runner/` in a read-only boundary.
 ```bash
 swift package resolve
 swift build            # debug
-swift test             # unit tests (acceptance tests need a live server)
+swift test             # full suite — MeiAcceptanceTests need a live server
+swift test --skip MeiAcceptanceTests   # deterministic model-free suite (the P0 unit matrix)
+python3 tools/probe_mei.py --self-test  # validates the probe's assertions, no server
 swift build -c release --scratch-path ~/.local/share/local-model-bench/mei-build
 # The release launcher resolves the fork-pinned dependency automatically:
 scripts/start_mei_server.sh
 ```
+
+Exact commands for every P0 layer (unit, probe self-test, live matrix) are in
+[`docs/OPENAI-COMPATIBILITY.md`](OPENAI-COMPATIBILITY.md) §8.
 
 Known toolchain caveat: with Xcode 27's Swift 6.4, the pinned vmlx dependency
 occasionally fails debug builds with "unable to type-check this expression"
