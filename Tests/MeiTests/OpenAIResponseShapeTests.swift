@@ -177,6 +177,26 @@ final class OpenAIResponseShapeTests: XCTestCase {
         XCTAssertEqual(usage["total_tokens"] as? NSNumber, 15)
     }
 
+    func testPayloadLimiterAcceptsAtLimit() throws {
+        // The 413 boundary: a body of exactly maxBodyBytes bytes passes.
+        let body = Data(repeating: 0x61, count: HTTPRequestLimiter.maxBodyBytes)
+        try HTTPRequestLimiter.ensure(uri: "/v1/chat/completions", body: body)
+    }
+
+    func testPayloadLimiterRejectsOverLimit() {
+        // One byte over the limit throws the 413 error whose message the
+        // handler ships with code "payload_too_large".
+        let body = Data(repeating: 0x61, count: HTTPRequestLimiter.maxBodyBytes + 1)
+        XCTAssertThrowsError(try HTTPRequestLimiter.ensure(uri: "/v1/chat/completions", body: body)) { error in
+            guard let limitError = error as? HTTPRequestLimiter.LimitError else {
+                return XCTFail("expected HTTPRequestLimiter.LimitError, got \(error)")
+            }
+            let message = limitError.errorDescription ?? ""
+            XCTAssertTrue(message.contains("request body too large"), message)
+            XCTAssertTrue(message.contains("\(HTTPRequestLimiter.maxBodyBytes)"), message)
+        }
+    }
+
     func testStreamingSSEErrorFrameShape() throws {
         // The mid-stream error frame a streaming run emits when generation
         // itself fails after the 200 headers are out.

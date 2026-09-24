@@ -357,6 +357,16 @@ final class OpenAIRequestValidationTests: XCTestCase {
         _ = try chat(#"{"model": "m", "messages": [{"role": "user", "content": "x"}], "user": "abc-123"}"#)
     }
 
+    func testUnknownTopLevelFieldsAreInert() throws {
+        // Any unknown top-level key outside the enumerated deferred list and
+        // the named special cases (n, parallel_tool_calls, stream_options) is
+        // accepted and ignored — the contract's unknown-field rule. This pins
+        // the rule for arbitrary client/private fields, not just `user`.
+        let request = try chat(#"{"model": "m", "messages": [{"role": "user", "content": "x"}], "foo": {"bar": [1, 2]}, "custom_client_field": "anything", "web_search_options": {"search_context_size": "high"}}"#)
+        XCTAssertEqual(request.messages.count, 1)
+        XCTAssertEqual(request.messages[0].content, "x")
+    }
+
     // MARK: - Legacy /v1/completions
 
     func testCompletionRequiredFields() {
