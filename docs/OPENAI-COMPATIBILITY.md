@@ -105,7 +105,7 @@ router dispatch — `Sources/MeiCore/Router.swift:59-116`.
 | `stream` | boolean | Default `false`. `true` switches to SSE streaming. |
 | `stop` | string or array | Up to N sequences passed as `extraStopStrings`; single string normalized to one-element array (`FlexibleStop`, `OpenAITypes.swift:198-210`). Cardinality not validated. |
 | `tools` | array | Function tools are the supported P0 case; entries are copied verbatim into the template context (`MessageMapping.templateTools`, `MessageMapping.swift:51-63`). Non-function tool types are also passed through unvalidated — no acceptance coverage exists for them. |
-| `tool_choice` | string or object | `"none"`/`"auto"`/`"required"` map to the template's `tool_choice` verbatim; the nested OpenAI forced form `{"type":"function","function":{"name":X}}` degrades to `tool_choice:"required"` **without** extracting the nested name — only a **top-level** `name` key is read (`MessageMapping.additionalContext`, `MessageMapping.swift:65-101`). Forcing one specific tool by the official nested shape is therefore not wired; acceptance coverage exists only for the required-with-one-tool case. |
+| `tool_choice` | string or object | `"none"`/`"auto"`/`"required"` map to the template's `tool_choice` verbatim; any other string is a forced tool name (`tool_choice:"required"` + `tool_choice_name`). The nested OpenAI forced form `{"type":"function","function":{"name":X}}` extracts the name from `function.name` — a top-level `name` still wins when both are present — and pins it as `tool_choice_name` (`MessageMapping.additionalContext`, `MessageMapping.swift:65-112`). CoCore's forced-tool canary shape (`report_status`, nested `tool_choice`, strict schema, `max_tokens` 96, `temperature` 0; graze-social/cocore PR #237) is covered by `OpenAITypesTests.testCoCoreForcedToolCanaryPinsReportStatus`. |
 | `repetition_penalty` / `presence_penalty` / `frequency_penalty` | number | Passed to the generator (defaults from config). |
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
 | `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
@@ -277,6 +277,8 @@ parent's separate acceptance run):
 
 - `OpenAITypesTests` — request decoding (full payload, content arrays,
   `stream_options.include_usage`, tool messages, tool_choice object path),
+  the exact CoCore forced-tool canary shape (nested `function.name` pinned as
+  `tool_choice_name`; `testCoCoreForcedToolCanaryPinsReportStatus`),
   response encoding shape, usage field types/arithmetic, usage parity between
   streaming and non-streaming, usage absence when `include_usage` false.
 - `CacheRestoreTrackerTests` — `mapStopReason` finish-reason mapping (4 cases).
@@ -286,17 +288,19 @@ parent's separate acceptance run):
 Not yet pinned by tests (planned acceptance, do not claim as verified):
 §6 policy statements, `max_completion_tokens` inertness, unknown-field
 ignorance, error-envelope/status matrix as a whole (no unit test asserts the
-400/404/413/500 envelopes end to end), `tool_choice` nested-name degradation,
-non-function tool pass-through.
+400/404/413/500 envelopes end to end), non-function tool pass-through.
 
 ## 9. Open ambiguities
 
 1. **Upstream:** both `max_tokens` + `max_completion_tokens` in one request is
    undocumented upstream (o-series incompatibility is the only stated
    constraint); Mei's §6 policy is a deliberate local codification.
-2. **Mei:** forcing one specific tool via the official nested `tool_choice`
-   shape does not extract the name (`MessageMapping` reads only a top-level
-   `name`); whether that is a bug or a template constraint is undecided.
+2. **Mei (resolved):** forcing one specific tool via the official nested
+   `tool_choice` shape historically degraded to `tool_choice:"required"`
+   without the name; `MessageMapping.additionalContext` now reads both a
+   top-level `name` and the nested `function.name` and pins it as
+   `tool_choice_name` (§3). Covered by the CoCore forced-tool canary
+   regression test.
 3. **Mei:** `request.model` is not checked against the served id; a client can
    send any `model` value (permissive by design for a single-model server, but
    a divergence from upstream's unknown-model error).

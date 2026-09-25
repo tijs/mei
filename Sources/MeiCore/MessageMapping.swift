@@ -84,9 +84,23 @@ public enum MessageMapping {
                     context["tool_choice_name"] = name
                 }
             case .object(let object):
-                if case .string(let name)? = object["name"] {
+                // OpenAI forced form: {"type":"function","function":{"name":X}}.
+                // Read a top-level `name` first (used by some templates), then
+                // fall back to the standard nested `function.name` that OpenAI
+                // clients including CoCore's forced tool canary send.
+                let forcedName: String? = {
+                    if case .string(let name)? = object["name"] {
+                        return name
+                    }
+                    if case .object(let function)? = object["function"],
+                        case .string(let name)? = function["name"] {
+                        return name
+                    }
+                    return nil
+                }()
+                if let forcedName {
                     context["tool_choice"] = "required"
-                    context["tool_choice_name"] = name
+                    context["tool_choice_name"] = forcedName
                 } else {
                     context["tool_choice"] = "required"
                 }

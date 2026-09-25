@@ -107,6 +107,102 @@ final class OpenAITypesTests: XCTestCase {
         XCTAssertEqual(name, "add_numbers")
     }
 
+    // MARK: - CoCore attached-engine forced-tool canary
+
+    /// The exact request CoCore's attached engine sends at startup to prove
+    /// tool-calling (graze-social/cocore PR #237,
+    /// `engines/openai_http.rs::tool_canary_body`): a strict `report_status`
+    /// function forced via the nested OpenAI `tool_choice` shape, baked
+    /// decode settings included. The nested name must reach the template
+    /// context so the canary is actually pinned to `report_status`.
+    func testCoCoreForcedToolCanaryPinsReportStatus() throws {
+        let json = """
+        {
+          "model": "mlx-community/Qwen3.6-35B-A3B-4bit",
+          "messages": [
+            {"role": "system", "content": "You are a tool-calling canary. When a tool is forced, return exactly that tool call and no prose."},
+            {"role": "user", "content": "Call report_status with status set to ok."}
+          ],
+          "tools": [
+            {"type": "function", "function": {
+              "name": "report_status",
+              "description": "Report the tool-calling canary status.",
+              "strict": true,
+              "parameters": {
+                "type": "object",
+                "properties": {"status": {"type": "string"}},
+                "required": ["status"],
+                "additionalProperties": false
+              }
+            }}
+          ],
+          "tool_choice": {"type": "function", "function": {"name": "report_status"}},
+          "max_tokens": 96,
+          "temperature": 0
+        }
+        """
+        let request = try ChatRequest(json: Data(json.utf8))
+        XCTAssertEqual(request.maxTokens, 96)
+        XCTAssertEqual(request.temperature, 0)
+        XCTAssertEqual(request.tools?.count, 1)
+        let context = try XCTUnwrap(
+            MessageMapping.additionalContext(
+                enableThinking: nil, reasoningEffort: nil, toolChoice: request.toolChoice))
+        XCTAssertEqual(context["tool_choice"] as? String, "required")
+        XCTAssertEqual(
+            context["tool_choice_name"] as? String, "report_status",
+            "the nested function.name of the OpenAI forced form must pin the canary tool")
+    }
+
+    func testToolChoiceNestedFunctionNameExtraction() throws {
+        let choice = MeiJSONValue.object([
+            "type": .string("function"),
+            "function": .object(["name": .string("report_status")]),
+        ])
+        let context = try XCTUnwrap(
+            MessageMapping.additionalContext(enableThinking: nil, reasoningEffort: nil, toolChoice: choice))
+        XCTAssertEqual(context["tool_choice"] as? String, "required")
+        XCTAssertEqual(context["tool_choice_name"] as? String, "report_status")
+    }
+
+    func testToolChoiceTopLevelNameStillWinsOverNested() throws {
+        // Top-level `name` is the template convention; it must keep precedence
+        // when both conventions are present.
+        let choice = MeiJSONValue.object([
+            "type": .string("function"),
+            "name": .string("top_level"),
+            "function": .object(["name": .string("nested")]),
+        ])
+        let context = try XCTUnwrap(
+            MessageMapping.additionalContext(enableThinking: nil, reasoningEffort: nil, toolChoice: choice))
+        XCTAssertEqual(context["tool_choice"] as? String, "required")
+        XCTAssertEqual(context["tool_choice_name"] as? String, "top_level")
+    }
+
+    func testToolChoiceStringFormsUnchanged() throws {
+        for value in ["required", "auto", "none"] {
+            let context = MessageMapping.additionalContext(
+                enableThinking: nil, reasoningEffort: nil,
+                toolChoice: .string(value))
+            XCTAssertEqual(context?["tool_choice"] as? String, value, "\(value) must pass through verbatim")
+            XCTAssertNil(context?["tool_choice_name"], "\(value) must not set a forced name")
+        }
+        // A bare string that is not a preset is treated as a forced tool name.
+        let forced = try XCTUnwrap(
+            MessageMapping.additionalContext(
+                enableThinking: nil, reasoningEffort: nil, toolChoice: .string("report_status")))
+        XCTAssertEqual(forced["tool_choice"] as? String, "required")
+        XCTAssertEqual(forced["tool_choice_name"] as? String, "report_status")
+    }
+
+    func testToolChoiceObjectWithoutNameStillForcesRequired() throws {
+        let choice = MeiJSONValue.object(["type": .string("function")])
+        let context = try XCTUnwrap(
+            MessageMapping.additionalContext(enableThinking: nil, reasoningEffort: nil, toolChoice: choice))
+        XCTAssertEqual(context["tool_choice"] as? String, "required")
+        XCTAssertNil(context["tool_choice_name"])
+    }
+
     func testResponseEncoding() throws {
         var run = GenerationRun()
         run.text = "Ready."

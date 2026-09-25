@@ -193,6 +193,34 @@ Weights are never bundled and never uploaded — `mei pull` fetches from
 HuggingFace into your own cache. Provenance, quantization and per-model status:
 **[docs/MODELS.md](docs/MODELS.md)**.
 
+## CoCore attached engine
+
+[CoCore](https://github.com/graze-social/cocore) can serve a model through
+Mei instead of spawning its own backend: point its engine map at this
+server, and it probes `GET /v1/models`, runs a forced `report_status`
+tool-calling canary plus a `response_format` structured-output canary, and
+advertises exactly what passed.
+
+```bash
+mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
+    --model-profile qwen3.6-35b-a3b-text \
+    --served-model-id mlx-community/Qwen3.6-35B-A3B-4bit
+```
+
+```text
+# ~/.cocore/engine-map — key must equal the --served-model-id above;
+# value is the server root, no /v1.
+mlx-community/Qwen3.6-35B-A3B-4bit = http://127.0.0.1:8024
+```
+
+Mei 0.5.0 passes the tool canary (the forced nested `tool_choice` name is
+pinned to `report_status`) and **fails the structured-output canary by
+design** — `response_format` is not implemented, so CoCore simply does not
+advertise schema jobs for it. Full detail (endpoints, transport, canary
+shapes, streaming usage, security, troubleshooting):
+**[docs/COCORE.md](docs/COCORE.md)**; the wire contract it relies on is
+**[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)**.
+
 ## Build
 
 Mei is bundled SwiftPM ([`Package.swift`](Package.swift), fork-pinned
@@ -216,5 +244,7 @@ installer both assume an already-built (or prebuilt) binary.
   package, `mlx.metallib`, vMLX fork pin and workflow.
 - **[docs/INSTALL.md](docs/INSTALL.md)** — installer paths and safety contract
   (authoritative).
+- **[docs/COCORE.md](docs/COCORE.md)** — CoCore attached-engine integration:
+  engine map, canaries, streaming, Mei's structured-output limitation.
 - **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
   upstream-PR workflow (authoritative).
