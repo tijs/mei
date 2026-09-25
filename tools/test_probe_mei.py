@@ -5,20 +5,112 @@ Run: python3 tools/test_probe_mei.py
    (or: python3 -m unittest tools.test_probe_mei -v)
 
 Covers the probe() wrapper's collision-safe result schema and the
-aggregate_status() verdict. No server, model, or network is touched:
-probe() is exercised directly with synthetic detail dicts and raising
-functions, exactly the probe shapes used by the P0 expected-rejection
-gates (max_tokens conflict, deferred fields, legacy stream rejection,
-chat over-cap chats/streams), whose detail carries the numeric HTTP
-status of the rejection that was *expected* and therefore must not be
-mistaken for the per-probe verdict.
+aggregate_status() verdict, plus the exact_prompt() tokenizer load. No
+server, model, or network is touched: probe() is exercised directly with
+synthetic detail dicts and raising functions, exactly the probe shapes
+used by the P0 expected-rejection gates (max_tokens conflict, deferred
+fields, legacy stream rejection, chat over-cap chats/streams), whose
+detail carries the numeric HTTP status of the rejection that was
+*expected* and therefore must not be mistaken for the per-probe verdict.
+exact_prompt() is exercised with a fake transformers module injected into
+sys.modules (no transformers install required) so the tokenizer load
+keyword — trust_remote_code=False + fix_mistral_regex=True — and the
+token-count arithmetic are pinned deterministically.
 """
 import sys
+import types
 import unittest
+import unittest.mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import probe_mei  # noqa: E402
+
+
+class _FakeAutoTokenizer:
+    """Records the exact from_pretrained call exact_prompt() makes."""
+
+    calls: list[tuple[Path, dict]] = []
+
+    @classmethod
+    def from_pretrained(cls, path, **kwargs):
+        cls.calls.append((path, kwargs))
+        return _FakeCountTokenizer()
+
+
+class _FakeCountTokenizer:
+    """Deterministic count-based tokenizer.
+
+    Mirrors the staged P0 tokenizers' arithmetic: the unit " hello" is
+    exactly one token, and add_special_tokens=True adds one BOS token
+    (the Laguna-XS overhead case exact_prompt() measures).
+    """
+
+    def encode(self, text: str, add_special_tokens: bool = False) -> list[int]:
+        count = text.count(" hello")
+        return [0] * (count + (1 if add_special_tokens else 0))
+
+
+def _patched_transformers():
+    """Inject a fake `transformers` module so no real install is needed."""
+    fake = types.ModuleType("transformers")
+    setattr(fake, "AutoTokenizer", _FakeAutoTokenizer)
+    return unittest.mock.patch.dict(sys.modules, {"transformers": fake})
+
+
+class ExactPromptTokenizerTests(unittest.TestCase):
+    """exact_prompt() loads the tokenizer warning-free and counts exactly."""
+
+    def test_exact_prompt_loads_with_fix_mistral_regex_and_trust_remote_code_off(self):
+        # The central regression: the tokenizer load must pass
+        # fix_mistral_regex=True (silences transformers' incorrect-regex
+        # warning for the Mistral-derived pre-tokenizer the staged
+        # Qwen-lineage tokenizers ship) alongside trust_remote_code=False —
+        # and nothing else.
+        _FakeAutoTokenizer.calls = []
+        with _patched_transformers():
+            prompt = probe_mei.exact_prompt(Path("/fake/tokenizer-dir"), 100)
+        self.assertEqual(prompt, " hello" * 99)
+        (path, kwargs), = _FakeAutoTokenizer.calls
+        self.assertEqual(path, Path("/fake/tokenizer-dir"))
+        self.assertEqual(kwargs, {"trust_remote_code": False, "fix_mistral_regex": True})
+
+    def test_exact_prompt_rejects_multi_token_unit(self):
+        # A tokenizer whose unit is not one token must fail loudly rather
+        # than build a mis-measured prompt.
+        original = _FakeCountTokenizer.encode
+
+        def broken_encode(self, text, add_special_tokens=False):
+            return [0, 0]
+
+        _FakeCountTokenizer.encode = broken_encode
+        try:
+            with _patched_transformers():
+                with self.assertRaises(RuntimeError) as raised:
+                    probe_mei.exact_prompt(Path("/fake/tokenizer-dir"), 100)
+        finally:
+            _FakeCountTokenizer.encode = original
+        self.assertIn("not one token", str(raised.exception))
+
+    def test_exact_prompt_rejects_measured_mismatch(self):
+        # The final count must equal the target; a tokenizer whose counts
+        # drift (e.g. an unpatchable broken regex) fails the gate.
+        original = _FakeCountTokenizer.encode
+
+        def drifting_encode(self, text, add_special_tokens=False):
+            count = text.count(" hello")
+            if count <= 1:
+                return [0] * (count + (1 if add_special_tokens else 0))
+            return [0] * (len(text) + 1)
+
+        _FakeCountTokenizer.encode = drifting_encode
+        try:
+            with _patched_transformers():
+                with self.assertRaises(RuntimeError) as raised:
+                    probe_mei.exact_prompt(Path("/fake/tokenizer-dir"), 100)
+        finally:
+            _FakeCountTokenizer.encode = original
+        self.assertIn("expected 100", str(raised.exception))
 
 
 class WrapperStatusTests(unittest.TestCase):

@@ -480,7 +480,15 @@ def run_self_test() -> int:
 def exact_prompt(tokenizer_path: Path, target: int) -> str:
     from transformers import AutoTokenizer  # type: ignore[import-not-found]
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=False)
+    # fix_mistral_regex silences transformers' incorrect-regex warning for
+    # Mistral-derived tokenizer.json files (the P0 matrix's Qwen-lineage
+    # tokenizers ship that broken pre-tokenizer pattern) and applies the
+    # corrected pre-tokenizer when the broken pattern is present; it is a
+    # no-op for every other tokenizer, so trust_remote_code=False and the
+    # token-count semantics below are preserved.
+    tokenizer = AutoTokenizer.from_pretrained(
+        tokenizer_path, trust_remote_code=False, fix_mistral_regex=True
+    )
     unit = " hello"
     if len(tokenizer.encode(unit, add_special_tokens=False)) != 1:
         raise RuntimeError("the exact-token prompt unit is not one token for this tokenizer")
