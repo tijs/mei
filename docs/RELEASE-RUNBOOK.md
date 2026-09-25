@@ -56,7 +56,12 @@ bash scripts/prepare_metallib.sh <scratch>/release
 
 `prepare_metallib.sh` provisions `mlx.metallib` from a version-matched Python
 mlx wheel, because the local Xcode lacks the metallib archiver. The bundle is
-useless without it.
+useless without it. Point `MEI_VMLX_CHECKOUT` at the pinned vmlx-swift
+checkout so the script derives the vendored MLX version from its
+`mlx-version.h` (0.32.2 at this pin; it falls back to 0.32.2 without one).
+The mlx 0.32.2 Python wheel bundles no Metal library, so at this pin supply
+`MEI_METALLIB_SOURCE` with a verified 0.32.2 artifact or use the compile
+fallback on a machine with the archiver.
 
 ## 3. Verify before tagging
 

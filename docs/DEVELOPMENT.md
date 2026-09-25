@@ -70,7 +70,8 @@ scripts/test_package_release.sh         # packaging/install/version smoke checks
 ```
 
 `package_release.sh` builds the release binary, provisions the
-version-matched Metal library (mlx 0.31.1), assembles the bundle, tars it with
+version-matched Metal library (derived from the pinned vmlx checkout's
+`mlx-version.h`; 0.32.2 at the 0.6.0 pin), assembles the bundle, tars it with
 a stable member order, and emits the SHA-256 checksum. It verifies the binary
 is arm64 and reports exactly `mei <version>` before packaging.
 `test_package_release.sh` validates the tarball/checksum round-trip, extracted
@@ -85,9 +86,13 @@ Xcode's `metallib` archiver, which is not installed on this machine).
 `scripts/prepare_metallib.sh` provisions a prebuilt `mlx.metallib` next to the
 release binary:
 
-- prefers a wheel whose mlx version matches the vendored `0.31.1`
-  (`Source/Cmlx/include-framework/mlx-version.h`) — the exact version-matched
-  artifact, since kernels are looked up by name at runtime
+- derives the vendored mlx version from the pinned checkout's
+  `Source/Cmlx/include-framework/mlx-version.h` (`MEI_VMLX_CHECKOUT`; falls
+  back to 0.32.2 — the 0.6.0 pin's MLX — when no header is readable) and
+  prefers a wheel whose mlx version matches that derived version exactly —
+  the exact version-matched artifact, since kernels are looked up by name at
+  runtime. A stale 0.31.1 wheel is no longer treated as exact against the
+  0.6.0 pin; it provisions only with an explicit mismatch warning
 - verifies every candidate structurally (MTLB magic, size, `file`
   classification) before installing — never a blind copy
 - records provenance in `mlx.metallib.provenance` next to the artifact
@@ -95,6 +100,14 @@ release binary:
 
 The definitive verification is runtime: the server loads the library at
 startup and fails loudly if kernels are missing.
+
+Note for the 0.6.0 pin: the mlx 0.32.2 macOS wheel bundles no compiled Metal
+library (verified from the installed wheel), so `uv pip install mlx==0.32.2`
+alone yields no metallib. At this pin the release needs either a
+`MEI_METALLIB_SOURCE` artifact verified against the derived 0.32.2 or a
+machine with Xcode's `metal`/`metallib` archiver for the compile fallback;
+the script reports this truthfully instead of silently falling back to the
+old 0.31.1 library.
 
 ## vMLX fork pin and workflow
 
