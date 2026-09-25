@@ -11,7 +11,7 @@ explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
 - Mei side pin: `ServerConfig.version = "0.5.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  HEAD `950e8c2fdfa13ca6ed1dbfbd7794abc96705553a` (2026-09-14).
+  HEAD `2be7975fa2d9aece040e7d473fbfbef3aee3b3a0` (2026-09-25).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
 
 ## 1. Official reference pin
