@@ -11,7 +11,7 @@ explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
 - Mei side pin: `ServerConfig.version = "0.6.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  HEAD `13087635d293524971339fef6762d8092b1510c0` (2026-09-25, the 0.6.0 release commit).
+  release tag `v0.6.0` (2026-09-25).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
 
 ## 1. Official reference pin
