@@ -2,6 +2,74 @@
 
 All notable changes to Mei are documented here.
 
+## [0.6.0] - 2026-09-25
+
+The CoCore attached-engine integration is fixed, every model gets the
+alignment warning, the release tooling stopped packaging stale binaries, and
+the vmlx engine advances to the pushed fork `main`.
+
+### Fixed
+
+- **Nested OpenAI `tool_choice` function names are honored.** The OpenAI
+  forced form `{"type": "function", "function": {"name": ...}}` puts the name
+  inside `function`; Mei only read a top-level `name`, so a client forcing a
+  tool that way — CoCore's attached-engine canary included — never pinned the
+  call (`tool_choice` became `required` with no name to bind to), and the
+  model was not advertised for tool-calling jobs. The nested `function.name`
+  is now read when no top-level `name` is present, so the forced canary is
+  actually pinned to `report_status` and passes (commit `2be7975`, covered by
+  `OpenAITypesTests.testCoCoreForcedToolCanaryPinsReportStatus`).
+  `response_format` remains **unsupported**: the structured-output canary
+  still fails by design, and CoCore does not advertise schema jobs for Mei.
+- **Alignment warnings for every model, not only declared profiles.** The
+  misaligned-weights warning was gated behind a per-profile
+  `requiresAlignedWeights` flag that not every profile set, so a community
+  quant crashed with no explanation when realignment would not fit — measured
+  up to a hard Metal OOM on a 32 GB machine (18.2 GB of realignment on top of
+  20 GB of weights). Startup now checks alignment for every model and, for
+  profiles that declare it, still says which repack the settings were
+  measured on (commit `50fd9ab`).
+
+### Changed
+
+- **vmlx-swift re-pinned** `44461ffd` -> `fef563a5`, the pushed `main` of
+  [`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift). The fork `main`
+  integrated two upstream syncs plus the Bonsai 2 Prism-Hadamard work
+  (default-off gated, integrated by `f1c428d1`) and the `quantization_config`
+  alias — 151 commits past the old pin (133 upstream, 18 fork-side), with the
+  MLX C++ submodule at 0.32.2 (was 0.31.1 at the 0.4.2-era pin). The upstream
+  side brings Spark 2.5 prefill fusion, rotating-cache boundary snapshot
+  reuse, MiMo V2.6, ModernBERT and Linux CI builds. That is
+  **upstream-integrated, not Mei-validated**: no model Mei serves has a
+  profile for those additions, and Mei's acceptance matrix is unchanged. This
+  is a different line than the sync `23551729` prepared and held back during
+  0.5.0 (that commit is not an ancestor of the new pin). Every
+  Mei-maintained fork commit — including the former local-only `318a4e68` —
+  is now in the pushed fork `main`, so a pure source build of this tag needs
+  no local SwiftPM edit.
+
+### Release tooling
+
+- `scripts/package_release.sh` refuses to package a binary older than the
+  sources it ships (commit `a860630`): during 0.5.0, `--skip-build` packaged
+  a previous-day binary that contained none of the release and printed
+  "packaging OK".
+- The release runbook now asserts instead of observing (commit `68decd5`):
+  `git merge-base --is-ancestor v<tag> main` finishes the merge-back step,
+  because `git checkout main` can fail inside a release worktree and the
+  subsequent merge reports "Already up to date" while pushing an untouched
+  ref — three false successes 0.5.0 hit.
+
+### Docs
+
+- README rewritten around the models actually served: it names the model to
+  take (Qwen3.6 35B-A3B text-only), stops calling Ornith the default, and
+  cuts stale history (commits `5d5ab55`, `b766dad`, `fd39794`).
+- The OpenAI-compatible Chat Completions contract is frozen in
+  `docs/OPENAI-COMPATIBILITY.md` and the CoCore attached-engine integration
+  documented in `docs/COCORE.md` (commits `e795592`, `2be7975`, `bdf99d8`).
+- `AGENTS.md` is trimmed to a project guide (commit `950e8c2`).
+
 ## [0.5.0] - 2026-09-12
 
 Pick your model by name and get the settings we measured for it.

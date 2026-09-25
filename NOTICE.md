@@ -13,17 +13,18 @@ Mei depends on the public Mei-maintained fork
 fork revision:
 
 ```text
-91fed8be21319f92ce5220622c6dcde0b851bdae
+fef563a55b4f22d4530b3439c1edb233cfc44a8f
 ```
 
-The fork's `main` contains five separate Mei-maintained commits ported from
-the former local patch queue. A sixth Mei-maintained commit
-(`318a4e68`, rotating/companion stripped-boundary reuse fix for Gemma 4)
-exists **only in the local fork checkout** and is not yet pushed; the
-`0.2.0` release's packaged binary includes it (built from a local SwiftPM edit),
-but an external source-only build of the tag is not fully source-reproducible
-until the fork advances. They remain clearly attributable to Mei and have not
-been represented as upstream-accepted changes. See
+The fork's `main` contains all Mei-maintained commits ported from the former
+local patch queue — including `318a4e68` (rotating/companion stripped-boundary
+reuse fix for Gemma 4) — plus the Laguna model fixes, the cache
+boundary-capture fixes, the Bonsai 2 Prism-Hadamard work (default-off gated)
+and the `quantization_config` alias. Every one of them is pushed to the
+public fork, so an external source-only build of this tag resolves the same
+engine the release was built from, with no unpublished local state. They
+remain clearly attributable to Mei and have not been represented as
+upstream-accepted changes. See
 [`docs/VMLX-FORK.md`](docs/VMLX-FORK.md) for the commit mapping
 and upstream PR workflow.
 

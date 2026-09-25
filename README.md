@@ -19,12 +19,17 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.5.0**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.6.0**.
 
-**0.5.0** — `--model-profile <name>` loads the settings measured for a supported
-model (architecture handling, prefill step, anchor boundaries, generation cap),
-and `mei pull <name>` fetches its pinned revision and verifies the weights are
-the artifact those settings were measured on. Earlier releases fixed prefix
+**0.6.0** — the CoCore attached-engine integration is fixed: the nested
+OpenAI `tool_choice` form is honored, so the forced tool-calling canary pins
+`report_status` and passes (`response_format` remains unsupported by design),
+and the vmlx fork re-pins to its pushed `main` (MLX C++ 0.32.2). 0.5.0's
+headline feature — `--model-profile <name>` loads the settings measured for a
+supported model (architecture handling, prefill step, anchor boundaries,
+generation cap), and `mei pull <name>` fetches its pinned revision and
+verifies the weights are the artifact those settings were measured on — is
+unchanged. Earlier releases fixed prefix
 reuse, added cross-conversation prefix anchors and per-request instrumentation:
 see **[CHANGELOG.md](CHANGELOG.md)**.
 
@@ -127,7 +132,7 @@ pull` handles this; details in [docs/MODELS.md](docs/MODELS.md).
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.5.0)
+## Install on Apple Silicon (stable 0.6.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -135,10 +140,10 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.5.0
+mei --version     # -> mei 0.6.0
 ```
 
-**Manual — release asset:** download `mei-0.5.0-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.6.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
@@ -213,7 +218,7 @@ mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
 mlx-community/Qwen3.6-35B-A3B-4bit = http://127.0.0.1:8024
 ```
 
-Mei 0.5.0 passes the tool canary (the forced nested `tool_choice` name is
+Mei 0.6.0 passes the tool canary (the forced nested `tool_choice` name is
 pinned to `report_status`) and **fails the structured-output canary by
 design** — `response_format` is not implemented, so CoCore simply does not
 advertise schema jobs for it. Full detail (endpoints, transport, canary

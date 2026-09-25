@@ -1,6 +1,6 @@
 # CoCore attached-engine integration
 
-This document records how Mei (0.5.0) interoperates with the
+This document records how Mei (0.6.0) interoperates with the
 [CoCore](https://github.com/graze-social/cocore) agent's **attached engine**
 mode, shipped in
 [graze-social/cocore PR #237](https://github.com/graze-social/cocore/pull/237)
@@ -9,7 +9,7 @@ mlx_lm) + per-model admission gate", merged as commit
 `0151475bf8c98de10a64cab51c23a46dd84a8fe1`). CoCore's authoritative
 description of the same feature is `docs/attached-engine.md` in that
 repository; this page is the Mei-side mirror: what Mei must serve, what
-CoCore proves at startup, what the canaries expect, and what Mei 0.5.0
+CoCore proves at startup, what the canaries expect, and what Mei 0.6.0
 deliberately does not deliver yet. The wire contract Mei implements is
 frozen in **[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md)**; this
 page assumes it.
@@ -26,7 +26,7 @@ Mei runs as **one server per model process**. For the CoCore recipe on
 Apple Silicon (from PR #237):
 
 ```bash
-brew install tijs/tap/mei                 # mei 0.5.0
+brew install tijs/tap/mei                 # mei 0.6.0
 mei pull qwen3.6-35b-a3b-text              # ~19 GB, pinned revision, verified
 mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
     --model-profile qwen3.6-35b-a3b-text \
@@ -137,7 +137,7 @@ Exactly what CoCore sends (`tool_canary_body` in `engines/openai_http.rs`):
 }
 ```
 
-- **Mei 0.5.0 passes** this canary. The request uses the standard nested
+- **Mei 0.6.0 passes** this canary. The request uses the standard nested
   OpenAI forced `tool_choice` shape; Mei's `MessageMapping.additionalContext`
   reads both a top-level `name` and the nested `function.name`, so the
   template context receives `tool_choice = "required"` and
@@ -181,7 +181,7 @@ Also exactly as CoCore sends it (`structured_output_canary_body`):
 - The prompt deliberately begs for prose so a server that **silently drops
   `response_format`** answers in sentences and **fails** the canary instead
   of passing by luck.
-- **Mei 0.5.0 intentionally does not implement `response_format`.** It has no
+- **Mei 0.6.0 intentionally does not implement `response_format`.** It has no
   decoder path for the field (unknown fields are silently ignored per the
   compatibility contract §3/§7), so it answers in free text, HTTP 200 — the
   canary **fails**, which is the correct outcome.
@@ -231,7 +231,7 @@ saturated the job is refused up front with HTTP 503 `no-capacity`.
 | `engine-map-invalid` fault | Map URL must be the **server root** without `/v1` (a trailing `/v1` is rejected), `http://` only, one `model = url` per line. |
 | Readiness passes but jobs 404 | Map URL has a path prefix; CoCore appends `/v1/...` itself, so the prefix must sit before `/v1` (e.g. `http://127.0.0.1:8024/llm`). |
 | Model not advertised / model miss | Engine-map key must **exactly equal** the served id. Read it from `GET /v1/models` or the startup line `mei: no --served-model-id given; serving as …`; then `mei --served-model-id <that id>`. |
-| `structured-output-unsupported` on schema jobs | **Expected on Mei 0.5.0** — `response_format` is not implemented, the canary failed by design. Free-text/tool jobs unaffected. |
+| `structured-output-unsupported` on schema jobs | **Expected on Mei 0.6.0** — `response_format` is not implemented, the canary failed by design. Free-text/tool jobs unaffected. |
 | `engine-busy` refusals | Gate is full (1 running + 1 queued). One model per process — start another `mei` on its own port for more concurrency. |
 | Job times out waiting for first token | First-token budget is 300 s. Cold prefill of a 20k-token system+tools prompt can take ~50 s; if it exceeds the budget, the model is not actually ready — watch `mei:` startup logs. |
 | Tool canary fails intermittently | `tool_choice` is now pinned to `report_status` in Mei (nested `function.name` extraction); verify with the regression test. Template-level forced-call fidelity still depends on the model. |

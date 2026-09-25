@@ -10,7 +10,7 @@ labeled with the exact source location; anything not yet pinned by tests is
 explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
-- Mei side pin: `ServerConfig.version = "0.5.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
+- Mei side pin: `ServerConfig.version = "0.6.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
   HEAD `2be7975fa2d9aece040e7d473fbfbef3aee3b3a0` (2026-09-25).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
 
@@ -214,7 +214,7 @@ frame; unknown JSON fields never error.
 `max_completion_tokens`; the latter bounds visible + reasoning tokens; upstream
 does not document the both-supplied conflict (§1 open ambiguity).
 
-**Shipped (Mei 0.5.0):**
+**Shipped (Mei 0.6.0):**
 - Only `max_tokens` is decoded (`OpenAITypes.swift:228,244,299`).
 - `max_completion_tokens` has **no code path anywhere** in `Sources/` or
   `Tests/` (verified by whole-tree search, 2026-09-23). Because unknown keys are
