@@ -84,6 +84,22 @@ Do not tag on "it builds". At minimum:
   byte comparison between runs means anything.
 - Change exactly one variable between the legs of any comparison. A control that
   differs in three ways will produce a confident wrong answer.
+- If the vmlx pin moved, **run a throughput gate, not just a correctness gate.**
+  A re-pin can turn an upstream default on under a model family while every
+  probe still passes and decode quietly drops. 0.6.0 shipped exactly that:
+  upstream #455 made compiled routed-MoE decode the default for text-only
+  `qwen3_5_moe`, an experiment this repo had already measured at −9.7% short
+  decode and rejected. So, for every pinned contender and both context lengths
+  (short and loaded), run before/after legs of the **same binary** with only the
+  switch moved — `VMLX_QWEN35_COMPILE_DECODE_REGIONS=0` for the text-only
+  qwen3_5_moe path, `VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0` for the region itself —
+  round-robin the legs, warm up first, n≥10, quiet machine, and keep the same
+  binary, kernels, model revision, chat template and generation settings.
+  Every `server.log` now prints the effective value of these switches at
+  startup (`mei: vmlx switch … (source operator|mei-profile|upstream-default)`),
+  so an untouched default that flips on a re-pin is visible in the log instead
+  of being inferred from timings afterwards. Record the gate's numbers with the
+  release; a result that is not written down is a result the next pin re-learns.
 - If the vmlx pin moved and any config uses `VMLX_ENABLE_UNSAFE_COMPILE=1`,
   re-verify greedy token equality on the new pin. That flag's documented failure
   mode is silent numerical corruption, and its risk is version-dependent.
