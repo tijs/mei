@@ -11,7 +11,7 @@ pinned `vmlx-swift` fork engine and serves the OpenAI `chat/completions`
 surface. The high-level flow:
 
 1. **Startup** — the CLI parses `--model-dir`, `--served-model-id`,
-   `--optimization-profile`, and the context/memory/cache options; loads the
+   `--model-profile`, and the context/memory/cache options; loads the
    model's `config.json` and `.safetensors`; provisions the Metal kernel
    library (`mlx.metallib`, vmlx loads it from the executable's directory
    first); prints the post-load footprint.
@@ -34,30 +34,42 @@ The launch scripts (`scripts/start_mei_server.sh`, `stop_mei_server.sh`) run an
 isolated runtime: dedicated port 8024, own logs/build/model staging under
 `~/.local/share/local-model-bench/mei-*`.
 
-## Optimization profiles
+## Model profile and architecture profile
 
-`--optimization-profile auto|generic|ornith`:
+`--model-profile <name>` names one of the models whose settings were measured
+here and loads them together (prefill step, SSM anchors, max tokens). The
+registered names are the ones `mei pull` lists:
 
-| Profile | `--prefill-step-size` | Fused gate/up cache | Notes |
-|---|---|---|---|
-| `auto` | detects validated `qwen3_5_moe` metadata → Ornith behavior; else generic | per model | Reads the local model's `config.json`; unknown/malformed metadata stays generic |
-| `generic` | 64 (default) | unchanged | Default fallback |
-| `ornith` | 512 | **disabled before model load** | The validated Ornith path |
+| Name | Repo |
+| --- | --- |---|
+| `ornith-1.5-35b-a3b` | `ornith-ai/Ornith-1.5-35B-A3B` (MLX 4-bit) |
+| `qwen3.6-35b-a3b` | `mlx-community/Qwen3.6-35B-A3B-4bit` (vision tower) |
+| `qwen3.6-35b-a3b-text` | `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly` |
 
-Ornith (and the Ornith-profile only) uses prefill step 512 and disables the
-fused gate/up cache before model loading — this is what meets the >=30 tok/s
-goal. `generic` uses prefill step 64 and leaves that cache unchanged.
-Compiled decode, rotating-KV quantization, bounded windows, and SSM anchors
-remain default-off. Per-model recommendation is in
-[`docs/MODELS.md`](MODELS.md).
+Omit the flag and the **architecture** profile is resolved from the model's own
+`config.json`: validated `qwen3_5_moe` metadata gets Ornith behavior, anything
+else (or unreadable metadata) stays generic. Those defaults are safe but not
+tuned, and the server says so at startup.
+
+The architecture profile itself decides only two things:
+
+| Architecture profile | `--prefill-step-size` | Fused gate/up cache |
+| --- | --- | --- |
+| Ornith (`qwen3_5_moe`) | 512 (a named model may override, e.g. `ornith-1.5-35b-a3b` uses 1024) | **disabled before model load** |
+| generic | 64 | unchanged |
+
+Explicit flags always win over a named profile. Compiled decode, rotating-KV
+quantization, bounded windows, and SSM anchors remain default-off. Per-model
+recommendation is in [`docs/MODELS.md`](MODELS.md).
 
 ## Chunked prefill
 
 `GenerateParameters.prefillStepSize` is always on — the long-context safeguard
 for hybrid (GatedDelta) architectures; the Python serving wrappers this project
 replaces lacked it. The window is set with `--prefill-step-size` (default 64
-for generic; the auto/Ornith profile uses 512 for validated
-`qwen3_5_moe`; gemma4 bundles default to a measured 256). `--compiled-decode`
+for generic; the auto-detected Ornith profile uses 512 for validated
+`qwen3_5_moe` unless a named model profile overrides it; gemma4 bundles default
+to a measured 256). `--compiled-decode`
 and `--compiled-decode-threshold` gate the graph-traced compiled decode;
 skipping the upstream default promptOffset-sized trace avoids a multi-minute
 prefill tax at 45K.

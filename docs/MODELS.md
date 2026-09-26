@@ -55,7 +55,7 @@ alone gives the **raw** checkpoint, which is correctness-capable but **not**
 the measured >=30 tok/s path.
 
 **M1 / 32 GB launch settings (validated):** env
-`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--optimization-profile ornith`,
+`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--model-profile ornith-1.5-35b-a3b`,
 `--context-cap 65536`, `--prefill-step-size 512`,
 `--memory-limit-bytes 30000000000` (explicitly above the ~22.4 GB MLX default,
 which can hang the 35B working set), user-local `--kv-cache-dir`,
@@ -84,7 +84,7 @@ mkdir -p "$HOME/.cache/mei/runtime/kv"
 VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
   --model-dir        "$ALIGNED_DIR" \
   --served-model-id  "$MODEL_ID" \
-  --optimization-profile ornith \
+  --model-profile ornith-1.5-35b-a3b \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
@@ -119,7 +119,7 @@ quantization) are **not** part of this preset and remain off/unvalidated.
 ### Qwen3.6 — exploratory candidate
 
 **M1 / 32 GB launch settings (measured candidate path):** env
-`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--optimization-profile auto`,
+`VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0`, `--model-profile qwen3.6-35b-a3b`,
 `--prefill-step-size 512`, explicit `--memory-limit-bytes 30000000000` for the
 32 GB target, user-local `--kv-cache-dir`, `--max-tokens 32768`, sampling
 `0.6/0.95/20`, `--emit-reasoning true --cache-reuse true

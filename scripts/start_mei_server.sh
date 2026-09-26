@@ -25,7 +25,7 @@ if [[ -z "${MEI_MODEL_DIR:-}" && -d "$HOME/.local/share/local-model-bench/mei-mo
   MODEL_DIR="$HOME/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
 fi
 SERVED_MODEL_ID="${MEI_SERVED_MODEL_ID:-ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit}"
-OPTIMIZATION_PROFILE="${MEI_OPTIMIZATION_PROFILE:-auto}"
+MODEL_PROFILE="${MEI_MODEL_PROFILE:-}"
 PORT="${MEI_PORT:-8024}"
 CONTEXT_CAP="${MEI_CONTEXT_CAP:-65536}"
 MAX_TOKENS="${MEI_MAX_TOKENS:-32768}"
@@ -54,10 +54,10 @@ Usage: start_mei_server.sh [options]
 The full launch configuration is expressed through MEI_* environment
 variables (see the script); the bench config yaml sets them explicitly.
 
-Optimization profiles:
-  MEI_OPTIMIZATION_PROFILE=auto    detect qwen3_5_moe as Ornith, else generic
-  MEI_OPTIMIZATION_PROFILE=generic force conservative non-Ornith defaults
-  MEI_OPTIMIZATION_PROFILE=ornith  force the validated Ornith profile
+Model profile:
+  MEI_MODEL_PROFILE=<name>     name the served model and get its measured
+                               settings (names: `mei pull` with no argument).
+                               Unset = architecture defaults: safe, not tuned.
 
 Disk safety:
   MEI_MIN_FREE_GIB=20          refuse launch below this free-space floor
@@ -72,6 +72,16 @@ while [[ $# -gt 0 ]]; do
     *) echo "FATAL: unknown option $1" >&2; exit 2 ;;
   esac
 done
+
+# --optimization-profile no longer exists: it was replaced by --model-profile,
+# which takes a MODEL NAME, and `auto`/`generic`/`ornith` are not valid values.
+# The server rejects the old spelling outright, so any launch through the old
+# variable exited 2 before loading a model. Fail loudly rather than dropping the
+# operator's intent on the floor.
+if [[ -n "${MEI_OPTIMIZATION_PROFILE:-}" ]]; then
+  echo "FATAL: MEI_OPTIMIZATION_PROFILE is obsolete and ignored; the flag it fed (--optimization-profile) was removed from the server, so this script could not start. Use MEI_MODEL_PROFILE=<model name> (names: 'mei pull' with no argument), or unset it to run on architecture defaults." >&2
+  exit 2
+fi
 
 [[ -d "$MODEL_DIR" ]] || { echo "FATAL: model directory missing: $MODEL_DIR (run scripts/stage_model.sh)" >&2; exit 1; }
 [[ -f "$MODEL_DIR/config.json" ]] || { echo "FATAL: missing config.json: $MODEL_DIR/config.json" >&2; exit 1; }
@@ -113,13 +123,13 @@ MEI_VMLX_CHECKOUT="$BUILD_DIR/checkouts/vmlx-swift" \
   bash "$MEI_REPO/scripts/prepare_metallib.sh" "$BUILD_DIR/release" || { echo "FATAL: missing Metal kernel library" >&2; exit 1; }
 
 ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
-  --optimization-profile "$OPTIMIZATION_PROFILE"
   --host 127.0.0.1 --port "$PORT"
   --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
   --temperature "$TEMPERATURE" --top-p "$TOP_P" --top-k "$TOP_K"
   --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
   --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
   --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+[[ -n "$MODEL_PROFILE" ]] && ARGS+=(--model-profile "$MODEL_PROFILE")
 [[ -n "$PREFILL_STEP_SIZE" ]] && ARGS+=(--prefill-step-size "$PREFILL_STEP_SIZE")
 [[ -n "$COMPILED_DECODE_THRESHOLD" ]] && ARGS+=(--compiled-decode-threshold "$COMPILED_DECODE_THRESHOLD")
 [[ "$MAX_KV_WINDOW" != "0" && -n "$MAX_KV_WINDOW" ]] && ARGS+=(--max-kv-window "$MAX_KV_WINDOW")
