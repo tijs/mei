@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Provision MLX's Metal kernel library (mlx.metallib) next to the mei binary.
 #
-# vmlx-swift's SwiftPM build does NOT emit a compiled Metal kernel library:
-# the vendored mlx ships kernels as .metal sources that need Xcode's
-# `metallib` archiver to compile, and on this machine that archiver component
-# is NOT installed (xcrun -find metallib fails; Xcode 26.6 without the tool).
-# The fallback is a prebuilt mlx.metallib from a Python mlx wheel.
+# SwiftPM's Xcode build system emits mlx-swift_Cmlx.bundle/default.metallib
+# (under Contents/Resources on macOS) when the Metal Toolchain is installed.
+# Prefer that build product over cached/wheel libraries. The legacy native
+# build system may require an explicitly supplied library or wheel fallback.
 #
 # Version compatibility matters: vmlx-swift vendors a pinned MLX C++ version
 # (Source/Cmlx/include-framework/mlx-version.h; Mei's 0.6.0 pin fef563a5
@@ -21,13 +20,13 @@
 #
 # Search order:
 #   1. $MEI_METALLIB_SOURCE if set and readable (explicit user pin)
-#   2. an existing colocated mlx.metallib (no-op; already provisioned)
-#   3. a Python mlx wheel whose version equals the derived vendored version,
+#   2. the Cmlx resource bundle in $MEI_METALLIB_BUILD_DIR (default DEST_DIR)
+#   3. an existing colocated mlx.metallib (no-op; already provisioned)
+#   4. a Python mlx wheel whose version equals the derived vendored version,
 #      preferring a venv whose name tags that version (metallib-src/.venv-0322)
-#   4. a wheel in the same minor series (major.minor of the derived version)
-#   5. any other adjacent-version wheel, with an explicit warning
-#   6. compile via vmlx-swift's prepare-mlx-metal.sh (needs metal+metallib;
-#      verified unavailable on this machine)
+#   5. a wheel in the same minor series (major.minor of the derived version)
+#   6. any other adjacent-version wheel, with an explicit warning
+#   7. compile via vmlx-swift's prepare-mlx-metal.sh (needs metal+metallib)
 #
 # Every candidate is verified structurally (MTLB magic + size + `file`
 # classification) before install, and a provenance sidecar records the source
@@ -38,6 +37,7 @@ set -euo pipefail
 
 DEST_DIR="${1:?usage: prepare_metallib.sh DEST_DIR}"
 CHECKOUT="${MEI_VMLX_CHECKOUT:-$HOME/.local/share/local-model-bench/mei-build/checkouts/vmlx-swift}"
+BUILD_PRODUCT_DIR="${MEI_METALLIB_BUILD_DIR:-$DEST_DIR}"
 
 # Derive the vendored MLX version from the vmlx-swift checkout's
 # mlx-version.h when readable (the version the C++ runtime is built against at
@@ -96,6 +96,10 @@ provision_from() {
       echo "installed_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
       echo "vendored_mlx: $VENDORED_MLX_VERSION"
       echo "vendored_mlx_source: $VENDORED_MLX_SOURCE"
+      echo "sha256: $(shasum -a 256 "$DEST" | awk '{print $1}')"
+      if [[ -d "$CHECKOUT" ]]; then
+        echo "vmlx_checkout_revision: $(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo unknown)"
+      fi
       if [[ -n "$warn" ]]; then
         echo "warning: $warn"
       fi
@@ -118,7 +122,24 @@ if [[ -n "${MEI_METALLIB_SOURCE:-}" ]]; then
   exit 1
 fi
 
-# 2) Already provisioned and structurally intact: no-op — unless its provenance
+# The freshly built resource bundle takes precedence even over a structurally
+# valid colocated library: the latter may belong to an older fork revision.
+for built_library in \
+  "$BUILD_PRODUCT_DIR/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" \
+  "$BUILD_PRODUCT_DIR/mlx-swift_Cmlx.bundle/default.metallib"; do
+  [[ -f "$built_library" ]] || continue
+  if provision_from "$built_library" "SwiftPM Cmlx build product"; then
+    exit 0
+  fi
+  echo "FATAL: invalid Cmlx build product: $built_library; rebuild before provisioning" >&2
+  exit 1
+done
+if [[ -n "${MEI_METALLIB_BUILD_DIR:-}" ]]; then
+  echo "FATAL: no Cmlx metallib in $BUILD_PRODUCT_DIR; build with Xcode's Metal Toolchain or set MEI_METALLIB_SOURCE explicitly" >&2
+  exit 1
+fi
+
+# Already provisioned and structurally intact: no-op — unless its provenance
 # names a different vendored MLX. Build dirs are reused across vmlx pins, so a
 # library provisioned for 0.31.1 would otherwise keep serving a 0.32.2 runtime.
 PROVISIONED_FOR=""
@@ -199,7 +220,7 @@ for env_root in "${WHEEL_CANDIDATES[@]}"; do
 done
 
 if [[ -n "$BEST_SOURCE" ]]; then
-  warn=""
+  warn="Using a stock Python wheel rather than the Cmlx build product; matching MLX versions do not establish fork kernel identity."
   if [[ "$BEST_SCORE" -lt 5 ]]; then
     warn="mlx wheel version ${BEST_VERSION:-unknown} does not match vendored mlx $VENDORED_MLX_VERSION; kernels are looked up by name at runtime and may be missing. Install mlx==$VENDORED_MLX_VERSION into a scratch venv for a version-matched artifact."
   fi

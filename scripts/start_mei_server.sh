@@ -109,7 +109,8 @@ echo "mei: building (release, scratch: $BUILD_DIR) ..." | tee -a "$LOG_DIR/start
 }
 BIN="$BUILD_DIR/release/mei"
 [[ -x "$BIN" ]] || { echo "FATAL: built binary missing at $BIN" >&2; exit 1; }
-bash "$MEI_REPO/scripts/prepare_metallib.sh" "$BUILD_DIR/release" || { echo "FATAL: missing Metal kernel library" >&2; exit 1; }
+MEI_VMLX_CHECKOUT="$BUILD_DIR/checkouts/vmlx-swift" \
+  bash "$MEI_REPO/scripts/prepare_metallib.sh" "$BUILD_DIR/release" || { echo "FATAL: missing Metal kernel library" >&2; exit 1; }
 
 ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
   --optimization-profile "$OPTIMIZATION_PROFILE"

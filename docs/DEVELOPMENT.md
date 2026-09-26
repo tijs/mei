@@ -31,6 +31,8 @@ drivers to `local-model-bench/runner/` in a read-only boundary.
 ## Build
 
 ```bash
+# One-time setup if `xcrun metal --version` reports a missing toolchain:
+xcodebuild -downloadComponent MetalToolchain
 swift package resolve
 swift build            # debug
 swift test             # unit tests (acceptance tests need a live server)
@@ -45,7 +47,8 @@ deliberate decision that must re-run the whole acceptance suite.
 ## Put the built CLI on your PATH (user-local)
 
 ```bash
-scripts/prepare_metallib.sh .build/release   # Metal kernel lib the binary needs
+MEI_VMLX_CHECKOUT="$PWD/.build/checkouts/vmlx-swift" \
+  scripts/prepare_metallib.sh .build/release   # prefer the built Cmlx resource bundle
 scripts/install_mei.sh                       # -> $HOME/.local/bin/mei
 ```
 
@@ -69,9 +72,8 @@ scripts/package_release.sh 0.2.0 --skip-build
 scripts/test_package_release.sh         # packaging/install/version smoke checks
 ```
 
-`package_release.sh` builds the release binary, provisions the
-version-matched Metal library (derived from the pinned vmlx checkout's
-`mlx-version.h`; 0.32.2 at the 0.6.0 pin), assembles the bundle, tars it with
+`package_release.sh` builds the release binary, provisions the Metal library
+from the Cmlx resource bundle beside that binary, assembles the bundle, tars it with
 a stable member order, and emits the SHA-256 checksum. It verifies the binary
 is arm64 and reports exactly `mei <version>` before packaging.
 `test_package_release.sh` validates the tarball/checksum round-trip, extracted
@@ -80,34 +82,35 @@ blobs (`*.safetensors` / `*.gguf` / `*.bin`) are bundled.
 
 ## Metal kernel library (`mlx.metallib`)
 
-vmlx-swift's SwiftPM build does not emit the compiled Metal kernel library
-(the vendored mlx ships kernels as `.metal` sources; compiling them needs
-Xcode's `metallib` archiver, which is not installed on this machine).
-`scripts/prepare_metallib.sh` provisions a prebuilt `mlx.metallib` next to the
-release binary:
+With Xcode's Metal Toolchain installed, SwiftPM's Xcode build system emits
+`mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib` beside the binary
+(the flat bundle layout is also supported). `scripts/prepare_metallib.sh`
+copies this build product to the colocated `mlx.metallib` that MLX loads first,
+overwriting an older colocated library even if its MLX version is unchanged.
+Rebuild after changing the dependency pin; provisioning does not compile or
+validate the freshness of an arbitrary build directory.
 
-- derives the vendored mlx version from the pinned checkout's
-  `Source/Cmlx/include-framework/mlx-version.h` (`MEI_VMLX_CHECKOUT`; falls
-  back to 0.32.2 — the 0.6.0 pin's MLX — when no header is readable) and
-  prefers a wheel whose mlx version matches that derived version exactly —
-  the exact version-matched artifact, since kernels are looked up by name at
-  runtime. A stale 0.31.1 wheel is no longer treated as exact against the
-  0.6.0 pin; it provisions only with an explicit mismatch warning
-- verifies every candidate structurally (MTLB magic, size, `file`
-  classification) before installing — never a blind copy
-- records provenance in `mlx.metallib.provenance` next to the artifact
-- falls back to the compile path on machines that do have the archiver
+- `MEI_METALLIB_SOURCE` remains the highest-priority explicit override.
+- `MEI_METALLIB_BUILD_DIR` selects the binary's build-product directory when
+  provisioning elsewhere. If explicitly set, a missing bundle is fatal rather
+  than silently selecting a wheel. Packaging sets this to the selected binary's
+  directory, so release packaging is source-first and fail-closed.
+- Set `MEI_VMLX_CHECKOUT` to the checkout used for that build (especially with
+  custom scratch paths or `--binary`). The sidecar records the selected checkout
+  revision, derived MLX version, source path and installed library's SHA-256;
+  the checkout revision is context, not proof that an arbitrary artifact was
+  built from it.
+- Every candidate is structurally checked (MTLB magic, size, `file`
+  classification). An invalid build product fails rather than falling back.
+- Legacy standalone provisioning without an explicit build directory retains
+  existing-library/wheel fallbacks. Wheel use warns even on an MLX version
+  match: a version number does not establish fork kernel identity. Some wheel
+  installations have no bundled library; do not depend on them for releases.
 
-The definitive verification is runtime: the server loads the library at
-startup and fails loudly if kernels are missing.
-
-Note for the 0.6.0 pin: the mlx 0.32.2 macOS wheel bundles no compiled Metal
-library (verified from the installed wheel), so `uv pip install mlx==0.32.2`
-alone yields no metallib. At this pin the release needs either a
-`MEI_METALLIB_SOURCE` artifact verified against the derived 0.32.2 or a
-machine with Xcode's `metal`/`metallib` archiver for the compile fallback;
-the script reports this truthfully instead of silently falling back to the
-old 0.31.1 library.
+The precompiled library is only part of MLX's Metal code: quantized kernels
+also use runtime JIT compilation from embedded source. A stock wheel library
+does not imply that all fork kernel changes are absent. Runtime model probes
+remain required; a structural check or `mei --version` is not a kernel test.
 
 ## vMLX fork pin and workflow
 

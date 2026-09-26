@@ -118,7 +118,11 @@ mkdir -p "$BUNDLE_DIR/docs"
 # executable's directory first). Provision into the bundle bin/.
 METAL_TMP="$REPO/dist/.metallib-stage-$VERSION"
 rm -rf "$METAL_TMP"; mkdir -p "$METAL_TMP"
-MEI_METALLIB_SOURCE="${MEI_METALLIB_SOURCE:-}" "$REPO/scripts/prepare_metallib.sh" "$METAL_TMP"
+# Use the resource bundle built alongside this binary, never an unrelated wheel
+# discovered on the packaging machine. An explicit source remains an escape hatch.
+MEI_METALLIB_BUILD_DIR="$BIN_DIR" \
+  MEI_VMLX_CHECKOUT="${MEI_VMLX_CHECKOUT:-$REPO/.build/checkouts/vmlx-swift}" \
+  "$REPO/scripts/prepare_metallib.sh" "$METAL_TMP"
 cp -p "$METAL_TMP/mlx.metallib" "$BUNDLE_DIR/bin/mlx.metallib"
 # default.metallib is byte-identical to mlx.metallib (vmlx probes mlx.metallib
 # first); shipping one avoids doubling the ~125MB Metal library. Provenance
