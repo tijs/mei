@@ -19,6 +19,7 @@
 #     truthfully instead of silently skipping
 #   - MEI_METALLIB_SOURCE override still wins over every wheel candidate
 #   - an already-provisioned, structurally valid dest is a no-op
+#   - ...unless its provenance names a different vendored MLX version
 #
 # Usage: scripts/test_prepare_metallib.sh
 set -u
@@ -161,6 +162,20 @@ if [[ "$rc" -eq 0 ]] && grep -q 'already present and verified' "$T/run-dest-noop
   ok "already-provisioned valid metallib is a no-op"
 else
   bad "no-op path (rc=$rc): $(cat "$T/run-dest-noop/stdout" "$T/run-dest-noop/stderr")"
+fi
+
+# --- 9. a dest provisioned for another MLX version is re-provisioned ---------
+mkdir -p "$T/dest-stale"
+cp "$source_fixture" "$T/dest-stale/mlx.metallib"
+printf 'source: old\nvendored_mlx: 0.31.1\n' > "$T/dest-stale/mlx.metallib.provenance"
+make_wheel_env "$T/h9" "0.32.2" "$source_fixture"
+rc=$(run_prepare "$T/dest-stale" "$T/co-0322e" "$T/h9")
+if [[ "$rc" -eq 0 ]] && grep -q 'provisioned for mlx 0\.31\.1' "$T/run-dest-stale/stderr" \
+   && grep -q '^vendored_mlx: 0\.32\.2$' "$T/dest-stale/mlx.metallib.provenance" \
+   && grep -q 'version 0\.32\.2' "$T/dest-stale/mlx.metallib.provenance"; then
+  ok "metallib provisioned for 0.31.1 is replaced under a 0.32.2 pin"
+else
+  bad "stale-version dest kept (rc=$rc): $(cat "$T/run-dest-stale/stdout" "$T/run-dest-stale/stderr")"
 fi
 
 echo
