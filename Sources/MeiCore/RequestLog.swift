@@ -15,6 +15,14 @@ import Foundation
 /// shape is covered — non-streaming chat, streaming chat (which reports
 /// usage only when the client asks for it), and `/v1/completions`.
 ///
+/// `finalize_ms` splits the post-token tail out of `wall_ms`: the time from
+/// vmlx's `.info` (generation complete) to the producer's stream end, which is
+/// the GPU drain plus the cache store plus the advisor drain. A streaming client
+/// is answered at `.info`, so `finalize_ms` is work the client no longer waits
+/// for; `wall_ms - prefill_ms - generate_ms - finalize_ms` is the remaining
+/// non-generation overhead. Only the streaming path measures it, so 0 means
+/// "not measured here", not "no tail".
+///
 /// Deliberately a plain appended file rather than a structured logger: the
 /// consumer is a benchmark script, the volume is a few hundred lines per
 /// suite, and a partially written run must never lose the lines before it.
@@ -33,12 +41,12 @@ public enum RequestLog {
         let dir = (path as NSString).deletingLastPathComponent
         if !dir.isEmpty { try? fm.createDirectory(atPath: dir, withIntermediateDirectories: true) }
         if !fm.fileExists(atPath: path) { fm.createFile(atPath: path, contents: nil) }
-        guard let h = FileHandle(forWritingAtPath: path) else {
+        guard let fileHandle = FileHandle(forWritingAtPath: path) else {
             FileHandle.standardError.write(Data("mei: could not open --request-log at \(path); request logging disabled\n".utf8))
             return
         }
-        h.seekToEndOfFile()
-        handle = h
+        fileHandle.seekToEndOfFile()
+        handle = fileHandle
         startedAt = Date()
     }
 
@@ -59,7 +67,7 @@ public enum RequestLog {
         // A hand-built object rather than JSONEncoder: the field set is
         // fixed, the ordering is stable for eyeballing a tail -f, and every
         // value is already a number or a bare identifier.
-        func num(_ v: Double) -> String { String(format: "%.3f", v) }
+        func num(_ value: Double) -> String { String(format: "%.3f", value) }
         let line = """
         {"t":\(num(now.timeIntervalSince1970)),\
         "uptime_s":\(num(now.timeIntervalSince(startedAt))),\
@@ -71,6 +79,7 @@ public enum RequestLog {
         "prefill_ms":\(num(run.prefillMilliseconds)),\
         "generate_ms":\(num(run.generateMilliseconds)),\
         "wall_ms":\(num(run.wallMilliseconds)),\
+        "finalize_ms":\(num(run.finalizeMilliseconds)),\
         "prompt_tps":\(num(run.promptTokensPerSecond)),\
         "decode_tps":\(num(run.decodeTokensPerSecond)),\
         "tool_calls":\(run.toolCalls.count),\
