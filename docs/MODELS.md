@@ -136,7 +136,7 @@ mkdir -p "$HOME/.cache/mei/runtime/kv"
 VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
   --model-dir        "$MODEL_DIR" \
   --served-model-id  "$MODEL_ID" \
-  --optimization-profile auto \
+  --model-profile qwen3.6-35b-a3b \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 512 \
@@ -158,7 +158,8 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
 ### Nemotron — experimental, pending gate
 
 **M1 / 32 GB launch settings (conservative gate baseline — NOT optimized or
-validated):** `--optimization-profile generic`, `--prefill-step-size 256`,
+validated):** architecture defaults (no named model profile is registered
+for Nemotron), `--prefill-step-size 256`,
 user-local `--kv-cache-dir`, an explicit
 `--memory-limit-bytes 30000000000` allocator ceiling as a **guardrail**,
 `--max-tokens 32768`, sampling `0.6/0.95/20`, and
@@ -177,7 +178,6 @@ mkdir -p "$HOME/.cache/mei/runtime/kv"
 mei \
   --model-dir        "$MODEL_DIR" \
   --served-model-id  "$MODEL_ID" \
-  --optimization-profile generic \
   --port 8024 \
   --context-cap 65536 \
   --prefill-step-size 256 \
@@ -190,7 +190,7 @@ mei \
 
 > **Status caveat.** **Experimental and pending its gate**: this is the
 > *next* experimental evaluation, **not yet staged or validated under Mei's
-> acceptance/long-context checks**. It uses the conservative `generic` profile
+> acceptance/long-context checks**. It uses conservative architecture defaults
 > with a modest prefill step of 256, disk KV, and an explicit 30 GB allocator
 > ceiling as a guardrail. **No validation claim is made** for this model —
 > treat any run as exploratory. Omitted experimental knobs remain
