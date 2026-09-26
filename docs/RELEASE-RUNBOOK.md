@@ -49,19 +49,27 @@ print([d['state']['checkoutState']['revision']
 ## 2. Build from the real pin
 
 ```bash
+# Install once if `xcrun metal --version` fails:
+xcodebuild -downloadComponent MetalToolchain
 swift build -c release --scratch-path <scratch> --package-path <repo>
-bash scripts/prepare_metallib.sh <scratch>/release
+MEI_VMLX_CHECKOUT=<scratch>/checkouts/vmlx-swift \
+  MEI_METALLIB_BUILD_DIR=<scratch>/release \
+  bash scripts/prepare_metallib.sh <scratch>/release
 <scratch>/release/mei --version   # must print the new version
 ```
 
-`prepare_metallib.sh` provisions `mlx.metallib` from a version-matched Python
-mlx wheel, because the local Xcode lacks the metallib archiver. The bundle is
-useless without it. Point `MEI_VMLX_CHECKOUT` at the pinned vmlx-swift
-checkout so the script derives the vendored MLX version from its
-`mlx-version.h` (0.32.2 at this pin; it falls back to 0.32.2 without one).
-The mlx 0.32.2 Python wheel bundles no Metal library, so at this pin supply
-`MEI_METALLIB_SOURCE` with a verified 0.32.2 artifact or use the compile
-fallback on a machine with the archiver.
+SwiftPM's Xcode build system compiles the pinned checkout's precompiled Metal
+kernels into `mlx-swift_Cmlx.bundle`. Provisioning copies that build product
+next to the binary, ahead of any older colocated library. An explicit
+`MEI_METALLIB_BUILD_DIR` makes a missing bundle fatal instead of silently
+selecting a wheel. Packaging uses this strict mode automatically.
+
+Record the sidecar's source path, SHA-256, selected checkout revision and MLX
+version with the run. With a custom scratch build, also pass
+`MEI_VMLX_CHECKOUT=<scratch>/checkouts/vmlx-swift` to packaging. An explicit
+`MEI_METALLIB_SOURCE` remains available for controlled comparisons or legacy
+builds; verify it independently. Changing the Metal artifact requires the
+same real-model correctness/performance checks as other runtime changes.
 
 ## 3. Verify before tagging
 

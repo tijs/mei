@@ -13,8 +13,8 @@
 #   - fallback to 0.32.2 when no header is readable
 #   - wheel scoring runs against the DERIVED version: a 0.31.1 wheel must NOT
 #     score as exact against a 0.32.2 pin (the 0.6.0 release bug) and must
-#     provision only with an explicit warning; a same-minor wheel provisions
-#     without one
+#     provision only with an explicit mismatch warning; all wheels warn that
+#     version matching does not establish fork kernel identity
 #   - a version-matched wheel that bundles no mlx/lib/mlx.metallib is reported
 #     truthfully instead of silently skipping
 #   - MEI_METALLIB_SOURCE override still wins over every wheel candidate
@@ -80,8 +80,8 @@ if [[ "$rc" -eq 0 ]] && [[ -f "$T/dest-exact/mlx.metallib" ]] \
    && grep -q '^vendored_mlx: 0\.32\.2$' "$T/dest-exact/mlx.metallib.provenance" \
    && grep -q 'mlx-version\.h' "$T/dest-exact/mlx.metallib.provenance" \
    && grep -q 'version 0\.32\.2' "$T/dest-exact/mlx.metallib.provenance" \
-   && ! grep -q '^warning:' "$T/dest-exact/mlx.metallib.provenance"; then
-  ok "exact-match wheel scored against derived 0.32.2, provisioned without warning"
+   && grep -q '^warning: Using a stock Python wheel' "$T/dest-exact/mlx.metallib.provenance"; then
+  ok "exact-match wheel scored against derived 0.32.2, with stock-wheel warning"
 else
   bad "exact-match 0.32.2 wheel (rc=$rc): $(cat "$T/run-dest-exact/stderr")"
 fi
@@ -99,14 +99,14 @@ else
   bad "0.31.1 wheel scored wrong vs 0.32.2 pin (rc=$rc): $(cat "$T/run-dest-mismatch/stderr")"
 fi
 
-# --- 3. same-minor (0.32.1) provisions without warning -----------------------
+# --- 3. same-minor (0.32.1) provisions with stock-wheel warning --------------
 make_checkout "$T/co-0322c" "0.32.2"
 make_wheel_env "$T/h3" "0.32.1" "$source_fixture"
 rc=$(run_prepare "$T/dest-sameminor" "$T/co-0322c" "$T/h3")
 if [[ "$rc" -eq 0 ]] && [[ -f "$T/dest-sameminor/mlx.metallib" ]] \
    && grep -q 'version 0\.32\.1' "$T/dest-sameminor/mlx.metallib.provenance" \
-   && ! grep -q '^warning:' "$T/dest-sameminor/mlx.metallib.provenance"; then
-  ok "same-minor 0.32.1 wheel scored against derived 0.32.2, provisioned without warning"
+   && grep -q '^warning: Using a stock Python wheel' "$T/dest-sameminor/mlx.metallib.provenance"; then
+  ok "same-minor 0.32.1 wheel scored against derived 0.32.2, with stock-wheel warning"
 else
   bad "same-minor 0.32.1 wheel (rc=$rc): $(cat "$T/run-dest-sameminor/stderr")"
 fi
@@ -176,6 +176,50 @@ if [[ "$rc" -eq 0 ]] && grep -q 'provisioned for mlx 0\.31\.1' "$T/run-dest-stal
   ok "metallib provisioned for 0.31.1 is replaced under a 0.32.2 pin"
 else
   bad "stale-version dest kept (rc=$rc): $(cat "$T/run-dest-stale/stdout" "$T/run-dest-stale/stderr")"
+fi
+
+# --- Build-product selection: overwrite a valid old library; package elsewhere.
+for layout in Contents/Resources .; do
+  build="$T/built-${layout//\//-}"
+  mkdir -p "$build/mlx-swift_Cmlx.bundle/$layout"
+  built="$build/mlx-swift_Cmlx.bundle/$layout/default.metallib"
+  cp "$source_fixture" "$built"
+  printf 'source-build' >> "$built"
+  cp "$source_fixture" "$build/mlx.metallib"
+  rc=$(run_prepare "$build" "$T/co-0322" "$T/h1")
+  if [[ "$rc" -eq 0 ]] && cmp -s "$built" "$build/mlx.metallib" \
+     && grep -q '^label: SwiftPM Cmlx build product$' "$build/mlx.metallib.provenance" \
+     && grep -q "^sha256: $(shasum -a 256 "$built" | awk '{print $1}')$" "$build/mlx.metallib.provenance"; then
+    ok "Cmlx bundle ($layout) wins over existing library and exact wheel"
+  else
+    bad "Cmlx bundle selection ($layout, rc=$rc)"
+  fi
+  rc=$(run_prepare "$T/package-${layout//\//-}" "$T/co-0322" "$T/h1" env MEI_METALLIB_BUILD_DIR="$build")
+  if [[ "$rc" -eq 0 ]] && cmp -s "$built" "$T/package-${layout//\//-}/mlx.metallib"; then
+    ok "explicit build-product dir supports separate packaging destination ($layout)"
+  else
+    bad "separate packaging destination ($layout, rc=$rc)"
+  fi
+  rc=$(run_prepare "$T/override-${layout//\//-}" "$T/co-0322" "$T/h1" env \
+    MEI_METALLIB_BUILD_DIR="$build" MEI_METALLIB_SOURCE="$source_fixture")
+  if [[ "$rc" -eq 0 ]] && cmp -s "$source_fixture" "$T/override-${layout//\//-}/mlx.metallib"; then
+    ok "explicit override still wins over Cmlx bundle ($layout)"
+  else
+    bad "explicit override lost to build product ($layout)"
+  fi
+  printf 'invalid' > "$built"
+  rc=$(run_prepare "$build" "$T/co-0322" "$T/h1")
+  if [[ "$rc" -ne 0 ]]; then
+    ok "invalid Cmlx bundle fails instead of reusing old library or wheel ($layout)"
+  else
+    bad "invalid Cmlx bundle silently bypassed ($layout)"
+  fi
+done
+rc=$(run_prepare "$T/missing-built" "$T/co-0322" "$T/h1" env MEI_METALLIB_BUILD_DIR="$T/absent")
+if [[ "$rc" -ne 0 ]]; then
+  ok "explicit build-product directory without library fails even with a wheel available"
+else
+  bad "missing requested build product silently fell back"
 fi
 
 echo
