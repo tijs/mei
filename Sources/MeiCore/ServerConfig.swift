@@ -4,7 +4,7 @@ import MLX
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.6.0"
+    public static let version = "0.6.1"
     public var modelDirectory: String
     public var servedModelID: String
     /// Set when --served-model-id was omitted and defaulted from the

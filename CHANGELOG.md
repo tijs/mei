@@ -2,6 +2,88 @@
 
 All notable changes to Mei are documented here.
 
+## [0.6.1] - 2026-09-26
+
+A hardening patch on top of 0.6.0, with no dependency change — the vmlx pin
+stays `fef563a5`. Metallib provisioning and release packaging stop reusing a
+Metal library built for a different MLX version and prefer the binary's own
+source-built Cmlx kernels; streaming answers leave the post-token
+finalization tail off the client's critical path; the vmlx decode-policy
+switches are visible in the startup log; and the reference launcher script
+starts a server again. No inference, admission, or quality behaviour is
+claimed to change.
+
+### Fixed
+
+- **Streaming answers no longer wait for post-token finalization.** vmlx
+  yields `.info` as soon as generation completes and then keeps working — the
+  GPU drain, the cache store and the advisor drain run before the stream
+  ends. Mei answered only on stream termination, so every streaming turn paid
+  that tail before the client saw its finish frame and usage. The finish
+  frame is now emitted at `.info` while the single-flight lock is still held
+  through producer end — the next request still cannot race the cache store —
+  and the no-`.info` fallback keeps the previous behaviour. The run log gains
+  `finalize_ms` (from `.info` to producer end); on a truncated 12-layer proxy
+  (self-comparison only — not a product benchmark) the client-visible
+  completion point moved 27-35 ms earlier, with byte-identical generated
+  text, `finish_reason` and usage. The completion blocks in the streaming,
+  non-streaming chat and `/v1/completions` paths are consolidated into one
+  helper (commit `8529b37`).
+- **The reference launcher could not start a server at all.**
+  `scripts/start_mei_server.sh` passed the removed
+  `--optimization-profile auto|generic|ornith` flag, which both shipped
+  binaries reject outright, so every launch through the script exited 2
+  before loading a model. `MEI_MODEL_PROFILE=<name>` now feeds
+  `--model-profile` (omitted when unset, so the server runs on architecture
+  defaults and says so at startup), and the obsolete
+  `MEI_OPTIMIZATION_PROFILE` fails fast naming its replacement. The benchmark
+  path never noticed — local-model-bench keeps its own (correct) copy of this
+  launch logic. New `scripts/test_start_mei_server_flags.sh` checks the
+  removed flag is gone, the guard fires, and every flag the script hands the
+  binary is accepted by that binary (commit `0abbc5a`).
+- **Stale `mlx.metallib` reuse across MLX version changes.** Build
+  directories are reused across vmlx pins, and a colocated library was
+  re-accepted on a structural check alone — even when its provenance named a
+  different vendored MLX (e.g. a 0.31.1-era library under the 0.32.2
+  runtime). Provisioning now reads the `vendored_mlx` recorded in the
+  provenance sidecar and re-provisions when it disagrees with the derived
+  runtime version (commit `25478fe`).
+
+### Changed
+
+- **Metallib provisioning and packaging prefer the source-built Cmlx
+  kernels.** With Xcode's Metal Toolchain installed, SwiftPM's build emits the
+  pinned checkout's own `mlx-swift_Cmlx.bundle`; provisioning copies that
+  build product ahead of any cached or wheel library. An explicit
+  `MEI_METALLIB_BUILD_DIR` makes a missing bundle fatal instead of silently
+  selecting a wheel, and packaging sets it automatically to the selected
+  binary's build directory — release packaging is source-first and
+  fail-closed, never an unrelated wheel discovered on the packaging machine.
+  The provenance sidecar records the source path, SHA-256, selected checkout
+  revision (`vmlx_checkout_revision`) and vendored MLX version (commit
+  `83087c3`).
+- **Decode-policy switch values are logged at startup.** A vmlx re-pin can
+  turn an upstream default on under a model family while every local setting
+  stays silent — exactly how the 0.6.0 regression hid (upstream #455 made
+  compiled routed-MoE decode the default for text-only `qwen3_5_moe`, an
+  experiment this repo had already measured at -9.7% short decode and
+  rejected). Startup now reports every decode-policy switch with its
+  effective value and source (`operator`, `mei-profile`, or
+  `upstream-default`); the operator's environment is snapshotted before any
+  `setenv`, so the two sources stay distinguishable. The release runbook
+  gains the matching re-pin step: a throughput gate, not only a correctness
+  gate (commit `0772ba3`).
+
+### Docs
+
+- The source-first provisioning path is documented in `docs/DEVELOPMENT.md`
+  and the release runbook (Metal Toolchain prerequisite, strict packaging)
+  (commit `83087c3`), and the active docs that still used the removed
+  `--optimization-profile` spelling are fixed: `docs/ARCHITECTURE.md`'s
+  "Optimization profiles" section and the Qwen3.6/Nemotron launch examples in
+  `docs/MODELS.md`. Historical release notes keep their original text
+  (commit `0abbc5a`).
+
 ## [0.6.0] - 2026-09-25
 
 The CoCore attached-engine integration is fixed, every model gets the

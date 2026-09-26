@@ -17,10 +17,10 @@ repository cache being pre-populated.
 
 ## Current pin
 
-Mei 0.6.0 pins **`fef563a5`** (`fef563a55b4f22d4530b3439c1edb233cfc44a8f`),
-the pushed `main` of `tijs/vmlx-swift`. The fork `main` integrates upstream
-history through `e07bd67b` (upstream `main` at the last sync) plus the
-fork-side commits below.
+Mei 0.6.1 pins **`fef563a5`** (`fef563a55b4f22d4530b3439c1edb233cfc44a8f`) —
+unchanged since 0.6.0 — the pushed `main` of `tijs/vmlx-swift`. The fork
+`main` integrates upstream history through `e07bd67b` (upstream `main` at
+the last sync) plus the fork-side commits below.
 
 Since the previous Mei pin (`44461ffd`, the 0.4.2-era revision), the fork
 `main` advanced 151 commits: **133 upstream commits** (integrated by two sync
@@ -58,8 +58,9 @@ change.
 The `bonsai2`-prefixed commits (14 of the 18) are the Bonsai 2 Prism-Hadamard
 work: a default-off `prism_hadamard_qwen35` portability gate plus the
 transform modules, validation, load-path wiring and mlx-submodule pins that
-make it reproducible. They ship in Mei 0.6.0 gated off by default; nothing
-changes for the models Mei serves unless the flag is explicitly enabled.
+make it reproducible. They ship gated off by default, unchanged from Mei
+0.6.0; nothing changes for the models Mei serves unless the flag is
+explicitly enabled.
 
 ## Earlier Mei-maintained commits (also in the fork)
 
