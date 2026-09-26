@@ -438,23 +438,10 @@ public actor Engine {
         }
         await task.value
 
-        if let info {
-            run.promptTokenCount = info.promptTokenCount
-            run.completionTokenCount = info.generationTokenCount
-            run.decodeTokensPerSecond = info.tokensPerSecond
-            run.promptTokensPerSecond = info.promptTokensPerSecond
-            run.prefillMilliseconds = info.promptTime * 1000
-            run.generateMilliseconds = info.generateTime * 1000
-            run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
-        } else {
-            run.promptTokenCount = tokens.count
-            run.completionTokenCount = run.text.isEmpty ? 0 : 1
-        }
-        run.cachedTokenCount = restoreTracker.restoredTokens
-        run.cacheHit = restoreTracker.isCacheHit
-        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
+        Self.completeRunForClient(
+            &run, info: info, fallbackPromptTokens: tokens.count,
+            restoreTracker: restoreTracker, iterationStart: iterationStart)
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat")
 
@@ -522,6 +509,9 @@ public actor Engine {
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         var run = GenerationRun()
+        // Set when vmlx's `.info` lands; the producer keeps working after it.
+        var infoObservedAt: Date?
+        var finished = false
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
         for await item in stream {
@@ -551,33 +541,46 @@ public actor Engine {
                 }
                 continuation.yield(.prefill(completed: progress.completedUnitCount, total: progress.totalUnitCount))
             case .info(let completionInfo):
+                // vmlx yields `.info` as soon as generation is complete and
+                // BEFORE the post-answer GPU drain, cache store and advisor
+                // drain; only the STREAM END covers those. Its generate loop
+                // states the contract explicitly: "Safety is preserved by the
+                // STREAM END, not by `.info` ordering ... Consumers acting on
+                // `.info` alone get exactly the intended early spinner-off;
+                // they cannot reach the model without the lease." Mei's lease
+                // is this function's position inside `serialized`, so handing
+                // the client its finish frame and usage here is safe: the
+                // single-flight token is still held until `task.value` returns
+                // below, and the cache store still cannot race the next
+                // request.
                 info = completionInfo
+                infoObservedAt = Date()
+                Self.completeRunForClient(
+                    &run, info: completionInfo, fallbackPromptTokens: tokens.count,
+                    restoreTracker: restoreTracker, iterationStart: iterationStart)
+                continuation.yield(.finish(run))
+                continuation.finish()
+                finished = true
             }
         }
         await task.value
-
-        if let info {
-            run.promptTokenCount = info.promptTokenCount
-            run.completionTokenCount = info.generationTokenCount
-            run.decodeTokensPerSecond = info.tokensPerSecond
-            run.promptTokensPerSecond = info.promptTokensPerSecond
-            run.prefillMilliseconds = info.promptTime * 1000
-            run.generateMilliseconds = info.generateTime * 1000
-            run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
-        } else {
-            run.promptTokenCount = tokens.count
-            run.completionTokenCount = run.text.isEmpty ? 0 : 1
+        if !finished {
+            // No `.info` at all (cancelled or failed producer): the client still
+            // needs a terminal frame, so finish here exactly as before.
+            Self.completeRunForClient(
+                &run, info: info, fallbackPromptTokens: tokens.count,
+                restoreTracker: restoreTracker, iterationStart: iterationStart)
+            continuation.yield(.finish(run))
+            continuation.finish()
         }
-        run.cachedTokenCount = restoreTracker.restoredTokens
-        run.cacheHit = restoreTracker.isCacheHit
-        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
+
+        // Logged after the producer ends: `wall_ms` still covers the whole run,
+        // and `finalize_ms` is the post-token tail (drain + cache store +
+        // advisor) the client no longer waits for before its finish frame.
+        run.finalizeMilliseconds = infoObservedAt.map { Date().timeIntervalSince($0) * 1000 } ?? 0
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat_stream")
-
-        continuation.yield(.finish(run))
-        continuation.finish()
     }
 
     // MARK: - Text completion (/v1/completions)
@@ -660,23 +663,10 @@ public actor Engine {
             }
         }
         await task.value
-        if let info {
-            run.promptTokenCount = info.promptTokenCount
-            run.completionTokenCount = info.generationTokenCount
-            run.decodeTokensPerSecond = info.tokensPerSecond
-            run.promptTokensPerSecond = info.promptTokensPerSecond
-            run.prefillMilliseconds = info.promptTime * 1000
-            run.generateMilliseconds = info.generateTime * 1000
-            run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
-        } else {
-            run.promptTokenCount = tokens.count
-            run.completionTokenCount = run.text.isEmpty ? 0 : 1
-        }
-        run.cachedTokenCount = restoreTracker.restoredTokens
-        run.cacheHit = restoreTracker.isCacheHit
-        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
+        Self.completeRunForClient(
+            &run, info: info, fallbackPromptTokens: tokens.count,
+            restoreTracker: restoreTracker, iterationStart: iterationStart)
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
         captureRunMemory(&run)
         RequestLog.record(run, kind: "completion")
         return run
@@ -801,8 +791,8 @@ public actor Engine {
         context: [String: any Sendable]?,
         tokens: [Int]
     ) async throws -> [Int] {
-        let k = config.ssmAnchorBoundaryCount
-        guard k > 0 else { return [] }
+        let anchorCount = config.ssmAnchorBoundaryCount
+        guard anchorCount > 0 else { return [] }
 
         // Reuse the offsets when this prompt still begins with the exact token
         // prefix they were derived from.
@@ -845,13 +835,13 @@ public actor Engine {
         // SSMAnchorBoundaries.computeByDivergence). The additive method
         // below stays as the fallback and as the self-checked reference.
         let divergent = try SSMAnchorBoundaries.computeByDivergence(
-            template: template, fullTokens: tokens, k: k
+            template: template, fullTokens: tokens, k: anchorCount
         ) { variant in
             try tokenizer.applyChatTemplate(
                 messages: variant, tools: templateTools, additionalContext: context)
         }
         if !divergent.offsets.isEmpty {
-            print("mei: ssm anchor boundaries (k=\(k), divergence): \(divergent.offsets)")
+            print("mei: ssm anchor boundaries (k=\(anchorCount), divergence): \(divergent.offsets)")
             fflush(stdout)
             if let longest = divergent.offsets.max(), longest > 0, longest < tokens.count {
                 anchorMemo = (longest, prefixHash(longest), divergent.offsets)
@@ -861,24 +851,24 @@ public actor Engine {
         let trace = ProcessInfo.processInfo.environment["MEI_ANCHOR_TRACE"] == "1"
         if trace {
             let roles = template.map { ($0["role"] as? String) ?? "<\(type(of: $0["role"] as Any))>" }
-            print("mei: [anchor-trace] k=\(k) full=\(fullTokenCount) roles=\(roles) tools=\(templateTools?.count ?? -1)")
+            print("mei: [anchor-trace] k=\(anchorCount) full=\(fullTokenCount) roles=\(roles) tools=\(templateTools?.count ?? -1)")
             fflush(stdout)
         }
         let result = try SSMAnchorBoundaries.compute(
             template: template,
             fullTokenCount: fullTokenCount,
-            k: k
+            k: anchorCount
         ) { prefixCount in
-            let n = try tokenizer.applyChatTemplate(
+            let renderedCount = try tokenizer.applyChatTemplate(
                 messages: Array(template.prefix(prefixCount)),
                 tools: templateTools,
                 additionalContext: context
             ).count
             if trace {
-                print("mei: [anchor-trace] prefix(\(prefixCount)) -> \(n) tokens")
+                print("mei: [anchor-trace] prefix(\(prefixCount)) -> \(renderedCount) tokens")
                 fflush(stdout)
             }
-            return n
+            return renderedCount
         }
         if trace {
             print("mei: [anchor-trace] result offsets=\(result.offsets) warning=\(result.warning ?? "nil")")
@@ -887,7 +877,7 @@ public actor Engine {
         if let warning = result.warning {
             print("mei: ssm-anchor-boundaries disabled for this transcript: \(warning)")
         } else if !result.offsets.isEmpty {
-            print("mei: ssm anchor boundaries (k=\(k)): \(result.offsets)")
+            print("mei: ssm anchor boundaries (k=\(anchorCount)): \(result.offsets)")
         }
         fflush(stdout)
         return result.offsets
@@ -997,6 +987,35 @@ public actor Engine {
         run.memoryActiveBytes = snapshot.activeMemory
         run.memoryCacheBytes = snapshot.cacheMemory
         run.memoryPeakBytes = snapshot.peakMemory
+    }
+
+    /// Applies vmlx's completion info plus the cache-restore counters, leaving
+    /// a run ready to answer a client. The streaming path calls this the moment
+    /// `.info` lands (to answer early) and again on its no-`.info` fallback, so
+    /// both derive the emitted usage and the logged metrics identically.
+    private static func completeRunForClient(
+        _ run: inout GenerationRun,
+        info: GenerateCompletionInfo?,
+        fallbackPromptTokens: Int,
+        restoreTracker: CacheRestoreTracker,
+        iterationStart: Date
+    ) {
+        if let info {
+            run.promptTokenCount = info.promptTokenCount
+            run.completionTokenCount = info.generationTokenCount
+            run.decodeTokensPerSecond = info.tokensPerSecond
+            run.promptTokensPerSecond = info.promptTokensPerSecond
+            run.prefillMilliseconds = info.promptTime * 1000
+            run.generateMilliseconds = info.generateTime * 1000
+            run.finishReason = Self.mapStopReason(info.stopReason, toolCallCount: run.toolCalls.count)
+        } else {
+            run.promptTokenCount = fallbackPromptTokens
+            run.completionTokenCount = run.text.isEmpty ? 0 : 1
+        }
+        run.cachedTokenCount = restoreTracker.restoredTokens
+        run.cacheHit = restoreTracker.isCacheHit
+        if run.prefillMilliseconds == 0 { run.prefillMilliseconds = Date().timeIntervalSince(iterationStart) * 1000 }
+        run.text = run.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     public static func mapStopReason(_ reason: GenerateStopReason, toolCallCount: Int) -> String {

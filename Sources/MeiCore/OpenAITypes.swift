@@ -12,11 +12,11 @@ public enum MeiJSONValue: Sendable, Equatable {
 
     public var anyValue: Any {
         switch self {
-        case .string(let s): return s
-        case .number(let n): return n
-        case .bool(let b): return b
-        case .object(let o): return o.mapValues { $0.anyValue }
-        case .array(let a): return a.map { $0.anyValue }
+        case .string(let text): return text
+        case .number(let number): return number
+        case .bool(let flag): return flag
+        case .object(let object): return object.mapValues { $0.anyValue }
+        case .array(let array): return array.map { $0.anyValue }
         case .null: return NSNull()
         }
     }
@@ -66,14 +66,14 @@ public enum MeiJSONValue: Sendable, Equatable {
     /// chat-template consumption (applyChatTemplate wants Sendable dicts).
     public static func templateSendable(_ value: MeiJSONValue) -> any Sendable {
         switch value {
-        case .string(let s): return s
-        case .number(let n): return n
-        case .bool(let b): return b
+        case .string(let text): return text
+        case .number(let number): return number
+        case .bool(let flag): return flag
         case .null: return NSNull()
-        case .object(let o):
-            return o.mapValues { templateSendable($0) as any Sendable }
-        case .array(let a):
-            return a.map { templateSendable($0) as any Sendable }
+        case .object(let object):
+            return object.mapValues { templateSendable($0) as any Sendable }
+        case .array(let array):
+            return array.map { templateSendable($0) as any Sendable }
         }
     }
 }
@@ -545,6 +545,12 @@ public struct GenerationRun: Sendable {
     public var prefillMilliseconds: Double = 0
     public var generateMilliseconds: Double = 0
     public var wallMilliseconds: Double = 0
+    /// Post-token tail: from vmlx's `.info` (generation complete) to the
+    /// producer's stream end, covering the post-answer GPU drain, cache store
+    /// and advisor drain. Streaming responses are completed at `.info`, so this
+    /// is no longer on the client's critical path; it stays logged so the
+    /// remaining tail is measurable. 0 = not measured on this path.
+    public var finalizeMilliseconds: Double = 0
     public var cacheHit = false
     /// MLX allocator snapshot captured when the run finished: active (live
     /// arrays), cache (recyclable buffer pool), and program peak so far.
