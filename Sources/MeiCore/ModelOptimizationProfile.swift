@@ -174,6 +174,11 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// sets it only when neither supported environment control was supplied;
     /// an explicit `ornith` profile passes `force: true` for reproducibility.
     public func applyRuntimeEnvironment(force: Bool = false) {
+        // Snapshot before any `setenv` below: afterwards the operator's values
+        // and this profile's own are indistinguishable through ProcessInfo.
+        // `defer` so every profile reports, including the early return.
+        let operatorEnvironment = ProcessInfo.processInfo.environment
+        defer { Self.logDecodePolicySwitches(operatorEnvironment: operatorEnvironment) }
         guard isOrnith else { return }
         #if canImport(Darwin)
         let hasExplicitOverride = getenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES") != nil
@@ -208,6 +213,35 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
             setenv("VMLX_ENABLE_UNSAFE_COMPILE", "1", 1)
         }
         #endif
+    }
+
+    /// Reports every decode-policy switch this process will run with, and
+    /// whether the value came from the operator, from the applied profile, or
+    /// from the dependency's own default.
+    ///
+    /// A re-pin can flip an upstream default under a model family while every
+    /// local setting stays silent, which is exactly how the 0.6.0 regression
+    /// hid: upstream #455 made compiled routed-MoE decode the default for
+    /// text-only `qwen3_5_moe`, an experiment previously measured here at -9.7%
+    /// short decode and rejected. Printing the effective value makes that
+    /// auditable from the log afterwards instead of inferred from timings.
+    ///
+    /// `operatorEnvironment` must be snapshotted before
+    /// `applyRuntimeEnvironment` mutates the process environment; afterwards the
+    /// two are indistinguishable through `ProcessInfo`.
+    public static func logDecodePolicySwitches(operatorEnvironment: [String: String]) {
+        for name in [
+            "VMLX_QWEN35_COMPILE_DECODE_REGIONS",
+            "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE",
+            "VMLX_ENABLE_UNSAFE_COMPILE",
+            "VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES",
+        ] {
+            let effective = ProcessInfo.processInfo.environment[name]
+            let source =
+                operatorEnvironment[name] != nil
+                ? "operator" : (effective != nil ? "mei-profile" : "upstream-default")
+            print("mei: vmlx switch \(name)=\(effective ?? "unset") (source \(source))")
+        }
     }
 
     /// Server-side generation cap for this lineage.
