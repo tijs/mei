@@ -118,8 +118,14 @@ if [[ -n "${MEI_METALLIB_SOURCE:-}" ]]; then
   exit 1
 fi
 
-# 2) Already provisioned and structurally intact: no-op.
-if verify_metallib "$DEST"; then
+# 2) Already provisioned and structurally intact: no-op — unless its provenance
+# names a different vendored MLX. Build dirs are reused across vmlx pins, so a
+# library provisioned for 0.31.1 would otherwise keep serving a 0.32.2 runtime.
+PROVISIONED_FOR=""
+[[ -f "$PROVENANCE" ]] && PROVISIONED_FOR=$(sed -n 's/^vendored_mlx: //p' "$PROVENANCE" | head -1)
+if [[ -n "$PROVISIONED_FOR" && "$PROVISIONED_FOR" != "$VENDORED_MLX_VERSION" ]]; then
+  echo "mlx.metallib at $DEST was provisioned for mlx $PROVISIONED_FOR, runtime is $VENDORED_MLX_VERSION: re-provisioning" >&2
+elif verify_metallib "$DEST"; then
   echo "mlx.metallib already present and verified at $DEST"
   [[ -f "$PROVENANCE" ]] || { echo "source: (pre-existing, no provenance recorded)" > "$PROVENANCE"; }
   exit 0
