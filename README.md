@@ -78,6 +78,27 @@ Figures from two cold runs of each shipped configuration on a 32 GB M1 at a
 65,536-token context, plus the coding pass rate from the benchmark's composite
 leaderboard.
 
+### Mei 0.6.1 benchmark note
+
+A separate comparison: the full-agent `local-model-bench` suite (all 25 rows)
+on the 32 GB M1 Max, not the short-decode profile figures above. Mei 0.6.1 ran
+the complete suite for both retained target models with zero harness errors,
+against selected Mei 0.5.0 anchors. The anchors' model revisions, engine pins,
+and historical generation settings differ, so this is evidence rather than a
+clean isolated release benchmark.
+
+| model | rows passed (0.5.0 → 0.6.1) | avg TTFT | avg decode | weighted completion-over-wall |
+|---|---|---|---|---|
+| Ornith 1.5 35B-A3B | 22/25 (88%) → 24/25 (96%) | 53.984 → 42.052 s | 10.6813 → 10.5375 tok/s | 13.4696 → 16.6776 tok/s |
+| Qwen3.6 35B-A3B text-only | 24/25 and 22/25 (mean 23/25, 92%) → 24/25 (96%) | 53.561 → 42.448 s | 9.0844 → 8.935 tok/s | 11.2836 → 9.9917 tok/s |
+
+The Qwen3.6 0.5.0 side spans two retained anchors — 24/25 and 22/25 — with the
+averaged metrics above as their mean. Both models improved in quality and
+TTFT; Ornith also improved weighted completion-over-wall, while Qwen3.6 did
+not — Mei 0.6.1 is not uniformly faster than 0.5.0. Raw comparison artifacts:
+[Ornith](https://github.com/tijs/local-model-bench/blob/main/results/comparisons/ornith-mei061-vs-mei060-mei050.json),
+[Qwen3.6 text-only](https://github.com/tijs/local-model-bench/blob/main/results/comparisons/qwen36-textonly-mei061-vs-mei060-mei050.json).
+
 ```bash
 mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
 mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
