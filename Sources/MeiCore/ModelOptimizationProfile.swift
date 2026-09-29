@@ -87,11 +87,15 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         }
     }
 
+    /// The qwen3_5_moe family's declared `model_type` values, at the root or
+    /// nested (`text_config`). Architecture truth, so it is read from
+    /// metadata, never guessed from model names or paths.
+    public static let qwen35MoEModelTypes: Set<String> = ["qwen3_5_moe", "qwen3_5_moe_text"]
+
     /// Detect only from valid model metadata; model names and paths are not
     /// enough to activate the memory-sensitive Ornith profile.
     public static func detect(modelDirectory: String) -> ModelOptimizationProfile {
-        let ornithTypes: Set<String> = ["qwen3_5_moe", "qwen3_5_moe_text"]
-        return collectedModelTypes(in: modelDirectory).intersection(ornithTypes).isEmpty
+        collectedModelTypes(in: modelDirectory).isDisjoint(with: qwen35MoEModelTypes)
             ? .generic
             : .ornith
     }
@@ -154,17 +158,161 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         needsDiskKVTier(modelDirectory: modelDirectory)
     }
 
-    /// All `model_type` values reachable in config.json (root + nested
-    /// text_config etc.), lowercased; empty on unreadable metadata.
-    private static func collectedModelTypes(in modelDirectory: String) -> Set<String> {
+    // MARK: - Compiled routed-MoE decode opt-out (F1 / C2)
+
+    /// The compiled routed-MoE decode region (`Qwen4ExpCompiledRoutedSwitchGLU`,
+    /// reached via `Qwen35CompiledDecodePolicy` and `compileSeparatedDecode`)
+    /// is a measured regression on the text-only qwen3_5_moe topology:
+    /// control 67.11 vs 60.62 tok/s short decode (-9.7%, n=10 per leg,
+    /// distributions non-overlapping) and -4.9% at 30k, with greedy outputs
+    /// token-for-token identical and the same native tool call (Kiem evidence
+    /// 21c84df0). Upstream #455 (8fbdb04) turned it on by default for that
+    /// path, which is how 0.6.0 shipped the rejected experiment.
+    ///
+    /// So the two text-only bundles (Ornith 1.5 35B and the stripped Qwen3.6
+    /// 35B) opt out by default until a current-pin round-robin A/B says
+    /// otherwise. The vision-containing Qwen3.6 bundle already had the region
+    /// at the previous pin, is not part of the #455 change, and is the
+    /// benchmark's control leg — it must stay untouched.
+    ///
+    /// These are the exact Kiem plan switches (notes c85a5754, 5fbb3daa):
+    /// one disables the text path's compiled-decode policy for this family,
+    /// the other disables the region itself wherever it could be reached.
+    public static let compiledRoutedMoEDecodeOptOutSwitches: [String: String] = [
+        "VMLX_QWEN35_COMPILE_DECODE_REGIONS": "0",
+        "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE": "0",
+    ]
+
+    /// Sidecar files whose presence identifies a vision/multimodal bundle.
+    /// The stripped text-only exports removed these along with `vision_config`
+    /// and the vision tensors; the vision bundles carry them
+    /// (`processor_config.json`, `preprocessor_config.json`,
+    /// `video_preprocessor_config.json` on the Qwen3.6 vision repo).
+    public static let visionMetadataFileNames: Set<String> = [
+        "preprocessor_config.json",
+        "processor_config.json",
+        "video_preprocessor_config.json",
+        "image_processor_config.json",
+    ]
+
+    /// Whether this bundle is one of the text-only qwen3_5_moe bundles the
+    /// compiled routed-MoE decode opt-out targets.
+    ///
+    /// Fail closed: fires only when metadata POSITIVELY proves both halves of
+    /// the target signature — the qwen3_5_moe family AND no vision signal.
+    /// Missing, unreadable, or malformed metadata, unknown families, any
+    /// `vision_config` key (even null: a declared vision slot is not a proven
+    /// text-only bundle), any vision/processor sidecar, and a directory that
+    /// cannot be enumerated to prove the sidecars absent all resolve to
+    /// false. An unproven bundle is left exactly as it was — the same
+    /// principle as `needsDiskKVTier`, and the reason a re-export cannot
+    /// silently flip this policy.
+    public static func needsCompiledRoutedMoEDecodeOptOut(modelDirectory: String) -> Bool {
+        guard let root = loadedModelMetadata(in: modelDirectory) else { return false }
+        var modelTypes = Set<String>()
+        collectModelTypes(in: root, into: &modelTypes)
+        guard !modelTypes.isDisjoint(with: qwen35MoEModelTypes) else { return false }
+        if containsKey("vision_config", in: root) { return false }
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: modelDirectory),
+              Set(entries.map { $0.lowercased() }).isDisjoint(with: visionMetadataFileNames)
+        else {
+            return false
+        }
+        return true
+    }
+
+    /// What startup should do about the compiled routed-MoE decode region for
+    /// one bundle, per its metadata and the pre-mutation operator environment.
+    public enum CompiledRoutedMoEDecodeOptOutDecision: Equatable, Sendable {
+        /// Not a text-only qwen3_5_moe bundle (or metadata proves nothing):
+        /// no switch is touched.
+        case notApplicable
+        /// Text-only target with no operator switch supplied: set
+        /// `compiledRoutedMoEDecodeOptOutSwitches`.
+        case optOut
+        /// Text-only target, but the operator supplied at least one of the
+        /// switches: the explicit environment wins and nothing is set.
+        case operatorOverride(switches: [String])
+    }
+
+    /// Decides the opt-out for one bundle. `operatorEnvironment` must be the
+    /// snapshot taken before `applyRuntimeEnvironment` mutates the process
+    /// environment; afterwards operator and profile values are
+    /// indistinguishable through `ProcessInfo`.
+    ///
+    /// An explicit value for EITHER switch hands the WHOLE pair to the
+    /// operator: the two are one mechanism, and a force-on for an A/B leg
+    /// (`VMLX_QWEN35_COMPILE_DECODE_REGIONS=1`) must not be half-suppressed by
+    /// a leftover region kill. This mirrors the existing fused-gate-up
+    /// safeguard, which also stands down when either of its two controls was
+    /// supplied.
+    public static func compiledRoutedMoEDecodeOptOutDecision(
+        modelDirectory: String,
+        operatorEnvironment: [String: String]
+    ) -> CompiledRoutedMoEDecodeOptOutDecision {
+        guard needsCompiledRoutedMoEDecodeOptOut(modelDirectory: modelDirectory) else {
+            return .notApplicable
+        }
+        let overridden = compiledRoutedMoEDecodeOptOutSwitches.keys
+            .filter { operatorEnvironment[$0] != nil }
+            .sorted()
+        return overridden.isEmpty ? .optOut : .operatorOverride(switches: overridden)
+    }
+
+    /// Operator-facing line for the decision; nil when there is nothing to
+    /// report (ordinary/non-target models stay silent, exactly as before).
+    /// The per-switch effective values and sources still come from
+    /// `logDecodePolicySwitches`; this line says which decision was made and
+    /// why it was skipped.
+    public static func compiledRoutedMoEDecodeOptOutMessage(
+        for decision: CompiledRoutedMoEDecodeOptOutDecision
+    ) -> String? {
+        switch decision {
+        case .notApplicable:
+            return nil
+        case .optOut:
+            let applied = compiledRoutedMoEDecodeOptOutSwitches
+                .sorted { $0.key < $1.key }
+                .map { "\($0.key)=\($0.value)" }
+                .joined(separator: " ")
+            return "mei: compiled routed-MoE decode opt-out for text-only qwen3_5_moe: \(applied)"
+        case .operatorOverride(let switches):
+            return "mei: compiled routed-MoE decode opt-out skipped for text-only qwen3_5_moe: "
+                + "operator environment sets \(switches.joined(separator: ", "))"
+        }
+    }
+
+    /// Recursively looks for a key anywhere in a parsed JSON tree.
+    private static func containsKey(_ key: String, in value: Any) -> Bool {
+        if let dictionary = value as? [String: Any] {
+            if dictionary[key] != nil { return true }
+            return dictionary.values.contains { containsKey(key, in: $0) }
+        }
+        if let array = value as? [Any] {
+            return array.contains { containsKey(key, in: $0) }
+        }
+        return false
+    }
+
+    /// config.json parsed as a JSON object; nil when missing, unreadable, or
+    /// malformed. Callers with fail-closed semantics treat nil as "nothing is
+    /// proven".
+    private static func loadedModelMetadata(in modelDirectory: String) -> [String: Any]? {
         let url = URL(fileURLWithPath: modelDirectory, isDirectory: true)
             .appendingPathComponent("config.json")
         guard let data = try? Data(contentsOf: url),
               let object = try? JSONSerialization.jsonObject(with: data),
               let root = object as? [String: Any]
         else {
-            return []
+            return nil
         }
+        return root
+    }
+
+    /// All `model_type` values reachable in config.json (root + nested
+    /// text_config etc.), lowercased; empty on unreadable metadata.
+    private static func collectedModelTypes(in modelDirectory: String) -> Set<String> {
+        guard let root = loadedModelMetadata(in: modelDirectory) else { return [] }
         var modelTypes = Set<String>()
         collectModelTypes(in: root, into: &modelTypes)
         return modelTypes
@@ -173,12 +321,38 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// Apply only the validated Ornith memory safeguard. Automatic detection
     /// sets it only when neither supported environment control was supplied;
     /// an explicit `ornith` profile passes `force: true` for reproducibility.
-    public func applyRuntimeEnvironment(force: Bool = false) {
+    ///
+    /// `modelDirectory` feeds the F1/C2 compiled routed-MoE decode opt-out,
+    /// which is decided from MODEL METADATA, not from this profile: the two
+    /// text-only qwen3_5_moe bundles are opted out by default. `nil` means the
+    /// bundle is unproven, so nothing is applied — the fail-closed default.
+    public func applyRuntimeEnvironment(force: Bool = false, modelDirectory: String? = nil) {
         // Snapshot before any `setenv` below: afterwards the operator's values
         // and this profile's own are indistinguishable through ProcessInfo.
         // `defer` so every profile reports, including the early return.
         let operatorEnvironment = ProcessInfo.processInfo.environment
         defer { Self.logDecodePolicySwitches(operatorEnvironment: operatorEnvironment) }
+        #if canImport(Darwin)
+        if let modelDirectory {
+            // The compiled routed-MoE decode region is off by default for
+            // text-only qwen3_5_moe bundles (see the opt-out section above).
+            // The pair stands down when the operator set either switch; an
+            // explicit value always wins, so the F1 A/B legs run one variable
+            // at a time on this same binary.
+            let decision = Self.compiledRoutedMoEDecodeOptOutDecision(
+                modelDirectory: modelDirectory,
+                operatorEnvironment: operatorEnvironment)
+            if case .optOut = decision {
+                for (name, value) in Self.compiledRoutedMoEDecodeOptOutSwitches {
+                    setenv(name, value, 1)
+                }
+            }
+            if let message = Self.compiledRoutedMoEDecodeOptOutMessage(for: decision) {
+                print(message)
+                fflush(stdout)
+            }
+        }
+        #endif
         guard isOrnith else { return }
         #if canImport(Darwin)
         let hasExplicitOverride = getenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES") != nil
@@ -215,6 +389,18 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         #endif
     }
 
+    /// Every decode-policy switch the startup log reports. The opt-out
+    /// section's switches must stay a subset of this list — a switch this
+    /// project sets silently would recreate exactly the blindness this log
+    /// exists to prevent (asserted by
+    /// `CompiledRoutedMoEDecodeOptOutTests.testDecodeOptOutSwitchesAreAllReported`).
+    public static let loggedDecodePolicySwitchNames: [String] = [
+        "VMLX_QWEN35_COMPILE_DECODE_REGIONS",
+        "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE",
+        "VMLX_ENABLE_UNSAFE_COMPILE",
+        "VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES",
+    ]
+
     /// Reports every decode-policy switch this process will run with, and
     /// whether the value came from the operator, from the applied profile, or
     /// from the dependency's own default.
@@ -230,12 +416,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// `applyRuntimeEnvironment` mutates the process environment; afterwards the
     /// two are indistinguishable through `ProcessInfo`.
     public static func logDecodePolicySwitches(operatorEnvironment: [String: String]) {
-        for name in [
-            "VMLX_QWEN35_COMPILE_DECODE_REGIONS",
-            "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE",
-            "VMLX_ENABLE_UNSAFE_COMPILE",
-            "VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES",
-        ] {
+        for name in loggedDecodePolicySwitchNames {
             let effective = ProcessInfo.processInfo.environment[name]
             let source =
                 operatorEnvironment[name] != nil

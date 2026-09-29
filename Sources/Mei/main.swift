@@ -45,7 +45,8 @@ struct MeiMain {
         }
 
         config.optimizationProfile.applyRuntimeEnvironment(
-            force: config.requestedOptimizationProfile == .ornith)
+            force: config.requestedOptimizationProfile == .ornith,
+            modelDirectory: config.modelDirectory)
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
         // If the operator sets no flags, the profile is choosing for them — so
         // say what it chose. Silent auto-tuning is only an improvement if it is
