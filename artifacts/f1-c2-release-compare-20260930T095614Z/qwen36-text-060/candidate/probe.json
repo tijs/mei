@@ -1,0 +1,202 @@
+{
+  "base_url": "http://127.0.0.1:18251/v1",
+  "context_cap": 65536,
+  "engine": "mei",
+  "finished_epoch": 1790764443.51902,
+  "model": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+  "probes": {
+    "mei_status": {
+      "context_cap": null,
+      "device": {
+        "architecture": "applegpu_g13s",
+        "memoryBytes": 34359738368
+      },
+      "elapsed_seconds": 0.000745249999999989,
+      "memory": {
+        "activeBytes": 19551131404,
+        "cacheBytes": 0,
+        "cacheLimitBytes": 32641751449,
+        "device": {
+          "architecture": "applegpu_g13s",
+          "memoryBytes": 34359738368
+        },
+        "memoryLimitBytes": 24051816857,
+        "peakBytes": 0,
+        "recommendedWorkingSetBytes": 26800603136
+      },
+      "prefill_step_size": null,
+      "request_seconds": 0.000719125000000001,
+      "status": "passed"
+    },
+    "models_identity": {
+      "elapsed_seconds": 0.006130375000000007,
+      "request_seconds": 0.005985291000000004,
+      "served_ids": [
+        "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly"
+      ],
+      "status": "passed"
+    },
+    "parity_stream_vs_nonstream": {
+      "content": "parity-ok",
+      "elapsed_seconds": 5.997936375,
+      "nonstream_usage": {
+        "completion_tokens": 155,
+        "generate_ms": 2848.9060401916504,
+        "mei_memory_active_bytes": 20114454532,
+        "mei_memory_cache_bytes": 969283422,
+        "mei_memory_peak_bytes": 20822563310,
+        "prefill_ms": 110.93997955322266,
+        "prompt_tokens": 16,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 144.22212861797144,
+        "tokens_per_second": 54.406848738883966,
+        "total_tokens": 171
+      },
+      "status": "passed",
+      "stream_usage": {
+        "completion_tokens": 155,
+        "generate_ms": 2857.6940298080444,
+        "mei_memory_active_bytes": 20114454532,
+        "mei_memory_cache_bytes": 969283422,
+        "mei_memory_peak_bytes": 20822563310,
+        "prefill_ms": 110.22603511810303,
+        "prompt_tokens": 16,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 145.15626896002024,
+        "tokens_per_second": 54.23953662751347,
+        "total_tokens": 171
+      }
+    },
+    "plain_completion": {
+      "content": "ready",
+      "elapsed_seconds": 2.888967375,
+      "request_seconds": 2.888920666,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 137,
+        "generate_ms": 2510.1929903030396,
+        "mei_memory_active_bytes": 20114417680,
+        "mei_memory_cache_bytes": 91677566,
+        "mei_memory_peak_bytes": 20143388106,
+        "prefill_ms": 156.9209098815918,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 95.58955534554693,
+        "tokens_per_second": 54.577476922784676,
+        "total_tokens": 152
+      }
+    },
+    "tool_nonstreaming": {
+      "elapsed_seconds": 2.5975891669999998,
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "reasoning_content": "The user wants to calculate the sum of 15 and 27 using the `add_numbers` tool.\nI need to call the `add_numbers` function with arguments `a=15` and `b=27`.\nThen I will report the result.\n",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"a\":15,\"b\":27}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_88bb5542-97f",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1790764434,
+        "id": "chatcmpl-15042ab7-2b32-4051-bfad-",
+        "model": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 97,
+          "generate_ms": 1784.2680215835571,
+          "mei_memory_active_bytes": 20126089028,
+          "mei_memory_cache_bytes": 901507934,
+          "mei_memory_peak_bytes": 20822516730,
+          "prefill_ms": 615.818977355957,
+          "prompt_tokens": 298,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_tokens_per_second": 483.90843893683615,
+          "tokens_per_second": 54.36402985797585,
+          "total_tokens": 395
+        }
+      },
+      "request_seconds": 2.597514,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    "tool_streaming": {
+      "assembled_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "message": {
+              "content": "\n\n",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"a\":15,\"b\":27}",
+                    "name": "add_numbers"
+                  },
+                  "id": "call_a6bf62ff-c3e",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "completion_tokens": 97,
+          "generate_ms": 1789.0690565109253,
+          "mei_memory_active_bytes": 20126089028,
+          "mei_memory_cache_bytes": 901507934,
+          "mei_memory_peak_bytes": 20822563310,
+          "prefill_ms": 615.5110597610474,
+          "prompt_tokens": 298,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_tokens_per_second": 484.15052057015686,
+          "tokens_per_second": 54.2181419140808,
+          "total_tokens": 395
+        }
+      },
+      "client_ttft_seconds": 2.5956847089999995,
+      "elapsed_seconds": 2.602306165999999,
+      "request_seconds": 2.6022336249999993,
+      "status": "passed",
+      "validated_call": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    }
+  },
+  "started_epoch": 1790764429.425291,
+  "status": "passed"
+}

@@ -1,0 +1,26 @@
+candidate short r1: prompt=13 completion=32 wall=3.698s
+candidate short r2: prompt=13 completion=32 wall=3.697s
+candidate short r3: prompt=13 completion=32 wall=3.683s
+candidate short r4: prompt=13 completion=32 wall=3.694s
+candidate short r5: prompt=13 completion=32 wall=3.686s
+candidate short r6: prompt=13 completion=32 wall=3.685s
+candidate short r7: prompt=13 completion=32 wall=3.696s
+candidate short r8: prompt=13 completion=32 wall=3.691s
+candidate short r9: prompt=13 completion=32 wall=3.701s
+candidate short r10: prompt=13 completion=32 wall=3.693s
+candidate loaded r1: prompt=30000 completion=32 wall=113.568s
+candidate loaded r2: prompt=30000 completion=32 wall=102.474s
+candidate loaded r3: prompt=30000 completion=32 wall=100.479s
+candidate loaded r4: prompt=30000 completion=32 wall=100.915s
+candidate loaded r5: prompt=30000 completion=32 wall=100.542s
+candidate loaded r6: prompt=30000 completion=32 wall=103.195s
+candidate loaded r7: prompt=30000 completion=32 wall=107.738s
+candidate loaded r8: prompt=30000 completion=32 wall=101.720s
+candidate loaded r9: prompt=30000 completion=32 wall=101.494s
+candidate loaded r10: prompt=30000 completion=32 wall=101.670s
+{
+  "arm": "candidate",
+  "status": "passed",
+  "output": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-release-compare-20260930T095614Z/qwen36-vision-050-thinking-off/candidate",
+  "rows": 20
+}

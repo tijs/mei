@@ -1,0 +1,1607 @@
+{
+  "arms": {
+    "candidate": {
+      "meaning": "both F1/C2 switches unset; on the 0.6.0 pin the compiled routed-MoE decode region is active by default",
+      "overrides": {}
+    },
+    "optout": {
+      "meaning": "both F1/C2 switches explicitly '0'",
+      "overrides": {
+        "VMLX_QWEN35_COMPILE_DECODE_REGIONS": "0",
+        "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE": "0"
+      }
+    }
+  },
+  "artifact_root": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-release-compare-20260930T095614Z",
+  "binary": {
+    "note": "SHA256 taken from each leg's recorded result.json metadata; the binary file itself is not re-read by this tool.",
+    "path": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+    "sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+    "shared_by_all_legs": true
+  },
+  "caveats": [
+    {
+      "id": "no-finalize-ms",
+      "text": "No leg records finalize_ms (checked per leg across request.jsonl, result.json, probe.json and server.log; presence recorded, no value synthesized). The residual is therefore the legacy tail = wall - prefill - generate, which may absorb finalize/overhead; tail deltas must not be read as engine effects.",
+      "title": "finalize_ms absent in historical 0.6.0 logs"
+    },
+    {
+      "id": "descriptive-not-causal",
+      "text": "Each model has exactly one candidate block and one optout block, run as separate sequential server processes on one host, with 10 repeats per context per leg and no interleaving, randomization or significance testing. All candidate blocks ran before all optout blocks (candidate start epochs 1790762985-1790767673, optout 1790769043-1790770339). Host/time-varying effects cannot be separated from the F1/C2 switch effect; small deltas (order of a few percent) should not be read as effects.",
+      "title": "single sequential A/B blocks: descriptive, not causal"
+    },
+    {
+      "id": "vision-no-policy-line",
+      "text": "Both qwen36-vision legs have no compiled_routed_switch_glu line in server.log (other [Qwen4Exp] lines are present and tolerated: 7 candidate, 5 optout). The vision A/B block therefore has no direct compiled-routed-MoE signal in either arm; its deltas are recorded for completeness only.",
+      "title": "vision legs carry no compiled_routed_switch_glu policy line"
+    }
+  ],
+  "finalize_ms": {
+    "note": "Detected by scanning each leg's request.jsonl, result.json, probe.json and server.log; historical 0.6.0 logs lack finalize_ms, so it is recorded as absent and the legacy tail is used.",
+    "per_leg": {
+      "ornith-060-optout/optout": false,
+      "ornith-060/candidate": false,
+      "qwen36-text-060-thinking-off-optout/optout": false,
+      "qwen36-text-060-thinking-off/candidate": false,
+      "qwen36-vision-060-thinking-off-optout/optout": false,
+      "qwen36-vision-060-thinking-off/candidate": false
+    },
+    "present_in_any_leg": false
+  },
+  "generated_at_utc": "2026-09-30T12:39:08Z",
+  "generated_by": "tools/f1_c2_optout_report.py",
+  "legs": {
+    "ornith-060-optout/optout": {
+      "arm": "optout",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": null,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {
+          "VMLX_QWEN35_COMPILE_DECODE_REGIONS": "0",
+          "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE": "0"
+        },
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 307.78,
+          "client_minus_server_wall_ms_mean": 304.77,
+          "client_minus_server_wall_ms_min": 303.58,
+          "client_wall_ms_mean": 58693.08
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.61,
+          "client_minus_server_wall_ms_mean": 1.27,
+          "client_minus_server_wall_ms_min": 1.18,
+          "client_wall_ms_mean": 716.34
+        }
+      },
+      "dir": "ornith-060-optout/optout",
+      "enable_thinking": null,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790769656.9023402,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 50.227,
+          "generate_ms": 643.14,
+          "n": 20,
+          "prefill_ms": 28809.16,
+          "prompt_tps": 324.798,
+          "tail_ms": 99.39,
+          "wall_ms": 29551.69
+        },
+        "loaded_30k": {
+          "decode_tps": 45.391,
+          "generate_ms": 705.01,
+          "n": 10,
+          "prefill_ms": 57516.69,
+          "prompt_tps": 521.589,
+          "tail_ms": 166.6,
+          "wall_ms": 58388.31
+        },
+        "short": {
+          "decode_tps": 55.063,
+          "generate_ms": 581.26,
+          "n": 10,
+          "prefill_ms": 101.63,
+          "prompt_tps": 128.006,
+          "tail_ms": 32.17,
+          "wall_ms": 715.07
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+      "model_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "model_key": "ornith",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": null,
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line and no other [Qwen4Exp] lines",
+          "present": false,
+          "value": null
+        },
+        "expected": "absent",
+        "expected_note": "optout leg (both switches '0'): no compiled_routed_switch_glu policy line",
+        "matches_expected": true,
+        "qwen35_line_count": 1,
+        "qwen4exp_line_count": 0
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790769043.130358
+    },
+    "ornith-060/candidate": {
+      "arm": "candidate",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": null,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {},
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 305.53,
+          "client_minus_server_wall_ms_mean": 304.17,
+          "client_minus_server_wall_ms_min": 303.5,
+          "client_wall_ms_mean": 58318.21
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.6,
+          "client_minus_server_wall_ms_mean": 1.26,
+          "client_minus_server_wall_ms_min": 1.19,
+          "client_wall_ms_mean": 702.05
+        }
+      },
+      "dir": "ornith-060/candidate",
+      "enable_thinking": null,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790763591.5845928,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 51.147,
+          "generate_ms": 631.57,
+          "n": 20,
+          "prefill_ms": 28625.02,
+          "prompt_tps": 328.361,
+          "tail_ms": 100.82,
+          "wall_ms": 29357.41
+        },
+        "loaded_30k": {
+          "decode_tps": 46.203,
+          "generate_ms": 692.6,
+          "n": 10,
+          "prefill_ms": 57151.36,
+          "prompt_tps": 524.922,
+          "tail_ms": 170.08,
+          "wall_ms": 58014.04
+        },
+        "short": {
+          "decode_tps": 56.092,
+          "generate_ms": 570.55,
+          "n": 10,
+          "prefill_ms": 98.68,
+          "prompt_tps": 131.799,
+          "tail_ms": 31.56,
+          "wall_ms": 700.78
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+      "model_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "model_key": "ornith",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": "[Qwen4Exp] compiled_routed_switch_glu=active stock_gather_qmm=true shared_weight_inputs=true dtype=bfloat16",
+          "line_number": 17,
+          "note": null,
+          "present": true,
+          "value": "active"
+        },
+        "expected": "active",
+        "expected_note": "0.6.0 default (switches unset): compiled_routed_switch_glu=active",
+        "matches_expected": true,
+        "qwen35_line_count": 1,
+        "qwen4exp_line_count": 1
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790762985.782193
+    },
+    "qwen36-text-060-thinking-off-optout/optout": {
+      "arm": "optout",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": false,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {
+          "VMLX_QWEN35_COMPILE_DECODE_REGIONS": "0",
+          "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE": "0"
+        },
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 376.66,
+          "client_minus_server_wall_ms_mean": 375.68,
+          "client_minus_server_wall_ms_min": 374.34,
+          "client_wall_ms_mean": 59175.42
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.54,
+          "client_minus_server_wall_ms_mean": 1.26,
+          "client_minus_server_wall_ms_min": 1.16,
+          "client_wall_ms_mean": 697.55
+        }
+      },
+      "dir": "qwen36-text-060-thinking-off-optout/optout",
+      "enable_thinking": false,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790770314.6728919,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 50.855,
+          "generate_ms": 638.36,
+          "n": 20,
+          "prefill_ms": 29006.64,
+          "prompt_tps": 323.798,
+          "tail_ms": 103.02,
+          "wall_ms": 29748.02
+        },
+        "loaded_30k": {
+          "decode_tps": 44.785,
+          "generate_ms": 714.52,
+          "n": 10,
+          "prefill_ms": 57912.78,
+          "prompt_tps": 518.021,
+          "tail_ms": 172.43,
+          "wall_ms": 58799.73
+        },
+        "short": {
+          "decode_tps": 56.924,
+          "generate_ms": 562.19,
+          "n": 10,
+          "prefill_ms": 100.5,
+          "prompt_tps": 129.576,
+          "tail_ms": 33.6,
+          "wall_ms": 696.3
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly",
+      "model_id": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+      "model_key": "qwen36-text",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": null,
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line and no other [Qwen4Exp] lines",
+          "present": false,
+          "value": null
+        },
+        "expected": "absent",
+        "expected_note": "optout leg (both switches '0'): no compiled_routed_switch_glu policy line",
+        "matches_expected": true,
+        "qwen35_line_count": 1,
+        "qwen4exp_line_count": 0
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790769700.5351732
+    },
+    "qwen36-text-060-thinking-off/candidate": {
+      "arm": "candidate",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": false,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {},
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 342.57,
+          "client_minus_server_wall_ms_mean": 340.23,
+          "client_minus_server_wall_ms_min": 338.48,
+          "client_wall_ms_mean": 58753.45
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.56,
+          "client_minus_server_wall_ms_mean": 1.27,
+          "client_minus_server_wall_ms_min": 1.21,
+          "client_wall_ms_mean": 688.02
+        }
+      },
+      "dir": "qwen36-text-060-thinking-off/candidate",
+      "enable_thinking": false,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790766498.23532,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 51.397,
+          "generate_ms": 632.26,
+          "n": 20,
+          "prefill_ms": 28816.79,
+          "prompt_tps": 326.188,
+          "tail_ms": 100.93,
+          "wall_ms": 29549.99
+        },
+        "loaded_30k": {
+          "decode_tps": 45.055,
+          "generate_ms": 710.27,
+          "n": 10,
+          "prefill_ms": 57534.21,
+          "prompt_tps": 521.429,
+          "tail_ms": 168.75,
+          "wall_ms": 58413.22
+        },
+        "short": {
+          "decode_tps": 57.739,
+          "generate_ms": 554.26,
+          "n": 10,
+          "prefill_ms": 99.37,
+          "prompt_tps": 130.946,
+          "tail_ms": 33.12,
+          "wall_ms": 686.75
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly",
+      "model_id": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+      "model_key": "qwen36-text",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": "[Qwen4Exp] compiled_routed_switch_glu=active stock_gather_qmm=true shared_weight_inputs=true dtype=bfloat16",
+          "line_number": 17,
+          "note": null,
+          "present": true,
+          "value": "active"
+        },
+        "expected": "active",
+        "expected_note": "0.6.0 default (switches unset): compiled_routed_switch_glu=active",
+        "matches_expected": true,
+        "qwen35_line_count": 1,
+        "qwen4exp_line_count": 1
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790765896.365451
+    },
+    "qwen36-vision-060-thinking-off-optout/optout": {
+      "arm": "optout",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": false,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {
+          "VMLX_QWEN35_COMPILE_DECODE_REGIONS": "0",
+          "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE": "0"
+        },
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 353.36,
+          "client_minus_server_wall_ms_mean": 346.2,
+          "client_minus_server_wall_ms_min": 342.63,
+          "client_wall_ms_mean": 83781.12
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.89,
+          "client_minus_server_wall_ms_mean": 1.33,
+          "client_minus_server_wall_ms_min": 1.22,
+          "client_wall_ms_mean": 2341.98
+        }
+      },
+      "dir": "qwen36-vision-060-thinking-off-optout/optout",
+      "enable_thinking": false,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790771258.2264278,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 13.839,
+          "generate_ms": 2355.48,
+          "n": 20,
+          "prefill_ms": 40502.91,
+          "prompt_tps": 207.853,
+          "tail_ms": 29.4,
+          "wall_ms": 42887.79
+        },
+        "loaded_30k": {
+          "decode_tps": 11.968,
+          "generate_ms": 2673.89,
+          "n": 10,
+          "prefill_ms": 80709.64,
+          "prompt_tps": 371.805,
+          "tail_ms": 51.39,
+          "wall_ms": 83434.92
+        },
+        "short": {
+          "decode_tps": 15.709,
+          "generate_ms": 2037.07,
+          "n": 10,
+          "prefill_ms": 296.17,
+          "prompt_tps": 43.901,
+          "tail_ms": 7.41,
+          "wall_ms": 2340.65
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+      "model_id": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "model_key": "qwen36-vision",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": null,
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present: 5, tolerated)",
+          "present": false,
+          "value": null
+        },
+        "expected": "absent",
+        "expected_note": "optout leg (both switches '0'): no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present, tolerated)",
+        "matches_expected": true,
+        "qwen35_line_count": 0,
+        "qwen4exp_line_count": 5
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790770339.419874
+    },
+    "qwen36-vision-060-thinking-off/candidate": {
+      "arm": "candidate",
+      "binary": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mei",
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "checks": {
+        "all_files_present": true,
+        "binary_matches_expected": true,
+        "binary_sha256_matches_expected": true,
+        "contexts_field_ok": true,
+        "embedded_request_log_matches_file": true,
+        "enable_thinking_flag": false,
+        "enable_thinking_ok": true,
+        "model_id_matches_expected": true,
+        "operator_overrides": {},
+        "operator_overrides_ok": true,
+        "probe_returncode": 0,
+        "probe_returncode_ok": true,
+        "probe_status": "passed",
+        "probe_status_ok": true,
+        "probe_subprobes_ok": true,
+        "repeats_per_context": 10,
+        "repeats_per_context_ok": true,
+        "request_completion_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "request_completion_contexts_ok": true,
+        "request_completion_rows": 20,
+        "request_completion_rows_ok": true,
+        "request_kind_counts": {
+          "chat": 3,
+          "chat_stream": 2,
+          "completion": 20
+        },
+        "request_log_rows": 25,
+        "request_log_rows_ok": true,
+        "server_stopped": true,
+        "server_stopped_ok": true,
+        "timing_contexts": {
+          "loaded": 10,
+          "short": 10
+        },
+        "timing_contexts_ok": true,
+        "timing_log_pairing_ok": true,
+        "timing_rows": 20,
+        "timing_rows_ok": true,
+        "timing_text_hashes_ok": true,
+        "timing_wall_positive": true
+      },
+      "context_cap": "65536",
+      "cross_check": {
+        "loaded": {
+          "client_minus_server_wall_ms_max": 333.85,
+          "client_minus_server_wall_ms_mean": 330.45,
+          "client_minus_server_wall_ms_min": 328.33,
+          "client_wall_ms_mean": 84211.44
+        },
+        "short": {
+          "client_minus_server_wall_ms_max": 1.67,
+          "client_minus_server_wall_ms_mean": 1.27,
+          "client_minus_server_wall_ms_min": 1.18,
+          "client_wall_ms_mean": 2353.84
+        }
+      },
+      "dir": "qwen36-vision-060-thinking-off/candidate",
+      "enable_thinking": false,
+      "failures": [],
+      "finalize_ms": {
+        "note": "Historical 0.6.0 logs do not emit finalize_ms; recorded as absent, no value synthesized. The residual is the legacy tail = wall - prefill - generate.",
+        "per_source": {
+          "probe.json": false,
+          "request.jsonl": false,
+          "result.json": false,
+          "server.log": false
+        },
+        "present": false
+      },
+      "finished_epoch": 1790768590.015094,
+      "means": {
+        "both_contexts": {
+          "decode_tps": 14.183,
+          "generate_ms": 2278.26,
+          "n": 20,
+          "prefill_ms": 40810.4,
+          "prompt_tps": 207.261,
+          "tail_ms": 28.11,
+          "wall_ms": 43116.78
+        },
+        "loaded_30k": {
+          "decode_tps": 12.79,
+          "generate_ms": 2501.9,
+          "n": 10,
+          "prefill_ms": 81330.26,
+          "prompt_tps": 369.771,
+          "tail_ms": 48.84,
+          "wall_ms": 83880.99
+        },
+        "short": {
+          "decode_tps": 15.575,
+          "generate_ms": 2054.63,
+          "n": 10,
+          "prefill_ms": 290.54,
+          "prompt_tps": 44.75,
+          "tail_ms": 7.39,
+          "wall_ms": 2352.57
+        }
+      },
+      "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+      "model_id": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "model_key": "qwen36-vision",
+      "outputs": {
+        "loaded": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+        },
+        "short": {
+          "completion_tokens": [
+            32
+          ],
+          "deterministic_within_leg": true,
+          "distinct_text_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "finish_reasons": [
+            "length"
+          ],
+          "text_sample": ""
+        }
+      },
+      "policy_evidence": {
+        "compiled_routed_switch_glu": {
+          "line": null,
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present: 7, tolerated)",
+          "present": false,
+          "value": null
+        },
+        "expected": "absent",
+        "expected_note": "0.6.0 vision leg: no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present, tolerated)",
+        "matches_expected": true,
+        "qwen35_line_count": 0,
+        "qwen4exp_line_count": 7
+      },
+      "port": "18251",
+      "probe_checks": {
+        "passed": 6,
+        "total": 6
+      },
+      "started_epoch": 1790767673.405926
+    }
+  },
+  "method": {
+    "delta_pct": "(optout - candidate) / candidate * 100",
+    "greedy_outputs": "requests pinned greedy decoding (temperature=0, top_p=1, top_k=1, seed=1); output match compares per-repeat text_sha256/text and distinct hash sets",
+    "means_source": "request.jsonl rows with kind=completion (10 short + 10 loaded per leg); server-reported metrics",
+    "policy_evidence": "server.log lines containing compiled_routed_switch_glu; other [Qwen4Exp] lines are recorded but tolerated",
+    "tail": "tail_ms = wall_ms - prefill_ms - generate_ms (legacy decomposition; no finalize_ms in historical 0.6.0 logs)"
+  },
+  "pairs": [
+    {
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "contexts": {
+        "loaded_30k": {
+          "candidate": {
+            "decode_tps": 46.203,
+            "generate_ms": 692.6,
+            "n": 10,
+            "prefill_ms": 57151.36,
+            "prompt_tps": 524.922,
+            "tail_ms": 170.08,
+            "wall_ms": 58014.04
+          },
+          "delta_pct": {
+            "decode_tps": -1.76,
+            "generate_ms": 1.79,
+            "prefill_ms": 0.64,
+            "prompt_tps": -0.63,
+            "tail_ms": -2.05,
+            "wall_ms": 0.65
+          },
+          "optout": {
+            "decode_tps": 45.391,
+            "generate_ms": 705.01,
+            "n": 10,
+            "prefill_ms": 57516.69,
+            "prompt_tps": 521.589,
+            "tail_ms": 166.6,
+            "wall_ms": 58388.31
+          }
+        },
+        "pooled_both_contexts": {
+          "candidate": {
+            "decode_tps": 51.147,
+            "generate_ms": 631.57,
+            "n": 20,
+            "prefill_ms": 28625.02,
+            "prompt_tps": 328.361,
+            "tail_ms": 100.82,
+            "wall_ms": 29357.41
+          },
+          "delta_pct": {
+            "decode_tps": -1.8,
+            "generate_ms": 1.83,
+            "prefill_ms": 0.64,
+            "prompt_tps": -1.09,
+            "tail_ms": -1.42,
+            "wall_ms": 0.66
+          },
+          "optout": {
+            "decode_tps": 50.227,
+            "generate_ms": 643.14,
+            "n": 20,
+            "prefill_ms": 28809.16,
+            "prompt_tps": 324.798,
+            "tail_ms": 99.39,
+            "wall_ms": 29551.69
+          }
+        },
+        "short": {
+          "candidate": {
+            "decode_tps": 56.092,
+            "generate_ms": 570.55,
+            "n": 10,
+            "prefill_ms": 98.68,
+            "prompt_tps": 131.799,
+            "tail_ms": 31.56,
+            "wall_ms": 700.78
+          },
+          "delta_pct": {
+            "decode_tps": -1.83,
+            "generate_ms": 1.88,
+            "prefill_ms": 2.99,
+            "prompt_tps": -2.88,
+            "tail_ms": 1.93,
+            "wall_ms": 2.04
+          },
+          "optout": {
+            "decode_tps": 55.063,
+            "generate_ms": 581.26,
+            "n": 10,
+            "prefill_ms": 101.63,
+            "prompt_tps": 128.006,
+            "tail_ms": 32.17,
+            "wall_ms": 715.07
+          }
+        }
+      },
+      "enable_thinking": null,
+      "legs": {
+        "candidate": "ornith-060/candidate",
+        "optout": "ornith-060-optout/optout"
+      },
+      "model_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "model_key": "ornith",
+      "output_match": {
+        "all_contexts_match": true,
+        "loaded_30k": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "rows_match": true
+        },
+        "short": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "rows_match": true
+        }
+      },
+      "policy": {
+        "candidate": {
+          "line_number": 17,
+          "note": null,
+          "present": true,
+          "value": "active"
+        },
+        "optout": {
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line and no other [Qwen4Exp] lines",
+          "present": false,
+          "value": null
+        },
+        "pattern_ok": true
+      },
+      "same_binary_sha256": true
+    },
+    {
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "contexts": {
+        "loaded_30k": {
+          "candidate": {
+            "decode_tps": 45.055,
+            "generate_ms": 710.27,
+            "n": 10,
+            "prefill_ms": 57534.21,
+            "prompt_tps": 521.429,
+            "tail_ms": 168.75,
+            "wall_ms": 58413.22
+          },
+          "delta_pct": {
+            "decode_tps": -0.6,
+            "generate_ms": 0.6,
+            "prefill_ms": 0.66,
+            "prompt_tps": -0.65,
+            "tail_ms": 2.18,
+            "wall_ms": 0.66
+          },
+          "optout": {
+            "decode_tps": 44.785,
+            "generate_ms": 714.52,
+            "n": 10,
+            "prefill_ms": 57912.78,
+            "prompt_tps": 518.021,
+            "tail_ms": 172.43,
+            "wall_ms": 58799.73
+          }
+        },
+        "pooled_both_contexts": {
+          "candidate": {
+            "decode_tps": 51.397,
+            "generate_ms": 632.26,
+            "n": 20,
+            "prefill_ms": 28816.79,
+            "prompt_tps": 326.188,
+            "tail_ms": 100.93,
+            "wall_ms": 29549.99
+          },
+          "delta_pct": {
+            "decode_tps": -1.05,
+            "generate_ms": 0.96,
+            "prefill_ms": 0.66,
+            "prompt_tps": -0.73,
+            "tail_ms": 2.07,
+            "wall_ms": 0.67
+          },
+          "optout": {
+            "decode_tps": 50.855,
+            "generate_ms": 638.36,
+            "n": 20,
+            "prefill_ms": 29006.64,
+            "prompt_tps": 323.798,
+            "tail_ms": 103.02,
+            "wall_ms": 29748.02
+          }
+        },
+        "short": {
+          "candidate": {
+            "decode_tps": 57.739,
+            "generate_ms": 554.26,
+            "n": 10,
+            "prefill_ms": 99.37,
+            "prompt_tps": 130.946,
+            "tail_ms": 33.12,
+            "wall_ms": 686.75
+          },
+          "delta_pct": {
+            "decode_tps": -1.41,
+            "generate_ms": 1.43,
+            "prefill_ms": 1.14,
+            "prompt_tps": -1.05,
+            "tail_ms": 1.45,
+            "wall_ms": 1.39
+          },
+          "optout": {
+            "decode_tps": 56.924,
+            "generate_ms": 562.19,
+            "n": 10,
+            "prefill_ms": 100.5,
+            "prompt_tps": 129.576,
+            "tail_ms": 33.6,
+            "wall_ms": 696.3
+          }
+        }
+      },
+      "enable_thinking": false,
+      "legs": {
+        "candidate": "qwen36-text-060-thinking-off/candidate",
+        "optout": "qwen36-text-060-thinking-off-optout/optout"
+      },
+      "model_id": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+      "model_key": "qwen36-text",
+      "output_match": {
+        "all_contexts_match": true,
+        "loaded_30k": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "rows_match": true
+        },
+        "short": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "rows_match": true
+        }
+      },
+      "policy": {
+        "candidate": {
+          "line_number": 17,
+          "note": null,
+          "present": true,
+          "value": "active"
+        },
+        "optout": {
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line and no other [Qwen4Exp] lines",
+          "present": false,
+          "value": null
+        },
+        "pattern_ok": true
+      },
+      "same_binary_sha256": true
+    },
+    {
+      "binary_sha256": "3d828371326dd170364f4312b1ef8ffcbffbf235ed67f735d29c5a5214edbffc",
+      "contexts": {
+        "loaded_30k": {
+          "candidate": {
+            "decode_tps": 12.79,
+            "generate_ms": 2501.9,
+            "n": 10,
+            "prefill_ms": 81330.26,
+            "prompt_tps": 369.771,
+            "tail_ms": 48.84,
+            "wall_ms": 83880.99
+          },
+          "delta_pct": {
+            "decode_tps": -6.43,
+            "generate_ms": 6.87,
+            "prefill_ms": -0.76,
+            "prompt_tps": 0.55,
+            "tail_ms": 5.22,
+            "wall_ms": -0.53
+          },
+          "optout": {
+            "decode_tps": 11.968,
+            "generate_ms": 2673.89,
+            "n": 10,
+            "prefill_ms": 80709.64,
+            "prompt_tps": 371.805,
+            "tail_ms": 51.39,
+            "wall_ms": 83434.92
+          }
+        },
+        "pooled_both_contexts": {
+          "candidate": {
+            "decode_tps": 14.183,
+            "generate_ms": 2278.26,
+            "n": 20,
+            "prefill_ms": 40810.4,
+            "prompt_tps": 207.261,
+            "tail_ms": 28.11,
+            "wall_ms": 43116.78
+          },
+          "delta_pct": {
+            "decode_tps": -2.43,
+            "generate_ms": 3.39,
+            "prefill_ms": -0.75,
+            "prompt_tps": 0.29,
+            "tail_ms": 4.59,
+            "wall_ms": -0.53
+          },
+          "optout": {
+            "decode_tps": 13.839,
+            "generate_ms": 2355.48,
+            "n": 20,
+            "prefill_ms": 40502.91,
+            "prompt_tps": 207.853,
+            "tail_ms": 29.4,
+            "wall_ms": 42887.79
+          }
+        },
+        "short": {
+          "candidate": {
+            "decode_tps": 15.575,
+            "generate_ms": 2054.63,
+            "n": 10,
+            "prefill_ms": 290.54,
+            "prompt_tps": 44.75,
+            "tail_ms": 7.39,
+            "wall_ms": 2352.57
+          },
+          "delta_pct": {
+            "decode_tps": 0.86,
+            "generate_ms": -0.85,
+            "prefill_ms": 1.94,
+            "prompt_tps": -1.9,
+            "tail_ms": 0.27,
+            "wall_ms": -0.51
+          },
+          "optout": {
+            "decode_tps": 15.709,
+            "generate_ms": 2037.07,
+            "n": 10,
+            "prefill_ms": 296.17,
+            "prompt_tps": 43.901,
+            "tail_ms": 7.41,
+            "wall_ms": 2340.65
+          }
+        }
+      },
+      "enable_thinking": false,
+      "legs": {
+        "candidate": "qwen36-vision-060-thinking-off/candidate",
+        "optout": "qwen36-vision-060-thinking-off-optout/optout"
+      },
+      "model_id": "mlx-community/Qwen3.6-35B-A3B-4bit",
+      "model_key": "qwen36-vision",
+      "output_match": {
+        "all_contexts_match": true,
+        "loaded_30k": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "4e0b7037f631632d09cb9fb1809568ad17bf38c859bb80ac58e7e50cf0e0a47f"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello"
+          },
+          "rows_match": true
+        },
+        "short": {
+          "candidate": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "match": true,
+          "optout": {
+            "completion_tokens": [
+              32
+            ],
+            "distinct_text_sha256": [
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "finish_reasons": [
+              "length"
+            ],
+            "text": ""
+          },
+          "rows_match": true
+        }
+      },
+      "policy": {
+        "candidate": {
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present: 7, tolerated)",
+          "present": false,
+          "value": null
+        },
+        "optout": {
+          "line_number": null,
+          "note": "no compiled_routed_switch_glu policy line (other [Qwen4Exp] lines present: 5, tolerated)",
+          "present": false,
+          "value": null
+        },
+        "pattern_ok": true
+      },
+      "same_binary_sha256": true
+    }
+  ],
+  "schema": "mei-f1-c2-optout/1",
+  "scope": {
+    "contexts": {
+      "loaded": 30000,
+      "short": 13
+    },
+    "legs": [
+      "ornith-060/candidate",
+      "ornith-060-optout/optout",
+      "qwen36-text-060-thinking-off/candidate",
+      "qwen36-text-060-thinking-off-optout/optout",
+      "qwen36-vision-060-thinking-off/candidate",
+      "qwen36-vision-060-thinking-off-optout/optout"
+    ],
+    "models": [
+      "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+      "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+      "mlx-community/Qwen3.6-35B-A3B-4bit"
+    ],
+    "note": "Same-binary A/B: one shared 0.6.0 binary per pair; candidate = both F1/C2 switches unset (default compiled-ON), optout = both switches explicitly '0'.",
+    "pairs": [
+      {
+        "legs": {
+          "candidate": "ornith-060/candidate",
+          "optout": "ornith-060-optout/optout"
+        },
+        "model_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        "model_key": "ornith"
+      },
+      {
+        "legs": {
+          "candidate": "qwen36-text-060-thinking-off/candidate",
+          "optout": "qwen36-text-060-thinking-off-optout/optout"
+        },
+        "model_id": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+        "model_key": "qwen36-text"
+      },
+      {
+        "legs": {
+          "candidate": "qwen36-vision-060-thinking-off/candidate",
+          "optout": "qwen36-vision-060-thinking-off-optout/optout"
+        },
+        "model_id": "mlx-community/Qwen3.6-35B-A3B-4bit",
+        "model_key": "qwen36-vision"
+      }
+    ],
+    "release": "0.6.0",
+    "repeats_per_context": 10
+  },
+  "totals": {
+    "all_ok": true,
+    "candidate_overrides_ok_legs": 3,
+    "completion_rows_total": 120,
+    "finalize_ms_absent_legs": 6,
+    "legs": 6,
+    "legs_valid": 6,
+    "models": 3,
+    "optout_overrides_ok_legs": 3,
+    "output_pairs_matched": 3,
+    "pairs": 3,
+    "policy_pattern_matched_legs": 6,
+    "probe_returncode_zero_legs": 6,
+    "request_log_rows_total": 150,
+    "same_binary_sha_legs": 6,
+    "server_stopped_legs": 6,
+    "timing_rows_total": 120
+  }
+}

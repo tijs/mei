@@ -1,0 +1,26 @@
+optout short r1: prompt=13 completion=32 wall=0.686s
+optout short r2: prompt=13 completion=32 wall=0.691s
+optout short r3: prompt=13 completion=32 wall=0.697s
+optout short r4: prompt=13 completion=32 wall=0.700s
+optout short r5: prompt=13 completion=32 wall=0.707s
+optout short r6: prompt=13 completion=32 wall=0.703s
+optout short r7: prompt=13 completion=32 wall=0.694s
+optout short r8: prompt=13 completion=32 wall=0.692s
+optout short r9: prompt=13 completion=32 wall=0.703s
+optout short r10: prompt=13 completion=32 wall=0.702s
+optout loaded r1: prompt=30000 completion=32 wall=59.164s
+optout loaded r2: prompt=30000 completion=32 wall=59.106s
+optout loaded r3: prompt=30000 completion=32 wall=59.287s
+optout loaded r4: prompt=30000 completion=32 wall=59.209s
+optout loaded r5: prompt=30000 completion=32 wall=59.127s
+optout loaded r6: prompt=30000 completion=32 wall=59.165s
+optout loaded r7: prompt=30000 completion=32 wall=59.161s
+optout loaded r8: prompt=30000 completion=32 wall=59.059s
+optout loaded r9: prompt=30000 completion=32 wall=59.264s
+optout loaded r10: prompt=30000 completion=32 wall=59.212s
+{
+  "arm": "optout",
+  "status": "passed",
+  "output": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-release-compare-20260930T095614Z/qwen36-text-060-thinking-off-optout/optout",
+  "rows": 20
+}

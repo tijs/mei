@@ -6,6 +6,18 @@ local-model-bench probe_mei.py read-only for the per-arm admission/tool gate,
 then measures the actual OpenAI-compatible Mei endpoint at short and 30k
 context. One server process is used for one arm; each arm gets a fresh process,
 its own request log, and a fresh KV/runtime path.
+
+Arms (both F1/C2 switches are cleared from the environment first; the arm then
+applies its overrides on top):
+
+  candidate  leave both switches unset. This is the upstream/profile default;
+             on the 0.6.0 pin the compiled routed-MoE decode region is active
+             by default, so this arm measures it ON.
+  control    force both switches to "1" -- compiled region explicitly ON.
+  optout     force both switches to "0" -- compiled region explicitly OFF.
+
+The same-binary A/B for the 0.6.0 pin is candidate (default ON) versus optout
+(explicit OFF); control is kept for pins whose default already flipped off.
 """
 from __future__ import annotations
 
@@ -26,6 +38,37 @@ SWITCHES = (
     "VMLX_QWEN35_COMPILE_DECODE_REGIONS",
     "VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE",
 )
+
+# Arm name -> environment overrides applied after both switches are cleared.
+# "candidate" intentionally stays empty so the switches remain unset (the
+# 0.6.0 default is compiled ON); "optout" pins the explicit off state.
+ARM_OVERRIDES = {
+    "candidate": {},
+    "control": {name: "1" for name in SWITCHES},
+    "optout": {name: "0" for name in SWITCHES},
+}
+
+
+def arm_overrides(arm: str) -> dict[str, str]:
+    """Return a fresh copy of the switch overrides for ``arm``."""
+    return dict(ARM_OVERRIDES[arm])
+
+
+def build_env(overrides: dict[str, str], base: dict[str, str] | None = None) -> dict[str, str]:
+    """Build the server environment for one arm.
+
+    Both F1/C2 switches are cleared first, the fixed compile flags are set,
+    and the arm's overrides are applied last (so "candidate" leaves the
+    switches genuinely unset, "control" pins them to "1", and "optout" pins
+    them to "0"). ``base`` defaults to ``os.environ`` and is never mutated.
+    """
+    env = dict(os.environ) if base is None else dict(base)
+    for name in SWITCHES:
+        env.pop(name, None)
+    env["VMLX_ENABLE_UNSAFE_COMPILE"] = "1"
+    env["VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES"] = "0"
+    env.update(overrides)
+    return env
 
 
 def get_json(url: str, timeout: float = 30.0) -> dict:
@@ -101,12 +144,7 @@ def run_arm(args: argparse.Namespace, arm: str, overrides: dict[str, str]) -> di
     model = args.model_id
     base = f"http://127.0.0.1:{args.port}/v1"
 
-    env = os.environ.copy()
-    for name in SWITCHES:
-        env.pop(name, None)
-    env["VMLX_ENABLE_UNSAFE_COMPILE"] = "1"
-    env["VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES"] = "0"
-    env.update(overrides)
+    env = build_env(overrides)
 
     command = [
         str(args.binary),
@@ -124,6 +162,8 @@ def run_arm(args: argparse.Namespace, arm: str, overrides: dict[str, str]) -> di
         "--request-log", str(request_log),
         "--log-requests", "true",
     ]
+    if args.enable_thinking is not None:
+        command.extend(["--enable-thinking", args.enable_thinking])
     metadata = {
         "arm": arm,
         "model_id": model,
@@ -217,8 +257,14 @@ def run_arm(args: argparse.Namespace, arm: str, overrides: dict[str, str]) -> di
         (out / "result.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "F1/C2 same-binary A/B driver. Arms: candidate (both switches "
+            "unset, the 0.6.0 default compiled-ON behavior), control (both "
+            "switches '1'), optout (both switches '0')."
+        )
+    )
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--model-dir", type=Path, required=True)
     parser.add_argument("--model-id", required=True)
@@ -226,13 +272,23 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--repeats", type=int, default=10)
-    parser.add_argument("--arm", choices=["candidate", "control"], required=True)
-    args = parser.parse_args()
+    parser.add_argument(
+        "--arm",
+        choices=list(ARM_OVERRIDES),
+        required=True,
+        help="candidate=switches unset; control=both '1'; optout=both '0'",
+    )
+    parser.add_argument("--enable-thinking", choices=["true", "false"], default=None)
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
     args.binary = args.binary.resolve()
     args.model_dir = args.model_dir.resolve()
     args.probe = args.probe.resolve()
     args.output = args.output.resolve()
-    overrides = {} if args.arm == "candidate" else {name: "1" for name in SWITCHES}
+    overrides = arm_overrides(args.arm)
     result = run_arm(args, args.arm, overrides)
     print(json.dumps({"arm": args.arm, "status": "passed", "output": str(args.output / args.arm), "rows": len(result.get("rows", []))}, indent=2))
     return 0
