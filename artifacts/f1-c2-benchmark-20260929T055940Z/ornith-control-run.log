@@ -1,0 +1,26 @@
+control short r1: prompt=13 completion=32 wall=0.699s
+control short r2: prompt=13 completion=32 wall=0.716s
+control short r3: prompt=13 completion=32 wall=0.717s
+control short r4: prompt=13 completion=32 wall=0.720s
+control short r5: prompt=13 completion=32 wall=0.734s
+control short r6: prompt=13 completion=32 wall=0.710s
+control short r7: prompt=13 completion=32 wall=0.716s
+control short r8: prompt=13 completion=32 wall=0.723s
+control short r9: prompt=13 completion=32 wall=0.719s
+control short r10: prompt=13 completion=32 wall=0.710s
+control loaded r1: prompt=30000 completion=32 wall=58.421s
+control loaded r2: prompt=30000 completion=32 wall=58.330s
+control loaded r3: prompt=30000 completion=32 wall=58.313s
+control loaded r4: prompt=30000 completion=32 wall=58.340s
+control loaded r5: prompt=30000 completion=32 wall=58.375s
+control loaded r6: prompt=30000 completion=32 wall=58.411s
+control loaded r7: prompt=30000 completion=32 wall=58.322s
+control loaded r8: prompt=30000 completion=32 wall=58.429s
+control loaded r9: prompt=30000 completion=32 wall=58.322s
+control loaded r10: prompt=30000 completion=32 wall=58.362s
+{
+  "arm": "control",
+  "status": "passed",
+  "output": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-benchmark-20260929T055940Z/ornith-control/control",
+  "rows": 20
+}

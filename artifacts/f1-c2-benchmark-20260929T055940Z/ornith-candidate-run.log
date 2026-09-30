@@ -1,0 +1,26 @@
+candidate short r1: prompt=13 completion=32 wall=0.689s
+candidate short r2: prompt=13 completion=32 wall=0.704s
+candidate short r3: prompt=13 completion=32 wall=0.701s
+candidate short r4: prompt=13 completion=32 wall=0.699s
+candidate short r5: prompt=13 completion=32 wall=0.711s
+candidate short r6: prompt=13 completion=32 wall=0.708s
+candidate short r7: prompt=13 completion=32 wall=0.691s
+candidate short r8: prompt=13 completion=32 wall=0.704s
+candidate short r9: prompt=13 completion=32 wall=0.706s
+candidate short r10: prompt=13 completion=32 wall=0.703s
+candidate loaded r1: prompt=30000 completion=32 wall=58.508s
+candidate loaded r2: prompt=30000 completion=32 wall=58.295s
+candidate loaded r3: prompt=30000 completion=32 wall=58.332s
+candidate loaded r4: prompt=30000 completion=32 wall=58.297s
+candidate loaded r5: prompt=30000 completion=32 wall=58.328s
+candidate loaded r6: prompt=30000 completion=32 wall=58.398s
+candidate loaded r7: prompt=30000 completion=32 wall=58.382s
+candidate loaded r8: prompt=30000 completion=32 wall=58.328s
+candidate loaded r9: prompt=30000 completion=32 wall=58.294s
+candidate loaded r10: prompt=30000 completion=32 wall=58.361s
+{
+  "arm": "candidate",
+  "status": "passed",
+  "output": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-benchmark-20260929T055940Z/ornith-candidate/candidate",
+  "rows": 20
+}

@@ -1,0 +1,26 @@
+control short r1: prompt=13 completion=32 wall=0.694s
+control short r2: prompt=13 completion=32 wall=0.688s
+control short r3: prompt=13 completion=32 wall=0.694s
+control short r4: prompt=13 completion=32 wall=0.680s
+control short r5: prompt=13 completion=32 wall=0.679s
+control short r6: prompt=13 completion=32 wall=0.694s
+control short r7: prompt=13 completion=32 wall=0.696s
+control short r8: prompt=13 completion=32 wall=0.677s
+control short r9: prompt=13 completion=32 wall=0.693s
+control short r10: prompt=13 completion=32 wall=0.700s
+control loaded r1: prompt=30000 completion=32 wall=58.643s
+control loaded r2: prompt=30000 completion=32 wall=58.697s
+control loaded r3: prompt=30000 completion=32 wall=58.682s
+control loaded r4: prompt=30000 completion=32 wall=58.673s
+control loaded r5: prompt=30000 completion=32 wall=58.624s
+control loaded r6: prompt=30000 completion=32 wall=58.652s
+control loaded r7: prompt=30000 completion=32 wall=58.683s
+control loaded r8: prompt=30000 completion=32 wall=58.756s
+control loaded r9: prompt=30000 completion=32 wall=58.657s
+control loaded r10: prompt=30000 completion=32 wall=58.684s
+{
+  "arm": "control",
+  "status": "passed",
+  "output": "/private/tmp/mei-c2-optout-0.6.1/artifacts/f1-c2-benchmark-20260929T055940Z/qwen36-text-control/control",
+  "rows": 20
+}
