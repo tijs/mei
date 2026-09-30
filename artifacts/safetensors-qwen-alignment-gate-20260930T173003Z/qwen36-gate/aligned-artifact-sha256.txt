@@ -1,0 +1,2 @@
+d15286efca67b349c1dec31e32f44f8a815680927982e357c6e5836c215e8e53  /tmp/qwen36-safetensors-alignment-gate/build/release/mei
+0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3  /tmp/qwen36-safetensors-alignment-gate/build/release/mlx.metallib

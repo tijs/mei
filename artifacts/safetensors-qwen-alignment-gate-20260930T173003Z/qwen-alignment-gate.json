@@ -1,0 +1,479 @@
+{
+  "gate": "Qwen stage-time safetensors alignment promotion",
+  "generated_utc": "2026-09-30T17:30:03Z",
+  "qwen36": {
+    "active_audit": {
+      "aligned": true,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+      "shard_bytes": 20402204288,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 5288196024,
+          "data_start_mod8": 0,
+          "file": "model-00001-of-00004.safetensors",
+          "payload_sha256": "fd515c1cf01d1d4547dff17d1c253b0b71087e707b5e3a1b885f8202d373324a",
+          "tensors": 716,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368472752,
+          "data_start_mod8": 0,
+          "file": "model-00002-of-00004.safetensors",
+          "payload_sha256": "93ff42a7f3b365febb20768810e78019ef501387da0967241a4e4416a683047f",
+          "tensors": 498,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368324144,
+          "data_start_mod8": 0,
+          "file": "model-00003-of-00004.safetensors",
+          "payload_sha256": "4f0e217c3736d8a0fab9d337e4f331f5228ef8f919969ca9ffff5e1b30ebb52a",
+          "tensors": 504,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 4377211368,
+          "data_start_mod8": 0,
+          "file": "model-00004-of-00004.safetensors",
+          "payload_sha256": "ccf6fa83d07b731fb0b10b4e0534c73153fc6228db199df4f7aca28fc540a782",
+          "tensors": 372,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        }
+      ],
+      "tensor_count": 2090,
+      "unaligned_bytes": 0,
+      "unaligned_tensors": 0
+    },
+    "active_served_path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+    "aligned": {
+      "load_active_bytes": 20444312596,
+      "probe_status": "passed",
+      "short_decode_active_bytes": 21008250176,
+      "short_decode_peak_bytes": 21084342090,
+      "short_decode_tokens_per_second": 47.73031029138671
+    },
+    "alignment_tool_manifest": {
+      "generated_utc": "2026-09-30T16:57:56Z",
+      "shards": [
+        {
+          "file": "model-00001-of-00004.safetensors",
+          "padding_bytes": 6,
+          "payload_bytes": 5288107104,
+          "payload_sha256": "fd515c1cf01d1d4547dff17d1c253b0b71087e707b5e3a1b885f8202d373324a",
+          "repack_seconds": 9.38,
+          "src_header_len": 88906,
+          "tensors": 716,
+          "unaligned_after": 0
+        },
+        {
+          "file": "model-00002-of-00004.safetensors",
+          "padding_bytes": 3,
+          "payload_bytes": 5368405504,
+          "payload_sha256": "93ff42a7f3b365febb20768810e78019ef501387da0967241a4e4416a683047f",
+          "repack_seconds": 10.79,
+          "src_header_len": 67237,
+          "tensors": 498,
+          "unaligned_after": 0
+        },
+        {
+          "file": "model-00003-of-00004.safetensors",
+          "padding_bytes": 5,
+          "payload_bytes": 5368256256,
+          "payload_sha256": "4f0e217c3736d8a0fab9d337e4f331f5228ef8f919969ca9ffff5e1b30ebb52a",
+          "repack_seconds": 8.11,
+          "src_header_len": 67875,
+          "tensors": 504,
+          "unaligned_after": 0
+        },
+        {
+          "file": "model-00004-of-00004.safetensors",
+          "padding_bytes": 3,
+          "payload_bytes": 4377161088,
+          "payload_sha256": "ccf6fa83d07b731fb0b10b4e0534c73153fc6228db199df4f7aca28fc540a782",
+          "repack_seconds": 6.65,
+          "src_header_len": 50269,
+          "tensors": 372,
+          "unaligned_after": 0
+        }
+      ],
+      "source_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-misaligned-20260930T171531Z",
+      "target_alignment": 8,
+      "tool": "align_safetensors.py"
+    },
+    "binary_sha256": "d15286efca67b349c1dec31e32f44f8a815680927982e357c6e5836c215e8e53",
+    "delta": {
+      "aligned_speedup_factor": 5.0529782695744885,
+      "load_active_bytes": 3884161970,
+      "load_active_percent": 18.998740856466604,
+      "misaligned_relative_to_aligned_percent": -80.20969126225414,
+      "short_decode_tps_delta": 38.28433452323719
+    },
+    "launcher_dry_run": "mei isolated launch: /Users/tijs/.local/share/local-model-bench/mei-build-040/release/mei --model-dir /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit --served-model-id mlx-community/Qwen3.6-35B-A3B-4bit --host 127.0.0.1 --port 8024 --context-cap 65536 --temperature 0.6 --top-p 0.95 --top-k 20 --emit-reasoning true --cache-reuse true --max-tokens 8192 --prefill-step-size 1024 --kv-cache-dir /Users/tijs/.local/share/local-model-bench/mei-runtime/kv-qwen36-35B",
+    "launcher_path_after_promotion": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+    "local_model_bench_acceptance": {
+      "checks": {
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "served_ids": [
+        "mlx-community/Qwen3.6-35B-A3B-4bit"
+      ],
+      "status": "passed"
+    },
+    "metallib_sha256": "0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3",
+    "misaligned": {
+      "load_active_bytes": 24328474566,
+      "probe_status": "passed",
+      "realignment_log_lines": [
+        "[mlx.safetensors.mmap] realigned 372 unaligned tensor(s) (4377161088 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit/model-00004-of-00004.safetensors",
+        "[mlx.safetensors.mmap] realigned 111 unaligned tensor(s) (3906420736 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit/model-00001-of-00004.safetensors",
+        "[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit/model-00003-of-00004.safetensors",
+        "[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit/model-00002-of-00004.safetensors"
+      ],
+      "short_decode_active_bytes": 24891920562,
+      "short_decode_peak_bytes": 24899754732,
+      "short_decode_tokens_per_second": 9.44597576814952
+    },
+    "model_id": "mlx-community/Qwen3.6-35B-A3B-4bit",
+    "payload_identity": [
+      {
+        "aligned_bytes": 5288196024,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "fd515c1cf01d1d4547dff17d1c253b0b71087e707b5e3a1b885f8202d373324a",
+        "equal": true,
+        "file": "model-00001-of-00004.safetensors",
+        "padding_bytes": 6,
+        "source_bytes": 5288196018,
+        "source_data_start_mod8": 2,
+        "source_payload_sha256": "fd515c1cf01d1d4547dff17d1c253b0b71087e707b5e3a1b885f8202d373324a"
+      },
+      {
+        "aligned_bytes": 5368472752,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "93ff42a7f3b365febb20768810e78019ef501387da0967241a4e4416a683047f",
+        "equal": true,
+        "file": "model-00002-of-00004.safetensors",
+        "padding_bytes": 3,
+        "source_bytes": 5368472749,
+        "source_data_start_mod8": 5,
+        "source_payload_sha256": "93ff42a7f3b365febb20768810e78019ef501387da0967241a4e4416a683047f"
+      },
+      {
+        "aligned_bytes": 5368324144,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "4f0e217c3736d8a0fab9d337e4f331f5228ef8f919969ca9ffff5e1b30ebb52a",
+        "equal": true,
+        "file": "model-00003-of-00004.safetensors",
+        "padding_bytes": 5,
+        "source_bytes": 5368324139,
+        "source_data_start_mod8": 3,
+        "source_payload_sha256": "4f0e217c3736d8a0fab9d337e4f331f5228ef8f919969ca9ffff5e1b30ebb52a"
+      },
+      {
+        "aligned_bytes": 4377211368,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "ccf6fa83d07b731fb0b10b4e0534c73153fc6228db199df4f7aca28fc540a782",
+        "equal": true,
+        "file": "model-00004-of-00004.safetensors",
+        "padding_bytes": 3,
+        "source_bytes": 4377211365,
+        "source_data_start_mod8": 5,
+        "source_payload_sha256": "ccf6fa83d07b731fb0b10b4e0534c73153fc6228db199df4f7aca28fc540a782"
+      }
+    ],
+    "preserved_misaligned_source_path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-misaligned-20260930T171531Z",
+    "provenance": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit.provenance.json",
+    "same_binary": true,
+    "same_metallib": true,
+    "settings": {
+      "prefill_step_size": 1024,
+      "temperature_in_live_gate": 0.0
+    },
+    "source_audit": {
+      "aligned": false,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-misaligned-20260930T171531Z",
+      "shard_bytes": 20402204271,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 5288196018,
+          "data_start_mod8": 2,
+          "file": "model-00001-of-00004.safetensors",
+          "payload_sha256": "fd515c1cf01d1d4547dff17d1c253b0b71087e707b5e3a1b885f8202d373324a",
+          "tensors": 716,
+          "unaligned_bytes": 3906420736,
+          "unaligned_tensors": 111
+        },
+        {
+          "bytes": 5368472749,
+          "data_start_mod8": 5,
+          "file": "model-00002-of-00004.safetensors",
+          "payload_sha256": "93ff42a7f3b365febb20768810e78019ef501387da0967241a4e4416a683047f",
+          "tensors": 498,
+          "unaligned_bytes": 5368405504,
+          "unaligned_tensors": 498
+        },
+        {
+          "bytes": 5368324139,
+          "data_start_mod8": 3,
+          "file": "model-00003-of-00004.safetensors",
+          "payload_sha256": "4f0e217c3736d8a0fab9d337e4f331f5228ef8f919969ca9ffff5e1b30ebb52a",
+          "tensors": 504,
+          "unaligned_bytes": 5368256256,
+          "unaligned_tensors": 504
+        },
+        {
+          "bytes": 4377211365,
+          "data_start_mod8": 5,
+          "file": "model-00004-of-00004.safetensors",
+          "payload_sha256": "ccf6fa83d07b731fb0b10b4e0534c73153fc6228db199df4f7aca28fc540a782",
+          "tensors": 372,
+          "unaligned_bytes": 4377161088,
+          "unaligned_tensors": 372
+        }
+      ],
+      "tensor_count": 2090,
+      "unaligned_bytes": 19020243584,
+      "unaligned_tensors": 1485
+    },
+    "target_alignment_manifest": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit/MEI_ALIGN_MANIFEST.json"
+  },
+  "qwen38": {
+    "active_audit": {
+      "aligned": true,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
+      "shard_bytes": 16054541360,
+      "shard_count": 3,
+      "shards": [
+        {
+          "bytes": 5343268664,
+          "data_start_mod8": 0,
+          "file": "model-00001-of-00003.safetensors",
+          "payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560",
+          "tensors": 847,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5354185136,
+          "data_start_mod8": 0,
+          "file": "model-00002-of-00003.safetensors",
+          "payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59",
+          "tensors": 720,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5357087560,
+          "data_start_mod8": 0,
+          "file": "model-00003-of-00003.safetensors",
+          "payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb",
+          "tensors": 613,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        }
+      ],
+      "tensor_count": 2180,
+      "unaligned_bytes": 0,
+      "unaligned_tensors": 0
+    },
+    "active_served_path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
+    "aligned": {
+      "load_active_bytes": 16054543612,
+      "probe_status": "passed",
+      "short_decode_active_bytes": 18667595534,
+      "short_decode_peak_bytes": 18822840794,
+      "short_decode_tokens_per_second": 15.392999524649179
+    },
+    "alignment_tool_manifest": {
+      "generated_utc": "2026-09-30T16:58:39Z",
+      "shards": [
+        {
+          "file": "model-00001-of-00003.safetensors",
+          "padding_bytes": 2,
+          "payload_bytes": 5343164000,
+          "payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560",
+          "repack_seconds": 8.0,
+          "src_header_len": 104654,
+          "tensors": 847,
+          "unaligned_after": 0
+        },
+        {
+          "file": "model-00002-of-00003.safetensors",
+          "padding_bytes": 6,
+          "payload_bytes": 5354090816,
+          "payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59",
+          "repack_seconds": 9.12,
+          "src_header_len": 94306,
+          "tensors": 720,
+          "unaligned_after": 0
+        },
+        {
+          "file": "model-00003-of-00003.safetensors",
+          "padding_bytes": 3,
+          "payload_bytes": 5357007424,
+          "payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb",
+          "repack_seconds": 8.92,
+          "src_header_len": 80125,
+          "tensors": 613,
+          "unaligned_after": 0
+        }
+      ],
+      "source_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z",
+      "target_alignment": 8,
+      "tool": "align_safetensors.py"
+    },
+    "binary_sha256": "9acb4d80366589a2f136a7ff0fa6b12f425196d6289e8cb196fe9125fd3ad68a",
+    "delta": {
+      "aligned_speedup_factor": 3.848964638794197,
+      "load_active_bytes": 8687093488,
+      "load_active_percent": 54.10987504812541,
+      "misaligned_relative_to_aligned_percent": -74.0189870823734,
+      "short_decode_tps_delta": 11.393742329739876
+    },
+    "launcher_dry_run": "mei isolated launch: /Users/tijs/.local/share/local-model-bench/mei-build-67e897e/release/mei --model-dir /Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit --served-model-id mlx-community/Qwen3.8-27B-4bit --host 127.0.0.1 --port 8025 --context-cap 65536 --temperature 1.0 --top-p 0.95 --top-k 20 --emit-reasoning true --cache-reuse true --max-tokens 32768 --prefill-step-size 64",
+    "launcher_path_after_promotion": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
+    "local_model_bench_acceptance": {
+      "checks": {
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "served_ids": [
+        "mlx-community/Qwen3.8-27B-4bit"
+      ],
+      "status": "passed"
+    },
+    "metallib_sha256": "0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3",
+    "misaligned": {
+      "load_active_bytes": 24741637100,
+      "probe_status": "passed",
+      "realignment_log_lines": [
+        "[mlx.safetensors.mmap] realigned 194 unaligned tensor(s) (4757340160 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00002-of-00003.safetensors",
+        "[mlx.safetensors.mmap] realigned 613 unaligned tensor(s) (5357007424 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00003-of-00003.safetensors",
+        "[mlx.safetensors.mmap] realigned 138 unaligned tensor(s) (3929047040 bytes) without shard fallback file=/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/model-00001-of-00003.safetensors"
+      ],
+      "short_decode_active_bytes": 27354688826,
+      "short_decode_peak_bytes": 27396064610,
+      "short_decode_tokens_per_second": 3.999257194909303
+    },
+    "model_id": "mlx-community/Qwen3.8-27B-4bit",
+    "payload_identity": [
+      {
+        "aligned_bytes": 5343268664,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560",
+        "equal": true,
+        "file": "model-00001-of-00003.safetensors",
+        "padding_bytes": 2,
+        "source_bytes": 5343268662,
+        "source_data_start_mod8": 6,
+        "source_payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560"
+      },
+      {
+        "aligned_bytes": 5354185136,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59",
+        "equal": true,
+        "file": "model-00002-of-00003.safetensors",
+        "padding_bytes": 6,
+        "source_bytes": 5354185130,
+        "source_data_start_mod8": 2,
+        "source_payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59"
+      },
+      {
+        "aligned_bytes": 5357087560,
+        "aligned_data_start_mod8": 0,
+        "aligned_payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb",
+        "equal": true,
+        "file": "model-00003-of-00003.safetensors",
+        "padding_bytes": 3,
+        "source_bytes": 5357087557,
+        "source_data_start_mod8": 5,
+        "source_payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb"
+      }
+    ],
+    "preserved_misaligned_source_path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z",
+    "provenance": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit.provenance.json",
+    "same_binary": true,
+    "same_metallib": true,
+    "settings": {
+      "prefill_step_size": 64,
+      "temperature_in_live_gate": 0.0
+    },
+    "source_audit": {
+      "aligned": false,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z",
+      "shard_bytes": 16054541349,
+      "shard_count": 3,
+      "shards": [
+        {
+          "bytes": 5343268662,
+          "data_start_mod8": 6,
+          "file": "model-00001-of-00003.safetensors",
+          "payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560",
+          "tensors": 847,
+          "unaligned_bytes": 3929047040,
+          "unaligned_tensors": 138
+        },
+        {
+          "bytes": 5354185130,
+          "data_start_mod8": 2,
+          "file": "model-00002-of-00003.safetensors",
+          "payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59",
+          "tensors": 720,
+          "unaligned_bytes": 4757340160,
+          "unaligned_tensors": 194
+        },
+        {
+          "bytes": 5357087557,
+          "data_start_mod8": 5,
+          "file": "model-00003-of-00003.safetensors",
+          "payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb",
+          "tensors": 613,
+          "unaligned_bytes": 5357007424,
+          "unaligned_tensors": 613
+        }
+      ],
+      "tensor_count": 2180,
+      "unaligned_bytes": 14043394624,
+      "unaligned_tensors": 945
+    },
+    "target_alignment_manifest": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit/MEI_ALIGN_MANIFEST.json"
+  },
+  "repository": {
+    "base_head_before_config_correction": "7d9e957525d83d9784325767111614af34a48fff",
+    "local_model_bench_modified": false,
+    "path": "/Users/tijs/projects/mei"
+  },
+  "schema": 1,
+  "settings": {
+    "acceptance_runner": "/Users/tijs/projects/local-model-bench/runner/probe_mei.py --skip-context --skip-cache",
+    "cache_reuse": false,
+    "context_cap": 65536,
+    "emit_reasoning": false,
+    "fused_gate_up_cache_limit_bytes": 0,
+    "max_tokens": 8192,
+    "measurement_runner": "/Users/tijs/projects/local-model-bench/runner/start_mei_server.sh + /Users/tijs/projects/mei/tools/probe_load.py",
+    "qwen36_unsafe_compile": true,
+    "qwen38_unsafe_compile": false,
+    "temperature_by_model": {
+      "qwen36": 0.0,
+      "qwen38": 0.0
+    },
+    "top_k": 1,
+    "top_p": 1.0
+  }
+}

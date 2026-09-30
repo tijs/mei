@@ -1,0 +1,48 @@
+{
+  "alignment": {
+    "manifest": "MEI_ALIGN_MANIFEST.json",
+    "target_alignment": 8,
+    "tool": "align_safetensors.py"
+  },
+  "loadability": "passed in matched local-model-bench/Mei gate; see repository artifact",
+  "pinned_revision": "3e6447f082e89cc7f0bc6e5441afd38dfce760ff",
+  "repo": "mlx-community/Qwen3.8-27B-4bit",
+  "resolved_commit": "3e6447f082e89cc7f0bc6e5441afd38dfce760ff",
+  "schema": "mei.aligned-repack-v1",
+  "staged_at_utc": "2026-09-30T16:58:39Z",
+  "verify": {
+    "aligned_root": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
+    "aligned_shard_bytes": 16054541360,
+    "arch": [
+      "Qwen3_5ForCausalLM"
+    ],
+    "config_sha256": "14b65a0ee06517060a6bbd979bb1a8ff54e7b304b1a1f01d54344b88b8285e85",
+    "model_type": "qwen3_5",
+    "ok": true,
+    "padding_bytes_total": 11,
+    "payload_sha256": [
+      {
+        "file": "model-00001-of-00003.safetensors",
+        "sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560"
+      },
+      {
+        "file": "model-00002-of-00003.safetensors",
+        "sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59"
+      },
+      {
+        "file": "model-00003-of-00003.safetensors",
+        "sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb"
+      }
+    ],
+    "payload_total": 16054262240,
+    "shards": [
+      "model-00001-of-00003.safetensors",
+      "model-00002-of-00003.safetensors",
+      "model-00003-of-00003.safetensors"
+    ],
+    "source_root": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z",
+    "source_shard_bytes": 16054541349,
+    "unaligned_after": 0,
+    "unaligned_before": 945
+  }
+}

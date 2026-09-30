@@ -1,0 +1,38 @@
+{
+  "repo": "mlx-community/Qwen3.6-35B-A3B-4bit",
+  "pinned_revision": "38740b847e4cb78f352aba30aa41c76e08e6eb46",
+  "resolved_commit": "38740b847e4cb78f352aba30aa41c76e08e6eb46",
+  "subdir": "(root)",
+  "staged_at_utc": "2026-09-06T11:51:21.377923Z",
+  "verify": {
+    "ok": true,
+    "shards": [
+      "model-00001-of-00004.safetensors",
+      "model-00002-of-00004.safetensors",
+      "model-00003-of-00004.safetensors",
+      "model-00004-of-00004.safetensors"
+    ],
+    "weight_files": [
+      "model-00001-of-00004.safetensors",
+      "model-00002-of-00004.safetensors",
+      "model-00003-of-00004.safetensors",
+      "model-00004-of-00004.safetensors"
+    ],
+    "shard_bytes": 20402204728,
+    "file_bytes": 20402204728,
+    "payload_total": 20401929952,
+    "index_total": 20401929952,
+    "header_overhead_bytes": 274776,
+    "has_index": true,
+    "arch": [
+      "Qwen3_5MoeForConditionalGeneration"
+    ],
+    "model_type": "qwen3_5_moe",
+    "quant_bits": 4,
+    "quant_group_size": 64,
+    "quant_mode": "affine",
+    "config_sha256": "a822a9e48b0aafbe3144ec37d4fb067e178ed96615ce6e4420b3149893cc5767",
+    "reasons": []
+  },
+  "loadability": "NOT CHECKED (GPU-gated)"
+}

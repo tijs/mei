@@ -60,7 +60,7 @@
       "format": "mlx",
       "source_checkpoint": "Qwen/Qwen3.8-27B",
       "architecture": "qwen3_5",
-      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Untouched mlx-community artifact; sidecar verify ok" },
+      "artifact_audit": { "class": "upstream", "audited_utc": "2026-09-04", "note": "Active staged path is a stage-time header-aligned repack of the upstream mlx-community checkpoint (align_safetensors.py 2026-09-30; target alignment 8; 945 -> 0 unaligned tensors; header padding only, weight payload bytes bit-identical). In-dir MEI_ALIGN_MANIFEST.json + adjacent Qwen3.8-27B-4bit.provenance.json (schema mei.aligned-repack-v1, verify ok); aligned-artifact loadability gate passed 2026-09-30. Original upstream/misaligned source preserved separately at mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z." },
       "status": "loadable-accept-passed-perf-memory-constrained",
       "quantization": {
         "bits": 4,

@@ -1,0 +1,38 @@
+{
+ "tool": "align_safetensors.py",
+ "generated_utc": "2026-09-30T16:58:39Z",
+ "source_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit-misaligned-20260930T171531Z",
+ "target_alignment": 8,
+ "shards": [
+  {
+   "file": "model-00001-of-00003.safetensors",
+   "src_header_len": 104654,
+   "padding_bytes": 2,
+   "payload_bytes": 5343164000,
+   "payload_sha256": "47332bda7e24020f14a18aa96fbae25277b6c18f5b778458de02dd8389041560",
+   "tensors": 847,
+   "unaligned_after": 0,
+   "repack_seconds": 8.0
+  },
+  {
+   "file": "model-00002-of-00003.safetensors",
+   "src_header_len": 94306,
+   "padding_bytes": 6,
+   "payload_bytes": 5354090816,
+   "payload_sha256": "1f3b50701e03f67ea7aabb887883f3c2b6355d77c9d60c79f6d934e926592b59",
+   "tensors": 720,
+   "unaligned_after": 0,
+   "repack_seconds": 9.12
+  },
+  {
+   "file": "model-00003-of-00003.safetensors",
+   "src_header_len": 80125,
+   "padding_bytes": 3,
+   "payload_bytes": 5357007424,
+   "payload_sha256": "5d6a7f46e75cf419e1c6008c331ae9c50e03e3731e62318aec9bd00969b52deb",
+   "tensors": 613,
+   "unaligned_after": 0,
+   "repack_seconds": 8.92
+  }
+ ]
+}
