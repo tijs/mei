@@ -1,0 +1,80 @@
+[load] status: passed
+[load] hello: passed
+[load] short_decode: passed
+{
+  "engine": "mei",
+  "finished_epoch": 1790781818.770359,
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 4.17,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 33,
+        "generate_ms": 3450.978994369507,
+        "mei_memory_active_bytes": 24841346538,
+        "mei_memory_cache_bytes": 559134,
+        "mei_memory_peak_bytes": 24845236950,
+        "prefill_ms": 652.5349617004395,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 22.98727406254453,
+        "tokens_per_second": 9.562503873202825,
+        "total_tokens": 48
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 58,
+      "decode_tokens_per_second_engine": 9.555375156077353,
+      "elapsed_seconds": 6.524,
+      "prompt_tokens": 23,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 58,
+        "generate_ms": 6069.882035255432,
+        "mei_memory_active_bytes": 24842022410,
+        "mei_memory_cache_bytes": 559134,
+        "mei_memory_peak_bytes": 24849865462,
+        "prefill_ms": 419.2168712615967,
+        "prompt_tokens": 23,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 54.864204130867876,
+        "tokens_per_second": 9.555375156077353,
+        "total_tokens": 81
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.011,
+      "status": "passed",
+      "status_body": {
+        "cacheReuse": false,
+        "contextCap": 65536,
+        "maxTokens": 8192,
+        "memory": {
+          "activeBytes": 24278561190,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        "prefillStepSize": 1024,
+        "status": "ok",
+        "uptimeSeconds": 0
+      }
+    }
+  },
+  "server_log_tail": "mei: compiled routed-MoE decode opt-out for text-only qwen3_5_moe: VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0\nmei: vmlx switch VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 (source mei-profile)\nmei: vmlx switch VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0 (source mei-profile)\nmei: vmlx switch VMLX_ENABLE_UNSAFE_COMPILE=1 (source mei-profile)\nmei: vmlx switch VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 (source operator)\nmei: optimization profile ornith (requested auto, prefill 1024, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: profile applied max-tokens 8192, unsafe-compile 1, fused-gate-up-limit 0\nmei: no --model-profile given; serving on architecture defaults, which are safe but not tuned. If this is a supported model, naming it loads its measured settings: ornith-1.5-35b-a3b, qwen3.6-35b-a3b-text, qwen3.6-35b-a3b\nmei: WARNING 4 of 4 weight shards are not naturally aligned. MLX must copy unaligned tensors into RAM at load; depending on how much of the checkpoint is affected this costs memory and long-context prefill speed, and can exhaust the GPU allocator outright. Repack with mei's tools/align_safetensors.py (payload is unchanged; only header padding differs).\nmei: loading model from /tmp/safetensors-alignment-gate/misaligned-model-with-template (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\n[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00004-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00001-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00003-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00002-of-00004.safetensors\n[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]\n[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00004-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00001-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00003-of-00004.safetensors\n[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00002-of-00004.safetensors\n[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]\nmei: prefix cache disabled (--cache-reuse false)\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 24278561190 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:18263 (context cap 65536, prefill step 1024, max-tokens 8192, kv-bits none)\n[Qwen35] fused_gdn_decode_input_projections=active groups=[4]\n",
+  "started_epoch": 1790781808.064516,
+  "status": "passed"
+}

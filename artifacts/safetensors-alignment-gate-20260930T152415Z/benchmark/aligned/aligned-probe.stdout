@@ -1,0 +1,80 @@
+[load] status: passed
+[load] hello: passed
+[load] short_decode: passed
+{
+  "engine": "mei",
+  "finished_epoch": 1790780974.379276,
+  "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+  "probes": {
+    "hello": {
+      "content_tail": "hello",
+      "elapsed_seconds": 1.051,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 33,
+        "generate_ms": 632.0070028305054,
+        "mei_memory_active_bytes": 20114532536,
+        "mei_memory_cache_bytes": 91327832,
+        "mei_memory_peak_bytes": 20143456552,
+        "prefill_ms": 166.68307781219482,
+        "prompt_tokens": 15,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 89.99113885394414,
+        "tokens_per_second": 52.214611313175745,
+        "total_tokens": 48
+      }
+    },
+    "short_decode": {
+      "completion_tokens": 58,
+      "decode_tokens_per_second_engine": 52.63038344278993,
+      "elapsed_seconds": 1.271,
+      "prompt_tokens": 23,
+      "status": "passed",
+      "usage": {
+        "completion_tokens": 58,
+        "generate_ms": 1102.025032043457,
+        "mei_memory_active_bytes": 20115093748,
+        "mei_memory_cache_bytes": 205459235,
+        "mei_memory_peak_bytes": 20206223634,
+        "prefill_ms": 130.9950351715088,
+        "prompt_tokens": 23,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_tokens_per_second": 175.57917343879964,
+        "tokens_per_second": 52.63038344278993,
+        "total_tokens": 81
+      }
+    },
+    "status": {
+      "elapsed_seconds": 0.011,
+      "status": "passed",
+      "status_body": {
+        "cacheReuse": false,
+        "contextCap": 65536,
+        "maxTokens": 8192,
+        "memory": {
+          "activeBytes": 19551131124,
+          "cacheBytes": 0,
+          "cacheLimitBytes": 32641751449,
+          "device": {
+            "architecture": "applegpu_g13s",
+            "memoryBytes": 34359738368
+          },
+          "memoryLimitBytes": 24051816857,
+          "peakBytes": 0,
+          "recommendedWorkingSetBytes": 26800603136
+        },
+        "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+        "prefillStepSize": 1024,
+        "status": "ok",
+        "uptimeSeconds": 0
+      }
+    }
+  },
+  "server_log_tail": "mei: compiled routed-MoE decode opt-out for text-only qwen3_5_moe: VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0\nmei: vmlx switch VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 (source mei-profile)\nmei: vmlx switch VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0 (source mei-profile)\nmei: vmlx switch VMLX_ENABLE_UNSAFE_COMPILE=1 (source mei-profile)\nmei: vmlx switch VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 (source operator)\nmei: optimization profile ornith (requested auto, prefill 1024, compiled-decode false, kv-window 0, ssm-anchors 0)\nmei: profile applied max-tokens 8192, unsafe-compile 1, fused-gate-up-limit 0\nmei: no --model-profile given; serving on architecture defaults, which are safe but not tuned. If this is a supported model, naming it loads its measured settings: ornith-1.5-35b-a3b, qwen3.6-35b-a3b-text, qwen3.6-35b-a3b\nmei: loading model from /Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...\n[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]\n[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]\nmei: prefix cache disabled (--cache-reuse false)\nmei: model loaded\nmei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes\nmei: memory after load: active 19551131124 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449\nmei: listening on http://127.0.0.1:18261 (context cap 65536, prefill step 1024, max-tokens 8192, kv-bits none)\n[Qwen35] fused_gdn_decode_input_projections=active groups=[4]\n",
+  "started_epoch": 1790780972.0464761,
+  "status": "passed"
+}

@@ -1,0 +1,26 @@
+mei: compiled routed-MoE decode opt-out for text-only qwen3_5_moe: VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0
+mei: vmlx switch VMLX_QWEN35_COMPILE_DECODE_REGIONS=0 (source mei-profile)
+mei: vmlx switch VMLX_QWEN4_EXP_COMPILE_ROUTED_MOE=0 (source mei-profile)
+mei: vmlx switch VMLX_ENABLE_UNSAFE_COMPILE=1 (source mei-profile)
+mei: vmlx switch VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 (source operator)
+mei: optimization profile ornith (requested auto, prefill 1024, compiled-decode false, kv-window 0, ssm-anchors 0)
+mei: profile applied max-tokens 8192, unsafe-compile 1, fused-gate-up-limit 0
+mei: no --model-profile given; serving on architecture defaults, which are safe but not tuned. If this is a supported model, naming it loads its measured settings: ornith-1.5-35b-a3b, qwen3.6-35b-a3b-text, qwen3.6-35b-a3b
+mei: WARNING 4 of 4 weight shards are not naturally aligned. MLX must copy unaligned tensors into RAM at load; depending on how much of the checkpoint is affected this costs memory and long-context prefill speed, and can exhaust the GPU allocator outright. Repack with mei's tools/align_safetensors.py (payload is unchanged; only header padding differs).
+mei: loading model from /tmp/safetensors-alignment-gate/misaligned-model-with-template (served id: ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit)...
+[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00004-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00001-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00003-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00002-of-00004.safetensors
+[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]
+[mlx.safetensors.mmap] realigned 282 unaligned tensor(s) (3428489600 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00004-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 137 unaligned tensor(s) (4749611008 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00001-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 504 unaligned tensor(s) (5368256256 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00003-of-00004.safetensors
+[mlx.safetensors.mmap] realigned 498 unaligned tensor(s) (5368405504 bytes) without shard fallback file=/private/tmp/safetensors-alignment-gate/misaligned-model-with-template/model-00002-of-00004.safetensors
+[Load] dtype-materialisation bf16=true mmap=true jangtqNative=false preserveJANGAffine=false preserveCheckpointDTypes=false autoJANGTQBF16=true allowJANGTQBF16=false params[bfloat16=1165 uint32=432]
+mei: prefix cache disabled (--cache-reuse false)
+mei: model loaded
+mei: device applegpu_g13s memory 34359738368 bytes; recommended working set 26800603136 bytes
+mei: memory after load: active 24278561190 cache 0 peak 0 bytes; limit 24051816857 cache-limit 32641751449
+mei: listening on http://127.0.0.1:18264 (context cap 65536, prefill step 1024, max-tokens 8192, kv-bits none)
+[Qwen35] fused_gdn_decode_input_projections=active groups=[4]

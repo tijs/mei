@@ -1,0 +1,4 @@
+[aligned] starting
+[aligned] ready
+[aligned] probe_status=0
+[aligned] stopped

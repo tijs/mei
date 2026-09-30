@@ -1,0 +1,3 @@
+mei isolated launch: /tmp/safetensors-alignment-gate/build/release/mei --model-dir /tmp/safetensors-alignment-gate/misaligned-model-with-template --served-model-id ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit --host 127.0.0.1 --port 18263 --context-cap 65536 --temperature 0 --top-p 1 --top-k 1 --emit-reasoning false --cache-reuse false --max-tokens 8192 --prefill-step-size 1024
+mei: building (release, scratch: /tmp/safetensors-alignment-gate/build) ...
+mlx.metallib installed from SwiftPM Cmlx build product (/tmp/safetensors-alignment-gate/build/release/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib)

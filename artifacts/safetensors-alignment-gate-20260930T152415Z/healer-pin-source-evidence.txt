@@ -1,0 +1,137 @@
+=== 91fed8be21319f92ce5220622c6dcde0b851bdae
+2026-09-02 09:39:11 +0200
+feat(cache): support explicit SSM anchor boundaries ===
+-- Libraries/MLXLMCommon/Cache/SafetensorsStorageHealer.swift --
+  54:     private static let maximumHeaderBytes = UInt64(100_000_000)
+  55:
+  56:     static func healBundleIfEligible(at originalURL: URL) {
+  57:         _ = healBundle(at: originalURL, configuration: Configuration())
+  58:     }
+  59:
+  60:     @discardableResult
+  61:     static func healBundle(
+  62:         at originalURL: URL,
+  63:         configuration: Configuration
+  64:     ) -> Result {
+  65:         let env = configuration.environment
+  66:         let rawEnabled =
+  67:             env["MLXPRESS_HEAL_SAFETENSORS"]
+  68:             ?? env["JANGPRESS_HEAL_SAFETENSORS"]
+  69:         if isDisabledFlag(rawEnabled) {
+  70:             configuration.logger("event=disabled path=\\(quoted(originalURL.path))")
+  71:
+-- Libraries/MLXLMCommon/Cache/LoadConfiguration.swift --
+=== 654eb4554743df63a50cc0fa3aaed4977d636753
+2026-09-08 21:52:45 +0200
+cache: stop re-deriving durable boundaries on MambaCache hybrids ===
+-- Libraries/MLXLMCommon/Cache/SafetensorsStorageHealer.swift --
+  54:     private static let maximumHeaderBytes = UInt64(100_000_000)
+  55:
+  56:     static func healBundleIfEligible(at originalURL: URL) {
+  57:         _ = healBundle(at: originalURL, configuration: Configuration())
+  58:     }
+  59:
+  60:     @discardableResult
+  61:     static func healBundle(
+  62:         at originalURL: URL,
+  63:         configuration: Configuration
+  64:     ) -> Result {
+  65:         let env = configuration.environment
+  66:         let rawEnabled =
+  67:             env["MLXPRESS_HEAL_SAFETENSORS"]
+  68:             ?? env["JANGPRESS_HEAL_SAFETENSORS"]
+  69:         // Default OFF (opt-in). The realignment rewrites the user's ORIGINAL
+  70:         // model shards in place — payload-preserving and atomic, but it still
+  75:         // blocks a load. We do not modify a user's files for a perf
+  76:         // optimization unless they explicitly opt in via
+  77:         // MLXPRESS_HEAL_SAFETENSORS=1 (or JANGPRESS_HEAL_SAFETENSORS=1).
+  78:         guard isEnabledFlag(rawEnabled) else {
+  79:             configuration.logger(
+  80:                 "event=disabled reason=opt_in_required path=\\(quoted(originalURL.path))")
+  81:             return Result()
+  82:
+-- Libraries/MLXLMCommon/Cache/LoadConfiguration.swift --
+=== 44461ffdf8dca836b624b2d0d268c800dedea05e
+2026-09-11 14:25:15 +0200
+cache: warn when a restore matches a stable boundary instead of its seed ===
+-- Libraries/MLXLMCommon/Cache/SafetensorsStorageHealer.swift --
+  54:     private static let maximumHeaderBytes = UInt64(100_000_000)
+  55:
+  56:     static func healBundleIfEligible(at originalURL: URL) {
+  57:         _ = healBundle(at: originalURL, configuration: Configuration())
+  58:     }
+  59:
+  60:     @discardableResult
+  61:     static func healBundle(
+  62:         at originalURL: URL,
+  63:         configuration: Configuration
+  64:     ) -> Result {
+  65:         let env = configuration.environment
+  66:         let rawEnabled =
+  67:             env["MLXPRESS_HEAL_SAFETENSORS"]
+  68:             ?? env["JANGPRESS_HEAL_SAFETENSORS"]
+  69:         // Default OFF (opt-in). The realignment rewrites the user's ORIGINAL
+  70:         // model shards in place — payload-preserving and atomic, but it still
+  75:         // blocks a load. We do not modify a user's files for a perf
+  76:         // optimization unless they explicitly opt in via
+  77:         // MLXPRESS_HEAL_SAFETENSORS=1 (or JANGPRESS_HEAL_SAFETENSORS=1).
+  78:         guard isEnabledFlag(rawEnabled) else {
+  79:             configuration.logger(
+  80:                 "event=disabled reason=opt_in_required path=\\(quoted(originalURL.path))")
+  81:             return Result()
+  82:
+-- Libraries/MLXLMCommon/Cache/LoadConfiguration.swift --
+=== fef563a55b4f22d4530b3439c1edb233cfc44a8f
+2026-09-25 18:29:05 +0200
+Merge remote-tracking branch 'upstream/main' into integrate/main-upstream-sync ===
+-- Libraries/MLXLMCommon/Cache/SafetensorsStorageHealer.swift --
+  56:     private static let maximumHeaderBytes = UInt64(100_000_000)
+  57:
+  58:     static func healBundleIfEligible(
+  59:         at originalURL: URL,
+  60:         authorization: AlignmentRepairAuthorization *** .disabled
+  61:     ) {
+  62:         guard authorization == .directUserSend else { return }
+  63:         _ = healBundle(at: originalURL, configuration: Configuration())
+  64:     }
+  65:
+  66:     @discardableResult
+  67:     static func healBundle(
+  68:         at originalURL: URL,
+  69:         configuration: Configuration
+  70:     ) -> Result {
+  71:         let env = configuration.environment
+  72:         let rawEnabled =
+  73:             env["MLXPRESS_HEAL_SAFETENSORS"]
+  74:             ?? env["JANGPRESS_HEAL_SAFETENSORS"]
+  75:         // Default OFF (opt-in). The realignment rewrites the user's ORIGINAL
+  76:         // model shards in place — payload-preserving and atomic, but it still
+  81:         // blocks a load. We do not modify a user's files for a perf
+  82:         // optimization unless they explicitly opt in via
+  83:         // MLXPRESS_HEAL_SAFETENSORS=1 (or JANGPRESS_HEAL_SAFETENSORS=1).
+  84:         guard isEnabledFlag(rawEnabled) else {
+  85:             configuration.logger(
+  86:                 "event=disabled reason=opt_in_required path=\\(quoted(originalURL.path))")
+  87:             return Result()
+  88:
+-- Libraries/MLXLMCommon/Cache/LoadConfiguration.swift --
+ 107: /// step 2) consumes this struct.
+ 108: public struct LoadConfiguration: Sendable, Equatable {
+ 109:     /// Default-denied original-file repair. Does not replace the existing opt-in.
+ 110:     public var alignmentRepairAuthorization: AlignmentRepairAuthorization *** .disabled
+ 111:     /// Cold-weight (MLXPress) policy.
+ 112:     public var jangPress: JangPressPolicy
+=== Mei release tag -> vmlx pin ===
+v0.2.0: 91fed8be21319f92ce5220622c6dcde0b851bdae
+v0.3.0: e37d1d5919c5bd9f0220ee05f3ee07285d8f11af
+v0.4.0: 654eb4554743df63a50cc0fa3aaed4977d636753
+v0.4.1: 4a1069a472748fee76d3315c44c62e9c5b8f2537
+v0.4.2: 44461ffdf8dca836b624b2d0d268c800dedea05e
+v0.5.0: 44461ffdf8dca836b624b2d0d268c800dedea05e
+v0.6.0: fef563a55b4f22d4530b3439c1edb233cfc44a8f
+v0.6.1: fef563a55b4f22d4530b3439c1edb233cfc44a8f
+
+=== Flag semantics that explain the 2026-09-06 heal ===
+91fed8be: `if isDisabledFlag(rawEnabled) { return }`; the old helper treats only `0`, `false`, `no`, and `off` as disabled, so an unset variable does not disable healing.
+654eb455 and fef563a5: `isEnabledFlag` returns true only for `1`, `true`, `yes`, or `on`; unset/empty values keep healing off.
+fef563a5: `healBundleIfEligible` first requires `authorization == .directUserSend`, whose default in `LoadConfiguration` is `.disabled`.

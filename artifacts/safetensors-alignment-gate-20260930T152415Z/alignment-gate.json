@@ -1,0 +1,643 @@
+{
+  "alignment_audit": {
+    "Ornith-1.5-35B-A3B-MLX-4bit-aligned": {
+      "aligned": true,
+      "config_sha256": "fc27b922c3506e955271c68120be9079ad8bba7266c8086c02dfbb8c98723bd5",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+      "shard_bytes": 19509024216,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 5343699472,
+          "data_start_mod8": 0,
+          "file": "model-00001-of-00004.safetensors",
+          "header_bytes": 63368,
+          "tensors": 473,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368472840,
+          "data_start_mod8": 0,
+          "file": "model-00002-of-00004.safetensors",
+          "header_bytes": 67328,
+          "tensors": 498,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368324248,
+          "data_start_mod8": 0,
+          "file": "model-00003-of-00004.safetensors",
+          "header_bytes": 67984,
+          "tensors": 504,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 3428527656,
+          "data_start_mod8": 0,
+          "file": "model-00004-of-00004.safetensors",
+          "header_bytes": 38048,
+          "tensors": 282,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        }
+      ],
+      "tensor_count": 1757,
+      "unaligned_bytes": 0,
+      "unaligned_tensors": 0
+    },
+    "Ornith-1.5-35B-A3B-MLX-4bit-restage-19504d9": {
+      "aligned": false,
+      "config_sha256": "fc27b922c3506e955271c68120be9079ad8bba7266c8086c02dfbb8c98723bd5",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-restage-19504d9",
+      "shard_bytes": 19509024201,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 5343699466,
+          "data_start_mod8": 2,
+          "file": "model-00001-of-00004.safetensors",
+          "header_bytes": 63362,
+          "tensors": 473,
+          "unaligned_bytes": 4749611008,
+          "unaligned_tensors": 137
+        },
+        {
+          "bytes": 5368472837,
+          "data_start_mod8": 5,
+          "file": "model-00002-of-00004.safetensors",
+          "header_bytes": 67325,
+          "tensors": 498,
+          "unaligned_bytes": 5368405504,
+          "unaligned_tensors": 498
+        },
+        {
+          "bytes": 5368324245,
+          "data_start_mod8": 5,
+          "file": "model-00003-of-00004.safetensors",
+          "header_bytes": 67981,
+          "tensors": 504,
+          "unaligned_bytes": 5368256256,
+          "unaligned_tensors": 504
+        },
+        {
+          "bytes": 3428527653,
+          "data_start_mod8": 5,
+          "file": "model-00004-of-00004.safetensors",
+          "header_bytes": 38045,
+          "tensors": 282,
+          "unaligned_bytes": 3428489600,
+          "unaligned_tensors": 282
+        }
+      ],
+      "tensor_count": 1757,
+      "unaligned_bytes": 18914762368,
+      "unaligned_tensors": 1421
+    },
+    "Qwen3.6-35B-A3B-4bit": {
+      "aligned": false,
+      "config_sha256": "a822a9e48b0aafbe3144ec37d4fb067e178ed96615ce6e4420b3149893cc5767",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit",
+      "shard_bytes": 20402204271,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 5288196018,
+          "data_start_mod8": 2,
+          "file": "model-00001-of-00004.safetensors",
+          "header_bytes": 88906,
+          "tensors": 716,
+          "unaligned_bytes": 3906420736,
+          "unaligned_tensors": 111
+        },
+        {
+          "bytes": 5368472749,
+          "data_start_mod8": 5,
+          "file": "model-00002-of-00004.safetensors",
+          "header_bytes": 67237,
+          "tensors": 498,
+          "unaligned_bytes": 5368405504,
+          "unaligned_tensors": 498
+        },
+        {
+          "bytes": 5368324139,
+          "data_start_mod8": 3,
+          "file": "model-00003-of-00004.safetensors",
+          "header_bytes": 67875,
+          "tensors": 504,
+          "unaligned_bytes": 5368256256,
+          "unaligned_tensors": 504
+        },
+        {
+          "bytes": 4377211365,
+          "data_start_mod8": 5,
+          "file": "model-00004-of-00004.safetensors",
+          "header_bytes": 50269,
+          "tensors": 372,
+          "unaligned_bytes": 4377161088,
+          "unaligned_tensors": 372
+        }
+      ],
+      "tensor_count": 2090,
+      "unaligned_bytes": 19020243584,
+      "unaligned_tensors": 1485
+    },
+    "Qwen3.6-35B-A3B-4bit-textonly": {
+      "aligned": true,
+      "config_sha256": "ac8c9c4a36ce2205ada3cf938002166529403475f830e4366c818c18569f78b0",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly",
+      "shard_bytes": 19509024480,
+      "shard_count": 4,
+      "shards": [
+        {
+          "bytes": 4395015952,
+          "data_start_mod8": 0,
+          "file": "model-00001-of-00004.safetensors",
+          "header_bytes": 51336,
+          "tensors": 383,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368472832,
+          "data_start_mod8": 0,
+          "file": "model-00002-of-00004.safetensors",
+          "header_bytes": 67320,
+          "tensors": 498,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 5368324320,
+          "data_start_mod8": 0,
+          "file": "model-00003-of-00004.safetensors",
+          "header_bytes": 68056,
+          "tensors": 504,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        },
+        {
+          "bytes": 4377211376,
+          "data_start_mod8": 0,
+          "file": "model-00004-of-00004.safetensors",
+          "header_bytes": 50280,
+          "tensors": 372,
+          "unaligned_bytes": 0,
+          "unaligned_tensors": 0
+        }
+      ],
+      "tensor_count": 1757,
+      "unaligned_bytes": 0,
+      "unaligned_tensors": 0
+    },
+    "Qwen3.8-27B-4bit": {
+      "aligned": false,
+      "config_sha256": "14b65a0ee06517060a6bbd979bb1a8ff54e7b304b1a1f01d54344b88b8285e85",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit",
+      "shard_bytes": 16054541349,
+      "shard_count": 3,
+      "shards": [
+        {
+          "bytes": 5343268662,
+          "data_start_mod8": 6,
+          "file": "model-00001-of-00003.safetensors",
+          "header_bytes": 104654,
+          "tensors": 847,
+          "unaligned_bytes": 3929047040,
+          "unaligned_tensors": 138
+        },
+        {
+          "bytes": 5354185130,
+          "data_start_mod8": 2,
+          "file": "model-00002-of-00003.safetensors",
+          "header_bytes": 94306,
+          "tensors": 720,
+          "unaligned_bytes": 4757340160,
+          "unaligned_tensors": 194
+        },
+        {
+          "bytes": 5357087557,
+          "data_start_mod8": 5,
+          "file": "model-00003-of-00003.safetensors",
+          "header_bytes": 80125,
+          "tensors": 613,
+          "unaligned_bytes": 5357007424,
+          "unaligned_tensors": 613
+        }
+      ],
+      "tensor_count": 2180,
+      "unaligned_bytes": 14043394624,
+      "unaligned_tensors": 945
+    },
+    "Ternary-Bonsai-2-27B-mlx-2bit": {
+      "aligned": false,
+      "config_sha256": "238de7c512cc56a733421e3fd011d88f8260739e3d00e32c5d65b7943cc9f837",
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Ternary-Bonsai-2-27B-mlx-2bit",
+      "shard_bytes": 8595477990,
+      "shard_count": 1,
+      "shards": [
+        {
+          "bytes": 8595477990,
+          "data_start_mod8": 6,
+          "file": "model.safetensors",
+          "header_bytes": 303102,
+          "tensors": 2390,
+          "unaligned_bytes": 6834034688,
+          "unaligned_tensors": 1253
+        }
+      ],
+      "tensor_count": 2390,
+      "unaligned_bytes": 6834034688,
+      "unaligned_tensors": 1253
+    }
+  },
+  "benchmark": {
+    "aligned": {
+      "load_active_bytes": 19551131124,
+      "probe_load_status": "passed",
+      "server_port": 18261,
+      "short_decode_active_bytes": 20115093748,
+      "short_decode_peak_bytes": 20206223634,
+      "short_decode_tps": 52.63038344278993
+    },
+    "binary_hash_equal": true,
+    "delta": {
+      "load_active_bytes": 4727430066,
+      "load_active_percent": 24.179828962411495,
+      "short_decode_tps_delta": -43.075008286712574,
+      "short_decode_tps_delta_percent": -81.84437480592517
+    },
+    "fixed_binary_sha256": "8b3bec40a1b345f120b3eb79d5be5c5cbf70279bad2d9bd7c04f39897cf44ac6",
+    "fixed_metallib_sha256": "0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3",
+    "infrastructure": "/Users/tijs/projects/local-model-bench/runner/start_mei_server.sh, stop_mei_server.sh, probe_mei.py, and Mei probe_load.py",
+    "local_model_bench_probe": {
+      "arm": "misaligned",
+      "checks": {
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "plain_completion": "passed",
+      "port": 18264,
+      "served_ids": [
+        "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"
+      ],
+      "status": "passed",
+      "streaming_nonstreaming_parity": "passed",
+      "tool_nonstreaming": "passed",
+      "tool_streaming": "passed"
+    },
+    "metallib_hash_equal": true,
+    "misaligned": {
+      "load_active_bytes": 24278561190,
+      "probe_load_status": "passed",
+      "realignment_logged": true,
+      "server_port": 18263,
+      "short_decode_active_bytes": 24842022410,
+      "short_decode_peak_bytes": 24849865462,
+      "short_decode_tps": 9.555375156077353
+    },
+    "misaligned_model_payload_root": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-restage-19504d9",
+    "misaligned_probe_root": "/tmp/safetensors-alignment-gate/misaligned-model-with-template (hard-linked weights; identical chat_template.jinja restored without modifying the source root)",
+    "model": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+    "settings": {
+      "architecture": "applegpu_g13s",
+      "cache_reuse": false,
+      "context_cap": 65536,
+      "fused_gate_up_cache_limit_bytes": 0,
+      "max_tokens": 8192,
+      "prefill_step_size": 1024,
+      "temperature": 0.0,
+      "top_k": 1,
+      "top_p": 1.0
+    },
+    "source_model_payload_root": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+  },
+  "contention_gate": {
+    "foreign_owners": false,
+    "max_gib": 28.399,
+    "min_gib": 28.231,
+    "samples_gib": [
+      28.399,
+      28.393,
+      28.393,
+      28.377,
+      28.376,
+      28.379,
+      28.234,
+      28.233,
+      28.231,
+      28.232,
+      28.236
+    ],
+    "sustained_clean": true,
+    "threshold_gib": 10.0
+  },
+  "decision": {
+    "action": "Use the existing self-verifying align_safetensors.py repack at stage time for artifacts whose measured settings require alignment. Keep load-time original-file healing default-denied and do not authorize it in Mei.",
+    "code_change": "none required; existing ModelPull/ModelArtifactCheck profile path and align_safetensors.py are sufficient.",
+    "reason": "Natural safetensors alignment is a material serving improvement: same payload, binary, metallib, model, and settings reduced post-load active memory by 4,727,250,066 bytes (24.2%) and increased short decode from 9.56 to 52.63 tok/s (+450.8% relative to misaligned). The misaligned local-model-bench probe still passed identity, plain completion, streaming parity, and native tools, so this is a performance/memory regression rather than a correctness artifact.",
+    "verdict": "approved"
+  },
+  "gate": "safetensors alignment fallback admission",
+  "generated_utc": "2026-09-30T15:24:15Z",
+  "healer_history": {
+    "commits": [
+      {
+        "behavior": "heal unless explicitly disabled",
+        "commit": "1a2f4c17b45c57e86fa28c5a1ef2b41c4da94ffd",
+        "date": "2026-08-31"
+      },
+      {
+        "behavior": "opt-in via MLXPRESS_HEAL_SAFETENSORS/JANGPRESS_HEAL_SAFETENSORS; not an ancestor of 91fed8be",
+        "commit": "36b7396f7d9152171c14f3d29baadd6f96f32868",
+        "date": "2026-09-02"
+      },
+      {
+        "behavior": "direct-send authorization gate",
+        "commit": "9460dcc133b3509899265afd21deffaffc3eb9e9",
+        "date": "2026-09-09"
+      }
+    ],
+    "mei_pins": [
+      {
+        "behavior": "heal-by-default; explains 2026-09-06 Qwen3.6 in-place heal",
+        "mei_release": "0.2.0",
+        "vmlx": "91fed8be21319f92ce5220622c6dcde0b851bdae"
+      },
+      {
+        "behavior": "opt-in",
+        "mei_release": "0.4.0",
+        "vmlx": "654eb4554743df63a50cc0fa3aaed4977d636753"
+      },
+      {
+        "behavior": "opt-in",
+        "mei_release": "0.5.0",
+        "vmlx": "44461ffdf8dca836b624b2d0d268c800dedea05e"
+      },
+      {
+        "behavior": "opt-in plus direct-send",
+        "mei_release": "0.6.0/0.6.1",
+        "vmlx": "fef563a55b4f22d4530b3439c1edb233cfc44a8f"
+      }
+    ],
+    "vmlx_current_behavior": "healBundleIfEligible requires AlignmentRepairAuthorization.directUserSend; LoadConfiguration defaults authorization to disabled; Mei passes no direct-send authorization.",
+    "vmlx_current_pin": "fef563a55b4f22d4530b3439c1edb233cfc44a8f"
+  },
+  "model_root": "/Users/tijs/.local/share/local-model-bench/mei-models",
+  "payload_identity_ornith_pair": [
+    {
+      "aligned_sha256": "ae982af457a3c4cb2994257867c5c5076d5f623cf1098185fee0c51fd222fba9",
+      "equal": true,
+      "file": "model-00001-of-00004.safetensors",
+      "header_padding_bytes": 6,
+      "payload_bytes_aligned": 5343636096,
+      "payload_bytes_restage": 5343636096,
+      "restage_sha256": "ae982af457a3c4cb2994257867c5c5076d5f623cf1098185fee0c51fd222fba9"
+    },
+    {
+      "aligned_sha256": "4570d482fbc3ddb59360cc327578c3f45abfa15e518d26763bb0f7319ab4ec77",
+      "equal": true,
+      "file": "model-00002-of-00004.safetensors",
+      "header_padding_bytes": 3,
+      "payload_bytes_aligned": 5368405504,
+      "payload_bytes_restage": 5368405504,
+      "restage_sha256": "4570d482fbc3ddb59360cc327578c3f45abfa15e518d26763bb0f7319ab4ec77"
+    },
+    {
+      "aligned_sha256": "411ffa6f850b8f8859d418b1ef1127aac82fab77df5d0c69aa2645e14d8cdb3f",
+      "equal": true,
+      "file": "model-00003-of-00004.safetensors",
+      "header_padding_bytes": 3,
+      "payload_bytes_aligned": 5368256256,
+      "payload_bytes_restage": 5368256256,
+      "restage_sha256": "411ffa6f850b8f8859d418b1ef1127aac82fab77df5d0c69aa2645e14d8cdb3f"
+    },
+    {
+      "aligned_sha256": "32a9b3e550f03bb3330c34e2b971095a59f9dcdf1b9516944d8ad8ef4a46554c",
+      "equal": true,
+      "file": "model-00004-of-00004.safetensors",
+      "header_padding_bytes": 3,
+      "payload_bytes_aligned": 3428489600,
+      "payload_bytes_restage": 3428489600,
+      "restage_sha256": "32a9b3e550f03bb3330c34e2b971095a59f9dcdf1b9516944d8ad8ef4a46554c"
+    }
+  ],
+  "plan": "ecf96401-0679-4abb-adcf-d3f24024dbea",
+  "repository": {
+    "branch": "main",
+    "head": "8e5e4d2",
+    "path": "/Users/tijs/projects/mei",
+    "source_changes_required": false
+  },
+  "schema": 1,
+  "served_paths": {
+    "Ornith-1.5-35B-A3B-MLX-4bit-aligned": [
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-042-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-042-traced.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-042.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-050-profile.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-050-rollback.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-060.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-061.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-adaptive-strict.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-adaptive-traced.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-adaptive.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-capture.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-rc.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-seed-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-seed-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-step512-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-strict.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-sync-traced.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei-sync.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Ornith-1.5-35B-A3B/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned"
+      }
+    ],
+    "Ornith-1.5-35B-A3B-MLX-4bit-restage-19504d9": [],
+    "Qwen3.6-35B-A3B-4bit": [
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei-060.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei-rb-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei-rb-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-DWQ/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-DWQ"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-060-matched.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-060.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-061.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-rb-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-rb-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      }
+    ],
+    "Qwen3.6-35B-A3B-4bit-textonly": [
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-060-matched.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-060.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-061.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-rb-anchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei-rb-noanchors.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.6-35B-A3B-textonly/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.6-35B-A3B-4bit-textonly"
+      }
+    ],
+    "Qwen3.8-27B-4bit": [
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.8-27B/mei-060.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.8-27B/mei-061.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit"
+      },
+      {
+        "config": "/Users/tijs/projects/local-model-bench/configs/Qwen3.8-27B/mei.yaml",
+        "model_dir": "/Users/tijs/.local/share/local-model-bench/mei-models/Qwen3.8-27B-4bit"
+      }
+    ],
+    "Ternary-Bonsai-2-27B-mlx-2bit": []
+  },
+  "verification": {
+    "aligned_probe": "passed",
+    "misaligned_local_model_bench_probe": "passed",
+    "misaligned_probe": "passed",
+    "payload_identity": "all four Ornith shard payload hashes equal",
+    "raw_artifacts": "/Users/tijs/projects/mei/artifacts/safetensors-alignment-gate-20260930T152415Z/benchmark",
+    "server_cleanup": "both servers stopped by isolated stop_mei_server.sh; final port/process check pending before commit"
+  }
+}
