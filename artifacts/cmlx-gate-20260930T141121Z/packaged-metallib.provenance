@@ -1,0 +1,8 @@
+source: /tmp/mei-cmlx-gate-build/out/Products/Release/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+label: SwiftPM Cmlx build product
+verification: structural (MTLB magic, size, file classification)
+installed_at: 2026-09-30T14:40:39Z
+vendored_mlx: 0.32.2
+vendored_mlx_source: /tmp/mei-cmlx-gate-build/checkouts/vmlx-swift/Source/Cmlx/include-framework/mlx-version.h
+sha256: 0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3
+vmlx_checkout_revision: fef563a55b4f22d4530b3439c1edb233cfc44a8f

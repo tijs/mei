@@ -1,0 +1,160 @@
+{
+  "build": {
+    "binary": {
+      "bytes": 91755536,
+      "path": "/tmp/mei-cmlx-gate-build/out/Products/Release/mei",
+      "sha256": "49de31c38e610e5c6e81ba4e00711bb18c5de3f3efc1140e3a7f73c6f1c30c08"
+    },
+    "binary_version": "mei 0.6.1",
+    "packaged_equals_source_bundle": true,
+    "packaged_metallib": {
+      "bytes": 2422136,
+      "path": "/Users/tijs/projects/mei/dist/mei-0.6.1-macos-arm64/bin/mlx.metallib",
+      "sha256": "0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3"
+    },
+    "packaged_tarball": {
+      "bytes": 23784704,
+      "path": "/Users/tijs/projects/mei/dist/mei-0.6.1-macos-arm64.tar.gz",
+      "sha256": "fb14a233979465be08331ae6af5642d9f0e9fa9863e02bf79403d903801b474a"
+    },
+    "scratch_build_dir": "/tmp/mei-cmlx-gate-build",
+    "source_bundle": {
+      "bytes": 2422136,
+      "path": "/tmp/mei-cmlx-gate-build/out/Products/Release/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "sha256": "0f6bdc29ff9afb81369eb5ca6f6561e0fdbb63228db0d4520c91e3c281738da3"
+    },
+    "vendored_mlx": "0.32.2",
+    "vmlx_revision": "fef563a55b4f22d4530b3439c1edb233cfc44a8f"
+  },
+  "caveats": [
+    "The comparison used one real 35B model on one quiet Apple Silicon machine.",
+    "Cross-library output identity was checked and matched for the exercised probes; this is not a proof for every model.",
+    "Performance deltas are descriptive, not a universal speedup claim.",
+    "The historical stock reference is the retained 0.6.0 Python MLX 0.32.2 metallib; the fixed binary for every live arm was the fresh 0.6.1 source build."
+  ],
+  "contention_gate": {
+    "max_reclaimable_gib": 24.841094970703125,
+    "min_reclaimable_gib": 24.825088500976562,
+    "samples": [
+      {
+        "epoch": 1790777420.5750442,
+        "index": 0,
+        "owners": [],
+        "reclaimable_gib": 24.8367919921875
+      },
+      {
+        "epoch": 1790777425.813339,
+        "index": 1,
+        "owners": [],
+        "reclaimable_gib": 24.8370361328125
+      },
+      {
+        "epoch": 1790777431.054092,
+        "index": 2,
+        "owners": [],
+        "reclaimable_gib": 24.836944580078125
+      },
+      {
+        "epoch": 1790777436.2933462,
+        "index": 3,
+        "owners": [],
+        "reclaimable_gib": 24.841094970703125
+      },
+      {
+        "epoch": 1790777441.531127,
+        "index": 4,
+        "owners": [],
+        "reclaimable_gib": 24.840682983398438
+      },
+      {
+        "epoch": 1790777446.7696488,
+        "index": 5,
+        "owners": [],
+        "reclaimable_gib": 24.840118408203125
+      },
+      {
+        "epoch": 1790777452.008668,
+        "index": 6,
+        "owners": [],
+        "reclaimable_gib": 24.839950561523438
+      },
+      {
+        "epoch": 1790777457.2470322,
+        "index": 7,
+        "owners": [],
+        "reclaimable_gib": 24.840408325195312
+      },
+      {
+        "epoch": 1790777462.489435,
+        "index": 8,
+        "owners": [],
+        "reclaimable_gib": 24.82611083984375
+      },
+      {
+        "epoch": 1790777467.729604,
+        "index": 9,
+        "owners": [],
+        "reclaimable_gib": 24.825088500976562
+      },
+      {
+        "epoch": 1790777472.921845,
+        "index": 10,
+        "owners": [],
+        "reclaimable_gib": 24.83502197265625
+      }
+    ],
+    "sustained_clean": true,
+    "threshold_gib": 10.0
+  },
+  "decision": "admit source-built Cmlx metallib as the packaged artifact: both cold source runs were deterministic; source and stock passed greedy, streaming/non-streaming, native tool, cache, and exact context-cap checks; round-robin performance was neutral within measurement noise.",
+  "gate": "source-built Cmlx metallib real-model admission",
+  "model": {
+    "config": {
+      "bytes": 23203,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned/config.json",
+      "sha256": "fc27b922c3506e955271c68120be9079ad8bba7266c8086c02dfbb8c98723bd5"
+    },
+    "model_type": "qwen3_5_moe",
+    "root": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+    "safetensors_bytes": 19509024216,
+    "served_model_id": "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit",
+    "tokenizer_config": {
+      "bytes": 1160,
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-models/Ornith-1.5-35B-A3B-MLX-4bit-aligned/tokenizer_config.json",
+      "sha256": "386ba246ba3dfa4d3a21d8bc8712eba38de558e5ac94c2c90436d8f94d519d5e"
+    },
+    "vision_config": false
+  },
+  "plan": "3b51fe67-1e73-4a1d-ab2c-68ba801745a2",
+  "raw_legs": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs",
+  "report": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/cmlx-gate-report.json",
+  "schema": 1,
+  "settings": {
+    "behavior_legs": [
+      "source-behavior-1",
+      "source-behavior-2",
+      "stock-behavior-1"
+    ],
+    "cache_behavior": true,
+    "context_cap": 65536,
+    "enable_thinking": false,
+    "performance_cache_behavior": false,
+    "performance_repeats_per_arm": 6,
+    "performance_round_robin_order": [
+      "source-performance-1",
+      "stock-performance-1",
+      "stock-performance-2",
+      "source-performance-2"
+    ],
+    "performance_rows_per_leg": 6,
+    "prefill_step_size": 1024,
+    "temperature": 0.0,
+    "top_k": 1,
+    "top_p": 1.0
+  },
+  "stock_reference": {
+    "bytes": 182351120,
+    "path": "/Users/tijs/projects/mei/dist/mei-0.6.0-macos-arm64/bin/mlx.metallib",
+    "sha256": "dc59d1cceb1a5c7e578232e6e41e28e2c73c9463ac6dbc3886c3ee17ffc270ed"
+  }
+}

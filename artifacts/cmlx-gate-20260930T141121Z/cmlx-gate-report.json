@@ -1,0 +1,291 @@
+{
+  "behavior": [
+    {
+      "arm": "source",
+      "cache": {
+        "cache_growing_turn1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_growing_turn2_reuses_slot": {
+          "cached_tokens": 785,
+          "status": "passed"
+        },
+        "cache_repeat_1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_repeat_2": {
+          "cached_tokens": 6165,
+          "status": "passed"
+        }
+      },
+      "context_cap": {
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed"
+      },
+      "parity_content": "parity-ok",
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/source-behavior-1/result.json",
+      "plain_content": "ready",
+      "probe_checks": {
+        "cache_growing_turn1": "passed",
+        "cache_growing_turn2_reuses_slot": "passed",
+        "cache_repeat_1": "passed",
+        "cache_repeat_2": "passed",
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed",
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "probe_returncode": 0,
+      "probe_status": "passed",
+      "server_stopped": true,
+      "status": "passed",
+      "tool": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    {
+      "arm": "source",
+      "cache": {
+        "cache_growing_turn1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_growing_turn2_reuses_slot": {
+          "cached_tokens": 785,
+          "status": "passed"
+        },
+        "cache_repeat_1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_repeat_2": {
+          "cached_tokens": 6165,
+          "status": "passed"
+        }
+      },
+      "context_cap": {
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed"
+      },
+      "parity_content": "parity-ok",
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/source-behavior-2/result.json",
+      "plain_content": "ready",
+      "probe_checks": {
+        "cache_growing_turn1": "passed",
+        "cache_growing_turn2_reuses_slot": "passed",
+        "cache_repeat_1": "passed",
+        "cache_repeat_2": "passed",
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed",
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "probe_returncode": 0,
+      "probe_status": "passed",
+      "server_stopped": true,
+      "status": "passed",
+      "tool": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    },
+    {
+      "arm": "stock",
+      "cache": {
+        "cache_growing_turn1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_growing_turn2_reuses_slot": {
+          "cached_tokens": 785,
+          "status": "passed"
+        },
+        "cache_repeat_1": {
+          "cached_tokens": 0,
+          "status": "passed"
+        },
+        "cache_repeat_2": {
+          "cached_tokens": 6165,
+          "status": "passed"
+        }
+      },
+      "context_cap": {
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed"
+      },
+      "parity_content": "parity-ok",
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/stock-behavior-1/result.json",
+      "plain_content": "ready",
+      "probe_checks": {
+        "cache_growing_turn1": "passed",
+        "cache_growing_turn2_reuses_slot": "passed",
+        "cache_repeat_1": "passed",
+        "cache_repeat_2": "passed",
+        "context_exact_cap": "passed",
+        "context_over_cap_rejected": "passed",
+        "mei_status": "passed",
+        "models_identity": "passed",
+        "parity_stream_vs_nonstream": "passed",
+        "plain_completion": "passed",
+        "tool_nonstreaming": "passed",
+        "tool_streaming": "passed"
+      },
+      "probe_returncode": 0,
+      "probe_status": "passed",
+      "server_stopped": true,
+      "status": "passed",
+      "tool": {
+        "arguments": {
+          "a": 15,
+          "b": 27
+        },
+        "finish_reason": "tool_calls",
+        "name": "add_numbers"
+      }
+    }
+  ],
+  "behavior_results": 3,
+  "checks": {
+    "all_runs_passed": true,
+    "all_server_runs_stopped": true,
+    "cross_library_cache_check_equal": true,
+    "cross_library_context_boundary_equal": true,
+    "cross_library_parity_output_equal": true,
+    "cross_library_plain_output_equal": true,
+    "cross_library_tool_equal": true,
+    "cross_library_tool_valid": true,
+    "performance_loaded_source_vs_stock_decode_tps_delta_pct": 0.14290517821116122,
+    "performance_loaded_source_vs_stock_prefill_ms_delta_pct": 0.17749405502049953,
+    "performance_short_source_vs_stock_decode_tps_delta_pct": -0.1314512653734501,
+    "performance_short_source_vs_stock_prefill_ms_delta_pct": -0.0356685738153284,
+    "performance_source_loaded_mean_decode_tps": 45.6665,
+    "performance_source_loaded_mean_prefill_ms": 57428.55433333333,
+    "performance_source_loaded_mean_tps": 1.078603267393171,
+    "performance_source_loaded_runs": 2,
+    "performance_source_short_mean_decode_tps": 53.68816666666666,
+    "performance_source_short_mean_prefill_ms": 161.14883333333336,
+    "performance_source_short_mean_tps": 46.6472336294498,
+    "performance_source_short_runs": 2,
+    "performance_stock_loaded_mean_decode_tps": 45.60133333333333,
+    "performance_stock_loaded_mean_prefill_ms": 57326.80266666666,
+    "performance_stock_loaded_mean_tps": 1.081097421038145,
+    "performance_stock_loaded_runs": 2,
+    "performance_stock_short_mean_decode_tps": 53.75883333333333,
+    "performance_stock_short_mean_prefill_ms": 161.20633333333333,
+    "performance_stock_short_mean_tps": 46.70384380694861,
+    "performance_stock_short_runs": 2,
+    "source_behavior_count": 2,
+    "source_behavior_determinism": true,
+    "stock_behavior_count": 1
+  },
+  "gate_verdict": "pass",
+  "performance": [
+    {
+      "arm": "source",
+      "loaded_decode_tps_mean": 45.78333333333333,
+      "loaded_generate_ms_mean": 1397.8963333333334,
+      "loaded_peak_bytes_max": 22714709646,
+      "loaded_prefill_ms_mean": 57384.06366666666,
+      "loaded_prompt_tps_mean": 522.891,
+      "loaded_tps_mean": 1.0801731089361808,
+      "loaded_wall_mean": 59.250872472,
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/source-performance-1/result.json",
+      "rows": 6,
+      "server_stopped": true,
+      "short_decode_tps_mean": 53.61266666666666,
+      "short_generate_ms_mean": 1193.7659999999998,
+      "short_peak_bytes_max": 20162615064,
+      "short_prefill_ms_mean": 223.50300000000001,
+      "short_prompt_tps_mean": 97.39566666666667,
+      "short_tps_mean": 44.88828246288276,
+      "short_wall_mean": 1.4452666253333337,
+      "status": "passed"
+    },
+    {
+      "arm": "source",
+      "loaded_decode_tps_mean": 45.54966666666667,
+      "loaded_generate_ms_mean": 1405.0603333333331,
+      "loaded_peak_bytes_max": 22714709566,
+      "loaded_prefill_ms_mean": 57473.045000000006,
+      "loaded_prompt_tps_mean": 522.0726666666666,
+      "loaded_tps_mean": 1.077033425850161,
+      "loaded_wall_mean": 59.42270509733333,
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/source-performance-2/result.json",
+      "rows": 6,
+      "server_stopped": true,
+      "short_decode_tps_mean": 53.763666666666666,
+      "short_generate_ms_mean": 1190.482,
+      "short_peak_bytes_max": 20162635480,
+      "short_prefill_ms_mean": 98.79466666666667,
+      "short_prompt_tps_mean": 131.65766666666667,
+      "short_tps_mean": 48.406184796016845,
+      "short_wall_mean": 1.3221994719999997,
+      "status": "passed"
+    },
+    {
+      "arm": "stock",
+      "loaded_decode_tps_mean": 45.507666666666665,
+      "loaded_generate_ms_mean": 1406.3890000000001,
+      "loaded_peak_bytes_max": 22714709694,
+      "loaded_prefill_ms_mean": 57381.22133333333,
+      "loaded_prompt_tps_mean": 522.9146666666667,
+      "loaded_tps_mean": 1.080049100161135,
+      "loaded_wall_mean": 59.25750440299999,
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/stock-performance-1/result.json",
+      "rows": 6,
+      "server_stopped": true,
+      "short_decode_tps_mean": 53.52133333333333,
+      "short_generate_ms_mean": 1195.8313333333333,
+      "short_peak_bytes_max": 20162615128,
+      "short_prefill_ms_mean": 223.53866666666667,
+      "short_prompt_tps_mean": 98.40066666666667,
+      "short_tps_mean": 44.80500271438285,
+      "short_wall_mean": 1.4474473889999995,
+      "status": "passed"
+    },
+    {
+      "arm": "stock",
+      "loaded_decode_tps_mean": 45.695,
+      "loaded_generate_ms_mean": 1400.589,
+      "loaded_peak_bytes_max": 22714709646,
+      "loaded_prefill_ms_mean": 57272.384,
+      "loaded_prompt_tps_mean": 523.9013333333334,
+      "loaded_tps_mean": 1.082145741915155,
+      "loaded_wall_mean": 59.141910417,
+      "path": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z/legs/stock-performance-2/result.json",
+      "rows": 6,
+      "server_stopped": true,
+      "short_decode_tps_mean": 53.99633333333333,
+      "short_generate_ms_mean": 1185.2973333333332,
+      "short_peak_bytes_max": 20162635544,
+      "short_prefill_ms_mean": 98.87400000000001,
+      "short_prompt_tps_mean": 131.493,
+      "short_tps_mean": 48.602684899514365,
+      "short_wall_mean": 1.316824902666667,
+      "status": "passed"
+    }
+  ],
+  "performance_results": 4,
+  "results": 7,
+  "root": "/Users/tijs/projects/mei/artifacts/cmlx-gate-20260930T141121Z",
+  "schema": 1
+}

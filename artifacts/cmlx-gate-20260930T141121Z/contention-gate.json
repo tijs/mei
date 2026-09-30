@@ -1,0 +1,74 @@
+{
+  "threshold_gib": 10.0,
+  "samples": [
+    {
+      "index": 0,
+      "epoch": 1790777420.5750442,
+      "reclaimable_gib": 24.8367919921875,
+      "owners": []
+    },
+    {
+      "index": 1,
+      "epoch": 1790777425.813339,
+      "reclaimable_gib": 24.8370361328125,
+      "owners": []
+    },
+    {
+      "index": 2,
+      "epoch": 1790777431.054092,
+      "reclaimable_gib": 24.836944580078125,
+      "owners": []
+    },
+    {
+      "index": 3,
+      "epoch": 1790777436.2933462,
+      "reclaimable_gib": 24.841094970703125,
+      "owners": []
+    },
+    {
+      "index": 4,
+      "epoch": 1790777441.531127,
+      "reclaimable_gib": 24.840682983398438,
+      "owners": []
+    },
+    {
+      "index": 5,
+      "epoch": 1790777446.7696488,
+      "reclaimable_gib": 24.840118408203125,
+      "owners": []
+    },
+    {
+      "index": 6,
+      "epoch": 1790777452.008668,
+      "reclaimable_gib": 24.839950561523438,
+      "owners": []
+    },
+    {
+      "index": 7,
+      "epoch": 1790777457.2470322,
+      "reclaimable_gib": 24.840408325195312,
+      "owners": []
+    },
+    {
+      "index": 8,
+      "epoch": 1790777462.489435,
+      "reclaimable_gib": 24.82611083984375,
+      "owners": []
+    },
+    {
+      "index": 9,
+      "epoch": 1790777467.729604,
+      "reclaimable_gib": 24.825088500976562,
+      "owners": []
+    },
+    {
+      "index": 10,
+      "epoch": 1790777472.921845,
+      "reclaimable_gib": 24.83502197265625,
+      "owners": []
+    }
+  ],
+  "sustained_clean": true,
+  "min_reclaimable_gib": 24.825088500976562,
+  "max_reclaimable_gib": 24.841094970703125
+}
