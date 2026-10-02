@@ -951,11 +951,17 @@ struct NumericConstraintSet: Equatable {
                 lower: clippedLower, upper: clippedUpper, multiple: multiple) {
                 return true
             }
-            // An unclipped window of width ≥ the multiple spacing is
-            // guaranteed to contain a multiple: stop scanning.
-            if clippedLower.value == lowerValue, clippedUpper.value == upperValue,
-                DecimalLiteral.compareMagnitudes(w.scaled(byPowerOf10: e), multiple) >= 0 {
-                return true
+            // An unclipped window at least as wide as the multiple spacing is
+            // guaranteed to contain a multiple — but only with an inclusive
+            // lower end. The open interval (A, A + m) contains no multiple
+            // when A is itself one, so the width must strictly exceed the
+            // spacing when the window start is excluded by the bound.
+            if clippedLower.value == lowerValue, clippedUpper.value == upperValue {
+                let width = w.scaled(byPowerOf10: e)
+                let order = DecimalLiteral.compareMagnitudes(width, multiple)
+                if order > 0 || (order == 0 && clippedLower.inclusive) {
+                    return true
+                }
             }
             e += 1
             iterations += 1

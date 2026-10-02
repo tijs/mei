@@ -585,6 +585,38 @@ final class JSONGrammarStateTests: XCTestCase {
         assertRejected(#"{"v":1.5e-1}"#, state)
     }
 
+    func testNumberExclusiveLowerBoundAtWindowStartRejectsDeadPrefix() throws {
+        // Regression: exclusiveMinimum 150 / maximum 200 / multipleOf 10. The
+        // prefix `1.5` reaches {x · 10^e : x ∈ [1.5, 1.6)}; the only exponent
+        // window that can meet the bounds is [150, 160), whose open lower end
+        // at the exclusive minimum excludes its only multiple (150). The
+        // window is exactly as wide as the spacing, so it is not a guaranteed
+        // completion: the `5` byte is a dead end and must be rejected.
+        let state = try scalarState(
+            #"{"type": "number", "exclusiveMinimum": 150, "maximum": 200, "multipleOf": 10}"#)
+        assertRejected(#"{"v":1.5"#, state)
+        assertRejected(#"{"v":1.5}"#, state)
+        assertRejected(#"{"v":1.5e2"#, state)
+        // Neighbouring prefixes stay live: 160 = 1.6e2 and 200 = 2e2 are
+        // multiples of 10 inside (150, 200].
+        assertIncomplete(#"{"v":1.6"#, state)
+        assertAccepts(#"{"v":1.6e2}"#, state)
+        assertAccepts(#"{"v":1.7e2}"#, state)
+        assertAccepts(#"{"v":2e2}"#, state)
+        assertAccepts(#"{"v":2.0e2}"#, state)
+
+        // The same shape with a fractional spacing: exclusiveMinimum 1 /
+        // maximum 1.05 / multipleOf 0.01. `1.0` can still reach 1.01, but
+        // `1.00` reaches only [1, 1.01), which holds no multiple of 0.01 —
+        // the second `0` is a dead end.
+        let fractional = try scalarState(
+            #"{"type": "number", "exclusiveMinimum": 1, "maximum": 1.05, "multipleOf": 0.01}"#)
+        assertIncomplete(#"{"v":1.0"#, fractional)
+        assertRejected(#"{"v":1.00"#, fractional)
+        assertAccepts(#"{"v":1.01}"#, fractional)
+        assertAccepts(#"{"v":1.05}"#, fractional)
+    }
+
     func testNumberAndIntegerEnumGrammar() throws {
         let integerEnum = try scalarState(#"{"type": "integer", "enum": [0, 1, 2]}"#)
         assertAccepts(#"{"v":0}"#, integerEnum)
