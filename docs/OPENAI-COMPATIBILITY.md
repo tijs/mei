@@ -429,6 +429,12 @@ black-box probes):
   (`4f83f8f146fdf28b512a06562b671d7af4fab457`): downloaded and exercised as
   a second family checkpoint; its live acceptance run did not pass the full
   structured canary class, so it is not promoted as structured-output evidence.
+- **Llama-3.2-3B-Instruct-4bit**
+  (`7f0dc925e0d0afb0322d96f9255cfddf2ba5636e`): plain completion and
+  fail-closed truncation transport passed live, but the structured canary
+  failed closed when the tokenizer path reached a state with no legal
+  advancing token; tool-call canaries also did not pass. No structured-success
+  evidence is claimed for this checkpoint.
 - **Qwen3.6-35B-A3B-4bit**: the staged download is incomplete and was not
   started; no live evidence is claimed.
 
