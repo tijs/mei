@@ -234,6 +234,62 @@ final class MeiAcceptanceTests: XCTestCase {
         let body = try dict(data)
         XCTAssertEqual(body["status"] as? String, "ok")
     }
+
+    // MARK: - CoCore structured-output canary (live)
+
+    /// The exact CoCore startup canary (`structured_output_canary_body`,
+    /// graze-social/cocore PR #237): a strict `json_schema` request whose
+    /// prompt deliberately begs for prose, so a server that silently drops
+    /// `response_format` answers in sentences and fails instead of passing by
+    /// luck. Non-streaming, exactly as CoCore sends it (no `stream` key).
+    ///
+    /// Passing this test is what lets CoCore advertise the model in
+    /// `structured_output_models`; the request fixture and the pass condition
+    /// are the Rust oracle mirrored in `CoCoreCanary`.
+    func testCoCoreStructuredOutputCanaryNonStreaming() throws {
+        let (data, response) = try post(
+            "/chat/completions", json: CoCoreCanary.structuredOutputBody(model: modelID))
+        let raw = String(data: data, encoding: .utf8) ?? ""
+        XCTAssertEqual(response.statusCode, 200, raw)
+        let body = try dict(data)
+        let choices = body["choices"] as? [[String: Any]] ?? []
+        XCTAssertEqual(choices.count, 1, raw)
+        XCTAssertEqual(choices.first?["finish_reason"] as? String, "stop", raw)
+        XCTAssertTrue(
+            CoCoreCanary.structuredOutputPassed(responseBody: body),
+            "the canary content must be exactly {\"status\":\"ok\"}: \(raw)")
+    }
+
+    /// The same canary through the streaming shape CoCore uses for proxied
+    /// jobs (`stream: true`, `stream_options.include_usage: true`): the
+    /// assembled deltas must satisfy the same exact condition, finish with
+    /// `stop`, and carry the server's own usage counts.
+    func testCoCoreStructuredOutputCanaryStreaming() throws {
+        var payload = CoCoreCanary.structuredOutputBody(model: modelID)
+        payload["stream"] = true
+        payload["stream_options"] = ["include_usage": true]
+        let url = URL(string: "\(baseURL)/chat/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let (data, response) = try send(request, timeout: nil)
+        let raw = String(data: data, encoding: .utf8) ?? ""
+        XCTAssertEqual(response.statusCode, 200, raw)
+        XCTAssertTrue(
+            raw.contains("\"finish_reason\":\"stop\""),
+            "the stream must carry a stop finish frame: \(raw)")
+        let assembled = try assembleSSE(data)
+        XCTAssertTrue(
+            CoCoreCanary.structuredOutputPassed(responseBody: assembled),
+            "the assembled stream must be exactly {\"status\":\"ok\"}: \(raw)")
+        let usage = assembled["usage"] as? [String: Any] ?? [:]
+        let prompt = usage["prompt_tokens"] as? Int ?? -1
+        let completion = usage["completion_tokens"] as? Int ?? -1
+        XCTAssertGreaterThan(prompt, 0, "include_usage must carry prompt tokens: \(raw)")
+        XCTAssertGreaterThan(completion, 0, "include_usage must carry completion tokens: \(raw)")
+        XCTAssertEqual(usage["total_tokens"] as? Int, prompt + completion, raw)
+    }
 }
 
 extension URLSession {

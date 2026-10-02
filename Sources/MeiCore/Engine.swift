@@ -69,6 +69,13 @@ public actor Engine {
     /// derived from, so a continuing conversation never recomputes them.
     private var anchorMemo: (prefixLength: Int, hash: Int, offsets: [Int])?
 
+    /// Immutable per-model token-fragment table for structured generation,
+    /// built on the first structured request (one decode per vocabulary
+    /// entry) and reused for the process lifetime: the table depends only on
+    /// the tokenizer and the declared vocabulary size, never on a request.
+    /// The grammar state itself is per request (a fresh processor).
+    private var fragmentTableCache: (vocabularySize: Int, table: any TokenFragmentTable)?
+
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
         self.container = container
         self.config = config
@@ -254,12 +261,17 @@ public actor Engine {
     }
 
     private func chatRunLocked(request: ChatRequest) async throws -> GenerationRun {
+        // Structured requests: compile + build the constraint processor
+        // BEFORE any tokenization work, and force thinking off (the grammar
+        // constrains the first sampled token to start a JSON value).
+        let structuredPlan = try await makeStructuredPlan(for: request)
         let (template, tokens, context) = try await renderChatTemplate(
             messages: request.messages,
             tools: request.tools,
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
-            toolChoice: request.toolChoice)
+            toolChoice: request.toolChoice,
+            structured: structuredPlan != nil)
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
@@ -277,15 +289,47 @@ public actor Engine {
             tokens: tokens,
             parameters: parameters,
             tools: request.tools,
-            cachePrefixCounts: prefixCounts)
+            cachePrefixCounts: prefixCounts,
+            structuredPlan: structuredPlan)
         return run
     }
 
     private func requestEnableThinking(_ request: ChatRequest) -> Bool? {
-        if let reasoningEffort = request.reasoningEffort, config.enableThinking == nil {
-            return reasoningEffort != "none"
+        StructuredGeneration.enableThinking(
+            request: request, configEnableThinking: config.enableThinking)
+    }
+
+    /// The structured-generation plan for one chat request, or nil for
+    /// ordinary text (the byte-compatible default path: no processor is
+    /// built and no tokenizer work happens).
+    ///
+    /// Model-free construction lives in `StructuredGeneration`; the Engine
+    /// supplies the real tokenizer, the model's vocabulary size from
+    /// config.json, and the model configuration's declared EOS ids. The
+    /// immutable fragment table is cached per vocabulary size. Structured
+    /// requests never take a speculative path: Mei constructs no
+    /// `DraftStrategy` anywhere, and the vmlx seam documents that an
+    /// additional processor must not be paired with one.
+    private func makeStructuredPlan(for request: ChatRequest) async throws -> StructuredGeneration.Plan? {
+        guard request.responseFormat != .text else { return nil }
+        if let tools = request.tools, !tools.isEmpty {
+            // The router rejects this combination before generation; the
+            // engine keeps the fail-closed check for direct callers.
+            throw ResponseFormatError.structuredToolsUnsupported
         }
-        return config.enableThinking
+        let vocabularySize = try StructuredGeneration.modelVocabularySize(
+            modelDirectory: config.modelDirectory)
+        let table: any TokenFragmentTable
+        if let cached = fragmentTableCache, cached.vocabularySize == vocabularySize {
+            table = cached.table
+        } else {
+            table = try TokenizerFragmentTable(
+                tokenizer: await container.tokenizer,
+                vocabularySize: vocabularySize,
+                additionalEndOfSequenceTokenIds: await container.configuration.eosTokenIds)
+            fragmentTableCache = (vocabularySize, table)
+        }
+        return try StructuredGeneration.plan(for: request.responseFormat, table: table)
     }
 
 
@@ -340,13 +384,17 @@ public actor Engine {
         tools: [MeiJSONValue]?,
         enableThinking: Bool?,
         reasoningEffort: String?,
-        toolChoice: MeiJSONValue?
+        toolChoice: MeiJSONValue?,
+        structured: Bool = false
     ) async throws -> (template: [[String: any Sendable]], tokens: [Int], context: [String: any Sendable]?) {
         let template = messages.map { MessageMapping.templateDictionary(from: $0) }
         let templateTools = MessageMapping.templateTools(tools)
         let context = MessageMapping.additionalContext(
             enableThinking: enableThinking ?? config.enableThinking,
-            reasoningEffort: reasoningEffort ?? config.reasoningEffort,
+            // Structured requests force thinking off: no `reasoning_effort`
+            // may re-enable a think prefill the JSON grammar cannot start
+            // from, including the operator's server-side default.
+            reasoningEffort: structured ? nil : (reasoningEffort ?? config.reasoningEffort),
             toolChoice: toolChoice)
         let tokenizer = await container.tokenizer
         let tokens = try tokenizer.applyChatTemplate(
@@ -358,7 +406,8 @@ public actor Engine {
         tokens: [Int],
         parameters: GenerateParameters,
         tools: [MeiJSONValue]?,
-        cachePrefixCounts: [Int]? = nil
+        cachePrefixCounts: [Int]? = nil,
+        structuredPlan: StructuredGeneration.Plan? = nil
     ) async throws -> GenerationRun {
         // Emit the token array as `[1, T]` (batch-first), matching the raw
         // completions path and the vmlx cache-restore rebuild. A multimodal
@@ -404,7 +453,8 @@ public actor Engine {
                 print("mei: pp stage=\(progress.stage.rawValue) completed=\(progress.completedUnitCount) total=\(progress.totalUnitCount)")
                 fflush(stdout)
             }
-            restoreBox.tracker.observe(progress) })
+            restoreBox.tracker.observe(progress) },
+            additionalProcessor: structuredPlan?.processor)
         let (stream, task) = MLXLMCommon.generateTask(
             promptTokenCount: tokens.count,
             modelConfiguration: await container.configuration,
@@ -438,6 +488,16 @@ public actor Engine {
         }
         await task.value
 
+        // A captured constraint failure — or a stop that contradicts the
+        // constraint (no complete root value while the response would report
+        // `stop`) — means the answer cannot be trusted to satisfy the
+        // request: fail it instead of returning an unconstrained answer.
+        if let error = StructuredGeneration.postGenerationError(
+            plan: structuredPlan, stopReason: info?.stopReason,
+            toolCallCount: run.toolCalls.count) {
+            throw error
+        }
+
         Self.completeRunForClient(
             &run, info: info, fallbackPromptTokens: tokens.count,
             restoreTracker: restoreTracker, iterationStart: iterationStart)
@@ -456,12 +516,15 @@ public actor Engine {
         request: ChatRequest,
         continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation
     ) async throws {
+        // Structured requests: same pre-generation plan as the buffered path.
+        let structuredPlan = try await makeStructuredPlan(for: request)
         let (template, tokens, context) = try await renderChatTemplate(
             messages: request.messages,
             tools: request.tools,
             enableThinking: requestEnableThinking(request),
             reasoningEffort: request.reasoningEffort,
-            toolChoice: request.toolChoice)
+            toolChoice: request.toolChoice,
+            structured: structuredPlan != nil)
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
@@ -500,7 +563,8 @@ public actor Engine {
                 print("mei: pp stage=\(progress.stage.rawValue) completed=\(progress.completedUnitCount) total=\(progress.totalUnitCount)")
                 fflush(stdout)
             }
-            restoreBox.tracker.observe(progress) })
+            restoreBox.tracker.observe(progress) },
+            additionalProcessor: structuredPlan?.processor)
         let (stream, task) = MLXLMCommon.generateTask(
             promptTokenCount: tokens.count,
             modelConfiguration: await container.configuration,
@@ -514,7 +578,7 @@ public actor Engine {
         var finished = false
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
-        for await item in stream {
+        streamLoop: for await item in stream {
             switch item {
             case .chunk(let chunk):
                 run.text += chunk
@@ -541,6 +605,15 @@ public actor Engine {
                 }
                 continuation.yield(.prefill(completed: progress.completedUnitCount, total: progress.totalUnitCount))
             case .info(let completionInfo):
+                // The constraint already failed, or the stop contradicts it
+                // (no complete root value while the finish would say `stop`):
+                // never emit a success finish frame. Stop consuming; the
+                // check after `task.value` fails the stream instead.
+                if StructuredGeneration.postGenerationError(
+                    plan: structuredPlan, stopReason: completionInfo.stopReason,
+                    toolCallCount: run.toolCalls.count) != nil {
+                    break streamLoop
+                }
                 // vmlx yields `.info` as soon as generation is complete and
                 // BEFORE the post-answer GPU drain, cache store and advisor
                 // drain; only the STREAM END covers those. Its generate loop
@@ -564,6 +637,16 @@ public actor Engine {
             }
         }
         await task.value
+        // A captured constraint failure — or a stop that contradicts the
+        // constraint (no complete root value while the finish would say
+        // `stop`) — fails the stream (the SSE handler turns the thrown error
+        // into a stream error frame): the client never receives a finish
+        // frame for an unconstrained answer.
+        if let error = StructuredGeneration.postGenerationError(
+            plan: structuredPlan, stopReason: info?.stopReason,
+            toolCallCount: run.toolCalls.count) {
+            throw error
+        }
         if !finished {
             // No `.info` at all (cancelled or failed producer): the client still
             // needs a terminal frame, so finish here exactly as before.
@@ -896,7 +979,11 @@ public actor Engine {
         var parameters = GenerateParameters()
         parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
-        parameters.enableCompiledDecode = config.enableCompiledDecode
+        // Structured requests stay off the compiled decode path (the plan's
+        // decode-path gate): an operator's --compiled-decode applies to text
+        // requests only until constrained-processor replay is proven safe.
+        parameters.enableCompiledDecode = StructuredGeneration.enableCompiledDecode(
+            request: request, configEnabled: config.enableCompiledDecode)
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
         if config.maxKVWindowSize > 0 {
             parameters.maxKVWindowSize = config.maxKVWindowSize

@@ -21,8 +21,10 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 **License:** MIT. Model weights are never bundled; see
 [`NOTICE.md`](NOTICE.md). Current stable release: **0.6.1**.
 
-**0.6.1** — a hardening patch on 0.6.0, with the vmlx pin unchanged
-(`fef563a5`). Provisioning and packaging stop reusing a Metal library built
+**0.6.1** — the released hardening patch on 0.6.0 was built with the
+`fef563a5` vmlx pin. The **current working tree** advances the fork to
+`633fe166` for the request logit-processor seam required by unreleased
+structured output. Provisioning and packaging stop reusing a Metal library built
 for a different MLX version and prefer the binary's own source-built Cmlx
 kernels (strict, fail-closed packaging with recorded provenance); streaming
 answers leave the post-token finalization tail off the client's critical path
@@ -243,9 +245,24 @@ mlx-community/Qwen3.6-35B-A3B-4bit = http://127.0.0.1:8024
 
 Mei 0.6.1 passes the tool canary (the forced nested `tool_choice` name is
 pinned to `report_status`) and **fails the structured-output canary by
-design** — `response_format` is not implemented, so CoCore simply does not
-advertise schema jobs for it. Full detail (endpoints, transport, canary
-shapes, streaming usage, security, troubleshooting):
+design** — 0.6.1 does not implement `response_format`, so CoCore simply does
+not advertise schema jobs for it. In the **current source tree (unreleased)**
+structured output *is* implemented: `response_format` is decoded, compiled
+before generation, and enforced token-by-token by constrained decoding
+(`json_object` and strict `json_schema`; structured + `tools` rejected;
+thinking forced off; failures fail closed). It is covered by model-free tests
+— including the exact CoCore canary request/response fixtures and buffered +
+SSE pipeline tests — and has now passed a live smoke run with
+`mlx-community/Qwen3-4B-4bit` at HF revision
+`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`: both the exact non-streaming and
+streaming canaries returned a JSON value that parsed to exactly
+`{"status":"ok"}` (whitespace in the raw JSON is immaterial). The merged CoCore attached-engine
+client at `0151475bf8c98de10a64cab51c23a46dd84a8fe1` also passed its live
+readiness, tool, structured-output, buffered-proxy, and streaming-proxy
+checks against that server. This is a model-specific smoke result, not a
+release-wide or advisor-registration claim; the feature remains unreleased.
+Full detail (endpoints, transport, canary shapes, streaming usage, security,
+troubleshooting):
 **[docs/COCORE.md](docs/COCORE.md)**; the wire contract it relies on is
 **[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)**.
 
@@ -273,6 +290,7 @@ installer both assume an already-built (or prebuilt) binary.
 - **[docs/INSTALL.md](docs/INSTALL.md)** — installer paths and safety contract
   (authoritative).
 - **[docs/COCORE.md](docs/COCORE.md)** — CoCore attached-engine integration:
-  engine map, canaries, streaming, Mei's structured-output limitation.
+  engine map, canaries, streaming, structured-output status (0.6.1 vs working
+  tree).
 - **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
   upstream-PR workflow (authoritative).

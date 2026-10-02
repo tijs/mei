@@ -9,12 +9,16 @@ licensed under the MIT License. See `LICENSE`.
 
 Mei depends on the public Mei-maintained fork
 [`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift), whose parent is
-[`osaurus-ai/vmlx-swift`](https://github.com/osaurus-ai/vmlx-swift). Mei pins
-fork revision:
+[`osaurus-ai/vmlx-swift`](https://github.com/osaurus-ai/vmlx-swift). Mei's
+current source tree pins fork revision:
 
 ```text
-fef563a55b4f22d4530b3439c1edb233cfc44a8f
+633fe166630ef04310aea7d5a1795555ab32970d
 ```
+
+The released Mei 0.6.1 build used the preceding pinned revision
+`fef563a55b4f22d4530b3439c1edb233cfc44a8f`; the current pin adds the
+request logit-processor seam required by unreleased structured output.
 
 The fork's `main` contains all Mei-maintained commits ported from the former
 local patch queue — including `318a4e68` (rotating/companion stripped-boundary

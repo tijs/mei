@@ -20,6 +20,19 @@ that, and proxies jobs to it over loopback HTTP. This is the integration
 surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
+> **Structured-output status (read this first).** The released **Mei 0.6.1
+> does not implement `response_format`** — the structured-output canary fails
+> by design and CoCore refuses schema jobs for it (§2). The **current source
+> tree (unreleased)** does implement it with token-level constrained decoding,
+> and the exact canary request/response pair plus buffered and SSE pipeline
+> behavior are covered by model-free tests. A live smoke run now passes on
+> `mlx-community/Qwen3-4B-4bit` at HF revision
+> `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` through both Mei paths. The
+> merged CoCore attached-engine client also passes readiness, canaries, and
+> buffered/streaming proxy calls against that server. This proves one real
+> model path, not every model family or the full advisor Register-frame
+> readback; do not describe the unreleased feature as part of 0.6.1.
+
 ## Startup commands
 
 Mei runs as **one server per model process**. For the CoCore recipe on
@@ -181,17 +194,39 @@ Also exactly as CoCore sends it (`structured_output_canary_body`):
 - The prompt deliberately begs for prose so a server that **silently drops
   `response_format`** answers in sentences and **fails** the canary instead
   of passing by luck.
-- **Mei 0.6.1 intentionally does not implement `response_format`.** It has no
-  decoder path for the field (unknown fields are silently ignored per the
+- **Passing is exact:** the whole `choices[0].message.content` (trimmed) must
+  parse as a JSON object with exactly one key, `status`, whose value is the
+  string `"ok"` — no prose around it, no extra keys, no embedded JSON inside
+  sentences (CoCore's `structured_output_canary_passed`, mirrored in
+  `CoCoreCanaryFixture`).
+- **Released Mei 0.6.1 fails this canary by design.** It has no decoder path
+  for `response_format` (unknown fields are silently ignored per the
   compatibility contract §3/§7), so it answers in free text, HTTP 200 — the
-  canary **fails**, which is the correct outcome.
-- CoCore then **does not** list the model in `structured_output_models`, and
-  refuses schema jobs for it with a typed `structured-output-unsupported`
-  error **before a byte reaches the server**; the advisor routes schema jobs
-  elsewhere. Free-text and tool-calling jobs are unaffected.
-- Implementing `response_format` support in Mei is **deferred** (tracked in
-  the compatibility contract's deferred list); when it lands it must pass
-  this canary's exact shape before CoCore will advertise structured output.
+  canary **fails**, which is the correct outcome for 0.6.1. CoCore then does
+  not list the model in `structured_output_models`, and refuses schema jobs
+  with a typed `structured-output-unsupported` error **before a byte reaches
+  the server**; the advisor routes schema jobs elsewhere. Free-text and
+  tool-calling jobs are unaffected.
+- **Working tree (unreleased):** Mei decodes `response_format` on
+  `/v1/chat/completions`, compiles it before generation, and enforces it
+  token-by-token by constrained decoding (see
+  [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §4). The exact
+  canary request is the fixture `CoCoreCanary.structuredOutputBody(model:)`;
+  its buffered and streaming response paths are covered by
+  `StructuredGenerationPipelineTests`, and the live probes are
+  `MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` /
+  `…Streaming`.
+- **Live evidence:** those two Mei probes passed **7/7 acceptance tests**
+  against the pinned Qwen3-4B model, with JSON content that parsed to exactly
+  `{"status":"ok"}` in both modes (raw whitespace is immaterial). The
+  standalone CoCore attached-engine runner from merged commit
+  `0151475bf8c98de10a64cab51c23a46dd84a8fe1` also reported readiness, passed
+  the tool and structured canaries, and successfully proxied buffered and SSE
+  structured jobs.
+- **Still not proven:** other model families, a released 0.6.1 binary, and
+  full CoCore advisor connection/Register-frame capability readback. The
+  attached-engine result is direct client/engine evidence, not a claim that an
+  advisor registration was observed.
 
 ## Streamed jobs and budgets
 
@@ -231,7 +266,7 @@ saturated the job is refused up front with HTTP 503 `no-capacity`.
 | `engine-map-invalid` fault | Map URL must be the **server root** without `/v1` (a trailing `/v1` is rejected), `http://` only, one `model = url` per line. |
 | Readiness passes but jobs 404 | Map URL has a path prefix; CoCore appends `/v1/...` itself, so the prefix must sit before `/v1` (e.g. `http://127.0.0.1:8024/llm`). |
 | Model not advertised / model miss | Engine-map key must **exactly equal** the served id. Read it from `GET /v1/models` or the startup line `mei: no --served-model-id given; serving as …`; then `mei --served-model-id <that id>`. |
-| `structured-output-unsupported` on schema jobs | **Expected on Mei 0.6.1** — `response_format` is not implemented, the canary failed by design. Free-text/tool jobs unaffected. |
+| `structured-output-unsupported` on schema jobs | **Expected on Mei 0.6.1** — `response_format` is not implemented there; the canary failed by design. In the current source tree structured output is implemented and passed the live Qwen3-4B canary; other models still require their own live canary. |
 | `engine-busy` refusals | Gate is full (1 running + 1 queued). One model per process — start another `mei` on its own port for more concurrency. |
 | Job times out waiting for first token | First-token budget is 300 s. Cold prefill of a 20k-token system+tools prompt can take ~50 s; if it exceeds the budget, the model is not actually ready — watch `mei:` startup logs. |
 | Tool canary fails intermittently | `tool_choice` is now pinned to `report_status` in Mei (nested `function.name` extraction); verify with the regression test. Template-level forced-call fidelity still depends on the model. |

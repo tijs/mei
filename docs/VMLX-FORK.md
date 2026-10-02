@@ -17,18 +17,21 @@ repository cache being pre-populated.
 
 ## Current pin
 
-Mei 0.6.1 pins **`fef563a5`** (`fef563a55b4f22d4530b3439c1edb233cfc44a8f`) —
-unchanged since 0.6.0 — the pushed `main` of `tijs/vmlx-swift`. The fork
-`main` integrates upstream history through `e07bd67b` (upstream `main` at
+The released Mei 0.6.1 build pinned **`fef563a5`**
+(`fef563a55b4f22d4530b3439c1edb233cfc44a8f`). The current unreleased source
+tree pins **`633fe166`** (`633fe166630ef04310aea7d5a1795555ab32970d`), the
+pushed `main` of `tijs/vmlx-swift`. The new commit adds the public request
+logit-processor seam and focused tests required by Mei structured output. The
+fork `main` integrates upstream history through `e07bd67b` (upstream `main` at
 the last sync) plus the fork-side commits below.
 
 Since the previous Mei pin (`44461ffd`, the 0.4.2-era revision), the fork
-`main` advanced 151 commits: **133 upstream commits** (integrated by two sync
-merges, `d38d3c50` and the pin tip `fef563a5`) and **18 fork-side commits**.
+`main` advanced 152 commits: **133 upstream commits** (integrated by two sync
+merges, `d38d3c50` and `fef563a5`) and **19 fork-side commits**.
 The pinned MLX C++ submodule (`Source/Cmlx/mlx`) moved from the 0.31.1-era
 revision to **0.32.2** (`c0a51a08`).
 
-## The 18 fork-side commits since the 0.4.2-era pin
+## The 19 fork-side commits since the 0.4.2-era pin
 
 All pushed, each with a focused message, each independently cherry-pickable.
 They are Mei-maintained changes; none is represented as an upstream-accepted
@@ -53,9 +56,10 @@ change.
 | `8c7df5bd` | pin mlx default-off bd=256 remedy tile; mirror steel kernels |
 | `d38d3c50` | merge: upstream sync into `integrate/main-upstream-sync` |
 | `f1c428d1` | integrate: merge the validated Bonsai 2 Prism-Hadamard work into fork `main` |
-| `fef563a5` | merge: upstream sync into `integrate/main-upstream-sync` (fork `main` tip) |
+| `fef563a5` | merge: upstream sync into `integrate/main-upstream-sync` (fork `main` tip at the 0.6.1 release) |
+| `633fe166` | add request-scoped logit-processor composition to `TokenIterator`, with focused ordering/copy/default-path tests |
 
-The `bonsai2`-prefixed commits (14 of the 18) are the Bonsai 2 Prism-Hadamard
+The `bonsai2`-prefixed commits (14 of the 19) are the Bonsai 2 Prism-Hadamard
 work: a default-off `prism_hadamard_qwen35` portability gate plus the
 transform modules, validation, load-path wiring and mlx-submodule pins that
 make it reproducible. They ship gated off by default, unchanged from Mei

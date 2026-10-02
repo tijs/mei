@@ -13,6 +13,22 @@ behavior.
 - Mei side pin: `ServerConfig.version = "0.6.1"` (`Sources/MeiCore/ServerConfig.swift:7`),
   release tag `v0.6.1` (2026-09-26).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
+- Current working-tree engine pin: `tijs/vmlx-swift`
+  `633fe166630ef04310aea7d5a1795555ab32970d`, pushed to the public fork. The
+  released 0.6.1 binary used `fef563a5`; structured output requires the newer
+  seam.
+
+> **Unreleased working-tree additions.** `response_format` structured output
+> (decoded, compiled before generation, enforced by token-level constrained
+> decoding) is implemented in the current source tree and covered by
+> model-free tests. A live smoke run now passes on
+> `mlx-community/Qwen3-4B-4bit` at HF revision
+> `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` for both buffered and SSE paths;
+> the merged CoCore attached-engine client also passes readiness, canaries, and
+> both proxy paths against that server. It is still **not** part of the 0.6.1
+> release; broader model coverage and full advisor registration/readback remain
+> unverified (§3, §4, §8). Everything else below describes the shipped 0.6.1
+> contract.
 
 ## 1. Official reference pin
 
@@ -81,6 +97,12 @@ Shipped and covered by tests at this pin:
 6. Identity/health — `GET /v1/models` (exact served model id), `GET /healthz`
    and `GET /health`.
 7. Error envelope and status codes as specified in §5.
+8. **Structured outputs (working tree, unreleased)** — `response_format` on
+   `/v1/chat/completions`: `text` (default), `json_object`, and strict
+   `json_schema`, enforced by token-level constrained decoding, not prompt
+   instructions. Model-free tests cover decode/compile/mask/response paths;
+   the exact CoCore canary passed in live buffered and SSE runs on
+   `mlx-community/Qwen3-4B-4bit` (§4, §8).
 
 Everything else from the official reference is **deferred** (§7).
 
@@ -110,6 +132,7 @@ router dispatch — `Sources/MeiCore/Router.swift:59-116`.
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
 | `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
 | `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:311-313`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
+| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the flat-object subset — root `type: "object"`, `properties` with scalar fields (`string`/`number`/`integer`/`boolean`) and optional string `enum`, `required`, `additionalProperties: false`. Unsupported keywords/types, non-strict forms, malformed envelopes → 400 `param: "response_format"` **before generation**; structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
 | Any other field | — | **Silently ignored** — `JSONDecoder` is non-strict; unknown keys produce no error. This is shipped behavior and the reason §7 fields are "inert" rather than rejected. |
 
 Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
@@ -162,7 +185,69 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   `testStreamingUsageAbsentWhenIncludeUsageFalse`.
 - A generation error after headers are sent is emitted as an SSE `data:` frame
   carrying the error envelope with `code: "stream_error"`; the HTTP status
-  stays 200 (`HTTPServer.swift:66-70`).
+  stays 200 (`HTTPServer.swift:65-70`, `Router.streamErrorSSEData`,
+  `Router.swift:318-320`).
+
+### Structured outputs (`response_format`) — working tree, unreleased
+
+- Requests without `response_format` (or with `{"type":"text"}`) take the
+  ordinary path byte-for-byte: no constraint processor is built and no
+  tokenizer vocabulary work happens (`StructuredGeneration.plan` returns nil).
+- `json_object` root semantics (pinned against the reference, re-retrieved
+  2026-10-01): the grammar accepts any complete JSON value — object, array,
+  string, number, boolean, `null` — a superset of the reference's stated
+  guarantee ("JSON mode ensures that model output is valid JSON", "only that
+  it is valid and parses without errors"). The reference's "must instruct the
+  model to produce JSON / the API will throw an error if the string `JSON`
+  does not appear in the context" safeguard is deliberately **not**
+  replicated: CoCore's exact canary prompt contains no such instruction, and
+  constrained decoding structurally prevents non-JSON output (a whitespace-only
+  unterminated run is reported as `length`, never as a successful `stop`).
+- Structured requests are compiled **before generation** (HTTP 400 on any
+  unsupported construct, including for streaming requests — the SSE response
+  has not started), and enforced token-by-token by `JSONGrammarLogitProcessor`
+  riding the ordinary single-sequence, non-speculative decode path through the
+  vmlx `additionalProcessor:` seam, composed **after** the built-in penalty
+  processors. The response DTOs are unchanged (same `completionResponse` /
+  SSE chunk shape as any other completion).
+- Guarantee: content returned with `finish_reason: "stop"` is a complete JSON
+  value — for `json_schema`, exactly the compiled object (no prose, no extra
+  keys, every required key present, enum values enforced). EOS is masked until
+  the root value is complete, so a normal stop cannot end an incomplete
+  document.
+- Failure semantics: a constraint failure (illegal token, all-illegal state,
+  vocabulary mismatch) or a stop that contradicts the constraint (no complete
+  root value while the response would report `stop`) fails the request — HTTP
+  500 `engine_error` non-streaming; for streaming, the SSE error frame
+  (`code: "stream_error"`) after the HTTP 200 head, never a success finish
+  frame (`StructuredGeneration.postGenerationError`,
+  `StructuredGeneration.swift:151-168`).
+- A `length` truncation is reported honestly as `finish_reason: "length"`
+  (content may be an incomplete JSON value; the client can retry with a larger
+  budget). It is never rewritten to `stop`.
+- Thinking is forced off for structured requests: the request's
+  `reasoning_effort` and the operator's server-side default cannot re-enable a
+  reasoning preamble the grammar cannot start from
+  (`StructuredGeneration.enableThinking`).
+- Live evidence at this pin: `mlx-community/Qwen3-4B-4bit` at HF revision
+  `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` passed the exact CoCore
+  structured-output canary through both buffered and SSE Engine paths; the
+  response content parsed to exactly the JSON object `{"status":"ok"}`;
+  raw JSON whitespace is immaterial. The response had `finish_reason:
+  "stop"` and six completion tokens in both runs. This proves one real
+  tokenizer/vocabulary/chat-template path, not all model families.
+- CoCore evidence: the merged attached-engine implementation at commit
+  `0151475bf8c98de10a64cab51c23a46dd84a8fe1` reported readiness, tool canary
+  pass, structured-output canary pass, and successful buffered/streaming proxy
+  responses against that live Mei server. The full advisor connection and
+  Register-frame capability readback were not run.
+- Decode-path gate: structured requests ride the ordinary single-sequence,
+  non-speculative path. An operator's `--compiled-decode true` does **not**
+  apply to them (`StructuredGeneration.enableCompiledDecode`; text requests
+  keep the configured value), Mei constructs no `DraftStrategy` anywhere, so
+  speculative/MTP paths are unreachable for every request, and decode is
+  batch size 1. Re-enabling any of these for structured requests requires its
+  own correctness evidence first.
 
 ### Other routes
 
@@ -185,20 +270,26 @@ Envelope shape — `APIErrorEnvelope`, `OpenAITypes.swift:523-531`:
 
 `code` is **omitted** when nil (optional encoding); `type` defaults to
 `"invalid_request_error"` everywhere except the serializer fallback
-(`ResponseSerializer.errorPayload`, `Router.swift:24-26`). Mei's envelope has
-**no `param` field** — upstream's documented envelope carries
-`message`/`type`/`param`/`code`.
+(`ResponseSerializer.errorPayload`, `Router.swift:24-26`). The working tree
+adds the OpenAI-style `param` (also omitted when nil) for errors that name a
+request field — currently only `response_format` errors — so upstream's
+documented `message`/`type`/`param`/`code` envelope is now complete for those;
+all pre-existing errors keep their previous bytes (no `param`).
 
 | Status | When | Envelope details | Source |
 |---|---|---|---|
 | 200 | Success (all JSON routes and streams) | n/a | `Router.swift:53-128` |
-| 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:66-70` |
+| 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:65-70` |
 | 400 | JSON decode failure (missing `model`/`messages`, malformed body) | `type: invalid_request_error`, no code | `Router.swift:113-115` |
+| 400 | `response_format` decode/validation failure (not an object, missing/wrong `type`, missing `json_schema`/`name`/`schema`, non-strict, structured + non-empty `tools`) | `code: "invalid_response_format"` (structured + tools: `"response_format_unsupported"`), `param: "response_format"` | `Router.errorResult` (`Router.swift:136-173`), `ResponseFormat.swift` |
+| 400 | Schema outside the supported strict subset (nested objects/arrays, unsupported keywords, duplicate/invalid names) | message prefixed `response_format.json_schema.schema: `, `code: "response_format_unsupported"`, `param: "response_format"` | `Router.errorResult`, `JSONSchemaCompiler.swift` |
 | 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112`, `EngineError.emptyPrompt` (`Engine.swift:29,594`) |
 | 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:132-138`), `Engine.swift:903-904,951-952` |
 | 404 | Unmatched route | `type: invalid_request_error`, `code: "not_found"` | `HTTPServer.swift:139-143` |
 | 413 | Body > 64 MiB | `type: invalid_request_error`, `code: "payload_too_large"` | `HTTPRequestLimiter` (`HTTPServer.swift:156-176`), `HTTPServer.swift:124-131` |
 | 500 | Engine failure (`modelDirectoryMissing`, `modelNotLoaded`, `generationFailed`) | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112` |
+| 500 | Structured-generation construction failure (unreadable `config.json`, no identifiable EOS, mismatched vocabulary) | `code: "engine_error"` | `Router.errorResult`, `StructuredGeneration.swift`, `TokenizerFragmentTable.swift` |
+| 500 | Structured constraint failure, or a stop that contradicts the constraint (incomplete root value while the response would report `stop`) | message `structured output constraint failed: …`, `code: "engine_error"` | `StructuredGeneration.postGenerationError` (`StructuredGeneration.swift:151-168`), `Engine.swift:495,612,645` |
 | 500 | Channel-level handler error | `type: invalid_request_error`, `code: "internal_error"` | `HTTPServer.swift:147-153` |
 | 500 (payload) | Serializer encoding failure (theoretically unreachable for encodable DTOs) | literal `{"error":{"message":"encoding failure","type":"internal_error"}}` | `Router.swift:18-19` |
 
@@ -249,7 +340,13 @@ does not document the both-supplied conflict (§1 open ambiguity).
 Absent from the decoder → inert per the §3 unknown-field rule, unless noted:
 
 - `max_completion_tokens` — see §6.
-- `response_format` (`json_object`/`json_schema` structured outputs).
+- `response_format` (`json_object`/`json_schema` structured outputs) — **no
+  longer ignored on `/v1/chat/completions` in the working tree**: the field is
+  decoded, compiled before generation, and enforced token-by-token by
+  constrained decoding (structured + non-empty `tools` is rejected; thinking
+  is forced off; see §3/§4). Model-free tests cover the contract, and one live
+  Qwen3-4B model plus the CoCore attached-engine client passed the smoke canary
+  (§8). Still absent from the `/v1/completions` DTO, so it remains inert there.
 - `logprobs`, `top_logprobs`, `logit_bias`.
 - `n` (multiple choices) — response is always one choice; `n` is ignored.
 - `parallel_tool_calls`.
@@ -285,10 +382,45 @@ parent's separate acceptance run):
 - `RouterSSEToolCallIndexingTests`, `ToolArgumentNormalizerTests` — streaming
   tool-call indexing and arguments normalization.
 
-Not yet pinned by tests (planned acceptance, do not claim as verified):
-§6 policy statements, `max_completion_tokens` inertness, unknown-field
-ignorance, error-envelope/status matrix as a whole (no unit test asserts the
-400/404/413/500 envelopes end to end), non-function tool pass-through.
+Working-tree structured-output suites (unreleased; model-free core plus live
+black-box probes):
+
+- `ResponseFormatTests` — `response_format` decode/validation contract,
+  including the exact CoCore structured-output canary request body; error
+  status/code/param mapping.
+- `JSONSchemaCompilerTests` — strict-subset compilation, canonical constraint
+  keys, the rejection matrix for unsupported constructs.
+- `JSONGrammarStateTests` — the byte-level automaton (JSON syntax, escapes,
+  strict UTF-8, numbers, nesting, schema keys/enums/required/
+  additionalProperties).
+- `JSONGrammarProcessorTests`, `JSONGrammarLogitProcessorTests` — token-mask
+  and lifecycle contract (fail-closed masking, EOS rules, reset, copies,
+  completion recorded through the shared run record).
+- `TokenizerFragmentTableTests` — the production tokenizer adapter
+  (fragments, EOS union, fail-closed vocabulary handling).
+- `StructuredGenerationTests` — Engine-seam construction, thinking-off policy,
+  the compiled-decode gate, HTTP error mapping, pre-generation validation.
+- `StructuredGenerationPipelineTests` — model-free end-to-end: the exact
+  CoCore canary through the buffered and SSE response paths with a scripted
+  constrained decoder, grammar-failure / incomplete-at-stop / honest-length
+  semantics, and a scalar-type schema matrix.
+- `CoCoreCanaryFixture` — the exact CoCore canary request/response oracle
+  (mirror of the Rust source; used by the live probes below).
+- Live acceptance evidence — `MeiAcceptanceTests` passed **7/7** against a
+  running Mei server backed by Qwen3-4B, including the structured canary in
+  non-streaming and streaming modes. The standalone CoCore attached-engine
+  runner at the merged PR commit passed readiness, both canaries, and buffered
+  plus streaming structured proxy calls.
+
+Not yet pinned by tests (do not claim as verified): §6 policy statements,
+`max_completion_tokens` inertness, unknown-field ignorance, the complete
+400/404/413/500 error-envelope matrix, and non-function tool pass-through.
+The live evidence is model-specific: other model families, a released 0.6.1
+binary, and the full CoCore advisor connection/Register-frame capability
+readback remain unverified. The live probes are
+`MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` and
+`testCoCoreStructuredOutputCanaryStreaming`; they require a running server with
+a local model.
 
 ## 9. Open ambiguities
 

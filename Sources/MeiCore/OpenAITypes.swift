@@ -120,6 +120,12 @@ public struct ChatRequest: Sendable {
     public var seed: UInt64?
     public var includeUsage: Bool
     public var reasoningEffort: String?
+    /// Decoded `response_format` (`.text` when the field is absent or null).
+    /// Structured formats are contract-decoded here; whether they can be
+    /// honored is decided by the model-free compiler before generation and by
+    /// token-level constrained decoding in the engine
+    /// (`StructuredGeneration`, `JSONGrammarLogitProcessor`).
+    public var responseFormat: ResponseFormat
 }
 
 public struct APIMessage: Sendable {
@@ -235,6 +241,7 @@ extension ChatRequest {
             let frequencyPenalty: Double?
             let seed: UInt64?
             let reasoningEffort: String?
+            let responseFormat: MeiJSONValue?
 
             enum CodingKeys: String, CodingKey {
                 case model, messages, temperature, stop, tools, seed, stream
@@ -247,6 +254,7 @@ extension ChatRequest {
                 case presencePenalty = "presence_penalty"
                 case frequencyPenalty = "frequency_penalty"
                 case reasoningEffort = "reasoning_effort"
+                case responseFormat = "response_format"
             }
         }
         struct RawMessage: Decodable {
@@ -306,6 +314,11 @@ extension ChatRequest {
         self.frequencyPenalty = raw.frequencyPenalty
         self.seed = raw.seed
         self.reasoningEffort = raw.reasoningEffort
+        if let rawFormat = raw.responseFormat {
+            self.responseFormat = try ResponseFormat.decode(from: rawFormat)
+        } else {
+            self.responseFormat = .text
+        }
         // stream_options.include_usage lives at the top level of the payload,
         // not inside messages; pull it via a raw JSON probe.
         let root = try JSONSerialization.jsonObject(with: json) as? [String: Any]
@@ -527,6 +540,10 @@ public struct APIErrorEnvelope: Encodable, Sendable {
         public var message: String
         public var type: String
         public var code: String?
+        /// OpenAI-style `param` naming the offending request field; omitted
+        /// unless an error actually names one (keeps older errors
+        /// byte-compatible).
+        public var param: String?
     }
 }
 

@@ -21,8 +21,8 @@ public final class ResponseSerializer: @unchecked Sendable {
         return string
     }
 
-    public func errorPayload(_ message: String, type: String = "invalid_request_error", code: String? = nil) -> String {
-        json(APIErrorEnvelope(error: .init(message: message, type: type, code: code)))
+    public func errorPayload(_ message: String, type: String = "invalid_request_error", code: String? = nil, param: String? = nil) -> String {
+        json(APIErrorEnvelope(error: .init(message: message, type: type, code: code, param: param)))
     }
 }
 
@@ -101,6 +101,11 @@ public final class Router: @unchecked Sendable {
     private func chat(body: Data) async -> RouteResult {
         do {
             let request = try ChatRequest(json: body)
+            // Structured requests are validated and compiled BEFORE
+            // generation: compiler rejections and unsupported combinations
+            // are HTTP 400, including for streaming requests (the response
+            // has not started yet). Ordinary text requests skip this.
+            try Self.validateStructuredRequest(request)
             if request.stream {
                 return .stream(request: request)
             }
@@ -108,10 +113,8 @@ public final class Router: @unchecked Sendable {
             return .plain(
                 status: .ok, contentType: "application/json",
                 body: serializer.json(Self.completionResponse(run: run, model: config.servedModelID, emitReasoning: config.emitReasoning)))
-        } catch let error as EngineError {
-            return .plain(status: errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
         } catch {
-            return .plain(status: .badRequest, contentType: "application/json", body: serializer.errorPayload(error.localizedDescription))
+            return Self.errorResult(error, serializer: serializer)
         }
     }
 
@@ -122,14 +125,73 @@ public final class Router: @unchecked Sendable {
             return .plain(
                 status: .ok, contentType: "application/json",
                 body: serializer.json(Self.completionResponse(run: run, model: config.servedModelID, emitReasoning: config.emitReasoning)))
-        } catch let error as EngineError {
-            return .plain(status: errorStatus(error), contentType: "application/json", body: serializer.errorPayload(error.localizedDescription, code: "engine_error"))
         } catch {
-            return .plain(status: .badRequest, contentType: "application/json", body: serializer.errorPayload(error.localizedDescription))
+            return Self.errorResult(error, serializer: serializer)
         }
     }
 
-    public func errorStatus(_ error: EngineError) -> HTTPResponseStatus {
+    /// Map a thrown request/engine error onto the HTTP response the client
+    /// sees. Pure and static so the error contract is unit-testable without
+    /// an Engine; the existing 400/500 shapes stay byte-compatible.
+    public static func errorResult(_ error: Error, serializer: ResponseSerializer) -> RouteResult {
+        if let formatError = error as? ResponseFormatError {
+            return .plain(
+                status: .badRequest, contentType: "application/json",
+                body: serializer.errorPayload(formatError.message, code: formatError.code, param: formatError.param))
+        }
+        if let compileError = error as? JSONSchemaCompileError {
+            // A well-formed request whose schema uses a construct outside the
+            // supported strict subset. The compiler message names the precise
+            // offending keyword; the HTTP shape names the request field.
+            return .plain(
+                status: .badRequest, contentType: "application/json",
+                body: serializer.errorPayload(
+                    "response_format.json_schema.schema: \(compileError.message)",
+                    code: "response_format_unsupported", param: "response_format"))
+        }
+        if let engineError = error as? EngineError {
+            return .plain(
+                status: errorStatus(engineError), contentType: "application/json",
+                body: serializer.errorPayload(engineError.localizedDescription, code: "engine_error"))
+        }
+        // Structured-generation construction failures (unreadable model
+        // config, no identifiable EOS, mismatched vocabulary) are server-side:
+        // the request itself is well-formed and cannot be fixed by the client.
+        if let structuredError = error as? StructuredGenerationError {
+            return .plain(
+                status: .internalServerError, contentType: "application/json",
+                body: serializer.errorPayload(structuredError.message, code: "engine_error"))
+        }
+        if let tableError = error as? TokenizerFragmentTableError {
+            return .plain(
+                status: .internalServerError, contentType: "application/json",
+                body: serializer.errorPayload(tableError.message, code: "engine_error"))
+        }
+        return .plain(
+            status: .badRequest, contentType: "application/json",
+            body: serializer.errorPayload(error.localizedDescription))
+    }
+
+    /// Pre-generation validation for structured requests, replacing the
+    /// temporary fail-closed gate now that the constrained-decoding
+    /// processor is wired into the engine:
+    /// - malformed/unsupported `response_format` payloads were already
+    ///   rejected during request decoding (`ResponseFormat.decode`);
+    /// - the strict subset is compiled here so compiler rejections are HTTP
+    ///   400 BEFORE generation (and before a streaming response starts);
+    /// - structured output combined with `tools` is rejected until the two
+    ///   are separately proven compatible.
+    /// `text` (and an absent field) keeps the ordinary path untouched.
+    /// Pure and static so the contract is unit-testable without an Engine.
+    public static func validateStructuredRequest(_ request: ChatRequest) throws {
+        guard request.responseFormat != .text else { return }
+        if let tools = request.tools, !tools.isEmpty {
+            throw ResponseFormatError.structuredToolsUnsupported
+        }
+        _ = try JSONSchemaCompiler.compile(request.responseFormat)
+    }
+
+    public static func errorStatus(_ error: EngineError) -> HTTPResponseStatus {
         switch error {
         case .overContextCap: return .badRequest
         case .modelDirectoryMissing, .modelNotLoaded, .generationFailed: return .internalServerError
@@ -230,6 +292,33 @@ public final class Router: @unchecked Sendable {
         return "data: \(ResponseSerializer().json(chunk))\n\n"
     }
 
+    /// Serialize one content-delta StreamEvent into a single SSE `data:
+    /// {...}\n\n` frame, exactly as the streaming handler ships it. Static and
+    /// pure so streaming structured-output tests can assemble a stream (and
+    /// split JSON chunks) without an Engine; `sseFrame`'s `.chunk` case
+    /// delegates here.
+    public static func chunkSSEData(
+        text: String,
+        id: String,
+        model: String,
+        created: Int
+    ) -> String {
+        let chunk = SSEChatChunk(
+            id: id, created: created, model: model,
+            choices: [.init(delta: .init(role: nil, content: text))],
+            usage: nil)
+        return "data: \(ResponseSerializer().json(chunk))\n\n"
+    }
+
+    /// One SSE error frame, exactly as `ResponseWriter.streamSSE` ships it
+    /// when the engine throws after headers are sent (the HTTP status stays
+    /// 200; the error travels in-band with `code: "stream_error"`). Static and
+    /// pure so the structured-generation failure mapping is unit-testable
+    /// without a channel, matching `toolCallSSEData`/`chunkSSEData`.
+    public static func streamErrorSSEData(_ error: Error) -> String {
+        "data: \(ResponseSerializer().errorPayload(error.localizedDescription, code: "stream_error"))\n\n"
+    }
+
     /// SSE frame for one stream event. Returns "" for events that should not
     /// produce visible frames.
     public func sseFrame(
@@ -241,11 +330,9 @@ public final class Router: @unchecked Sendable {
     ) -> String {
         switch event {
         case .chunk(let text):
-            let chunk = SSEChatChunk(
-                id: id, created: Int(Date().timeIntervalSince1970), model: model,
-                choices: [.init(delta: .init(role: nil, content: text))],
-                usage: nil)
-            return "data: \(serializer.json(chunk))\n\n"
+            return Self.chunkSSEData(
+                text: text, id: id, model: model,
+                created: Int(Date().timeIntervalSince1970))
         case .reasoning(let reason):
             guard emitReasoning else { return "" }
             let chunk = SSEChatChunk(

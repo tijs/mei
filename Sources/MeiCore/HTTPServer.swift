@@ -64,8 +64,7 @@ final class ResponseWriter: @unchecked Sendable {
             }
         } catch {
             var buffer = channel.allocator.buffer(capacity: 256)
-            buffer.writeString(
-                "data: \(router.serializer.errorPayload(error.localizedDescription, code: "stream_error"))\n\n")
+            buffer.writeString(Router.streamErrorSSEData(error))
             write(.body(.byteBuffer(buffer)))
         }
         end()
