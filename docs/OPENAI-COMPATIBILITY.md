@@ -202,7 +202,8 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   does not appear in the context" safeguard is deliberately **not**
   replicated: CoCore's exact canary prompt contains no such instruction, and
   constrained decoding structurally prevents non-JSON output (a whitespace-only
-  unterminated run is reported as `length`, never as a successful `stop`).
+  unterminated run fails closed as `engine_error`/`stream_error`, rather than
+  being returned as a successful length-truncated response).
 - Structured requests are compiled **before generation** (HTTP 400 on any
   unsupported construct, including for streaming requests — the SSE response
   has not started), and enforced token-by-token by `JSONGrammarLogitProcessor`
@@ -222,9 +223,12 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   (`code: "stream_error"`) after the HTTP 200 head, never a success finish
   frame (`StructuredGeneration.postGenerationError`,
   `StructuredGeneration.swift:151-168`).
-- A `length` truncation is reported honestly as `finish_reason: "length"`
-  (content may be an incomplete JSON value; the client can retry with a larger
-  budget). It is never rewritten to `stop`.
+- An incomplete structured root fails closed regardless of the producer stop
+  reason, including `length`: buffered requests return HTTP 500 with
+  `engine_error`; streaming requests return an in-band `stream_error`, with no
+  success finish frame or `[DONE]` after the error. Clients should retry with a
+  larger budget when appropriate. The implementation never rewrites an
+  incomplete root to a successful `stop` or `length` response.
 - Thinking is forced off for structured requests: the request's
   `reasoning_effort` and the operator's server-side default cannot re-enable a
   reasoning preamble the grammar cannot start from
@@ -402,15 +406,31 @@ black-box probes):
   the compiled-decode gate, HTTP error mapping, pre-generation validation.
 - `StructuredGenerationPipelineTests` — model-free end-to-end: the exact
   CoCore canary through the buffered and SSE response paths with a scripted
-  constrained decoder, grammar-failure / incomplete-at-stop / honest-length
+  constrained decoder, grammar-failure / incomplete-at-stop / fail-closed-length
   semantics, and a scalar-type schema matrix.
 - `CoCoreCanaryFixture` — the exact CoCore canary request/response oracle
   (mirror of the Rust source; used by the live probes below).
-- Live acceptance evidence — `MeiAcceptanceTests` passed **7/7** against a
-  running Mei server backed by Qwen3-4B, including the structured canary in
-  non-streaming and streaming modes. The standalone CoCore attached-engine
-  runner at the merged PR commit passed readiness, both canaries, and buffered
-  plus streaming structured proxy calls.
+- `MeiAcceptanceTests` — live HTTP/SSE evidence including the exact CoCore
+  structured canary, plain/tool pass-through, and buffered/streaming
+  fail-closed truncation transport.
+
+### Live model matrix
+
+- **Qwen3-4B-4bit** (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`): the exact
+  structured canary passed buffered and SSE paths; the full live acceptance
+  class passed **9/9**, including the new truncation transport tests.
+- **Qwen3-8B-4bit** (`545dc4251c05440727734bcd94334791f6ab0192`): plain
+  completion, tool calls, and fail-closed truncation transport passed live;
+  the successful structured canary did not complete because this checkpoint
+  spent its structured token budget emitting whitespace, and Mei correctly
+  returned `engine_error`/`stream_error`. This is not structured-success
+  evidence for the 8B checkpoint.
+- **Qwen2.5-3B-Instruct-4bit**
+  (`4f83f8f146fdf28b512a06562b671d7af4fab457`): downloaded and exercised as
+  a second family checkpoint; its live acceptance run did not pass the full
+  structured canary class, so it is not promoted as structured-output evidence.
+- **Qwen3.6-35B-A3B-4bit**: the staged download is incomplete and was not
+  started; no live evidence is claimed.
 
 Not yet pinned by tests (do not claim as verified): §6 policy statements,
 `max_completion_tokens` inertness, unknown-field ignorance, the complete
@@ -420,7 +440,7 @@ binary, and the full CoCore advisor connection/Register-frame capability
 readback remain unverified. The live probes are
 `MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` and
 `testCoCoreStructuredOutputCanaryStreaming`; they require a running server with
-a local model.
+an available local model.
 
 ## 9. Open ambiguities
 

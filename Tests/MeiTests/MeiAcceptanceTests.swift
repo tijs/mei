@@ -290,6 +290,74 @@ final class MeiAcceptanceTests: XCTestCase {
         XCTAssertGreaterThan(completion, 0, "include_usage must carry completion tokens: \(raw)")
         XCTAssertEqual(usage["total_tokens"] as? Int, prompt + completion, raw)
     }
+
+    // MARK: - Structured truncation: fail-closed error transport (live)
+
+    /// The exact CoCore canary body with the token budget cut to 3: the
+    /// grammar forces JSON, and three tokens cannot finish `{"status":"ok"}`,
+    /// so the run always truncates. This pins the fail-closed transport
+    /// (HTTP 500, `engine_error`, no choices) rather than a generation
+    /// outcome, so it is model-independent in expectation.
+    func testStructuredTruncationNonStreamingReturnsEngineError() throws {
+        var payload = CoCoreCanary.structuredOutputBody(model: modelID)
+        payload["max_tokens"] = 3
+        let (data, response) = try post("/chat/completions", json: payload)
+        let raw = String(data: data, encoding: .utf8) ?? ""
+        XCTAssertEqual(response.statusCode, 500, raw)
+        let body = try dict(data)
+        let error = body["error"] as? [String: Any] ?? [:]
+        XCTAssertEqual(error["code"] as? String, "engine_error", raw)
+        XCTAssertNil(body["choices"], "a fail-closed structured response must not carry choices: \(raw)")
+    }
+
+    /// The streaming transport for the same truncated run: the response head
+    /// has already been sent, so the failure must travel in-band as a
+    /// `stream_error` frame — and the stream must fail closed: no success
+    /// finish frame and no `[DONE]` sentinel after the error.
+    func testStructuredTruncationStreamingEmitsTerminalStreamError() throws {
+        var payload = CoCoreCanary.structuredOutputBody(model: modelID)
+        payload["max_tokens"] = 3
+        payload["stream"] = true
+        payload["stream_options"] = ["include_usage": true]
+        let (data, response) = try post("/chat/completions", json: payload)
+        let raw = String(data: data, encoding: .utf8) ?? ""
+        XCTAssertEqual(response.statusCode, 200, raw)
+
+        let payloads = sseDataPayloads(data)
+        let errorIndex = try XCTUnwrap(
+            payloads.firstIndex { sseErrorCode($0) == "stream_error" },
+            "the stream must carry an in-band stream_error frame: \(raw)")
+        let afterError = payloads.dropFirst(errorIndex + 1)
+        XCTAssertFalse(
+            afterError.contains { $0.contains("\"finish_reason\":") },
+            "no success finish frame may follow the stream_error: \(raw)")
+        XCTAssertFalse(
+            afterError.contains("[DONE]"),
+            "no [DONE] may follow the stream_error: \(raw)")
+    }
+
+    /// The `data:` payloads of an SSE body in wire order (`[DONE]` included).
+    /// `assembleSSE` deliberately assembles only success-path frames, so the
+    /// transport tests read the raw payloads instead.
+    func sseDataPayloads(_ data: Data) -> [String] {
+        let text = String(data: data, encoding: .utf8) ?? ""
+        return text.split(separator: "\n", omittingEmptySubsequences: false).compactMap { rawLine in
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard line.hasPrefix("data:") else { return nil }
+            return line.dropFirst(5).trimmingCharacters(in: .whitespaces)
+        }
+    }
+
+    /// The `error.code` of one SSE payload, or nil when the payload is not an
+    /// error envelope.
+    func sseErrorCode(_ payload: String) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any],
+            let error = object["error"] as? [String: Any]
+        else {
+            return nil
+        }
+        return error["code"] as? String
+    }
 }
 
 extension URLSession {
