@@ -10,29 +10,23 @@ labeled with the exact source location; anything not yet pinned by tests is
 explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
-- Mei side pin: `ServerConfig.version = "0.6.1"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  release tag `v0.6.1` (2026-09-26).
+- Mei release pin: `ServerConfig.version = "0.7.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
+  planned release tag `v0.7.0` (2026-10-02).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
-- Current working-tree engine pin: `tijs/vmlx-swift`
+- Mei 0.7.0 engine pin: `tijs/vmlx-swift`
   `633fe166630ef04310aea7d5a1795555ab32970d`, pushed to the public fork. The
   released 0.6.1 binary used `fef563a5`; structured output requires the newer
   seam.
 
-> **Unreleased working-tree additions.** `response_format` structured output
-> (decoded, compiled before generation, enforced by token-level constrained
-> decoding) is implemented in the current source tree and covered by
-> model-free tests. A live smoke run now passes on
-> `mlx-community/Qwen3-4B-4bit` at HF revision
-> `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` for both buffered and SSE paths;
-> the merged CoCore attached-engine client also passes readiness, canaries, and
-> both proxy paths against that server, and the expanded numeric/array schema
-> features also passed live on it (buffered + SSE). Structured-output support
-> is **per checkpoint, not model-general** — no other tested checkpoint has
-> passed, and the shipped Qwen3.6 (text-only and vision) and Ornith profiles
-> fail closed (§8). It is still **not** part of the 0.6.1
-> release; a released binary and full advisor registration/readback remain
-> unverified (§3, §4, §8). Everything else below describes the shipped 0.6.1
-> contract.
+> **Mei 0.7.0 structured-output status.** `response_format` is shipped and
+> enforced by token-level constrained decoding. The exact CoCore canary and
+> the full 9-test live acceptance suite passed with `mlx-community/Qwen3-4B-4bit`.
+> Structured-output compatibility remains checkpoint-specific: Qwen3.6
+> (text-only and vision) and Ornith fail closed; they must not be advertised for
+> schema jobs until their canaries pass. The shipped 0.7.0 release uses the
+> `633fe166` vmlx seam; 0.6.1 used `fef563a5`. Full CoCore advisor
+> Register-frame capability readback is not claimed here. Everything else
+> below records the broader Chat Completions contract and deferred fields.
 
 ## 1. Official reference pin
 
@@ -101,7 +95,7 @@ Shipped and covered by tests at this pin:
 6. Identity/health — `GET /v1/models` (exact served model id), `GET /healthz`
    and `GET /health`.
 7. Error envelope and status codes as specified in §5.
-8. **Structured outputs (working tree, unreleased)** — `response_format` on
+8. **Structured outputs (shipped in Mei 0.7.0)** — `response_format` on
    `/v1/chat/completions`: `text` (default), `json_object`, and strict
    `json_schema`, enforced by token-level constrained decoding, not prompt
    instructions. The supported schema subset is recursive (nested strict
@@ -142,7 +136,7 @@ router dispatch — `Sources/MeiCore/Router.swift:59-116`.
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
 | `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
 | `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:311-313`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
-| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space, optional `minItems`/`maxItems`); `enum` is supported on every scalar type — string, number/integer (compared by exact decimal value), and boolean — and on nullable fields may include `null` (which then also decides whether null is accepted); `number`/`integer` scalars additionally accept `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and `multipleOf` (finite JSON numbers, `multipleOf` strictly positive) with exact decimal semantics (schema numbers use their shortest round-trip decimal form, so `multipleOf: 0.1` accepts `0.3`); a schema whose declared constraints are unsatisfiable for the declared type (and cannot be null) is rejected. Everything else — constraints (`minLength`, `maxLength`, `pattern`, `format`, `uniqueItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
+| `response_format` **(shipped in Mei 0.7.0)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space, optional `minItems`/`maxItems`); `enum` is supported on every scalar type — string, number/integer (compared by exact decimal value), and boolean — and on nullable fields may include `null` (which then also decides whether null is accepted); `number`/`integer` scalars additionally accept `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and `multipleOf` (finite JSON numbers, `multipleOf` strictly positive) with exact decimal semantics (schema numbers use their shortest round-trip decimal form, so `multipleOf: 0.1` accepts `0.3`); a schema whose declared constraints are unsatisfiable for the declared type (and cannot be null) is rejected. Everything else — constraints (`minLength`, `maxLength`, `pattern`, `format`, `uniqueItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
 | Any other field | — | **Silently ignored** — `JSONDecoder` is non-strict; unknown keys produce no error. This is shipped behavior and the reason §7 fields are "inert" rather than rejected. |
 
 Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
@@ -198,7 +192,7 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   stays 200 (`HTTPServer.swift:65-70`, `Router.streamErrorSSEData`,
   `Router.swift:318-320`).
 
-### Structured outputs (`response_format`) — working tree, unreleased
+### Structured outputs (`response_format`) — shipped in Mei 0.7.0
 
 - Requests without `response_format` (or with `{"type":"text"}`) take the
   ordinary path byte-for-byte: no constraint processor is built and no
@@ -258,7 +252,7 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   `reasoning_effort` and the operator's server-side default cannot re-enable a
   reasoning preamble the grammar cannot start from
   (`StructuredGeneration.enableThinking`).
-- Live evidence at this pin: `mlx-community/Qwen3-4B-4bit` at HF revision
+- Live evidence for Mei 0.7.0: `mlx-community/Qwen3-4B-4bit` at HF revision
   `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` passed the exact CoCore
   structured-output canary through both buffered and SSE Engine paths; the
   response content parsed to exactly the JSON object `{"status":"ok"}`;
@@ -269,8 +263,8 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   non-compiled decode path (thinking off; prefix cache disabled). This
   proves one real
   tokenizer/vocabulary/chat-template path, not all model families — no other
-  checkpoint has passed: the shipped Qwen3.6 text-only, Qwen3.6 vision, and
-  Ornith profiles each fail the canary closed on the same pre-release build
+  checkpoint has passed: the Qwen3.6 text-only, Qwen3.6 vision, and Ornith
+  profiles each fail the canary closed in the Mei 0.7.0 feature build
   (§8). The expanded numeric/array schema features (`minimum`/`maximum`,
   `multipleOf`, scalar enums, `minItems`/`maxItems`) also passed live buffered
   + SSE on this checkpoint.
@@ -308,8 +302,8 @@ Envelope shape — `APIErrorEnvelope`, `OpenAITypes.swift:523-531`:
 
 `code` is **omitted** when nil (optional encoding); `type` defaults to
 `"invalid_request_error"` everywhere except the serializer fallback
-(`ResponseSerializer.errorPayload`, `Router.swift:24-26`). The working tree
-adds the OpenAI-style `param` (also omitted when nil) for errors that name a
+(`ResponseSerializer.errorPayload`, `Router.swift:24-26`). Mei 0.7.0 adds the
+OpenAI-style `param` (also omitted when nil) for errors that name a
 request field — currently only `response_format` errors — so upstream's
 documented `message`/`type`/`param`/`code` envelope is now complete for those;
 all pre-existing errors keep their previous bytes (no `param`).
@@ -343,7 +337,7 @@ frame; unknown JSON fields never error.
 `max_completion_tokens`; the latter bounds visible + reasoning tokens; upstream
 does not document the both-supplied conflict (§1 open ambiguity).
 
-**Shipped (Mei 0.6.1):**
+**Shipped (Mei 0.7.0):**
 - Only `max_tokens` is decoded (`OpenAITypes.swift:228,244,299`).
 - `max_completion_tokens` has **no code path anywhere** in `Sources/` or
   `Tests/` (verified by whole-tree search, 2026-09-23). Because unknown keys are
@@ -378,9 +372,9 @@ does not document the both-supplied conflict (§1 open ambiguity).
 Absent from the decoder → inert per the §3 unknown-field rule, unless noted:
 
 - `max_completion_tokens` — see §6.
-- `response_format` (`json_object`/`json_schema` structured outputs) — **no
-  longer ignored on `/v1/chat/completions` in the working tree**: the field is
-  decoded, compiled before generation, and enforced token-by-token by
+- `response_format` (`json_object`/`json_schema` structured outputs) — shipped
+  on `/v1/chat/completions` in Mei 0.7.0: the field is decoded, compiled
+  before generation, and enforced token-by-token by
   constrained decoding (the recursive subset plus enums on every scalar type,
   numeric constraints with exact decimal semantics, and array
   `minItems`/`maxItems`; structured + non-empty `tools` is rejected; thinking
@@ -424,7 +418,7 @@ parent's separate acceptance run):
 - `RouterSSEToolCallIndexingTests`, `ToolArgumentNormalizerTests` — streaming
   tool-call indexing and arguments normalization.
 
-Working-tree structured-output suites (unreleased; model-free core plus live
+Structured-output suites (shipped in Mei 0.7.0; model-free core plus live
 black-box probes):
 
 - `ResponseFormatTests` — `response_format` decode/validation contract,
@@ -471,21 +465,19 @@ black-box probes):
 
 Live evidence is **per checkpoint**: a pass on one checkpoint is not evidence
 for any other model family, and a tokenizer/template preflight is not evidence
-at all — only a completed canary run is. The first four rows below (Qwen3-4B,
-Qwen3.6 text-only, Qwen3.6 vision, Ornith) are current acceptance runs on a
-release-optimized binary built from the `feat/expand-schema-matrix` worktree
-with uncommitted feature changes (the binary still reports `mei 0.6.1`):
-**pre-release acceptance results, not published-release claims**. The
-remaining rows are earlier feature-development evidence kept for continuity.
-A checkpoint that does not pass is **not advertised** for schema jobs (CoCore
-lists a model only after its structured canary passes) and must remain
-disabled pending a fix and a successful live canary. A failed structured
-canary does not change normal serving compatibility (plain text, tool calls),
-which is tracked separately from this matrix.
+at all — only a completed canary run is. The Qwen3-4B row is verified on the
+Mei 0.7.0 release binary (source commit `107414a`); its full live acceptance
+suite passed 9/9 on 2026-10-02. Qwen3.6 and Ornith have separate failed-canary
+results against the same feature implementation and remain unsupported for
+schema jobs. A checkpoint that does not pass is **not advertised** (CoCore
+lists a model only after its structured canary passes) and must remain disabled
+pending a fix and a successful live canary. A failed structured canary does not
+change normal serving compatibility (plain text, tool calls), which is tracked
+separately from this matrix.
 
 | Checkpoint (HF revision) | Result | Live evidence |
 |---|---|---|
-| `mlx-community/Qwen3-4B-4bit` (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`) | **PASS** | Exact CoCore canary parsed to exactly `{"status":"ok"}` buffered + SSE; the recorded live acceptance run is `MeiAcceptanceTests` **7/7** (2026-10-01); the truncation transport was verified separately (**2/2**: buffered HTTP 500 `engine_error`; streaming in-band `stream_error`) — no combined 9/9 acceptance run is claimed. The expanded schema features also passed live buffered + SSE — integer `count = 3` under `minimum: 3`/`maximum: 3`, number `ratio = 0.3` within exact bounds and `multipleOf: 0.1`, and `labels = ["alpha","beta"]` with enum items and `minItems`/`maxItems` 2, full contents matched; unsupported `pattern` → HTTP 400 `response_format_unsupported` before generation. |
+| `mlx-community/Qwen3-4B-4bit` (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`) | **PASS** | Mei 0.7.0 release binary passed the full `MeiAcceptanceTests` suite **9/9** on 2026-10-02, including buffered and streaming structured canaries and both fail-closed truncation transports. Expanded schema features also passed live buffered + SSE: integer `count = 3` under bounds 3..3, number `ratio = 0.3` with exact `multipleOf: 0.1`, and `labels = ["alpha","beta"]` with enum items and item count 2; unsupported `pattern` → HTTP 400 `response_format_unsupported` before generation. |
 | Qwen3.6-35B-A3B **text-only** (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`; profile `qwen3.6-35b-a3b-text`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`generation stopped before a complete JSON value was produced`) at both 64- and 16-token budgets; a plain prompt on the same process returned HTTP 200 text (`hello`), so normal generation works and the failure is specific to structured output; no streaming run was made. Not supported — keep disabled. |
 | Qwen3.6-35B-A3B **vision** (`mlx-community/Qwen3.6-35B-A3B-4bit`, `38740b847e4cb78f352aba30aa41c76e08e6eb46`; profile `qwen3.6-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (same incomplete-JSON failure), tested independently of the text-only sibling; no streaming run was made. Not supported — keep disabled. |
 | **Ornith 1.5 35B-A3B** (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, `19504d912fa8fc7622bf6b1de3db5d5d890b1f02`, aligned repack; profile `ornith-1.5-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`no token in the vocabulary can advance the grammar`); matches the offline preflight warning that Ornith's tokenizer backend/template differs; no streaming run was made. Not supported — keep disabled. |
@@ -509,9 +501,9 @@ Not yet pinned by tests (do not claim as verified): §6 policy statements,
 The live evidence is checkpoint-specific: only `mlx-community/Qwen3-4B-4bit`
 has passed the structured canary; the Qwen3.6 (text-only and vision) and
 Ornith checkpoints failed closed (above) and remain unsupported for
-structured output. A released 0.6.1
-binary and the full CoCore advisor connection/Register-frame capability
-readback remain unverified. The live probes are
+structured output. Full CoCore advisor connection/Register-frame capability
+readback remains unverified; this evidence covers Mei's live canaries and
+attached-engine proxy calls, not advisor registration. The live probes are
 `MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` and
 `testCoCoreStructuredOutputCanaryStreaming`; they require a running server with
 an available local model.

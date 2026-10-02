@@ -2,6 +2,26 @@
 
 All notable changes to Mei are documented here.
 
+## [0.7.0] - 2026-10-02
+
+Strict structured output is now available through token-level constrained
+JSON generation. The supported `json_object` and strict `json_schema` subset
+includes recursive objects and arrays, item-count limits, nullable scalar
+unions, scalar enums, and exact-decimal numeric bounds and `multipleOf`.
+Unsupported or unsatisfiable schemas fail before generation; invalid token
+continuations are masked or fail closed. Structured-output compatibility is
+model-specific: live CoCore canaries and the 9-test acceptance suite passed
+with `mlx-community/Qwen3-4B-4bit`; the live canaries failed closed on
+Qwen3.6 and Ornith, so those models must not be advertised for structured
+jobs until their canaries pass.
+
+The numeric grammar fixes integer satisfiability for fractional `multipleOf`
+and the first-item bypass at `maxItems: 0`. It also computes feasible
+integer-prefix windows directly instead of scanning every intervening decade.
+In a reproducible synthetic 20k-token adversarial scan, the `1e300`-bound
+prefix case fell from 17.84 s to 73.56 ms; this is a focused grammar benchmark,
+not a model throughput claim. The full 337-test suite passed.
+
 ## [0.6.1] - 2026-09-26
 
 A hardening patch on top of 0.6.0, with no dependency change — the vmlx pin

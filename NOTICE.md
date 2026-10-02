@@ -17,8 +17,8 @@ current source tree pins fork revision:
 ```
 
 The released Mei 0.6.1 build used the preceding pinned revision
-`fef563a55b4f22d4530b3439c1edb233cfc44a8f`; the current pin adds the
-request logit-processor seam required by unreleased structured output.
+`fef563a55b4f22d4530b3439c1edb233cfc44a8f`; Mei 0.7.0 uses the current pin,
+which adds the request logit-processor seam used by structured output.
 
 The fork's `main` contains all Mei-maintained commits ported from the former
 local patch queue — including `318a4e68` (rotating/companion stripped-boundary

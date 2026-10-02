@@ -20,13 +20,12 @@ they are separate evaluation candidates documented here for tracking. Do not
 claim they are in the lineup.
 
 Status above describes **normal serving** (load, plain text, tools, context).
-Structured output (`response_format`) is a separate, **unreleased** feature
-with its own per-checkpoint boundary: of everything tested so far, only the
-`mlx-community/Qwen3-4B-4bit` canary checkpoint has passed it; Ornith and both
-Qwen3.6 builds (text-only and vision) fail it closed and must not be
-advertised for schema jobs pending a fix and a successful live canary;
-Nemotron is untested. Normal-serving status is unaffected. Per-model evidence:
-[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
+Structured output (`response_format`) shipped in Mei 0.7.0 and has its own
+per-checkpoint boundary: only `mlx-community/Qwen3-4B-4bit` passed the live
+canary; Ornith and both Qwen3.6 builds (text-only and vision) fail it closed
+and must not be advertised for schema jobs pending a fix and a successful
+live canary; Nemotron is untested. Normal-serving status is unaffected.
+Per-model evidence: [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
 
 ## Provenance and quantization policy
 
@@ -125,9 +124,9 @@ byte-identical on the payload and is the validated >=30 tok/s path.
 Omitted experimental knobs (`--max-kv-window`, `--ssm-anchor-boundaries`, KV
 quantization) are **not** part of this preset and remain off/unvalidated.
 
-> **Structured output (`response_format`, unreleased): fails closed.** Ornith
+> **Structured output (`response_format`, Mei 0.7.0): fails closed on this checkpoint.** Ornith
 > remains validated for normal serving — plain text, tools, long context — but
-> the unreleased structured-output feature is **not supported on this
+> the structured-output feature is **not supported on this
 > checkpoint**: the exact CoCore canary request returns HTTP 500 `engine_error`
 > (`no token in the vocabulary can advance the grammar`), so CoCore does not
 > advertise it for schema jobs. Keep it disabled for structured output pending
@@ -173,7 +172,7 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
 > path is covered — **no multimodal or stable-lineup admission claim is made**.
 > Omitted experimental knobs remain off/unvalidated.
 >
-> **Structured output (`response_format`, unreleased): fails closed.** Neither
+> **Structured output (`response_format`, Mei 0.7.0): fails closed.** Neither
 > this vision checkpoint nor the text-only build
 > (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, revision
 > `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`) has passed the structured-output

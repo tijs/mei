@@ -18,10 +18,10 @@ repository cache being pre-populated.
 ## Current pin
 
 The released Mei 0.6.1 build pinned **`fef563a5`**
-(`fef563a55b4f22d4530b3439c1edb233cfc44a8f`). The current unreleased source
-tree pins **`633fe166`** (`633fe166630ef04310aea7d5a1795555ab32970d`), the
-pushed `main` of `tijs/vmlx-swift`. The new commit adds the public request
-logit-processor seam and focused tests required by Mei structured output. The
+(`fef563a55b4f22d4530b3439c1edb233cfc44a8f`). Mei 0.7.0 pins
+**`633fe166`** (`633fe166630ef04310aea7d5a1795555ab32970d`), the pushed
+`main` of `tijs/vmlx-swift`. The new commit adds the public request
+logit-processor seam used by Mei's token-level structured-output decoding. The
 fork `main` integrates upstream history through `e07bd67b` (upstream `main` at
 the last sync) plus the fork-side commits below.
 

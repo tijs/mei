@@ -19,23 +19,19 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.6.1**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.7.0**.
 
-**0.6.1** — the released hardening patch on 0.6.0 was built with the
-`fef563a5` vmlx pin. The **current working tree** advances the fork to
-`633fe166` for the request logit-processor seam required by unreleased
-structured output. Provisioning and packaging stop reusing a Metal library built
-for a different MLX version and prefer the binary's own source-built Cmlx
-kernels (strict, fail-closed packaging with recorded provenance); streaming
-answers leave the post-token finalization tail off the client's critical path
-while keeping the single-flight lock, and the tail is measurable as
-`finalize_ms`; the vmlx decode-policy switches are logged at startup with
-their source; and the reference launcher script starts again
-(`--model-profile`/`MEI_MODEL_PROFILE`; the obsolete
-`MEI_OPTIMIZATION_PROFILE` fails fast). 0.6.0's CoCore tool-canary fix is
-unchanged. Earlier releases fixed prefix reuse, added cross-conversation
-prefix anchors and per-request instrumentation:
-see **[CHANGELOG.md](CHANGELOG.md)**.
+**0.7.0** adds token-level constrained structured output (`json_object` and a
+strict recursive `json_schema` subset), plus exact-decimal numeric constraints
+and fail-closed schema validation. The feature passed the full test suite and
+live CoCore/acceptance checks with `mlx-community/Qwen3-4B-4bit`. **This is
+model-specific:** Qwen3.6 and Ornith fail the structured-output canary and are
+not eligible for schema jobs until revalidated successfully. See
+[CoCore compatibility](docs/COCORE.md) and the [compatibility matrix](docs/OPENAI-COMPATIBILITY.md).
+
+Earlier releases fixed prefix reuse, added cross-conversation prefix anchors,
+per-request instrumentation, and source-built Metal kernel packaging; see
+**[CHANGELOG.md](CHANGELOG.md)**.
 
 ## Supported models
 
@@ -157,7 +153,7 @@ pull` handles this; details in [docs/MODELS.md](docs/MODELS.md).
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.6.1)
+## Install on Apple Silicon (stable 0.7.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -165,18 +161,17 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.6.1
+mei --version     # -> mei 0.7.0
 ```
 
-**Manual — release asset:** download `mei-0.6.1-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.7.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
 
 See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
 source-built `scripts/install_mei.sh` installer. Release notes:
-[`docs/RELEASE-0.2.0.md`](docs/RELEASE-0.2.0.md); 0.3.0's changes are in
-[`CHANGELOG.md`](CHANGELOG.md).
+[`docs/RELEASE-0.7.0.md`](docs/RELEASE-0.7.0.md).
 
 ## One-time prerequisite: `hf`
 
@@ -232,52 +227,25 @@ tool-calling canary plus a `response_format` structured-output canary, and
 advertises exactly what passed.
 
 ```bash
-mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
-    --model-profile qwen3.6-35b-a3b-text \
-    --served-model-id mlx-community/Qwen3.6-35B-A3B-4bit
+mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
+    --served-model-id mlx-community/Qwen3-4B-4bit
 ```
 
 ```text
 # ~/.cocore/engine-map — key must equal the --served-model-id above;
 # value is the server root, no /v1.
-mlx-community/Qwen3.6-35B-A3B-4bit = http://127.0.0.1:8024
+mlx-community/Qwen3-4B-4bit = http://127.0.0.1:8024
 ```
 
-Mei 0.6.1 passes the tool canary (the forced nested `tool_choice` name is
-pinned to `report_status`) and **fails the structured-output canary by
-design** — 0.6.1 does not implement `response_format`, so CoCore simply does
-not advertise schema jobs for it. In the **current source tree (unreleased)**
-structured output *is* implemented: `response_format` is decoded, compiled
-before generation, and enforced token-by-token by constrained decoding
-(`json_object` and strict `json_schema` — the recursive schema subset:
-nested objects, arrays with `items` and `minItems`/`maxItems`, nullable
-`[scalar, "null"]` unions, enums on every scalar type, and numeric
-constraints — `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/
-`multipleOf` — with exact decimal semantics; structured + `tools` rejected;
-thinking forced off; failures fail closed). It
-is covered by model-free tests — including the exact CoCore canary
-request/response fixtures and buffered +
-SSE pipeline tests — and has now passed a live smoke run with
-`mlx-community/Qwen3-4B-4bit` at HF revision
-`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`: both the exact non-streaming and
-streaming canaries returned a JSON value that parsed to exactly
-`{"status":"ok"}` (whitespace in the raw JSON is immaterial), and the
-expanded numeric/array schema features also passed live buffered + SSE on it.
-The merged CoCore attached-engine
-client at `0151475bf8c98de10a64cab51c23a46dd84a8fe1` also passed its live
-readiness, tool, structured-output, buffered-proxy, and streaming-proxy
-checks against that server. **Structured output is checkpoint-specific, not
-model-general:** only `mlx-community/Qwen3-4B-4bit` has passed so far — the
-shipped Qwen3.6 (text-only and vision) and Ornith profiles all fail the
-canary closed (HTTP 500 `engine_error`) and stay disabled for schema jobs
-pending a fix and a successful live canary, with normal serving unaffected.
-Per-model evidence: [docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md) §8.
-This is a model-specific smoke result, not a
-release-wide or advisor-registration claim; the feature remains unreleased.
-Full detail (endpoints, transport, canary shapes, streaming usage, security,
-troubleshooting):
-**[docs/COCORE.md](docs/COCORE.md)**; the wire contract it relies on is
-**[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)**.
+Mei **0.7.0** passes the tool and structured-output canaries with
+`mlx-community/Qwen3-4B-4bit`; the full 9-test live acceptance suite passed,
+and structured requests are enforced by token-level constrained decoding.
+Support is **checkpoint-specific**, not model-general: the shipped Qwen3.6
+(text-only and vision) and Ornith checkpoints fail the structured-output
+canary closed and must not be advertised for schema jobs until a fix and a
+successful live canary. See [docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md)
+§8 for model-specific evidence and [docs/COCORE.md](docs/COCORE.md) for the
+full attached-engine contract.
 
 ## Build
 
@@ -303,7 +271,6 @@ installer both assume an already-built (or prebuilt) binary.
 - **[docs/INSTALL.md](docs/INSTALL.md)** — installer paths and safety contract
   (authoritative).
 - **[docs/COCORE.md](docs/COCORE.md)** — CoCore attached-engine integration:
-  engine map, canaries, streaming, structured-output status (0.6.1 vs working
-  tree).
+  engine map, canaries, streaming, and model-specific structured-output support.
 - **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
   upstream-PR workflow (authoritative).
