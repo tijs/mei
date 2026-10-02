@@ -257,6 +257,76 @@ final class JSONGrammarLogitProcessorTests: XCTestCase {
         XCTAssertTrue(masked.asArray(Float16.self).allSatisfy { $0 == -Float16.infinity })
     }
 
+    // MARK: - Recursive schema (nested objects, arrays, nullable unions)
+
+    func testRecursiveSchemaCompletesThroughTheLogitProcessor() throws {
+        let table = RecursiveSchemaFixture.table()
+        let handle = JSONGrammarRunRecord()
+        var processor = try JSONGrammarLogitProcessor(
+            format: .jsonSchema(try RecursiveSchemaFixture.schema()), table: table,
+            runRecord: handle)
+        for tokenId in RecursiveSchemaFixture.documentScript {
+            let masked = processor.process(
+                logits: logits(Array(repeating: Float(1), count: table.vocabularySize)))
+            XCTAssertNotEqual(
+                masked.asArray(Float.self)[tokenId], -Float.infinity,
+                "scripted token \(tokenId) must survive the constraint mask")
+            processor.didSample(token: sample(tokenId))
+        }
+        XCTAssertEqual(processor.status, .finished)
+        XCTAssertTrue(processor.isAccepting)
+        XCTAssertFalse(handle.isFailed)
+        XCTAssertTrue(handle.rootValueCompleted, "the shared run record must observe completion")
+    }
+
+    func testIllegalNestedTokenIsCapturedAndProcessStaysAllMasked() throws {
+        let table = RecursiveSchemaFixture.table()
+        let handle = JSONGrammarRunRecord()
+        var processor = try JSONGrammarLogitProcessor(
+            format: .jsonSchema(try RecursiveSchemaFixture.schema()), table: table,
+            runRecord: handle)
+        // `"tags":` is a root key; it cannot open inside `meta` after `{"meta":{`.
+        processor.didSample(token: sample(RecursiveSchemaFixture.Token.openMetaNested.rawValue))
+        processor.didSample(token: sample(RecursiveSchemaFixture.Token.tagsKey.rawValue))
+        XCTAssertEqual(handle.failure, .illegalToken(RecursiveSchemaFixture.Token.tagsKey.rawValue))
+
+        let masked = processor.process(logits: logits(Array(repeating: Float(1), count: table.vocabularySize)))
+        XCTAssertTrue(masked.asArray(Float.self).allSatisfy { $0 == -Float.infinity })
+        XCTAssertEqual(
+            handle.failure, .illegalToken(RecursiveSchemaFixture.Token.tagsKey.rawValue),
+            "the FIRST failure is deterministic")
+    }
+
+    func testRecursiveSchemaMasksNestedBoundaries() throws {
+        typealias Token = RecursiveSchemaFixture.Token
+        let table = RecursiveSchemaFixture.table()
+        var processor = try JSONGrammarLogitProcessor(
+            format: .jsonSchema(try RecursiveSchemaFixture.schema()), table: table)
+
+        func masked(_ token: Token) -> Float {
+            processor.process(logits: logits(Array(repeating: Float(1), count: table.vocabularySize)))
+                .asArray(Float.self)[token.rawValue]
+        }
+
+        // Inside the nested object only its own key can open.
+        processor.didSample(token: sample(Token.openMetaNested.rawValue))
+        XCTAssertNotEqual(masked(.idKey), -Float.infinity)
+        XCTAssertEqual(masked(.tagsKey), -Float.infinity)
+        XCTAssertEqual(masked(.closeNested), -Float.infinity, "the nested required key is missing")
+
+        // Nullable union: null and strings are allowed, other types are not.
+        processor.didSample(token: sample(Token.idKey.rawValue))
+        processor.didSample(token: sample(Token.seven.rawValue))
+        processor.didSample(token: sample(Token.closeNested.rawValue))
+        processor.didSample(token: sample(Token.tagsArrayOpen.rawValue))
+        processor.didSample(token: sample(Token.closeBracket.rawValue))
+        processor.didSample(token: sample(Token.noteKey.rawValue))
+        XCTAssertNotEqual(masked(.nullLiteral), -Float.infinity)
+        XCTAssertNotEqual(masked(.stringX), -Float.infinity)
+        XCTAssertEqual(masked(.trueLiteral), -Float.infinity)
+        XCTAssertEqual(masked(.eos), -Float.infinity, "premature EOS must be masked")
+    }
+
     // MARK: - End to end with the tokenizer adapter
 
     func testEndToEndFromTokenizerVocabularyToNormalCompletion() throws {

@@ -17,10 +17,11 @@ import Foundation
 /// Supported shapes:
 /// - `json_object`: any complete JSON value (object, array, string with
 ///   escapes, number, boolean, null), with a nesting cap;
-/// - strict `json_schema`: the flat object subset compiled by
-///   `JSONSchemaCompiler` — scalar properties with optional string enums,
-///   `required` keys enforced at close, `additionalProperties: false`, keys in
-///   any order (each at most once).
+/// - strict `json_schema`: the recursive subset compiled by
+///   `JSONSchemaCompiler` — nested strict objects, arrays with `items`,
+///   scalar properties with optional string enums, nullable scalar unions
+///   (`[scalar, "null"]`), `required` keys enforced at every object close,
+///   `additionalProperties: false`, keys in any order (each at most once).
 ///
 /// Guarantees:
 /// - every accepted root value is syntactically valid JSON: strict UTF-8
@@ -35,8 +36,8 @@ public struct JSONGrammarState: Sendable, Equatable {
 
     /// Default cap on nested objects/arrays in `json_object` mode. Deeper
     /// input fails closed (the opening bracket is rejected) instead of being
-    /// unbounded; schemas with nested values are not part of the supported
-    /// subset yet.
+    /// unbounded. Strict `json_schema` mode needs no such cap: the compiled
+    /// schema itself bounds how deep generation can nest.
     public static let defaultMaximumNestingDepth = 32
 
     // MARK: Configuration
@@ -48,11 +49,6 @@ public struct JSONGrammarState: Sendable, Equatable {
 
     private let kind: GrammarKind
     private let maximumNestingDepth: Int
-
-    private var schema: CompiledJSONSchema? {
-        if case .strictSchema(let schema) = kind { return schema }
-        return nil
-    }
 
     // MARK: Mutable state
 
@@ -86,7 +82,8 @@ public struct JSONGrammarState: Sendable, Equatable {
         self.init(kind: .freeJSON, maximumNestingDepth: maximumNestingDepth)
     }
 
-    /// Strict flat-object schema mode.
+    /// Strict schema mode (recursive object/array/scalar/nullable shapes; the
+    /// compiled schema itself bounds nesting).
     public init(
         schema: CompiledJSONSchema,
         maximumNestingDepth: Int = JSONGrammarState.defaultMaximumNestingDepth
@@ -182,10 +179,9 @@ public struct JSONGrammarState: Sendable, Equatable {
     private enum ValueConstraint: Equatable {
         /// Any JSON value (`json_object` mode).
         case anyJSON
-        /// The root object of a strict schema.
-        case schemaRootObject
-        /// A scalar property of a strict schema.
-        case schemaScalar(CompiledJSONSchema.Property)
+        /// A value schema of a strict schema (root object or any nested
+        /// scalar/object/array value).
+        case schema(CompiledJSONSchema.Value)
     }
 
     private enum StringRole: Equatable {
@@ -278,7 +274,12 @@ public struct JSONGrammarState: Sendable, Equatable {
     private enum Frame: Equatable {
         case freeObject
         case freeArray
-        case schemaObject(used: Set<String>)
+        /// A strict schema object node: its compiled fields plus the names
+        /// already consumed in this instance.
+        case schemaObject(CompiledJSONSchema.ObjectSchema, used: Set<String>)
+        /// A strict schema array node: the item schema each element must
+        /// satisfy.
+        case schemaArray(items: CompiledJSONSchema.Value)
     }
 
     private enum Phase: Equatable {
@@ -288,8 +289,8 @@ public struct JSONGrammarState: Sendable, Equatable {
         /// Expecting an object key. `fresh` is true only directly after `{`.
         case keyStart(fresh: Bool)
         /// An object key completed; expecting `:`. Carries the constraint for
-        /// the member value (`.anyJSON` for free objects, the scalar property
-        /// for schema objects).
+        /// the member value (`.anyJSON` for free objects, the compiled value
+        /// schema for schema objects).
         case expectColon(ValueConstraint)
         /// A value completed inside a container; expecting `,` or the closer.
         case afterValue
@@ -319,8 +320,8 @@ public struct JSONGrammarState: Sendable, Equatable {
         switch kind {
         case .freeJSON:
             return .valueStart(.anyJSON, allowsEmptyClose: false)
-        case .strictSchema:
-            return .valueStart(.schemaRootObject, allowsEmptyClose: false)
+        case .strictSchema(let schema):
+            return .valueStart(.schema(.object(schema.root)), allowsEmptyClose: false)
         }
     }
 
@@ -340,13 +341,8 @@ public struct JSONGrammarState: Sendable, Equatable {
             switch constraint {
             case .anyJSON:
                 return startJSONValue(byte)
-            case .schemaRootObject:
-                guard byte == Self.openBrace else { return .rejected }
-                stack.append(.schemaObject(used: []))
-                phase = .keyStart(fresh: true)
-                return .consumed
-            case .schemaScalar(let property):
-                return startScalarValue(byte, property: property)
+            case .schema(let value):
+                return startSchemaValue(byte, value: value)
             }
 
         case .keyStart(let fresh):
@@ -444,11 +440,35 @@ public struct JSONGrammarState: Sendable, Equatable {
         return .rejected
     }
 
-    private mutating func startScalarValue(_ byte: UInt8, property: CompiledJSONSchema.Property) -> StepOutcome {
-        switch property.type {
+    private mutating func startSchemaValue(_ byte: UInt8, value: CompiledJSONSchema.Value) -> StepOutcome {
+        switch value {
+        case .scalar(let scalar):
+            return startScalarValue(byte, scalar: scalar)
+        case .object(let object):
+            guard byte == Self.openBrace else { return .rejected }
+            stack.append(.schemaObject(object, used: []))
+            phase = .keyStart(fresh: true)
+            return .consumed
+        case .array(let items):
+            guard byte == Self.openBracket else { return .rejected }
+            stack.append(.schemaArray(items: items))
+            phase = .valueStart(.schema(items), allowsEmptyClose: true)
+            return .consumed
+        }
+    }
+
+    private mutating func startScalarValue(_ byte: UInt8, scalar: CompiledJSONSchema.Scalar) -> StepOutcome {
+        if scalar.acceptsNull, byte == UInt8(ascii: "n") {
+            phase = .literal(LiteralState(expected: Self.nullLiteral, matched: 1))
+            return .consumed
+        }
+        switch scalar.type {
         case .string:
             guard byte == Self.quote else { return .rejected }
-            if let allowedValues = property.allowedValues {
+            if let allowedValues = scalar.allowedValues {
+                // An enum of only null admits no string at all; do not open a
+                // string that can never close.
+                guard !allowedValues.isEmpty else { return .rejected }
                 phase = .string(.enumValue(ScalarPrefixMatcher(allowedValues)), utf8: nil)
             } else {
                 phase = .string(.plain, utf8: nil)
@@ -497,30 +517,30 @@ public struct JSONGrammarState: Sendable, Equatable {
         switch frame {
         case .freeObject:
             phase = .string(.freeKey, utf8: nil)
-        case .schemaObject(let used):
-            let unused = (schema?.properties.map(\.name) ?? []).filter { !used.contains($0) }
+        case .schemaObject(let object, let used):
+            let unused = object.properties.map(\.name).filter { !used.contains($0) }
             phase = .string(.key(ScalarPrefixMatcher(unused)), utf8: nil)
-        case .freeArray:
+        case .freeArray, .schemaArray:
             phase = .failed
         }
     }
 
-    private mutating func markKeyUsed(_ name: String) -> CompiledJSONSchema.Property? {
-        guard let schema, let property = schema.properties.first(where: { $0.name == name }) else { return nil }
-        guard case .schemaObject(var used)? = stack.last else { return nil }
+    private mutating func markKeyUsed(_ name: String) -> CompiledJSONSchema.Value? {
+        guard case .schemaObject(let object, var used)? = stack.last,
+            let property = object.properties.first(where: { $0.name == name })
+        else { return nil }
         used.insert(name)
-        stack[stack.count - 1] = .schemaObject(used: used)
-        return property
+        stack[stack.count - 1] = .schemaObject(object, used: used)
+        return property.value
     }
 
     private var canAddMember: Bool {
         guard let frame = stack.last else { return false }
         switch frame {
-        case .freeObject, .freeArray:
+        case .freeObject, .freeArray, .schemaArray:
             return true
-        case .schemaObject(let used):
-            guard let schema else { return false }
-            return schema.properties.contains { !used.contains($0.name) }
+        case .schemaObject(let object, let used):
+            return object.properties.contains { !used.contains($0.name) }
         }
     }
 
@@ -534,6 +554,8 @@ public struct JSONGrammarState: Sendable, Equatable {
             phase = .keyStart(fresh: false)
         case .freeArray:
             phase = .valueStart(.anyJSON, allowsEmptyClose: false)
+        case .schemaArray(let items):
+            phase = .valueStart(.schema(items), allowsEmptyClose: false)
         }
     }
 
@@ -550,9 +572,14 @@ public struct JSONGrammarState: Sendable, Equatable {
             stack.removeLast()
             phase = valueCompletedPhase()
             return .consumed
-        case .schemaObject(let used):
+        case .schemaObject(let object, let used):
             guard byte == Self.closeBrace else { return .rejected }
-            guard let schema, schema.required.allSatisfy(used.contains) else { return .rejected }
+            guard object.required.allSatisfy(used.contains) else { return .rejected }
+            stack.removeLast()
+            phase = valueCompletedPhase()
+            return .consumed
+        case .schemaArray:
+            guard byte == Self.closeBracket else { return .rejected }
             stack.removeLast()
             phase = valueCompletedPhase()
             return .consumed
@@ -618,8 +645,8 @@ public struct JSONGrammarState: Sendable, Equatable {
             phase = valueCompletedPhase()
             return .consumed
         case .key(let matcher):
-            guard let name = matcher.completedName, let property = markKeyUsed(name) else { return .rejected }
-            phase = .expectColon(.schemaScalar(property))
+            guard let name = matcher.completedName, let value = markKeyUsed(name) else { return .rejected }
+            phase = .expectColon(.schema(value))
             return .consumed
         }
     }

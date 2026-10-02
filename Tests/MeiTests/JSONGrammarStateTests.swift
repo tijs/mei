@@ -410,6 +410,124 @@ final class JSONGrammarStateTests: XCTestCase {
         assertAccepts(#"{"status":"ok"}"#, state)
     }
 
+    // MARK: - Recursive json_schema subset: nested objects, arrays, nullable unions
+
+    func testNestedObjectGrammar() throws {
+        let state = JSONGrammarState(schema: try RecursiveSchemaFixture.schema())
+        assertAccepts(#"{"meta":{"id":3},"tags":[],"note":null}"#, state)
+        assertAccepts(#"{"note":"x","tags":["a","b"],"meta":{"id":-7}}"#, state)
+        assertAccepts(" { \"meta\" : { \"id\" : 3 } , \"tags\" : [ ] , \"note\" : null } \n", state)
+        assertIncomplete(#"{"meta":{"id":1}"#, state)
+        // Nested required keys are enforced at the nested close.
+        assertRejected(#"{"meta":{}"#, state)
+        // Nested additionalProperties: false.
+        assertRejected(#"{"meta":{"id":1,"extra":2}"#, state)
+        // The key matcher is scoped to the nested object's own keys.
+        assertRejected(#"{"meta":{"tags":[]}"#, state)
+        // Duplicate nested key.
+        assertRejected(#"{"meta":{"id":1,"id":2}"#, state)
+        // Nested value types are enforced.
+        assertRejected(#"{"meta":{"id":"3"}"#, state)
+        assertRejected(#"{"meta":[]"#, state)
+        // Root-level keys are not silently reusable inside `meta`.
+        assertRejected(#"{"meta":{"id":1},"meta":{"id":2}"#, state)
+        // The root close still enforces the root required keys.
+        assertRejected(#"{"meta":{"id":1}}"#, state)
+    }
+
+    func testArrayItemsGrammar() throws {
+        let state = JSONGrammarState(schema: try RecursiveSchemaFixture.schema())
+        assertAccepts(#"{"meta":{"id":1},"tags":["a","b",""],"note":null}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":["a",1],"note":null}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":["a",],"note":null}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":[},"note":null}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":{"a":1},"note":null}"#, state)
+        assertIncomplete(#"{"meta":{"id":1},"tags":["a"]"#, state)
+        assertIncomplete(#"{"meta":{"id":1},"tags":["a""#, state)
+    }
+
+    func testRecursiveArrayOfObjectsGrammar() throws {
+        let schema = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "rows", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"rows": {"type": "array", "items": {"type": "object", "properties": {"v": {"type": ["number", "null"]}}, "required": ["v"], "additionalProperties": false}}}, "required": ["rows"], "additionalProperties": false}"#
+                )))
+        let state = JSONGrammarState(schema: schema)
+        assertAccepts(#"{"rows":[]}"#, state)
+        assertAccepts(#"{"rows":[{"v":1},{"v":null},{"v":-2.5}]}"#, state)
+        assertRejected(#"{"rows":[{"v":"x"}]}"#, state)
+        assertRejected(#"{"rows":[{}]}"#, state)
+        assertRejected(#"{"rows":[{"v":1,"x":2}]}"#, state)
+        assertRejected(#"{"rows":[{"v":1},]}"#, state)
+        assertIncomplete(#"{"rows":[{"v":1}]"#, state)
+    }
+
+    func testNestedArrayOfArraysGrammar() throws {
+        let schema = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "grid", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"grid": {"type": "array", "items": {"type": "array", "items": {"type": "integer"}}}}, "required": ["grid"], "additionalProperties": false}"#
+                )))
+        let state = JSONGrammarState(schema: schema)
+        assertAccepts(#"{"grid":[[1],[2,3],[]]}"#, state)
+        assertRejected(#"{"grid":[[1],[2,"x"]]}"#, state)
+        assertRejected(#"{"grid":[[1] 2]}"#, state)
+        assertRejected(#"{"grid":[[1],2]}"#, state)
+    }
+
+    func testNullableUnionGrammar() throws {
+        let state = JSONGrammarState(schema: try RecursiveSchemaFixture.schema())
+        assertAccepts(#"{"meta":{"id":1},"tags":[],"note":null}"#, state)
+        assertAccepts(#"{"meta":{"id":1},"tags":[],"note":"anything"}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":[],"note":1}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":[],"note":true}"#, state)
+        assertRejected(#"{"meta":{"id":1},"tags":[],"note":[]}"#, state)
+        assertIncomplete(#"{"meta":{"id":1},"tags":[],"note":nul"#, state)
+        assertIncomplete(#"{"meta":{"id":1},"tags":[],"note":null"#, state)
+    }
+
+    func testNullableEnumGrammar() throws {
+        let withNull = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "nullable_enum", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": ["ok", null]}}, "required": ["e"], "additionalProperties": false}"#
+                )))
+        let withNullState = JSONGrammarState(schema: withNull)
+        assertAccepts(#"{"e":null}"#, withNullState)
+        assertAccepts(#"{"e":"ok"}"#, withNullState)
+        assertAccepts(#"{"e":"\u006f\u006b"}"#, withNullState)
+        assertRejected(#"{"e":"nope"}"#, withNullState)
+        assertRejected(#"{"e":1}"#, withNullState)
+        assertRejected(#"{"e":nulll}"#, withNullState)
+
+        // An enum without null rejects null even though the union allows it.
+        let withoutNull = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "nullable_enum", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": ["ok"]}}, "required": ["e"], "additionalProperties": false}"#
+                )))
+        let withoutNullState = JSONGrammarState(schema: withoutNull)
+        assertRejected(#"{"e":null}"#, withoutNullState)
+        assertAccepts(#"{"e":"ok"}"#, withoutNullState)
+
+        // An enum of only null accepts null and no string.
+        let onlyNull = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "nullable_enum", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": [null]}}, "required": ["e"], "additionalProperties": false}"#
+                )))
+        let onlyNullState = JSONGrammarState(schema: onlyNull)
+        assertAccepts(#"{"e":null}"#, onlyNullState)
+        assertRejected(#"{"e":"ok"}"#, onlyNullState)
+        assertRejected(#"{"e":""}"#, onlyNullState)
+    }
+
+
     // MARK: - Lifecycle
 
     func testResetRestoresInitialState() throws {

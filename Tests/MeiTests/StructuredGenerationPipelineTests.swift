@@ -664,6 +664,186 @@ final class StructuredGenerationPipelineTests: XCTestCase {
             StructuredGeneration.postGenerationError(plan: plan, stopReason: .stop, toolCallCount: 0))
     }
 
+    // MARK: - Recursive schema slice (nested objects, arrays, nullable unions)
+
+    func testNestedSchemaDocumentThroughBothResponsePaths() throws {
+        let format = ResponseFormat.jsonSchema(
+            JSONSchemaFormat(
+                name: "nested_v1", strict: true,
+                schema: try decode(RecursiveSchemaFixture.schemaJSON)))
+        guard case .jsonSchema(let compiled) = try JSONSchemaCompiler.compile(format) else {
+            return XCTFail("the nested schema must compile")
+        }
+        let table = RecursiveSchemaFixture.table()
+        let plan = try XCTUnwrap(try StructuredGeneration.plan(for: format, table: table))
+        let text = scriptedGenerate(plan: plan, table: table, script: RecursiveSchemaFixture.documentScript)
+        XCTAssertEqual(text, RecursiveSchemaFixture.document)
+        XCTAssertTrue(plan.runRecord.rootValueCompleted)
+        XCTAssertNil(plan.runRecord.failure)
+
+        // Buffered path: content parses, validates, finishes with stop.
+        let run = makeRun(
+            text: text, finishReason: "stop",
+            completionTokens: RecursiveSchemaFixture.documentScript.count)
+        let body = responseBody(run)
+        let choices = body["choices"] as? [[String: Any]] ?? []
+        XCTAssertEqual(choices.count, 1)
+        XCTAssertEqual(choices.first?["finish_reason"] as? String, "stop")
+        let content = (choices.first?["message"] as? [String: Any])?["content"] as? String
+        XCTAssertEqual(content, text)
+        XCTAssertTrue(compiled.validate(try decode(content ?? "{}")), "the compiled validator agrees")
+        let parsed = try XCTUnwrap(
+            (try? JSONSerialization.jsonObject(with: Data((content ?? "").utf8))) as? [String: Any])
+        XCTAssertEqual((parsed["meta"] as? [String: Any])?["id"] as? Int, 7)
+        XCTAssertEqual(parsed["tags"] as? [String], ["a", "b"])
+        XCTAssertTrue(parsed["note"] is NSNull, "the nullable union emitted JSON null")
+
+        // Streaming path: same content, same finish reason, usage parity.
+        let assembled = assembleSSE(chunkFrames(text.map { String($0) }) + finishFrames(run, includeUsage: true))
+        XCTAssertEqual(assembled.content, text)
+        XCTAssertEqual(assembled.finishReason, "stop")
+        XCTAssertTrue(assembled.sawDone)
+        let bufferedUsage = Router.usage(run: run)
+        XCTAssertEqual(assembled.usage?["total_tokens"] as? Int, bufferedUsage.totalTokens)
+        XCTAssertNil(
+            StructuredGeneration.postGenerationError(plan: plan, stopReason: .stop, toolCallCount: 0))
+    }
+
+    func testNestedSchemaMasksWrongTokensAndProse() throws {
+        typealias Token = RecursiveSchemaFixture.Token
+        let format = ResponseFormat.jsonSchema(
+            JSONSchemaFormat(
+                name: "nested_v1", strict: true,
+                schema: try decode(RecursiveSchemaFixture.schemaJSON)))
+        let table = RecursiveSchemaFixture.table()
+        let plan = try XCTUnwrap(try StructuredGeneration.plan(for: format, table: table))
+        var processor = plan.processor
+
+        func row() -> [Float] {
+            processor.process(logits: MLXArray(Array(repeating: Float(0), count: table.vocabularySize)))
+                .asArray(Float.self)
+        }
+
+        let initial = row()
+        XCTAssertNotEqual(initial[Token.openMetaNested.rawValue], -Float.infinity)
+        XCTAssertNotEqual(initial[Token.wholeDocument.rawValue], -Float.infinity)
+        XCTAssertEqual(initial[Token.tagsKey.rawValue], -Float.infinity, "a root key cannot start the document")
+        XCTAssertEqual(initial[Token.nullLiteral.rawValue], -Float.infinity, "null cannot start the document")
+        XCTAssertEqual(initial[Token.eos.rawValue], -Float.infinity, "premature EOS must be masked")
+
+        forceSample(&processor, tokenId: Token.openMetaNested.rawValue)
+        let nested = row()
+        XCTAssertNotEqual(nested[Token.idKey.rawValue], -Float.infinity)
+        XCTAssertEqual(nested[Token.tagsKey.rawValue], -Float.infinity, "wrong nested key scope")
+        XCTAssertEqual(nested[Token.trueLiteral.rawValue], -Float.infinity)
+
+        forceSample(&processor, tokenId: Token.idKey.rawValue)
+        let idValue = row()
+        XCTAssertNotEqual(idValue[Token.seven.rawValue], -Float.infinity)
+        XCTAssertEqual(idValue[Token.stringX.rawValue], -Float.infinity, "the nested value is an integer")
+        XCTAssertEqual(idValue[Token.nullLiteral.rawValue], -Float.infinity, "not a nullable integer")
+
+        forceSample(&processor, tokenId: Token.seven.rawValue)
+        forceSample(&processor, tokenId: Token.closeNested.rawValue)
+        let afterMeta = row()
+        XCTAssertNotEqual(afterMeta[Token.tagsArrayOpen.rawValue], -Float.infinity)
+        XCTAssertEqual(afterMeta[Token.idKey.rawValue], -Float.infinity, "a nested key is out of scope at the root")
+        XCTAssertEqual(afterMeta[Token.closeRoot.rawValue], -Float.infinity, "required root keys are missing")
+
+        forceSample(&processor, tokenId: Token.tagsArrayOpen.rawValue)
+        let itemPosition = row()
+        XCTAssertNotEqual(itemPosition[Token.stringA.rawValue], -Float.infinity)
+        XCTAssertNotEqual(itemPosition[Token.closeBracket.rawValue], -Float.infinity, "an empty array may close")
+        XCTAssertEqual(itemPosition[Token.seven.rawValue], -Float.infinity, "an integer is not a string item")
+
+        forceSample(&processor, tokenId: Token.stringA.rawValue)
+        forceSample(&processor, tokenId: Token.comma.rawValue)
+        XCTAssertNotEqual(row()[Token.stringB.rawValue], -Float.infinity)
+        XCTAssertEqual(row()[Token.closeBracket.rawValue], -Float.infinity, "a comma requires another item")
+
+        forceSample(&processor, tokenId: Token.stringB.rawValue)
+        forceSample(&processor, tokenId: Token.closeBracket.rawValue)
+        forceSample(&processor, tokenId: Token.noteKey.rawValue)
+        let note = row()
+        XCTAssertNotEqual(note[Token.nullLiteral.rawValue], -Float.infinity)
+        XCTAssertNotEqual(note[Token.stringX.rawValue], -Float.infinity)
+        XCTAssertEqual(note[Token.trueLiteral.rawValue], -Float.infinity)
+        XCTAssertEqual(note[Token.seven.rawValue], -Float.infinity)
+        XCTAssertEqual(note[Token.eos.rawValue], -Float.infinity)
+
+        forceSample(&processor, tokenId: Token.nullLiteral.rawValue)
+        let beforeClose = row()
+        XCTAssertNotEqual(beforeClose[Token.closeRoot.rawValue], -Float.infinity)
+        XCTAssertEqual(beforeClose[Token.eos.rawValue], -Float.infinity, "the root is still open")
+        forceSample(&processor, tokenId: Token.closeRoot.rawValue)
+        XCTAssertNotEqual(row()[Token.eos.rawValue], -Float.infinity)
+        XCTAssertTrue(plan.runRecord.rootValueCompleted)
+        XCTAssertNil(plan.runRecord.failure)
+    }
+
+    func testUnsupportedRecursiveConstructFailsBeforeGenerationWith400() throws {
+        let cases: [(String, JSONSchemaCompileError)] = [
+            (
+                #"{"type": "object", "properties": {"o": {"type": "object", "properties": {}, "required": [], "additionalProperties": false, "minProperties": 1}}, "required": ["o"], "additionalProperties": false}"#,
+                .objectKeywordUnsupported("o", "minProperties")
+            ),
+            (
+                #"{"type": "object", "properties": {"u": {"type": ["string", "integer"]}}, "required": ["u"], "additionalProperties": false}"#,
+                .propertyTypeUnionUnsupported("u")
+            ),
+            (
+                #"{"type": "object", "properties": {"a": {"type": "array"}}, "required": ["a"], "additionalProperties": false}"#,
+                .arrayItemsInvalid("a")
+            ),
+        ]
+        for (schemaJSON, expected) in cases {
+            let format = ResponseFormat.jsonSchema(
+                JSONSchemaFormat(name: "bad_nested", strict: true, schema: try decode(schemaJSON)))
+            var request = try ChatRequest(
+                json: Data(#"{"model": "test-model", "messages": [{"role": "user", "content": "hi"}]}"#.utf8))
+            request.responseFormat = format
+
+            var thrown: Error?
+            XCTAssertThrowsError(try Router.validateStructuredRequest(request), schemaJSON) { thrown = $0 }
+            let error = try XCTUnwrap(thrown)
+            XCTAssertEqual(error as? JSONSchemaCompileError, expected)
+
+            let (status, body) = httpError(error)
+            XCTAssertEqual(status, 400)
+            let envelope = body["error"] as? [String: Any] ?? [:]
+            XCTAssertEqual(envelope["code"] as? String, "response_format_unsupported")
+            XCTAssertEqual(envelope["param"] as? String, "response_format")
+            XCTAssertTrue(
+                (envelope["message"] as? String ?? "").hasPrefix("response_format.json_schema.schema: "),
+                "the 400 names the request field")
+            XCTAssertNil(body["choices"], "an unsupported schema must fail before generation")
+        }
+    }
+
+    func testNestedIncompleteRunFailsClosed() throws {
+        let format = ResponseFormat.jsonSchema(
+            JSONSchemaFormat(
+                name: "nested_v1", strict: true,
+                schema: try decode(RecursiveSchemaFixture.schemaJSON)))
+        let table = RecursiveSchemaFixture.table()
+        let plan = try XCTUnwrap(try StructuredGeneration.plan(for: format, table: table))
+        // A valid prefix (the nested object closes) but the root never does.
+        _ = scriptedGenerate(
+            plan: plan, table: table,
+            script: [RecursiveSchemaFixture.Token.openMetaNested, .idKey, .seven, .closeNested].map(\.rawValue))
+        XCTAssertNil(plan.runRecord.failure, "no token was illegal — the run is just incomplete")
+        XCTAssertFalse(plan.runRecord.rootValueCompleted)
+
+        let error = try XCTUnwrap(
+            StructuredGeneration.postGenerationError(plan: plan, stopReason: .stop, toolCallCount: 0),
+            "an incomplete recursive run must fail closed")
+        guard case .generationFailed(let message) = error else {
+            return XCTFail("expected generationFailed, got \(error)")
+        }
+        XCTAssertTrue(message.contains("complete JSON value"), message)
+        XCTAssertEqual(httpError(error).status, 500)
+    }
+
     // MARK: - CoCore checker oracle
 
     func testCoCoreCanaryCheckerMatchesTheRustOracle() {

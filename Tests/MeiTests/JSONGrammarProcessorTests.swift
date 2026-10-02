@@ -263,6 +263,119 @@ final class JSONGrammarProcessorTests: XCTestCase {
         XCTAssertEqual(decoded, .object(["status": .array([.number(1), .number(5)])]))
     }
 
+    // MARK: - Recursive schema flow (nested objects, arrays, nullable unions)
+
+    private func recursiveProcessor() throws -> JSONGrammarProcessor {
+        try JSONGrammarProcessor(
+            format: .jsonSchema(try RecursiveSchemaFixture.schema()),
+            table: RecursiveSchemaFixture.table())
+    }
+
+    func testRecursiveSchemaInitialAllowedTokens() throws {
+        let processor = try recursiveProcessor()
+        let allowed = Set(processor.allowedTokenIds())
+        XCTAssertEqual(
+            allowed,
+            Set(
+                [RecursiveSchemaFixture.Token.openMetaNested, .space, .wholeDocument]
+                    .map(\.rawValue)))
+        XCTAssertFalse(processor.isAllowed(tokenId: RecursiveSchemaFixture.Token.eos.rawValue))
+    }
+
+    func testRecursiveSchemaTokenFlow() throws {
+        var processor = try recursiveProcessor()
+        typealias Token = RecursiveSchemaFixture.Token
+        try processor.consume(tokenId: Token.openMetaNested.rawValue)
+
+        // Inside the nested object only its own key can open, and the nested
+        // required key must be present before it can close.
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.idKey.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.tagsKey.rawValue), "`tags` is not a key of `meta`")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeNested.rawValue), "the nested required key is missing")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.seven.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.eos.rawValue))
+
+        try processor.consume(tokenId: Token.idKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.seven.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.stringX.rawValue), "the nested value is an integer")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.nullLiteral.rawValue))
+
+        try processor.consume(tokenId: Token.seven.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeNested.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.comma.rawValue), "no second key in `meta`")
+        try processor.consume(tokenId: Token.closeNested.rawValue)
+
+        // Back at the root object: root keys are available, nested-only keys are not.
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.tagsArrayOpen.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.idKey.rawValue), "`id` is not a root key")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeRoot.rawValue), "root required keys are missing")
+
+        try processor.consume(tokenId: Token.tagsArrayOpen.rawValue)
+        // Array item position: strings only, and the empty array may close.
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.stringA.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeBracket.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.seven.rawValue), "an integer is not a string item")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.nullLiteral.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeNested.rawValue), "the wrong closer")
+
+        try processor.consume(tokenId: Token.stringA.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.comma.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeBracket.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.stringB.rawValue), "items need a comma first")
+        try processor.consume(tokenId: Token.comma.rawValue)
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeBracket.rawValue), "a comma requires another item")
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.stringB.rawValue))
+        try processor.consume(tokenId: Token.stringB.rawValue)
+        try processor.consume(tokenId: Token.closeBracket.rawValue)
+
+        // Nullable union position: null and a string are both allowed; other
+        // types are not.
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.noteKey.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeRoot.rawValue))
+        try processor.consume(tokenId: Token.noteKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.nullLiteral.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.stringX.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.seven.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.trueLiteral.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.eos.rawValue))
+
+        try processor.consume(tokenId: Token.nullLiteral.rawValue)
+        XCTAssertEqual(processor.status, .inProgress)
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.eos.rawValue), "the root object is still open")
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeRoot.rawValue))
+        try processor.consume(tokenId: Token.closeRoot.rawValue)
+        XCTAssertEqual(processor.status, .complete)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.eos.rawValue))
+    }
+
+    func testWholeRecursiveDocumentTokenCompletesTheGrammar() throws {
+        var processor = try recursiveProcessor()
+        XCTAssertTrue(processor.isAllowed(tokenId: RecursiveSchemaFixture.Token.wholeDocument.rawValue))
+        try processor.consume(tokenId: RecursiveSchemaFixture.Token.wholeDocument.rawValue)
+        XCTAssertEqual(processor.status, .complete)
+        XCTAssertTrue(processor.isAllowed(tokenId: RecursiveSchemaFixture.Token.eos.rawValue))
+    }
+
+    func testRecursiveSchemaFlowProducesExactlyTheSchemaObject() throws {
+        let table = RecursiveSchemaFixture.table()
+        var processor = try recursiveProcessor()
+        var output: [UInt8] = []
+        for tokenId in RecursiveSchemaFixture.documentScript {
+            XCTAssertTrue(processor.isAllowed(tokenId: tokenId), "token \(tokenId) must be allowed")
+            try processor.consume(tokenId: tokenId)
+            output += table.fragment(forTokenId: tokenId) ?? []
+        }
+        XCTAssertEqual(processor.status, .finished)
+        let decoded = try JSONDecoder().decode(MeiJSONValue.self, from: Data(output))
+        XCTAssertEqual(
+            decoded,
+            .object([
+                "meta": .object(["id": .number(7)]),
+                "tags": .array([.string("a"), .string("b")]),
+                "note": .null,
+            ]))
+    }
+
     // MARK: - Fail-closed behavior
 
     func testPrematureEndOfSequenceIsRejected() throws {

@@ -49,8 +49,12 @@ final class JSONSchemaCompilerTests: XCTestCase {
         XCTAssertEqual(compiled.properties.count, 1)
         let status = try XCTUnwrap(compiled.properties.first)
         XCTAssertEqual(status.name, "status")
-        XCTAssertEqual(status.type, .string)
-        XCTAssertEqual(status.allowedValues, ["ok"])
+        guard case .scalar(let scalar) = status.value else {
+            return XCTFail("status must compile to a scalar, got \(status.value)")
+        }
+        XCTAssertEqual(scalar.type, .string)
+        XCTAssertEqual(scalar.allowedValues, ["ok"])
+        XCTAssertFalse(scalar.nullable)
         XCTAssertFalse(compiled.constraintKey.isEmpty)
         XCTAssertEqual(
             try canarySchema().constraintKey, compiled.constraintKey,
@@ -196,19 +200,181 @@ final class JSONSchemaCompilerTests: XCTestCase {
         }
     }
 
+    // MARK: - Recursive subset: nested objects, arrays/items, nullable unions
+
+    func testNestedObjectSchemaCompilesAndValidates() throws {
+        let compiled = try compileSchema(
+            #"{"type": "object", "properties": {"meta": {"type": "object", "properties": {"id": {"type": "integer"}, "label": {"type": "string", "enum": ["a", "b"]}}, "required": ["id"], "additionalProperties": false}}, "required": ["meta"], "additionalProperties": false}"#
+        )
+        guard case .object(let meta) = try XCTUnwrap(compiled.properties.first).value else {
+            return XCTFail("meta must compile to a nested object")
+        }
+        XCTAssertEqual(meta.required, ["id"])
+        XCTAssertEqual(meta.properties.map(\.name), ["id", "label"])
+        XCTAssertTrue(compiled.validate(try mei(#"{"meta": {"id": 3}}"#)))
+        XCTAssertTrue(compiled.validate(try mei(#"{"meta": {"id": 3, "label": "b"}}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"meta": {}}"#)), "nested required keys must be enforced")
+        XCTAssertFalse(
+            compiled.validate(try mei(#"{"meta": {"id": 3, "extra": 1}}"#)),
+            "nested additionalProperties: false must be enforced")
+        XCTAssertFalse(compiled.validate(try mei(#"{"meta": {"id": "3"}}"#)), "nested scalar types must be enforced")
+        XCTAssertFalse(compiled.validate(try mei(#"{"meta": {"id": 3, "label": "c"}}"#)), "nested enums must be enforced")
+        XCTAssertFalse(compiled.validate(try mei(#"{"meta": 3}"#)))
+        XCTAssertFalse(compiled.validate(try mei("{}")))
+    }
+
+    func testArraySchemaCompilesAndValidates() throws {
+        let compiled = try compileSchema(
+            #"{"type": "object", "properties": {"tags": {"type": "array", "items": {"type": "string"}}, "counts": {"type": "array", "items": {"type": "integer"}}}, "required": ["tags", "counts"], "additionalProperties": false}"#
+        )
+        XCTAssertTrue(compiled.validate(try mei(#"{"tags": [], "counts": []}"#)), "empty arrays are valid")
+        XCTAssertTrue(compiled.validate(try mei(#"{"tags": ["a", "b"], "counts": [1, 2, -3]}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"tags": [1], "counts": []}"#)), "array items must match")
+        XCTAssertFalse(compiled.validate(try mei(#"{"tags": ["a", null], "counts": []}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"tags": "a", "counts": []}"#)), "a scalar is not an array")
+        XCTAssertFalse(compiled.validate(try mei(#"{"tags": [], "counts": [1.5]}"#)), "integer items reject fractions")
+    }
+
+    func testRecursiveShapesCompileAndValidate() throws {
+        // object -> array -> object -> array -> boolean, with a nullable leaf.
+        let compiled = try compileSchema(
+            #"{"type": "object", "properties": {"rows": {"type": "array", "items": {"type": "object", "properties": {"cells": {"type": "array", "items": {"type": "boolean"}}, "note": {"type": ["string", "null"]}}, "required": ["cells", "note"], "additionalProperties": false}}}, "required": ["rows"], "additionalProperties": false}"#
+        )
+        XCTAssertTrue(compiled.validate(try mei(#"{"rows": []}"#)))
+        XCTAssertTrue(
+            compiled.validate(try mei(#"{"rows": [{"cells": [true, false], "note": null}, {"cells": [], "note": "x"}]}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"rows": [{"cells": [1], "note": null}]}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"rows": [{"cells": [], "note": 1}]}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"rows": [{"cells": []}]}"#)), "nested required keys are enforced")
+        XCTAssertFalse(
+            compiled.validate(try mei(#"{"rows": [{"cells": [], "note": null, "x": 1}]}"#)),
+            "nested additionalProperties: false is enforced")
+    }
+
+    func testNullableUnionsCompileAndValidate() throws {
+        let compiled = try compileSchema(
+            #"{"type": "object", "properties": {"s": {"type": ["string", "null"]}, "n": {"type": ["number", "null"]}, "i": {"type": ["integer", "null"]}, "b": {"type": ["boolean", "null"]}}, "required": ["s", "n", "i", "b"], "additionalProperties": false}"#
+        )
+        XCTAssertTrue(compiled.validate(try mei(#"{"s": null, "n": null, "i": null, "b": null}"#)))
+        XCTAssertTrue(compiled.validate(try mei(#"{"s": "x", "n": 1.5, "i": 3, "b": false}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"s": 1, "n": 1.5, "i": 3, "b": false}"#)))
+        XCTAssertFalse(compiled.validate(try mei(#"{"s": "x", "n": true, "i": 3, "b": false}"#)))
+        XCTAssertFalse(
+            compiled.validate(try mei(#"{"s": "x", "n": 1.5, "i": 3.5, "b": false}"#)),
+            "a nullable integer still rejects fractions")
+        XCTAssertFalse(compiled.validate(try mei(#"{"s": "x", "n": 1.5, "i": 3, "b": 1}"#)))
+
+        // The order of the union entries does not matter.
+        let reversed = try compileSchema(
+            #"{"type": "object", "properties": {"s": {"type": ["null", "string"]}}, "required": ["s"], "additionalProperties": false}"#)
+        XCTAssertTrue(reversed.validate(try mei(#"{"s": null}"#)))
+        XCTAssertTrue(reversed.validate(try mei(#"{"s": "x"}"#)))
+        XCTAssertFalse(reversed.validate(try mei(#"{"s": 1}"#)))
+    }
+
+    func testNullableStringEnumSemantics() throws {
+        let withNull = try compileSchema(
+            #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": ["b", "a", null]}}, "required": ["e"], "additionalProperties": false}"#)
+        XCTAssertTrue(withNull.validate(try mei(#"{"e": null}"#)))
+        XCTAssertTrue(withNull.validate(try mei(#"{"e": "a"}"#)))
+        XCTAssertFalse(withNull.validate(try mei(#"{"e": "c"}"#)))
+        XCTAssertFalse(withNull.validate(try mei(#"{"e": 1}"#)))
+
+        // When the enum omits null, null is not an accepted value even though
+        // the type union allows it.
+        let withoutNull = try compileSchema(
+            #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": ["a"]}}, "required": ["e"], "additionalProperties": false}"#)
+        XCTAssertFalse(withoutNull.validate(try mei(#"{"e": null}"#)))
+        XCTAssertTrue(withoutNull.validate(try mei(#"{"e": "a"}"#)))
+
+        let onlyNull = try compileSchema(
+            #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": [null]}}, "required": ["e"], "additionalProperties": false}"#)
+        XCTAssertTrue(onlyNull.validate(try mei(#"{"e": null}"#)))
+        XCTAssertFalse(onlyNull.validate(try mei(#"{"e": "a"}"#)))
+
+        // null in an enum requires the nullable union; other enum shapes stay rejected.
+        XCTAssertThrowsError(
+            try compileSchema(
+                #"{"type": "object", "properties": {"e": {"type": "string", "enum": ["a", null]}}, "required": ["e"], "additionalProperties": false}"#)
+        ) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumInvalid("e"))
+        }
+        XCTAssertThrowsError(
+            try compileSchema(
+                #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": ["a", "a", null]}}, "required": ["e"], "additionalProperties": false}"#)
+        ) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumDuplicated("e", "a"))
+        }
+        XCTAssertThrowsError(
+            try compileSchema(
+                #"{"type": "object", "properties": {"e": {"type": ["string", "null"], "enum": [null, null]}}, "required": ["e"], "additionalProperties": false}"#)
+        ) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumDuplicated("e", "null"))
+        }
+        XCTAssertThrowsError(
+            try compileSchema(
+                #"{"type": "object", "properties": {"e": {"type": ["integer", "null"], "enum": [1]}}, "required": ["e"], "additionalProperties": false}"#)
+        ) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumRequiresStringType("e"))
+        }
+    }
+
     // MARK: - Unsupported constructs fail closed
 
-    func testUnsupportedNestedStructuresRejected() throws {
-        let nestedObject =
-            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "string"}}}}, "required": ["o"], "additionalProperties": false}"#
-        XCTAssertThrowsError(try compileSchema(nestedObject)) { error in
-            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyTypeUnsupported("o", "object"))
+    func testUnsupportedNestedConstructsStillFailClosed() throws {
+        // Nested objects and arrays are part of the recursive subset now;
+        // their malformed variants must still be rejected explicitly.
+        let nestedBadKeyword =
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "string"}}, "required": ["x"], "additionalProperties": false, "minProperties": 1}}, "required": ["o"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(nestedBadKeyword)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .objectKeywordUnsupported("o", "minProperties"))
         }
-        let nestedArray =
-            #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "string"}}}, "required": ["a"], "additionalProperties": false}"#
-        XCTAssertThrowsError(try compileSchema(nestedArray)) { error in
-            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyTypeUnsupported("a", "array"))
+        let nestedAdditional =
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {}, "required": [], "additionalProperties": true}}, "required": ["o"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(nestedAdditional)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .nested("o", .additionalPropertiesMustBeFalse))
         }
+        let nestedMissingRequired =
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "string"}}, "required": ["y"], "additionalProperties": false}}, "required": ["o"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(nestedMissingRequired)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .nested("o", .requiredNameNotDefined("y")))
+        }
+        // Deeper levels name their path.
+        let deepBadProperty =
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "string", "minLength": 1}}, "required": ["x"], "additionalProperties": false}}, "required": ["o"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(deepBadProperty)) { error in
+            XCTAssertEqual(
+                error as? JSONSchemaCompileError,
+                .propertyKeywordUnsupported("o.x", "minLength"))
+        }
+        let arrayMissingItems =
+            #"{"type": "object", "properties": {"a": {"type": "array"}}, "required": ["a"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(arrayMissingItems)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .arrayItemsInvalid("a"))
+        }
+        let arrayItemsNotObject =
+            #"{"type": "object", "properties": {"a": {"type": "array", "items": true}}, "required": ["a"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(arrayItemsNotObject)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .arrayItemsInvalid("a"))
+        }
+        let arrayBadKeyword =
+            #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "string"}, "minItems": 1}}, "required": ["a"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(arrayBadKeyword)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .arrayKeywordUnsupported("a", "minItems"))
+        }
+        let itemsBadType =
+            #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "null"}}}, "required": ["a"], "additionalProperties": false}"#
+        XCTAssertThrowsError(try compileSchema(itemsBadType)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyTypeUnsupported("a.items", "null"))
+        }
+        // `$ref` and other combinators stay unsupported at every level.
+        let nestedReference =
+            ##"{"type": "object", "properties": {"o": {"type": "object", "properties": {}, "required": [], "additionalProperties": false, "$ref": "#/x"}}, "required": ["o"], "additionalProperties": false}"##
+        XCTAssertThrowsError(try compileSchema(nestedReference)) { error in
+            XCTAssertEqual(error as? JSONSchemaCompileError, .objectKeywordUnsupported("o", "$ref"))
+        }
+
+        // Root must stay an object; a bare null type stays unsupported.
         XCTAssertThrowsError(
             try compileSchema(#"{"type": "array", "items": {"type": "string"}}"#)
         ) { error in
@@ -220,12 +386,25 @@ final class JSONSchemaCompilerTests: XCTestCase {
         ) { error in
             XCTAssertEqual(error as? JSONSchemaCompileError, .propertyTypeUnsupported("n", "null"))
         }
-        // Nullable unions are a later feature; an array-valued `type` is not
-        // silently interpreted.
-        XCTAssertThrowsError(
-            try compileSchema(
-                #"{"type": "object", "properties": {"u": {"type": ["string", "null"]}}, "required": ["u"], "additionalProperties": false}"#)
-        )
+    }
+
+    func testUnsupportedTypeUnionsRejected() throws {
+        let schemas = [
+            #"{"type": "object", "properties": {"u": {"type": ["string", "integer"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["object", "null"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["array", "null"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["null"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["null", "null"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["string", "string"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["string", "null", "integer"]}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": []}}, "required": ["u"], "additionalProperties": false}"#,
+            #"{"type": "object", "properties": {"u": {"type": ["string", 5]}}, "required": ["u"], "additionalProperties": false}"#,
+        ]
+        for schema in schemas {
+            XCTAssertThrowsError(try compileSchema(schema), schema) { error in
+                XCTAssertEqual(error as? JSONSchemaCompileError, .propertyTypeUnionUnsupported("u"))
+            }
+        }
     }
 
     func testUnsupportedSchemaKeywordsRejected() throws {
@@ -393,5 +572,30 @@ final class JSONSchemaCompilerTests: XCTestCase {
             #"{"type": "object", "properties": {"a": {"type": "string"}}, "required": ["a"], "additionalProperties": false}"#
         )
         XCTAssertNotEqual(a.constraintKey, different.constraintKey, "different schemas must produce different keys")
+    }
+
+    func testRecursiveCanonicalKeyIsOrderIndependent() throws {
+        let a = try compileSchema(
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "string"}}, "required": ["x"], "additionalProperties": false}, "a": {"type": "array", "items": {"type": ["integer", "null"]}}}, "required": ["o", "a"], "additionalProperties": false}"#
+        )
+        let b = try compileSchema(
+            #"{"additionalProperties": false, "required": ["a", "o"], "properties": {"a": {"items": {"type": ["null", "integer"]}, "type": "array"}, "o": {"required": ["x"], "additionalProperties": false, "properties": {"x": {"type": "string"}}, "type": "object"}}, "type": "object"}"#
+        )
+        XCTAssertEqual(a, b, "equivalent recursive schemas must compile to the same constraint")
+        XCTAssertEqual(a.constraintKey, b.constraintKey, "key/union order must not change the canonical key")
+
+        let different = try compileSchema(
+            #"{"type": "object", "properties": {"o": {"type": "object", "properties": {"x": {"type": "integer"}}, "required": ["x"], "additionalProperties": false}}, "required": ["o"], "additionalProperties": false}"#
+        )
+        XCTAssertNotEqual(a.constraintKey, different.constraintKey, "different nested schemas must produce different keys")
+    }
+
+    func testFlatCanaryConstraintKeyIsFrozen() throws {
+        // The canonical cache key of the flat CoCore canary subset is frozen:
+        // the recursive-schema refactor must not silently change keys for
+        // schemas that were already supported.
+        XCTAssertEqual(
+            try canarySchema().constraintKey,
+            "json_schema:v1:af38e1cfae52d821a5f94f1e69cb53cb817bc32f7e181c69cb6d6e80388cde6d")
     }
 }

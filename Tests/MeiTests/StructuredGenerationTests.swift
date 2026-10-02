@@ -90,17 +90,20 @@ final class StructuredGenerationTests: XCTestCase {
     }
 
     func testUnsupportedSchemaSurfacesTheCompilerError() throws {
+        // Nested objects are part of the recursive subset now; a nested
+        // object that uses an unsupported keyword must still surface the
+        // compiler error (with its path) through the Engine seam.
         let schema = try JSONDecoder().decode(
             MeiJSONValue.self,
             from: Data(
-                #"{"type": "object", "properties": {"nested": {"type": "object"}}, "required": ["nested"], "additionalProperties": false}"#
+                #"{"type": "object", "properties": {"nested": {"type": "object", "properties": {}, "required": [], "additionalProperties": false, "minProperties": 1}}, "required": ["nested"], "additionalProperties": false}"#
                     .utf8))
         let format = ResponseFormat.jsonSchema(
             JSONSchemaFormat(name: "x", strict: true, schema: schema))
         XCTAssertThrowsError(try StructuredGeneration.plan(for: format, table: toyTable())) { error in
             XCTAssertEqual(
                 error as? JSONSchemaCompileError,
-                .propertyTypeUnsupported("nested", "object"))
+                .objectKeywordUnsupported("nested", "minProperties"))
         }
     }
 
@@ -275,14 +278,16 @@ final class StructuredGenerationTests: XCTestCase {
 
     func testCompilerErrorsAreHTTP400NamingResponseFormat() throws {
         // A well-formed request whose schema uses an unsupported construct:
-        // the compiler rejects it BEFORE generation with a precise 400.
+        // the compiler rejects it BEFORE generation with a precise 400. The
+        // example is a nested object that is not strict (additionalProperties
+        // is not exactly false).
         let request = try chatRequest(
-            responseFormat: #"{"type": "json_schema", "json_schema": {"name": "x", "strict": true, "schema": {"type": "object", "properties": {"nested": {"type": "object"}}, "required": ["nested"], "additionalProperties": false}}}"#)
+            responseFormat: #"{"type": "json_schema", "json_schema": {"name": "x", "strict": true, "schema": {"type": "object", "properties": {"nested": {"type": "object", "properties": {}, "required": [], "additionalProperties": true}}, "required": ["nested"], "additionalProperties": false}}}"#)
         XCTAssertThrowsError(try Router.validateStructuredRequest(request)) { error in
             guard let compileError = error as? JSONSchemaCompileError else {
                 return XCTFail("expected a compiler error, got \(error)")
             }
-            XCTAssertEqual(compileError, .propertyTypeUnsupported("nested", "object"))
+            XCTAssertEqual(compileError, .nested("nested", .additionalPropertiesMustBeFalse))
             let object = errorObject(compileError)
             XCTAssertEqual(object["type"] as? String, "invalid_request_error")
             XCTAssertEqual(object["code"] as? String, "response_format_unsupported")

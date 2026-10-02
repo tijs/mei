@@ -100,8 +100,10 @@ Shipped and covered by tests at this pin:
 8. **Structured outputs (working tree, unreleased)** — `response_format` on
    `/v1/chat/completions`: `text` (default), `json_object`, and strict
    `json_schema`, enforced by token-level constrained decoding, not prompt
-   instructions. Model-free tests cover decode/compile/mask/response paths;
-   the exact CoCore canary passed in live buffered and SSE runs on
+   instructions. The supported schema subset is recursive (nested strict
+   objects, arrays with `items`, nullable scalar unions; see §3/§4).
+   Model-free tests cover decode/compile/mask/response paths; the exact
+   CoCore canary passed in live buffered and SSE runs on
    `mlx-community/Qwen3-4B-4bit` (§4, §8).
 
 Everything else from the official reference is **deferred** (§7).
@@ -132,7 +134,7 @@ router dispatch — `Sources/MeiCore/Router.swift:59-116`.
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
 | `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
 | `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:311-313`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
-| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the flat-object subset — root `type: "object"`, `properties` with scalar fields (`string`/`number`/`integer`/`boolean`) and optional string `enum`, `required`, `additionalProperties: false`. Unsupported keywords/types, non-strict forms, malformed envelopes → 400 `param: "response_format"` **before generation**; structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
+| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space); `enum` is supported on string scalars and, on nullable strings, may include `null` (which then also decides whether null is accepted). Everything else — constraints (`minLength`, `pattern`, `format`, `minItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
 | Any other field | — | **Silently ignored** — `JSONDecoder` is non-strict; unknown keys produce no error. This is shipped behavior and the reason §7 fields are "inert" rather than rejected. |
 
 Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
@@ -212,10 +214,14 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   processors. The response DTOs are unchanged (same `completionResponse` /
   SSE chunk shape as any other completion).
 - Guarantee: content returned with `finish_reason: "stop"` is a complete JSON
-  value — for `json_schema`, exactly the compiled object (no prose, no extra
-  keys, every required key present, enum values enforced). EOS is masked until
-  the root value is complete, so a normal stop cannot end an incomplete
-  document.
+  value — for `json_schema`, exactly the compiled value shape (no prose, no
+  extra keys at any object level, every required key present at every level,
+  nested object/array shapes enforced, enum values enforced, nullable unions
+  accepting only their scalar or null). The constraint is recursive: the
+  grammar admits nested objects and arrays only along the compiled schema, so
+  a nested key or item type the schema does not declare is masked out. EOS is
+  masked until the root value is complete, so a normal stop cannot end an
+  incomplete document.
 - Failure semantics: a constraint failure (illegal token, all-illegal state,
   vocabulary mismatch) or a stop that contradicts the constraint (no complete
   root value while the response would report `stop`) fails the request — HTTP
@@ -238,7 +244,10 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   structured-output canary through both buffered and SSE Engine paths; the
   response content parsed to exactly the JSON object `{"status":"ok"}`;
   raw JSON whitespace is immaterial. The response had `finish_reason:
-  "stop"` and six completion tokens in both runs. This proves one real
+  "stop"` and six completion tokens in both runs. The live server for these
+  runs used `--enable-thinking false`, `--compiled-decode false`, and
+  `--cache-reuse false` — the ordinary single-sequence, non-compiled
+  decode path (thinking off; prefix cache disabled). This proves one real
   tokenizer/vocabulary/chat-template path, not all model families.
 - CoCore evidence: the merged attached-engine implementation at commit
   `0151475bf8c98de10a64cab51c23a46dd84a8fe1` reported readiness, tool canary
@@ -286,7 +295,7 @@ all pre-existing errors keep their previous bytes (no `param`).
 | 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:65-70` |
 | 400 | JSON decode failure (missing `model`/`messages`, malformed body) | `type: invalid_request_error`, no code | `Router.swift:113-115` |
 | 400 | `response_format` decode/validation failure (not an object, missing/wrong `type`, missing `json_schema`/`name`/`schema`, non-strict, structured + non-empty `tools`) | `code: "invalid_response_format"` (structured + tools: `"response_format_unsupported"`), `param: "response_format"` | `Router.errorResult` (`Router.swift:136-173`), `ResponseFormat.swift` |
-| 400 | Schema outside the supported strict subset (nested objects/arrays, unsupported keywords, duplicate/invalid names) | message prefixed `response_format.json_schema.schema: `, `code: "response_format_unsupported"`, `param: "response_format"` | `Router.errorResult`, `JSONSchemaCompiler.swift` |
+| 400 | Schema outside the supported strict subset (unsupported keywords at any level, unions other than exactly one scalar plus `"null"`, arrays without a supported `items`, malformed shapes, duplicate/invalid names) | message prefixed `response_format.json_schema.schema: `; nested locations are named in the message (`at 'meta.id': …`), `code: "response_format_unsupported"`, `param: "response_format"` | `Router.errorResult`, `JSONSchemaCompiler.swift` |
 | 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112`, `EngineError.emptyPrompt` (`Engine.swift:29,594`) |
 | 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:132-138`), `Engine.swift:903-904,951-952` |
 | 404 | Unmatched route | `type: invalid_request_error`, `code: "not_found"` | `HTTPServer.swift:139-143` |
@@ -392,11 +401,13 @@ black-box probes):
 - `ResponseFormatTests` — `response_format` decode/validation contract,
   including the exact CoCore structured-output canary request body; error
   status/code/param mapping.
-- `JSONSchemaCompilerTests` — strict-subset compilation, canonical constraint
-  keys, the rejection matrix for unsupported constructs.
+- `JSONSchemaCompilerTests` — strict-subset compilation (recursive: nested
+  objects, arrays with `items`, nullable scalar unions, nullable string
+  enums), canonical constraint keys (flat-subset keys frozen), and the
+  rejection matrix for unsupported constructs with nested paths.
 - `JSONGrammarStateTests` — the byte-level automaton (JSON syntax, escapes,
   strict UTF-8, numbers, nesting, schema keys/enums/required/
-  additionalProperties).
+  additionalProperties, nested objects/arrays, nullable unions).
 - `JSONGrammarProcessorTests`, `JSONGrammarLogitProcessorTests` — token-mask
   and lifecycle contract (fail-closed masking, EOS rules, reset, copies,
   completion recorded through the shared run record).
@@ -407,7 +418,9 @@ black-box probes):
 - `StructuredGenerationPipelineTests` — model-free end-to-end: the exact
   CoCore canary through the buffered and SSE response paths with a scripted
   constrained decoder, grammar-failure / incomplete-at-stop / fail-closed-length
-  semantics, and a scalar-type schema matrix.
+  semantics, a scalar-type schema matrix, and the recursive slice (nested
+  object/array/nullable document through both response paths, nested mask
+  boundaries, and the 400 mapping for remaining unsupported constructs).
 - `CoCoreCanaryFixture` — the exact CoCore canary request/response oracle
   (mirror of the Rust source; used by the live probes below).
 - `MeiAcceptanceTests` — live HTTP/SSE evidence including the exact CoCore
@@ -417,8 +430,17 @@ black-box probes):
 ### Live model matrix
 
 - **Qwen3-4B-4bit** (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`): the exact
-  structured canary passed buffered and SSE paths; the full live acceptance
-  class passed **9/9**, including the new truncation transport tests.
+  structured canary returned `{"status":"ok"}` on both buffered and SSE
+  paths; the full live acceptance class passed **9/9**, including the new
+  truncation transport tests. Checkpoint facts: `tokenizer_class:
+  Qwen2Tokenizer`; the 4116-char chat template branches on `enable_thinking`
+  and emits the `<think>`/`</think>` reasoning delimiters (added
+  tokens 151667/151668); `config.json` sets `eos_token_id: 151645`; the
+  tokenizer maps `<|im_end|>` → 151645, `<|im_start|>` → 151644,
+  and `<|endoftext|>` → 151643. The live server ran `--enable-thinking
+  false`, `--compiled-decode false`, `--cache-reuse false` — the ordinary
+  single-sequence, non-compiled decode path. Only this checkpoint is
+  promoted as structured-success evidence.
 - **Qwen3-8B-4bit** (`545dc4251c05440727734bcd94334791f6ab0192`): plain
   completion, tool calls, and fail-closed truncation transport passed live;
   the successful structured canary did not complete because this checkpoint
@@ -437,6 +459,14 @@ black-box probes):
   evidence is claimed for this checkpoint.
 - **Qwen3.6-35B-A3B-4bit**: the staged download is incomplete and was not
   started; no live evidence is claimed.
+- **Gemma-4-12B-it-4bit** (`mlx-community/gemma-4-12B-it-4bit`, HF revision
+  `73bcf09092aa277861d5a191b989b666f7f32e8f`): a structured-output candidate
+  attempted once with the exact strict CoCore canary (thinking disabled,
+  `max_tokens` 64, buffered only). It failed closed — generation stopped
+  before a complete JSON value and the server returned HTTP 500
+  `engine_error`. No streaming run was made, so there is no streaming
+  result, and no structured-success claim is made for this checkpoint. Its
+  downloaded cache was removed after the test.
 
 Not yet pinned by tests (do not claim as verified): §6 policy statements,
 `max_completion_tokens` inertness, unknown-field ignorance, the complete

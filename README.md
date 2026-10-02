@@ -249,9 +249,11 @@ design** — 0.6.1 does not implement `response_format`, so CoCore simply does
 not advertise schema jobs for it. In the **current source tree (unreleased)**
 structured output *is* implemented: `response_format` is decoded, compiled
 before generation, and enforced token-by-token by constrained decoding
-(`json_object` and strict `json_schema`; structured + `tools` rejected;
-thinking forced off; failures fail closed). It is covered by model-free tests
-— including the exact CoCore canary request/response fixtures and buffered +
+(`json_object` and strict `json_schema` — the recursive schema subset:
+nested objects, arrays with `items`, and nullable `[scalar, "null"]` unions;
+structured + `tools` rejected; thinking forced off; failures fail closed). It
+is covered by model-free tests — including the exact CoCore canary
+request/response fixtures and buffered +
 SSE pipeline tests — and has now passed a live smoke run with
 `mlx-community/Qwen3-4B-4bit` at HF revision
 `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`: both the exact non-streaming and
