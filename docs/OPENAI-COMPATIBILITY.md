@@ -25,8 +25,12 @@ behavior.
 > `mlx-community/Qwen3-4B-4bit` at HF revision
 > `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` for both buffered and SSE paths;
 > the merged CoCore attached-engine client also passes readiness, canaries, and
-> both proxy paths against that server. It is still **not** part of the 0.6.1
-> release; broader model coverage and full advisor registration/readback remain
+> both proxy paths against that server, and the expanded numeric/array schema
+> features also passed live on it (buffered + SSE). Structured-output support
+> is **per checkpoint, not model-general** — no other tested checkpoint has
+> passed, and the shipped Qwen3.6 (text-only and vision) and Ornith profiles
+> fail closed (§8). It is still **not** part of the 0.6.1
+> release; a released binary and full advisor registration/readback remain
 > unverified (§3, §4, §8). Everything else below describes the shipped 0.6.1
 > contract.
 
@@ -101,10 +105,14 @@ Shipped and covered by tests at this pin:
    `/v1/chat/completions`: `text` (default), `json_object`, and strict
    `json_schema`, enforced by token-level constrained decoding, not prompt
    instructions. The supported schema subset is recursive (nested strict
-   objects, arrays with `items`, nullable scalar unions; see §3/§4).
-   Model-free tests cover decode/compile/mask/response paths; the exact
-   CoCore canary passed in live buffered and SSE runs on
-   `mlx-community/Qwen3-4B-4bit` (§4, §8).
+   objects, arrays with `items` and `minItems`/`maxItems`, nullable scalar
+   unions, enums on every scalar type, and numeric constraints —
+   `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/`multipleOf` —
+   with exact decimal semantics; see §3/§4). Model-free tests cover
+   decode/compile/mask/response paths; the exact CoCore canary passed in live
+   buffered and SSE runs on `mlx-community/Qwen3-4B-4bit` — the only
+   checkpoint that has passed so far; no other tested checkpoint has passed,
+   and the shipped Qwen3.6 and Ornith profiles fail closed (§4, §8).
 
 Everything else from the official reference is **deferred** (§7).
 
@@ -134,7 +142,7 @@ router dispatch — `Sources/MeiCore/Router.swift:59-116`.
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
 | `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
 | `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:311-313`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
-| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space); `enum` is supported on string scalars and, on nullable strings, may include `null` (which then also decides whether null is accepted). Everything else — constraints (`minLength`, `pattern`, `format`, `minItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
+| `response_format` **(working tree, unreleased)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space, optional `minItems`/`maxItems`); `enum` is supported on every scalar type — string, number/integer (compared by exact decimal value), and boolean — and on nullable fields may include `null` (which then also decides whether null is accepted); `number`/`integer` scalars additionally accept `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and `multipleOf` (finite JSON numbers, `multipleOf` strictly positive) with exact decimal semantics (schema numbers use their shortest round-trip decimal form, so `multipleOf: 0.1` accepts `0.3`); a schema whose declared constraints are unsatisfiable for the declared type (and cannot be null) is rejected. Everything else — constraints (`minLength`, `maxLength`, `pattern`, `format`, `uniqueItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
 | Any other field | — | **Silently ignored** — `JSONDecoder` is non-strict; unknown keys produce no error. This is shipped behavior and the reason §7 fields are "inert" rather than rejected. |
 
 Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
@@ -216,12 +224,23 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
 - Guarantee: content returned with `finish_reason: "stop"` is a complete JSON
   value — for `json_schema`, exactly the compiled value shape (no prose, no
   extra keys at any object level, every required key present at every level,
-  nested object/array shapes enforced, enum values enforced, nullable unions
-  accepting only their scalar or null). The constraint is recursive: the
-  grammar admits nested objects and arrays only along the compiled schema, so
-  a nested key or item type the schema does not declare is masked out. EOS is
-  masked until the root value is complete, so a normal stop cannot end an
-  incomplete document.
+  nested object/array shapes enforced, enum values enforced on every scalar
+  type, numeric constraints enforced exactly — `minimum`/`maximum`/
+  `exclusiveMinimum`/`exclusiveMaximum`/`multipleOf` on `number`/`integer`,
+  `minItems`/`maxItems` on arrays — nullable unions accepting only their
+  scalar or null). The constraint is recursive: the grammar admits nested
+  objects and arrays only along the compiled schema, so a nested key or item
+  type the schema does not declare is masked out. EOS is masked until the
+  root value is complete, so a normal stop cannot end an incomplete document.
+- Numeric semantics are exact decimal: schema numbers enter through their
+  shortest round-trip decimal form (`0.1` stays `0.1`, not the binary
+  expansion), generated literals through their exact digits, so
+  `multipleOf: 0.1` accepts `0.3`, `0.3 / 0.1 = 3`, and `1e-1` is exactly
+  `0.1`. Prefix masking is exact: a number continuation (digit, fraction,
+  exponent) is masked only when no completion of the prefix can satisfy the
+  declared constraints, and the completed value is re-checked exactly at the
+  number's terminator. A schema whose declared constraints no value of the
+  declared type can satisfy is rejected with a 400 before generation.
 - Failure semantics: a constraint failure (illegal token, all-illegal state,
   vocabulary mismatch) or a stop that contradicts the constraint (no complete
   root value while the response would report `stop`) fails the request — HTTP
@@ -244,11 +263,17 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   structured-output canary through both buffered and SSE Engine paths; the
   response content parsed to exactly the JSON object `{"status":"ok"}`;
   raw JSON whitespace is immaterial. The response had `finish_reason:
-  "stop"` and six completion tokens in both runs. The live server for these
-  runs used `--enable-thinking false`, `--compiled-decode false`, and
-  `--cache-reuse false` — the ordinary single-sequence, non-compiled
-  decode path (thinking off; prefix cache disabled). This proves one real
-  tokenizer/vocabulary/chat-template path, not all model families.
+  "stop"` and six completion tokens in both runs. The live server for the
+  original canary runs used `--enable-thinking false`, `--compiled-decode
+  false`, and `--cache-reuse false` — the ordinary single-sequence,
+  non-compiled decode path (thinking off; prefix cache disabled). This
+  proves one real
+  tokenizer/vocabulary/chat-template path, not all model families — no other
+  checkpoint has passed: the shipped Qwen3.6 text-only, Qwen3.6 vision, and
+  Ornith profiles each fail the canary closed on the same pre-release build
+  (§8). The expanded numeric/array schema features (`minimum`/`maximum`,
+  `multipleOf`, scalar enums, `minItems`/`maxItems`) also passed live buffered
+  + SSE on this checkpoint.
 - CoCore evidence: the merged attached-engine implementation at commit
   `0151475bf8c98de10a64cab51c23a46dd84a8fe1` reported readiness, tool canary
   pass, structured-output canary pass, and successful buffered/streaming proxy
@@ -356,10 +381,14 @@ Absent from the decoder → inert per the §3 unknown-field rule, unless noted:
 - `response_format` (`json_object`/`json_schema` structured outputs) — **no
   longer ignored on `/v1/chat/completions` in the working tree**: the field is
   decoded, compiled before generation, and enforced token-by-token by
-  constrained decoding (structured + non-empty `tools` is rejected; thinking
+  constrained decoding (the recursive subset plus enums on every scalar type,
+  numeric constraints with exact decimal semantics, and array
+  `minItems`/`maxItems`; structured + non-empty `tools` is rejected; thinking
   is forced off; see §3/§4). Model-free tests cover the contract, and one live
-  Qwen3-4B model plus the CoCore attached-engine client passed the smoke canary
-  (§8). Still absent from the `/v1/completions` DTO, so it remains inert there.
+  checkpoint — Qwen3-4B — plus the CoCore attached-engine client passed the
+  smoke canary; the shipped Qwen3.6 (text-only and vision) and Ornith profiles
+  fail it closed and are not advertised for schema jobs (§8). Still absent
+  from the `/v1/completions` DTO, so it remains inert there.
 - `logprobs`, `top_logprobs`, `logit_bias`.
 - `n` (multiple choices) — response is always one choice; `n` is ignored.
 - `parallel_tool_calls`.
@@ -405,9 +434,18 @@ black-box probes):
   objects, arrays with `items`, nullable scalar unions, nullable string
   enums), canonical constraint keys (flat-subset keys frozen), and the
   rejection matrix for unsupported constructs with nested paths.
+- `SchemaMatrixTests` — the expanded matrix: numeric constraints
+  (`minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/`multipleOf`) on
+  `number`/`integer`, enums on every scalar type, and array
+  `minItems`/`maxItems`; exact-decimal validation; canonical keys for the new
+  keywords; the invalid-value / unsatisfiable / enum-type-mismatch rejection
+  matrix; and a brute-force consistency sweep that checks the grammar's
+  accept/reject decision against an independent test-local oracle across
+  thousands of integer and number literals (including exponent spellings).
 - `JSONGrammarStateTests` — the byte-level automaton (JSON syntax, escapes,
   strict UTF-8, numbers, nesting, schema keys/enums/required/
-  additionalProperties, nested objects/arrays, nullable unions).
+  additionalProperties, nested objects/arrays, nullable unions, numeric
+  bounds/`multipleOf`, scalar enums, array counts).
 - `JSONGrammarProcessorTests`, `JSONGrammarLogitProcessorTests` — token-mask
   and lifecycle contract (fail-closed masking, EOS rules, reset, copies,
   completion recorded through the shared run record).
@@ -418,61 +456,61 @@ black-box probes):
 - `StructuredGenerationPipelineTests` — model-free end-to-end: the exact
   CoCore canary through the buffered and SSE response paths with a scripted
   constrained decoder, grammar-failure / incomplete-at-stop / fail-closed-length
-  semantics, a scalar-type schema matrix, and the recursive slice (nested
+  semantics, a scalar-type schema matrix, the recursive slice (nested
   object/array/nullable document through both response paths, nested mask
-  boundaries, and the 400 mapping for remaining unsupported constructs).
+  boundaries), the schema-matrix slice (numeric bounds/`multipleOf`, scalar
+  enums, and array counts through both response paths plus their mask
+  boundaries), and the 400 mapping for remaining unsupported constructs.
 - `CoCoreCanaryFixture` — the exact CoCore canary request/response oracle
   (mirror of the Rust source; used by the live probes below).
 - `MeiAcceptanceTests` — live HTTP/SSE evidence including the exact CoCore
   structured canary, plain/tool pass-through, and buffered/streaming
   fail-closed truncation transport.
 
-### Live model matrix
+### Structured-output live model matrix
 
-- **Qwen3-4B-4bit** (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`): the exact
-  structured canary returned `{"status":"ok"}` on both buffered and SSE
-  paths; the full live acceptance class passed **9/9**, including the new
-  truncation transport tests. Checkpoint facts: `tokenizer_class:
-  Qwen2Tokenizer`; the 4116-char chat template branches on `enable_thinking`
-  and emits the `<think>`/`</think>` reasoning delimiters (added
-  tokens 151667/151668); `config.json` sets `eos_token_id: 151645`; the
-  tokenizer maps `<|im_end|>` → 151645, `<|im_start|>` → 151644,
-  and `<|endoftext|>` → 151643. The live server ran `--enable-thinking
-  false`, `--compiled-decode false`, `--cache-reuse false` — the ordinary
-  single-sequence, non-compiled decode path. Only this checkpoint is
-  promoted as structured-success evidence.
-- **Qwen3-8B-4bit** (`545dc4251c05440727734bcd94334791f6ab0192`): plain
-  completion, tool calls, and fail-closed truncation transport passed live;
-  the successful structured canary did not complete because this checkpoint
-  spent its structured token budget emitting whitespace, and Mei correctly
-  returned `engine_error`/`stream_error`. This is not structured-success
-  evidence for the 8B checkpoint.
-- **Qwen2.5-3B-Instruct-4bit**
-  (`4f83f8f146fdf28b512a06562b671d7af4fab457`): downloaded and exercised as
-  a second family checkpoint; its live acceptance run did not pass the full
-  structured canary class, so it is not promoted as structured-output evidence.
-- **Llama-3.2-3B-Instruct-4bit**
-  (`7f0dc925e0d0afb0322d96f9255cfddf2ba5636e`): plain completion and
-  fail-closed truncation transport passed live, but the structured canary
-  failed closed when the tokenizer path reached a state with no legal
-  advancing token; tool-call canaries also did not pass. No structured-success
-  evidence is claimed for this checkpoint.
-- **Qwen3.6-35B-A3B-4bit**: the staged download is incomplete and was not
-  started; no live evidence is claimed.
-- **Gemma-4-12B-it-4bit** (`mlx-community/gemma-4-12B-it-4bit`, HF revision
-  `73bcf09092aa277861d5a191b989b666f7f32e8f`): a structured-output candidate
-  attempted once with the exact strict CoCore canary (thinking disabled,
-  `max_tokens` 64, buffered only). It failed closed — generation stopped
-  before a complete JSON value and the server returned HTTP 500
-  `engine_error`. No streaming run was made, so there is no streaming
-  result, and no structured-success claim is made for this checkpoint. Its
-  downloaded cache was removed after the test.
+Live evidence is **per checkpoint**: a pass on one checkpoint is not evidence
+for any other model family, and a tokenizer/template preflight is not evidence
+at all — only a completed canary run is. The first four rows below (Qwen3-4B,
+Qwen3.6 text-only, Qwen3.6 vision, Ornith) are current acceptance runs on a
+release-optimized binary built from the `feat/expand-schema-matrix` worktree
+with uncommitted feature changes (the binary still reports `mei 0.6.1`):
+**pre-release acceptance results, not published-release claims**. The
+remaining rows are earlier feature-development evidence kept for continuity.
+A checkpoint that does not pass is **not advertised** for schema jobs (CoCore
+lists a model only after its structured canary passes) and must remain
+disabled pending a fix and a successful live canary. A failed structured
+canary does not change normal serving compatibility (plain text, tool calls),
+which is tracked separately from this matrix.
+
+| Checkpoint (HF revision) | Result | Live evidence |
+|---|---|---|
+| `mlx-community/Qwen3-4B-4bit` (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`) | **PASS** | Exact CoCore canary parsed to exactly `{"status":"ok"}` buffered + SSE; the recorded live acceptance run is `MeiAcceptanceTests` **7/7** (2026-10-01); the truncation transport was verified separately (**2/2**: buffered HTTP 500 `engine_error`; streaming in-band `stream_error`) — no combined 9/9 acceptance run is claimed. The expanded schema features also passed live buffered + SSE — integer `count = 3` under `minimum: 3`/`maximum: 3`, number `ratio = 0.3` within exact bounds and `multipleOf: 0.1`, and `labels = ["alpha","beta"]` with enum items and `minItems`/`maxItems` 2, full contents matched; unsupported `pattern` → HTTP 400 `response_format_unsupported` before generation. |
+| Qwen3.6-35B-A3B **text-only** (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`; profile `qwen3.6-35b-a3b-text`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`generation stopped before a complete JSON value was produced`) at both 64- and 16-token budgets; a plain prompt on the same process returned HTTP 200 text (`hello`), so normal generation works and the failure is specific to structured output; no streaming run was made. Not supported — keep disabled. |
+| Qwen3.6-35B-A3B **vision** (`mlx-community/Qwen3.6-35B-A3B-4bit`, `38740b847e4cb78f352aba30aa41c76e08e6eb46`; profile `qwen3.6-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (same incomplete-JSON failure), tested independently of the text-only sibling; no streaming run was made. Not supported — keep disabled. |
+| **Ornith 1.5 35B-A3B** (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, `19504d912fa8fc7622bf6b1de3db5d5d890b1f02`, aligned repack; profile `ornith-1.5-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`no token in the vocabulary can advance the grammar`); matches the offline preflight warning that Ornith's tokenizer backend/template differs; no streaming run was made. Not supported — keep disabled. |
+| `mlx-community/Qwen3-8B-4bit` (`545dc4251c05440727734bcd94334791f6ab0192`) | fail (not promoted) | Plain completion, tool calls, and fail-closed truncation transport passed live; the structured canary did not complete — the checkpoint spent its structured token budget emitting whitespace, and Mei correctly returned `engine_error`/`stream_error`. Not structured-success evidence. |
+| `mlx-community/Qwen2.5-3B-Instruct-4bit` (`4f83f8f146fdf28b512a06562b671d7af4fab457`) | fail (not promoted) | Downloaded and exercised as a second family checkpoint; its live acceptance run did not pass the full structured canary class. Not promoted as structured-output evidence. |
+| `mlx-community/Llama-3.2-3B-Instruct-4bit` (`7f0dc925e0d0afb0322d96f9255cfddf2ba5636e`) | fail closed | Plain completion and fail-closed truncation transport passed live; the structured canary failed closed when the tokenizer path reached a state with no legal advancing token; tool-call canaries also did not pass. No structured-success claim. |
+| `mlx-community/gemma-4-12B-it-4bit` (`73bcf09092aa277861d5a191b989b666f7f32e8f`) | fail closed | Attempted once with the exact strict CoCore canary (thinking disabled, `max_tokens` 64, buffered only): generation stopped before a complete JSON value → HTTP 500 `engine_error`; no streaming run was made. No structured-success claim; cache removed after the test. |
+
+Checkpoint facts for the passing row: `tokenizer_class: Qwen2Tokenizer`; the
+4116-char chat template branches on `enable_thinking` and emits the
+`<think>`/`</think>` reasoning delimiters (added tokens 151667/151668);
+`config.json` sets `eos_token_id: 151645`; the tokenizer maps `<|im_end|>` →
+151645, `<|im_start|>` → 151644, and `<|endoftext|>` → 151643. The live
+server for the original canary runs used `--enable-thinking false`,
+`--compiled-decode false`, `--cache-reuse false` — the ordinary
+single-sequence, non-compiled decode path. Only this checkpoint is promoted as structured-success evidence.
 
 Not yet pinned by tests (do not claim as verified): §6 policy statements,
 `max_completion_tokens` inertness, unknown-field ignorance, the complete
 400/404/413/500 error-envelope matrix, and non-function tool pass-through.
-The live evidence is model-specific: other model families, a released 0.6.1
-binary, and the full CoCore advisor connection/Register-frame capability
+The live evidence is checkpoint-specific: only `mlx-community/Qwen3-4B-4bit`
+has passed the structured canary; the Qwen3.6 (text-only and vision) and
+Ornith checkpoints failed closed (above) and remain unsupported for
+structured output. A released 0.6.1
+binary and the full CoCore advisor connection/Register-frame capability
 readback remain unverified. The live probes are
 `MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` and
 `testCoCoreStructuredOutputCanaryStreaming`; they require a running server with

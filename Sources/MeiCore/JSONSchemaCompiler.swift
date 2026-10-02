@@ -7,13 +7,15 @@ import Foundation
 ///
 /// It validates the supported strict JSON-Schema subset — `strict: true`, a
 /// root object, recursively nested strict objects (`properties`, `required`,
-/// `additionalProperties: false` at every level), arrays with `items`, scalar
-/// fields (`string`/`number`/`integer`/`boolean`), nullable scalar unions
-/// (`type: [scalar, "null"]`), and string `enum` (with an optional null
-/// member on nullable strings) — and compiles it into a deterministic
-/// constraint value plus cache key. Unsupported keywords and ambiguous
-/// constructs are rejected explicitly (fail closed) instead of being ignored
-/// or downgraded.
+/// `additionalProperties: false` at every level), arrays with `items` and
+/// optional `minItems`/`maxItems`, scalar fields (`string`/`number`/
+/// `integer`/`boolean`), nullable scalar unions (`type: [scalar, "null"]`),
+/// enums on every scalar type (with an optional null member on nullable
+/// fields), and numeric constraints on `number`/`integer` (`minimum`,
+/// `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`) — and
+/// compiles it into a deterministic constraint value plus cache key.
+/// Unsupported keywords and ambiguous constructs are rejected explicitly
+/// (fail closed) instead of being ignored or downgraded.
 ///
 /// Deliberately free of HTTP, engine, and tokenizer types so it can be fuzzed
 /// in isolation and reused by buffered and streamed generation. The instance
@@ -126,7 +128,7 @@ public enum JSONSchemaCompiler {
             case "object":
                 return .object(try compileObjectSchema(raw, path: path))
             case "array":
-                return .array(items: try compileArrayItems(raw, path: path))
+                return .array(try compileArrayItems(raw, path: path))
             default:
                 guard let scalarType = CompiledJSONSchema.ScalarType(rawValue: typeName) else {
                     throw JSONSchemaCompileError.propertyTypeUnsupported(pathString(path), typeName)
@@ -144,19 +146,44 @@ public enum JSONSchemaCompiler {
         }
     }
 
-    /// Compile an array node: only `type` and `items` are allowed; `items` is
-    /// required and is itself a supported value schema.
+    /// Compile an array node: only `type`, `items`, `minItems`, and
+    /// `maxItems` are allowed; `items` is required and is itself a supported
+    /// value schema; the count keywords are non-negative integers and must
+    /// form a non-empty range.
     private static func compileArrayItems(
         _ raw: [String: MeiJSONValue],
         path: [String]
-    ) throws -> CompiledJSONSchema.Value {
-        for key in raw.keys.sorted() where key != "type" && key != "items" {
+    ) throws -> CompiledJSONSchema.ArraySchema {
+        let allowedKeys: Set<String> = ["type", "items", "minItems", "maxItems"]
+        for key in raw.keys.sorted() where !allowedKeys.contains(key) {
             throw JSONSchemaCompileError.arrayKeywordUnsupported(pathString(path), key)
         }
         guard case .object(let items)? = raw["items"] else {
             throw JSONSchemaCompileError.arrayItemsInvalid(pathString(path))
         }
-        return try compileValueSchema(.object(items), path: path + ["items"])
+        let itemValue = try compileValueSchema(.object(items), path: path + ["items"])
+        let minItems = try compileArrayCount(raw, keyword: "minItems", path: path)
+        let maxItems = try compileArrayCount(raw, keyword: "maxItems", path: path)
+        if let minItems, let maxItems, minItems > maxItems {
+            throw JSONSchemaCompileError.arrayCountRangeInvalid(pathString(path))
+        }
+        return CompiledJSONSchema.ArraySchema(items: itemValue, minItems: minItems, maxItems: maxItems)
+    }
+
+    /// Compile `minItems`/`maxItems`: a non-negative integer item count.
+    private static func compileArrayCount(
+        _ raw: [String: MeiJSONValue],
+        keyword: String,
+        path: [String]
+    ) throws -> Int? {
+        guard let value = raw[keyword] else { return nil }
+        guard case .number(let number) = value, number.isFinite,
+            number >= 0, number.rounded() == number,
+            let count = Int(exactly: number)
+        else {
+            throw JSONSchemaCompileError.arrayCountConstraintInvalid(pathString(path), keyword)
+        }
+        return count
     }
 
     /// Parse the only supported `type` union: exactly one supported scalar
@@ -187,39 +214,80 @@ public enum JSONSchemaCompiler {
     }
 
     /// Compile a scalar constraint (optionally nullable) with an optional
-    /// string enum. `enum` is allowed only for string-based scalars; a null
-    /// enum member requires the nullable union and, when a declared enum omits
-    /// null, null is not an accepted value (JSON-Schema intersection).
+    /// enum and, for `number`/`integer`, optional numeric constraints.
+    ///
+    /// - `enum` values must match the declared scalar type; string enums are
+    ///   as before, number/integer enums compare by exact decimal value, and
+    ///   boolean enums list `true`/`false`.
+    /// - A null enum member requires the nullable union; when a declared enum
+    ///   omits null, null is not an accepted value (JSON-Schema intersection).
+    /// - Numeric keywords are accepted only on `number`/`integer`, must be
+    ///   finite JSON numbers, and `multipleOf` must be strictly positive.
+    /// - The declared constraints must be satisfiable for the declared type;
+    ///   a schema that can never generate a value is rejected here instead of
+    ///   failing closed mid-generation.
     private static func compileScalar(
         _ raw: [String: MeiJSONValue],
         baseType: CompiledJSONSchema.ScalarType,
         nullable: Bool,
         path: [String]
     ) throws -> CompiledJSONSchema.Scalar {
-        for key in raw.keys.sorted() where key != "type" && key != "enum" {
+        let numericKeywords: Set<String> = [
+            "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
+        ]
+        var allowedKeys: Set<String> = ["type", "enum"]
+        if baseType == .number || baseType == .integer { allowedKeys.formUnion(numericKeywords) }
+        for key in raw.keys.sorted() where !allowedKeys.contains(key) {
             throw JSONSchemaCompileError.propertyKeywordUnsupported(pathString(path), key)
         }
-        var allowedValues: [String]? = nil
+
+        var enumValues: CompiledJSONSchema.ScalarEnumValues? = nil
         var enumAllowsNull = false
         if let enumValue = raw["enum"] {
-            guard baseType == .string else {
-                throw JSONSchemaCompileError.propertyEnumRequiresStringType(pathString(path))
-            }
-            guard case .array(let values) = enumValue else {
+            guard case .array(let values) = enumValue, !values.isEmpty else {
                 throw JSONSchemaCompileError.propertyEnumInvalid(pathString(path))
             }
             var strings: [String] = []
-            var seen = Set<String>()
+            var numbers: [DecimalLiteral] = []
+            var booleans: [Bool] = []
+            var seenStrings = Set<String>()
+            var seenNumbers = Set<DecimalLiteral>()
+            var seenBooleans = Set<Bool>()
             for entry in values {
                 switch entry {
                 case .string(let string):
+                    guard baseType == .string else {
+                        throw JSONSchemaCompileError.propertyEnumValueTypeMismatch(pathString(path))
+                    }
                     guard isJSONRepresentable(string) else {
                         throw JSONSchemaCompileError.invalidJSONString(string)
                     }
-                    guard seen.insert(string).inserted else {
+                    guard seenStrings.insert(string).inserted else {
                         throw JSONSchemaCompileError.propertyEnumDuplicated(pathString(path), string)
                     }
                     strings.append(string)
+                case .number(let number):
+                    guard baseType == .number || baseType == .integer, number.isFinite,
+                        let decimal = DecimalLiteral(double: number)
+                    else {
+                        throw JSONSchemaCompileError.propertyEnumValueTypeMismatch(pathString(path))
+                    }
+                    if baseType == .integer, !decimal.isInteger {
+                        throw JSONSchemaCompileError.propertyEnumValueTypeMismatch(pathString(path))
+                    }
+                    guard seenNumbers.insert(decimal).inserted else {
+                        throw JSONSchemaCompileError.propertyEnumDuplicated(pathString(path), decimal.canonicalText)
+                    }
+                    numbers.append(decimal)
+                case .bool(let bool):
+                    guard baseType == .boolean else {
+                        throw JSONSchemaCompileError.propertyEnumValueTypeMismatch(pathString(path))
+                    }
+                    guard seenBooleans.insert(bool).inserted else {
+                        throw JSONSchemaCompileError.propertyEnumDuplicated(
+                            pathString(path), bool ? "true" : "false")
+                    }
+                    booleans.append(bool)
                 case .null:
                     guard nullable else {
                         throw JSONSchemaCompileError.propertyEnumInvalid(pathString(path))
@@ -228,15 +296,61 @@ public enum JSONSchemaCompiler {
                         throw JSONSchemaCompileError.propertyEnumDuplicated(pathString(path), "null")
                     }
                     enumAllowsNull = true
-                default:
-                    throw JSONSchemaCompileError.propertyEnumInvalid(pathString(path))
+                case .object, .array:
+                    throw JSONSchemaCompileError.propertyEnumValueTypeMismatch(pathString(path))
                 }
             }
-            guard !values.isEmpty else { throw JSONSchemaCompileError.propertyEnumInvalid(pathString(path)) }
-            allowedValues = strings.sorted()
+            switch baseType {
+            case .string: enumValues = .strings(strings.sorted())
+            case .number, .integer: enumValues = .numbers(numbers.sorted())
+            case .boolean: enumValues = .booleans(booleans.sorted { !$0 && $1 })
+            }
         }
-        return CompiledJSONSchema.Scalar(
-            type: baseType, allowedValues: allowedValues, enumAllowsNull: enumAllowsNull, nullable: nullable)
+
+        var numeric: NumericConstraints? = nil
+        if baseType == .number || baseType == .integer {
+            func constraint(_ keyword: String) throws -> DecimalLiteral? {
+                guard let value = raw[keyword] else { return nil }
+                guard case .number(let number) = value, number.isFinite,
+                    let decimal = DecimalLiteral(double: number)
+                else {
+                    throw JSONSchemaCompileError.propertyNumericConstraintInvalid(pathString(path), keyword)
+                }
+                return decimal
+            }
+            let minimum = try constraint("minimum")
+            let maximum = try constraint("maximum")
+            let exclusiveMinimum = try constraint("exclusiveMinimum")
+            let exclusiveMaximum = try constraint("exclusiveMaximum")
+            var multipleOf = try constraint("multipleOf")
+            if let value = multipleOf {
+                guard value > .zero else {
+                    throw JSONSchemaCompileError.propertyNumericConstraintInvalid(pathString(path), "multipleOf")
+                }
+                multipleOf = value
+            }
+            if minimum != nil || maximum != nil || exclusiveMinimum != nil || exclusiveMaximum != nil
+                || multipleOf != nil {
+                numeric = NumericConstraints(
+                    minimum: minimum, maximum: maximum,
+                    exclusiveMinimum: exclusiveMinimum, exclusiveMaximum: exclusiveMaximum,
+                    multipleOf: multipleOf)
+            }
+        }
+
+        let scalar = CompiledJSONSchema.Scalar(
+            type: baseType, enumValues: enumValues, enumAllowsNull: enumAllowsNull, nullable: nullable,
+            numeric: numeric)
+
+        // Fail closed on a schema that can never generate a value.
+        if baseType == .number || baseType == .integer {
+            let constraintSet =
+                scalar.numericConstraintSet ?? NumericConstraintSet(bounds: nil, allowedValues: nil)
+            if !scalar.acceptsNull, !constraintSet.isSatisfiable(kind: baseType) {
+                throw JSONSchemaCompileError.propertyConstraintsUnsatisfiable(pathString(path))
+            }
+        }
+        return scalar
     }
 
     /// Dot-joined path of a schema node from the root (array items use the
@@ -303,17 +417,46 @@ public enum JSONSchemaCompiler {
             var field: [String: Any] = [:]
             field["type"] =
                 scalar.nullable ? [scalar.type.rawValue, "null"] : scalar.type.rawValue
-            if let allowedValues = scalar.allowedValues {
-                var values: [Any] = allowedValues
-                if scalar.enumAllowsNull { values.append(NSNull()) }
-                field["enum"] = values
+            if let enumValues = scalar.enumValues {
+                field["enum"] = canonicalEnumTree(enumValues, allowsNull: scalar.enumAllowsNull)
+            }
+            if let numeric = scalar.numeric {
+                if let minimum = numeric.minimum { field["minimum"] = minimum.canonicalText }
+                if let maximum = numeric.maximum { field["maximum"] = maximum.canonicalText }
+                if let exclusiveMinimum = numeric.exclusiveMinimum {
+                    field["exclusiveMinimum"] = exclusiveMinimum.canonicalText
+                }
+                if let exclusiveMaximum = numeric.exclusiveMaximum {
+                    field["exclusiveMaximum"] = exclusiveMaximum.canonicalText
+                }
+                if let multipleOf = numeric.multipleOf { field["multipleOf"] = multipleOf.canonicalText }
             }
             return field
         case .object(let object):
             return canonicalObjectTree(object)
-        case .array(let items):
-            return ["type": "array", "items": canonicalValueTree(items)]
+        case .array(let schema):
+            var field: [String: Any] = ["type": "array", "items": canonicalValueTree(schema.items)]
+            if let minItems = schema.minItems { field["minItems"] = minItems }
+            if let maxItems = schema.maxItems { field["maxItems"] = maxItems }
+            return field
         }
+    }
+
+    /// Canonical enum tree: string and boolean members render as JSON values;
+    /// number members render as `{"number": "<exact decimal>"}` so the tree
+    /// stays injective and free of binary floating-point artifacts. A null
+    /// member always renders last.
+    private static func canonicalEnumTree(
+        _ values: CompiledJSONSchema.ScalarEnumValues, allowsNull: Bool
+    ) -> [Any] {
+        var tree: [Any]
+        switch values {
+        case .strings(let strings): tree = strings
+        case .numbers(let numbers): tree = numbers.map { ["number": $0.canonicalText] }
+        case .booleans(let booleans): tree = booleans
+        }
+        if allowsNull { tree.append(NSNull()) }
+        return tree
     }
 
     private static func sha256Hex(_ string: String) -> String {
@@ -372,30 +515,69 @@ public struct CompiledJSONSchema: Equatable, Sendable {
 
     /// A supported value schema, recursively.
     public indirect enum Value: Equatable, Sendable {
-        /// A scalar (or `[scalar, "null"]` union) with an optional string enum.
+        /// A scalar (or `[scalar, "null"]` union) with optional enum and
+        /// numeric constraints.
         case scalar(Scalar)
         /// A strict nested object.
         case object(ObjectSchema)
-        /// An array of a supported value schema.
-        case array(items: Value)
+        /// An array with a supported `items` schema and optional
+        /// `minItems`/`maxItems`.
+        case array(ArraySchema)
+    }
+
+    /// An array schema node: the item schema plus optional count constraints.
+    public struct ArraySchema: Equatable, Sendable {
+        public let items: Value
+        public let minItems: Int?
+        public let maxItems: Int?
     }
 
     /// A scalar constraint: one scalar type, optionally nullable, with an
-    /// optional string enum. `enumAllowsNull` records whether a declared enum
-    /// listed null itself — a nullable type union whose enum omits null
-    /// rejects null (the JSON-Schema intersection semantics).
+    /// optional enum and optional numeric constraints (bounds and
+    /// `multipleOf` for `number`/`integer`). `enumAllowsNull` records whether
+    /// a declared enum listed null itself — a nullable type union whose enum
+    /// omits null rejects null (the JSON-Schema intersection semantics).
     public struct Scalar: Equatable, Sendable {
         public let type: ScalarType
-        /// Non-nil iff the schema declared a string enum (canonical order).
-        public let allowedValues: [String]?
+        /// Non-nil iff the schema declared an enum; the case matches `type`
+        /// and the values are in canonical order.
+        public let enumValues: ScalarEnumValues?
         /// True iff the declared enum listed null (only meaningful with an enum).
         public let enumAllowsNull: Bool
         /// True iff the `type` union included `"null"`.
         public let nullable: Bool
+        /// Non-nil iff the schema declared numeric constraints
+        /// (`number`/`integer` types only).
+        public let numeric: NumericConstraints?
+
+        /// String enum values in canonical order (accessor for the flat
+        /// milestone's string-enum shape).
+        public var allowedValues: [String]? {
+            if case .strings(let values)? = enumValues { return values }
+            return nil
+        }
 
         /// Whether null is an accepted value: the type union must allow it and
         /// a declared enum must not exclude it.
-        public var acceptsNull: Bool { nullable && (allowedValues == nil || enumAllowsNull) }
+        public var acceptsNull: Bool { nullable && (enumValues == nil || enumAllowsNull) }
+
+        /// The number-grammar constraint set for `number`/`integer` scalars,
+        /// or nil when the field is unconstrained (the byte-compatible fast
+        /// path: no per-byte feasibility work happens).
+        var numericConstraintSet: NumericConstraintSet? {
+            guard type == .number || type == .integer else { return nil }
+            var numbers: [DecimalLiteral]? = nil
+            if case .numbers(let values)? = enumValues { numbers = values }
+            guard numeric != nil || numbers != nil else { return nil }
+            return NumericConstraintSet(bounds: numeric, allowedValues: numbers)
+        }
+    }
+
+    /// Enum values for a scalar field; the case matches the field's type.
+    public enum ScalarEnumValues: Equatable, Sendable {
+        case strings([String])
+        case numbers([DecimalLiteral])
+        case booleans([Bool])
     }
 
     public enum ScalarType: String, Equatable, Sendable {
@@ -445,9 +627,11 @@ extension CompiledJSONSchema.Value {
             return scalar.accepts(value)
         case .object(let object):
             return object.accepts(value)
-        case .array(let items):
+        case .array(let schema):
             guard case .array(let array) = value else { return false }
-            return array.allSatisfy { items.accepts($0) }
+            if let minItems = schema.minItems, array.count < minItems { return false }
+            if let maxItems = schema.maxItems, array.count > maxItems { return false }
+            return array.allSatisfy { schema.items.accepts($0) }
         }
     }
 }
@@ -459,16 +643,19 @@ extension CompiledJSONSchema.Scalar {
             return acceptsNull
         case .string(let string):
             guard type == .string, isJSONRepresentable(string) else { return false }
-            if let allowedValues, !allowedValues.contains(string) { return false }
+            if case .strings(let allowed)? = enumValues, !allowed.contains(string) { return false }
             return true
         case .number(let number):
-            switch type {
-            case .number: return number.isFinite
-            case .integer: return number.isFinite && number == number.rounded()
-            default: return false
-            }
-        case .bool:
-            return type == .boolean
+            guard (type == .number || type == .integer), number.isFinite,
+                let decimal = DecimalLiteral(double: number)
+            else { return false }
+            if type == .integer, !decimal.isInteger { return false }
+            if let constraintSet = numericConstraintSet, !constraintSet.accepts(decimal) { return false }
+            return true
+        case .bool(let bool):
+            guard type == .boolean else { return false }
+            if case .booleans(let allowed)? = enumValues, !allowed.contains(bool) { return false }
+            return true
         case .object, .array:
             return false
         }
@@ -504,14 +691,28 @@ public enum JSONSchemaCompileError: Error, Sendable, Equatable {
     /// An array schema node with an unsupported keyword; the payload is the
     /// node's path and the keyword.
     case arrayKeywordUnsupported(String, String)
+    /// An array node whose `minItems`/`maxItems` is not a non-negative
+    /// integer; the payload is the node's path and the keyword.
+    case arrayCountConstraintInvalid(String, String)
+    /// An array node whose `minItems` exceeds its `maxItems`.
+    case arrayCountRangeInvalid(String)
     /// An error inside a nested value schema, located by its path from the
     /// root (property names joined with `.`, array items as `items`). The
     /// underlying error is never itself a `.nested`.
     indirect case nested(String, JSONSchemaCompileError)
-    case propertyEnumRequiresStringType(String)
+    /// An `enum` member whose JSON type does not match the declared scalar
+    /// type (including fractional members of `integer` enums).
+    case propertyEnumValueTypeMismatch(String)
     case propertyEnumInvalid(String)
     case propertyEnumDuplicated(String, String)
     case propertyKeywordUnsupported(String, String)
+    /// A numeric constraint keyword whose value is not a finite JSON number
+    /// (or `multipleOf` is not strictly positive); the payload is the
+    /// property's path and the keyword.
+    case propertyNumericConstraintInvalid(String, String)
+    /// The declared constraints cannot be satisfied by any value of the
+    /// declared type (and the field cannot be null).
+    case propertyConstraintsUnsatisfiable(String)
     case invalidJSONString(String)
     case schemaNotSerializable
     case invalidName
@@ -555,17 +756,31 @@ public enum JSONSchemaCompileError: Error, Sendable, Equatable {
             return
                 "object schema at '\(path)' uses unsupported JSON Schema keyword '\(keyword)'; supported: type, properties, required, additionalProperties"
         case .arrayKeywordUnsupported(let path, let keyword):
-            return "array schema at '\(path)' uses unsupported JSON Schema keyword '\(keyword)'; supported: type, items"
+            return
+                "array schema at '\(path)' uses unsupported JSON Schema keyword '\(keyword)'; supported: type, items, minItems, maxItems"
+        case .arrayCountConstraintInvalid(let path, let keyword):
+            return
+                "array schema at '\(path)' declares an invalid \"\(keyword)\": it must be a non-negative integer"
+        case .arrayCountRangeInvalid(let path):
+            return "array schema at '\(path)' declares minItems > maxItems; no array can satisfy it"
         case .nested(let path, let underlying):
             return "at '\(path)': \(underlying.message)"
-        case .propertyEnumRequiresStringType(let name):
-            return "property '\(name)' declares \"enum\" but its type is not \"string\"; only string enums are supported"
+        case .propertyEnumValueTypeMismatch(let name):
+            return
+                "property '\(name)' has an \"enum\" member whose type does not match the declared scalar type (integer enums must be whole numbers)"
         case .propertyEnumInvalid(let name):
-            return "property '\(name)' has an invalid \"enum\": it must be a non-empty array of unique strings"
+            return "property '\(name)' has an invalid \"enum\": it must be a non-empty array of unique values matching the declared type"
         case .propertyEnumDuplicated(let name, let value):
             return "property '\(name)' repeats enum value '\(value)'"
         case .propertyKeywordUnsupported(let name, let keyword):
-            return "property '\(name)' uses unsupported JSON Schema keyword '\(keyword)'; supported: type, enum"
+            return
+                "property '\(name)' uses unsupported JSON Schema keyword '\(keyword)'; supported: type, enum, and on number/integer minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf"
+        case .propertyNumericConstraintInvalid(let name, let keyword):
+            return
+                "property '\(name)' declares an invalid \"\(keyword)\": it must be a finite JSON number (and multipleOf must be strictly positive)"
+        case .propertyConstraintsUnsatisfiable(let name):
+            return
+                "property '\(name)' declares numeric constraints that no value of the declared type can satisfy"
         case .invalidJSONString(let string):
             return "string '\(string)' cannot be represented in JSON"
         case .schemaNotSerializable:

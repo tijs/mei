@@ -844,6 +844,155 @@ final class StructuredGenerationPipelineTests: XCTestCase {
         XCTAssertEqual(httpError(error).status, 500)
     }
 
+    // MARK: - Schema matrix slice (numeric constraints, enums, array counts)
+
+    func testSchemaMatrixDocumentThroughBothResponsePaths() throws {
+        let format = ResponseFormat.jsonSchema(
+            JSONSchemaFormat(
+                name: "matrix_v1", strict: true,
+                schema: try decode(SchemaMatrixFixture.schemaJSON)))
+        guard case .jsonSchema(let compiled) = try JSONSchemaCompiler.compile(format) else {
+            return XCTFail("the matrix schema must compile")
+        }
+        let table = SchemaMatrixFixture.table()
+        let plan = try XCTUnwrap(try StructuredGeneration.plan(for: format, table: table))
+        let text = scriptedGenerate(plan: plan, table: table, script: SchemaMatrixFixture.documentScript)
+        XCTAssertEqual(text, SchemaMatrixFixture.document)
+        XCTAssertTrue(plan.runRecord.rootValueCompleted)
+        XCTAssertNil(plan.runRecord.failure)
+
+        // Buffered path: content parses, validates, finishes with stop.
+        let run = makeRun(
+            text: text, finishReason: "stop",
+            completionTokens: SchemaMatrixFixture.documentScript.count)
+        let body = responseBody(run)
+        let choices = body["choices"] as? [[String: Any]] ?? []
+        XCTAssertEqual(choices.count, 1)
+        XCTAssertEqual(choices.first?["finish_reason"] as? String, "stop")
+        let content = (choices.first?["message"] as? [String: Any])?["content"] as? String
+        XCTAssertEqual(content, text)
+        XCTAssertTrue(compiled.validate(try decode(content ?? "{}")), "the compiled validator agrees")
+        let parsed = try XCTUnwrap(
+            (try? JSONSerialization.jsonObject(with: Data((content ?? "").utf8))) as? [String: Any])
+        XCTAssertEqual((parsed["level"] as? NSNumber)?.intValue, 15)
+        XCTAssertEqual((parsed["ratio"] as? NSNumber)?.doubleValue, 0.5)
+        XCTAssertEqual(parsed["mode"] as? String, "fast")
+        XCTAssertTrue(parsed["retries"] is NSNull)
+        XCTAssertEqual(parsed["ok"] as? Bool, true)
+        XCTAssertEqual(parsed["flags"] as? [Bool], [true, false])
+
+        // Streaming path: same content, same finish reason, usage parity.
+        let assembled = assembleSSE(chunkFrames(text.map { String($0) }) + finishFrames(run, includeUsage: true))
+        XCTAssertEqual(assembled.content, text)
+        XCTAssertEqual(assembled.finishReason, "stop")
+        XCTAssertTrue(assembled.sawDone)
+        XCTAssertEqual(assembled.usage?["total_tokens"] as? Int, Router.usage(run: run).totalTokens)
+        XCTAssertNil(
+            StructuredGeneration.postGenerationError(plan: plan, stopReason: .stop, toolCallCount: 0))
+    }
+
+    func testSchemaMatrixMasksConstraintDecoysAndCountGates() throws {
+        typealias Token = SchemaMatrixFixture.Token
+        let format = ResponseFormat.jsonSchema(
+            JSONSchemaFormat(
+                name: "matrix_v1", strict: true,
+                schema: try decode(SchemaMatrixFixture.schemaJSON)))
+        let table = SchemaMatrixFixture.table()
+        let plan = try XCTUnwrap(try StructuredGeneration.plan(for: format, table: table))
+        var processor = plan.processor
+
+        func row() -> [Float] {
+            processor.process(logits: MLXArray(Array(repeating: Float(0), count: table.vocabularySize)))
+                .asArray(Float.self)
+        }
+
+        // Level position: the multiple-of-5 bound masks `12` exactly.
+        forceSample(&processor, tokenId: Token.openLevel.rawValue)
+        XCTAssertNotEqual(row()[Token.fifteen.rawValue], -Float.infinity)
+        XCTAssertNotEqual(row()[Token.twenty.rawValue], -Float.infinity)
+        XCTAssertEqual(row()[Token.twelve.rawValue], -Float.infinity, "12 cannot reach a multiple of 5 in range")
+
+        // Ratio position: the exclusive bound masks `1`; the fractional
+        // multiple masks `0.3`.
+        forceSample(&processor, tokenId: Token.fifteen.rawValue)
+        forceSample(&processor, tokenId: Token.ratioKey.rawValue)
+        XCTAssertNotEqual(row()[Token.zeroPointFive.rawValue], -Float.infinity)
+        XCTAssertEqual(row()[Token.one.rawValue], -Float.infinity, "the exclusive upper bound")
+        XCTAssertEqual(row()[Token.zeroPointThree.rawValue], -Float.infinity, "not a multiple of 0.25")
+
+        // Boolean enum: `false` is masked.
+        forceSample(&processor, tokenId: Token.zeroPointFive.rawValue)
+        forceSample(&processor, tokenId: Token.modeKey.rawValue)
+        forceSample(&processor, tokenId: Token.fastString.rawValue)
+        forceSample(&processor, tokenId: Token.retriesKey.rawValue)
+        forceSample(&processor, tokenId: Token.nullLiteral.rawValue)
+        forceSample(&processor, tokenId: Token.okKey.rawValue)
+        XCTAssertNotEqual(row()[Token.trueLiteral.rawValue], -Float.infinity)
+        XCTAssertEqual(row()[Token.falseLiteral.rawValue], -Float.infinity, "the enum is [true]")
+
+        // Array gates: below minItems the bracket is masked; after two items
+        // the comma is masked (maxItems).
+        forceSample(&processor, tokenId: Token.trueLiteral.rawValue)
+        forceSample(&processor, tokenId: Token.flagsOpen.rawValue)
+        XCTAssertEqual(row()[Token.closeBracket.rawValue], -Float.infinity, "below minItems")
+        forceSample(&processor, tokenId: Token.trueLiteral.rawValue)
+        forceSample(&processor, tokenId: Token.comma.rawValue)
+        forceSample(&processor, tokenId: Token.falseLiteral.rawValue)
+        XCTAssertEqual(row()[Token.comma.rawValue], -Float.infinity, "above maxItems")
+        XCTAssertNotEqual(row()[Token.closeBracket.rawValue], -Float.infinity)
+
+        XCTAssertNil(plan.runRecord.failure)
+    }
+
+    func testSchemaMatrixUnsupportedConstructsFailBeforeGenerationWith400() throws {
+        let cases: [(String, JSONSchemaCompileError)] = [
+            (
+                #"{"type": "object", "properties": {"v": {"type": "integer", "minimum": 5, "maximum": 3}}, "required": ["v"], "additionalProperties": false}"#,
+                .propertyConstraintsUnsatisfiable("v")
+            ),
+            (
+                // Integer multiples of 1.5 are multiples of 3; [1, 2] has none.
+                #"{"type": "object", "properties": {"v": {"type": "integer", "minimum": 1, "maximum": 2, "multipleOf": 1.5}}, "required": ["v"], "additionalProperties": false}"#,
+                .propertyConstraintsUnsatisfiable("v")
+            ),
+            (
+                #"{"type": "object", "properties": {"v": {"type": "string", "pattern": "^a$"}}, "required": ["v"], "additionalProperties": false}"#,
+                .propertyKeywordUnsupported("v", "pattern")
+            ),
+            (
+                #"{"type": "object", "properties": {"v": {"anyOf": [{"type": "string"}]}}, "required": ["v"], "additionalProperties": false}"#,
+                .propertyTypeMissing("v")
+            ),
+            (
+                #"{"type": "object", "properties": {"v": {"type": "number", "multipleOf": 0}}, "required": ["v"], "additionalProperties": false}"#,
+                .propertyNumericConstraintInvalid("v", "multipleOf")
+            ),
+            (
+                #"{"type": "object", "properties": {"v": {"type": "array", "items": {"type": "string"}, "minItems": 2, "maxItems": 1}}, "required": ["v"], "additionalProperties": false}"#,
+                .arrayCountRangeInvalid("v")
+            ),
+        ]
+        for (schemaJSON, expected) in cases {
+            let format = ResponseFormat.jsonSchema(
+                JSONSchemaFormat(name: "bad_matrix", strict: true, schema: try decode(schemaJSON)))
+            var request = try ChatRequest(
+                json: Data(#"{"model": "test-model", "messages": [{"role": "user", "content": "hi"}]}"#.utf8))
+            request.responseFormat = format
+
+            var thrown: Error?
+            XCTAssertThrowsError(try Router.validateStructuredRequest(request), schemaJSON) { thrown = $0 }
+            let error = try XCTUnwrap(thrown)
+            XCTAssertEqual(error as? JSONSchemaCompileError, expected)
+
+            let (status, body) = httpError(error)
+            XCTAssertEqual(status, 400)
+            let envelope = body["error"] as? [String: Any] ?? [:]
+            XCTAssertEqual(envelope["code"] as? String, "response_format_unsupported")
+            XCTAssertEqual(envelope["param"] as? String, "response_format")
+            XCTAssertNil(body["choices"], "an unsupported schema must fail before generation")
+        }
+    }
+
     // MARK: - CoCore checker oracle
 
     func testCoCoreCanaryCheckerMatchesTheRustOracle() {

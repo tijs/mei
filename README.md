@@ -250,18 +250,29 @@ not advertise schema jobs for it. In the **current source tree (unreleased)**
 structured output *is* implemented: `response_format` is decoded, compiled
 before generation, and enforced token-by-token by constrained decoding
 (`json_object` and strict `json_schema` — the recursive schema subset:
-nested objects, arrays with `items`, and nullable `[scalar, "null"]` unions;
-structured + `tools` rejected; thinking forced off; failures fail closed). It
+nested objects, arrays with `items` and `minItems`/`maxItems`, nullable
+`[scalar, "null"]` unions, enums on every scalar type, and numeric
+constraints — `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/
+`multipleOf` — with exact decimal semantics; structured + `tools` rejected;
+thinking forced off; failures fail closed). It
 is covered by model-free tests — including the exact CoCore canary
 request/response fixtures and buffered +
 SSE pipeline tests — and has now passed a live smoke run with
 `mlx-community/Qwen3-4B-4bit` at HF revision
 `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`: both the exact non-streaming and
 streaming canaries returned a JSON value that parsed to exactly
-`{"status":"ok"}` (whitespace in the raw JSON is immaterial). The merged CoCore attached-engine
+`{"status":"ok"}` (whitespace in the raw JSON is immaterial), and the
+expanded numeric/array schema features also passed live buffered + SSE on it.
+The merged CoCore attached-engine
 client at `0151475bf8c98de10a64cab51c23a46dd84a8fe1` also passed its live
 readiness, tool, structured-output, buffered-proxy, and streaming-proxy
-checks against that server. This is a model-specific smoke result, not a
+checks against that server. **Structured output is checkpoint-specific, not
+model-general:** only `mlx-community/Qwen3-4B-4bit` has passed so far — the
+shipped Qwen3.6 (text-only and vision) and Ornith profiles all fail the
+canary closed (HTTP 500 `engine_error`) and stay disabled for schema jobs
+pending a fix and a successful live canary, with normal serving unaffected.
+Per-model evidence: [docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md) §8.
+This is a model-specific smoke result, not a
 release-wide or advisor-registration claim; the feature remains unreleased.
 Full detail (endpoints, transport, canary shapes, streaming usage, security,
 troubleshooting):

@@ -376,6 +376,170 @@ final class JSONGrammarProcessorTests: XCTestCase {
             ]))
     }
 
+    // MARK: - Schema matrix flow (numeric constraints, enums, array counts)
+
+    private func matrixProcessor() throws -> JSONGrammarProcessor {
+        try JSONGrammarProcessor(
+            format: .jsonSchema(try SchemaMatrixFixture.schema()),
+            table: SchemaMatrixFixture.table())
+    }
+
+    func testSchemaMatrixInitialAllowedTokens() throws {
+        let processor = try matrixProcessor()
+        let allowed = Set(processor.allowedTokenIds())
+        XCTAssertEqual(
+            allowed,
+            Set(
+                [SchemaMatrixFixture.Token.openLevel, .space, .wholeDocument]
+                    .map(\.rawValue)))
+        XCTAssertFalse(processor.isAllowed(tokenId: SchemaMatrixFixture.Token.eos.rawValue))
+    }
+
+    func testSchemaMatrixTokenFlow() throws {
+        typealias Token = SchemaMatrixFixture.Token
+        var processor = try matrixProcessor()
+
+        // Level position: only integer prefixes that can still land on a
+        // multiple of 5 in [10, 99]. `12` is already a dead end; `3` is a
+        // legal prefix of 30/35.
+        try processor.consume(tokenId: Token.openLevel.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.fifteen.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.twenty.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.three.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.twelve.rawValue), "12 can never be a multiple of 5 in range")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.nullLiteral.rawValue), "not a nullable integer")
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.space.rawValue))
+
+        try processor.consume(tokenId: Token.fifteen.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.ratioKey.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeRoot.rawValue), "required keys are missing")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.twelve.rawValue), "not a key position")
+
+        // Ratio position: (0, 1) exclusive, multiple of 0.25. `0` and `2`
+        // remain legal prefixes (`0.25`, `2.5e-1`); `0.3` and `1` are dead.
+        try processor.consume(tokenId: Token.ratioKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.zeroPointFive.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.zero.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.two.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.one.rawValue), "1 can never be < 1")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.zeroPointThree.rawValue), "0.3 is not a multiple of 0.25")
+
+        try processor.consume(tokenId: Token.zeroPointFive.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.modeKey.rawValue))
+
+        // String enum position.
+        try processor.consume(tokenId: Token.modeKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.fastString.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.slowString.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.nopeString.rawValue))
+
+        // Nullable integer enum position: 0, 1, 2, null — not 3.
+        try processor.consume(tokenId: Token.fastString.rawValue)
+        try processor.consume(tokenId: Token.retriesKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.zero.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.one.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.two.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.nullLiteral.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.three.rawValue), "3 is not an enum member")
+
+        // Boolean enum position: only true.
+        try processor.consume(tokenId: Token.nullLiteral.rawValue)
+        try processor.consume(tokenId: Token.okKey.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.trueLiteral.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.falseLiteral.rawValue), "the enum is [true]")
+
+        // Array count position: the empty array cannot close (minItems 1).
+        try processor.consume(tokenId: Token.trueLiteral.rawValue)
+        try processor.consume(tokenId: Token.flagsOpen.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.trueLiteral.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.falseLiteral.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeBracket.rawValue), "below minItems")
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.three.rawValue), "not a boolean item")
+
+        try processor.consume(tokenId: Token.trueLiteral.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.comma.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeBracket.rawValue))
+        try processor.consume(tokenId: Token.comma.rawValue)
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.closeBracket.rawValue), "a comma requires another item")
+
+        try processor.consume(tokenId: Token.falseLiteral.rawValue)
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.comma.rawValue), "above maxItems")
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeBracket.rawValue))
+
+        try processor.consume(tokenId: Token.closeBracket.rawValue)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.closeRoot.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: Token.eos.rawValue), "the root is still open")
+        try processor.consume(tokenId: Token.closeRoot.rawValue)
+        XCTAssertEqual(processor.status, .complete)
+        XCTAssertTrue(processor.isAllowed(tokenId: Token.eos.rawValue))
+    }
+
+    func testSchemaMatrixFlowProducesExactlyTheDocument() throws {
+        let table = SchemaMatrixFixture.table()
+        var processor = try matrixProcessor()
+        var output: [UInt8] = []
+        for tokenId in SchemaMatrixFixture.documentScript {
+            XCTAssertTrue(processor.isAllowed(tokenId: tokenId), "token \\(tokenId) must be allowed")
+            try processor.consume(tokenId: tokenId)
+            output += table.fragment(forTokenId: tokenId) ?? []
+        }
+        XCTAssertEqual(processor.status, .finished)
+        let decoded = try JSONDecoder().decode(MeiJSONValue.self, from: Data(output))
+        XCTAssertTrue(try SchemaMatrixFixture.schema().validate(decoded))
+    }
+
+    func testSchemaMatrixMaskedLogitsSetConstraintDecoysToNegativeInfinity() throws {
+        let table = SchemaMatrixFixture.table()
+        var processor = try matrixProcessor()
+        func values() throws -> [Float] {
+            try processor.maskedLogits(MLXArray(Array(repeating: Float(1), count: table.vocabularySize)))
+                .asArray(Float.self)
+        }
+        let initial = try values()
+        XCTAssertEqual(initial[SchemaMatrixFixture.Token.openLevel.rawValue], 1)
+        XCTAssertEqual(initial[SchemaMatrixFixture.Token.twelve.rawValue], -Float.infinity)
+        XCTAssertEqual(initial[SchemaMatrixFixture.Token.eos.rawValue], -Float.infinity)
+
+        try processor.consume(tokenId: SchemaMatrixFixture.Token.openLevel.rawValue)
+        let levelPosition = try values()
+        XCTAssertEqual(levelPosition[SchemaMatrixFixture.Token.fifteen.rawValue], 1)
+        XCTAssertEqual(levelPosition[SchemaMatrixFixture.Token.twelve.rawValue], -Float.infinity)
+        XCTAssertEqual(levelPosition[SchemaMatrixFixture.Token.nullLiteral.rawValue], -Float.infinity)
+    }
+
+    func testZeroMaxItemsArrayMasksTheFirstItemToken() throws {
+        let schema = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "empty_only", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"x": {"type": "array", "items": {"type": "integer"}, "maxItems": 0}}, "required": ["x"], "additionalProperties": false}"#)))
+        var processor = try JSONGrammarProcessor(format: .jsonSchema(schema), table: toyTable())
+        try processor.consume(tokenId: ToyToken.openBrace.rawValue)
+        try processor.consume(tokenId: ToyToken.keyX.rawValue)
+        try processor.consume(tokenId: ToyToken.colon.rawValue)
+        try processor.consume(tokenId: ToyToken.openBracket.rawValue)
+
+        // maxItems 0 gates the first item too: after `[` only the closer (and
+        // whitespace) may advance, exactly like the comma gate between items.
+        XCTAssertTrue(processor.isAllowed(tokenId: ToyToken.closeBracket.rawValue))
+        XCTAssertTrue(processor.isAllowed(tokenId: ToyToken.space.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: ToyToken.zero.rawValue), "the first item must be masked")
+        XCTAssertFalse(processor.isAllowed(tokenId: ToyToken.one.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: ToyToken.five.rawValue))
+        XCTAssertFalse(processor.isAllowed(tokenId: ToyToken.comma.rawValue), "an empty array takes no comma")
+        XCTAssertFalse(processor.isAllowed(tokenId: ToyToken.openBracket.rawValue))
+
+        var poisoned = processor.independentCopy()
+        XCTAssertThrowsError(try poisoned.consume(tokenId: ToyToken.one.rawValue)) { error in
+            XCTAssertEqual(error as? JSONGrammarError, .illegalToken(ToyToken.one.rawValue))
+        }
+        XCTAssertEqual(poisoned.status, .failed)
+
+        try processor.consume(tokenId: ToyToken.closeBracket.rawValue)
+        try processor.consume(tokenId: ToyToken.closeBrace.rawValue)
+        XCTAssertEqual(processor.status, .complete)
+    }
+
     // MARK: - Fail-closed behavior
 
     func testPrematureEndOfSequenceIsRejected() throws {

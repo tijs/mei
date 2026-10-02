@@ -109,7 +109,7 @@ public struct JSONGrammarState: Sendable, Equatable {
             return .finished
         case .complete:
             return .complete
-        case .number(let numberState, _) where stack.isEmpty && numberState.isTerminable:
+        case .number(let numberState, _, _) where stack.isEmpty && numberState.isTerminable:
             return .complete
         case .literal(let literal) where stack.isEmpty && literal.isComplete:
             return .complete
@@ -277,9 +277,9 @@ public struct JSONGrammarState: Sendable, Equatable {
         /// A strict schema object node: its compiled fields plus the names
         /// already consumed in this instance.
         case schemaObject(CompiledJSONSchema.ObjectSchema, used: Set<String>)
-        /// A strict schema array node: the item schema each element must
-        /// satisfy.
-        case schemaArray(items: CompiledJSONSchema.Value)
+        /// A strict schema array node: the compiled array schema (item schema
+        /// plus `minItems`/`maxItems`) and the number of items consumed so far.
+        case schemaArray(CompiledJSONSchema.ArraySchema, count: Int)
     }
 
     private enum Phase: Equatable {
@@ -304,8 +304,9 @@ public struct JSONGrammarState: Sendable, Equatable {
         /// surrogate. `offset` 0 expects `\`, 1 expects `u`, 2...5 are the
         /// constrained hex nibbles.
         case lowSurrogateEscape(StringRole, high: UInt32, offset: Int, value: UInt32)
-        /// Inside a number.
-        case number(NumberState, NumberKind)
+        /// Inside a number. The tracker is non-nil only for constrained
+        /// fields; unconstrained numbers keep the byte-compatible fast path.
+        case number(NumberState, NumberKind, NumberTracker?)
         /// Inside a `true`/`false`/`null` literal.
         case literal(LiteralState)
         /// Root value complete; only JSON whitespace may follow.
@@ -386,8 +387,8 @@ public struct JSONGrammarState: Sendable, Equatable {
         case .lowSurrogateEscape(let role, let high, let offset, let value):
             return consumeLowSurrogateByte(byte, role: role, high: high, offset: offset, value: value)
 
-        case .number(let numberState, let kind):
-            return consumeNumberByte(byte, state: numberState, kind: kind)
+        case .number(let numberState, let kind, let tracker):
+            return consumeNumberByte(byte, state: numberState, kind: kind, tracker: tracker)
 
         case .literal(let literal):
             return consumeLiteralByte(byte, literal: literal)
@@ -414,15 +415,15 @@ public struct JSONGrammarState: Sendable, Equatable {
             return .consumed
         }
         if byte == Self.minus {
-            phase = .number(.sign, .number)
+            phase = .number(.sign, .number, nil)
             return .consumed
         }
         if byte == Self.zero {
-            phase = .number(.zero, .number)
+            phase = .number(.zero, .number, nil)
             return .consumed
         }
         if Self.isNonZeroDigit(byte) {
-            phase = .number(.integerDigits, .number)
+            phase = .number(.integerDigits, .number, nil)
             return .consumed
         }
         if byte == UInt8(ascii: "t") {
@@ -449,10 +450,19 @@ public struct JSONGrammarState: Sendable, Equatable {
             stack.append(.schemaObject(object, used: []))
             phase = .keyStart(fresh: true)
             return .consumed
-        case .array(let items):
+        case .array(let schema):
             guard byte == Self.openBracket else { return .rejected }
-            stack.append(.schemaArray(items: items))
-            phase = .valueStart(.schema(items), allowsEmptyClose: true)
+            stack.append(.schemaArray(schema, count: 0))
+            if schema.maxItems == 0 {
+                // A zero-item array can only close: entering `.valueStart`
+                // here would let a first item start without the
+                // `canAddMember` maxItems gate that guards later commas.
+                // `.afterValue` admits whitespace and `]` only (the comma
+                // gate rejects, and the close re-checks `minItems`).
+                phase = .afterValue
+            } else {
+                phase = .valueStart(.schema(schema.items), allowsEmptyClose: true)
+            }
             return .consumed
         }
     }
@@ -475,15 +485,24 @@ public struct JSONGrammarState: Sendable, Equatable {
             }
             return .consumed
         case .number:
-            return startNumber(byte, kind: .number)
+            return startNumber(byte, kind: .number, constraints: scalar.numericConstraintSet)
         case .integer:
-            return startNumber(byte, kind: .integer)
+            return startNumber(byte, kind: .integer, constraints: scalar.numericConstraintSet)
         case .boolean:
-            if byte == UInt8(ascii: "t") {
+            let allowsTrue: Bool
+            let allowsFalse: Bool
+            if case .booleans(let allowed)? = scalar.enumValues {
+                allowsTrue = allowed.contains(true)
+                allowsFalse = allowed.contains(false)
+            } else {
+                allowsTrue = true
+                allowsFalse = true
+            }
+            if byte == UInt8(ascii: "t"), allowsTrue {
                 phase = .literal(LiteralState(expected: Self.trueLiteral, matched: 1))
                 return .consumed
             }
-            if byte == UInt8(ascii: "f") {
+            if byte == UInt8(ascii: "f"), allowsFalse {
                 phase = .literal(LiteralState(expected: Self.falseLiteral, matched: 1))
                 return .consumed
             }
@@ -491,20 +510,29 @@ public struct JSONGrammarState: Sendable, Equatable {
         }
     }
 
-    private mutating func startNumber(_ byte: UInt8, kind: NumberKind) -> StepOutcome {
+    private mutating func startNumber(
+        _ byte: UInt8, kind: NumberKind, constraints: NumericConstraintSet?
+    ) -> StepOutcome {
+        let state: NumberState
         if byte == Self.minus {
-            phase = .number(.sign, kind)
+            state = .sign
+        } else if byte == Self.zero {
+            state = .zero
+        } else if Self.isNonZeroDigit(byte) {
+            state = .integerDigits
+        } else {
+            return .rejected
+        }
+        guard var tracker = constraints.map({
+            NumberTracker(constraints: $0, isIntegerKind: kind == .integer)
+        }) else {
+            phase = .number(state, kind, nil)
             return .consumed
         }
-        if byte == Self.zero {
-            phase = .number(.zero, kind)
-            return .consumed
-        }
-        if Self.isNonZeroDigit(byte) {
-            phase = .number(.integerDigits, kind)
-            return .consumed
-        }
-        return .rejected
+        tracker.consumeStart(byte)
+        guard tracker.allowsCompletion else { return .rejected }
+        phase = .number(state, kind, tracker)
+        return .consumed
     }
 
     // MARK: Keys and containers
@@ -537,8 +565,11 @@ public struct JSONGrammarState: Sendable, Equatable {
     private var canAddMember: Bool {
         guard let frame = stack.last else { return false }
         switch frame {
-        case .freeObject, .freeArray, .schemaArray:
+        case .freeObject, .freeArray:
             return true
+        case .schemaArray(let schema, let count):
+            guard let maxItems = schema.maxItems else { return true }
+            return count < maxItems
         case .schemaObject(let object, let used):
             return object.properties.contains { !used.contains($0.name) }
         }
@@ -554,8 +585,8 @@ public struct JSONGrammarState: Sendable, Equatable {
             phase = .keyStart(fresh: false)
         case .freeArray:
             phase = .valueStart(.anyJSON, allowsEmptyClose: false)
-        case .schemaArray(let items):
-            phase = .valueStart(.schema(items), allowsEmptyClose: false)
+        case .schemaArray(let schema, _):
+            phase = .valueStart(.schema(schema.items), allowsEmptyClose: false)
         }
     }
 
@@ -578,16 +609,20 @@ public struct JSONGrammarState: Sendable, Equatable {
             stack.removeLast()
             phase = valueCompletedPhase()
             return .consumed
-        case .schemaArray:
+        case .schemaArray(let schema, let count):
             guard byte == Self.closeBracket else { return .rejected }
+            guard count >= (schema.minItems ?? 0) else { return .rejected }
             stack.removeLast()
             phase = valueCompletedPhase()
             return .consumed
         }
     }
 
-    private func valueCompletedPhase() -> Phase {
-        stack.isEmpty ? .complete : .afterValue
+    private mutating func valueCompletedPhase() -> Phase {
+        if case .schemaArray(let schema, let count)? = stack.last {
+            stack[stack.count - 1] = .schemaArray(schema, count: count + 1)
+        }
+        return stack.isEmpty ? .complete : .afterValue
     }
 
     // MARK: Strings
@@ -756,78 +791,101 @@ public struct JSONGrammarState: Sendable, Equatable {
 
     // MARK: Numbers and literals
 
-    private mutating func consumeNumberByte(_ byte: UInt8, state: NumberState, kind: NumberKind) -> StepOutcome {
+    private mutating func consumeNumberByte(
+        _ byte: UInt8, state: NumberState, kind: NumberKind, tracker: NumberTracker?
+    ) -> StepOutcome {
         switch state {
         case .sign:
             if byte == Self.zero {
-                phase = .number(.zero, kind)
-                return .consumed
+                return advanceNumber(to: .zero, kind: kind, tracker: tracker, byte: byte)
             }
             if Self.isNonZeroDigit(byte) {
-                phase = .number(.integerDigits, kind)
-                return .consumed
+                return advanceNumber(to: .integerDigits, kind: kind, tracker: tracker, byte: byte)
             }
             return .rejected
         case .zero:
             if kind == .number {
                 if byte == Self.dot {
-                    phase = .number(.fractionStart, kind)
-                    return .consumed
+                    return advanceNumber(to: .fractionStart, kind: kind, tracker: tracker, byte: byte)
                 }
                 if byte == Self.eLower || byte == Self.eUpper {
-                    phase = .number(.exponentStart, kind)
-                    return .consumed
+                    return advanceNumber(to: .exponentStart, kind: kind, tracker: tracker, byte: byte)
                 }
             }
-            return terminateNumber(byte, kind: kind)
+            return terminateNumber(byte, kind: kind, tracker: tracker)
         case .integerDigits:
-            if Self.isDigit(byte) { return .consumed }
+            if Self.isDigit(byte) {
+                return advanceNumber(to: .integerDigits, kind: kind, tracker: tracker, byte: byte)
+            }
             if kind == .number {
                 if byte == Self.dot {
-                    phase = .number(.fractionStart, kind)
-                    return .consumed
+                    return advanceNumber(to: .fractionStart, kind: kind, tracker: tracker, byte: byte)
                 }
                 if byte == Self.eLower || byte == Self.eUpper {
-                    phase = .number(.exponentStart, kind)
-                    return .consumed
+                    return advanceNumber(to: .exponentStart, kind: kind, tracker: tracker, byte: byte)
                 }
             }
-            return terminateNumber(byte, kind: kind)
+            return terminateNumber(byte, kind: kind, tracker: tracker)
         case .fractionStart:
             guard Self.isDigit(byte) else { return .rejected }
-            phase = .number(.fractionDigits, kind)
-            return .consumed
+            return advanceNumber(to: .fractionDigits, kind: kind, tracker: tracker, byte: byte)
         case .fractionDigits:
-            if Self.isDigit(byte) { return .consumed }
-            if byte == Self.eLower || byte == Self.eUpper {
-                phase = .number(.exponentStart, kind)
-                return .consumed
+            if Self.isDigit(byte) {
+                return advanceNumber(to: .fractionDigits, kind: kind, tracker: tracker, byte: byte)
             }
-            return terminateNumber(byte, kind: kind)
+            if byte == Self.eLower || byte == Self.eUpper {
+                return advanceNumber(to: .exponentStart, kind: kind, tracker: tracker, byte: byte)
+            }
+            return terminateNumber(byte, kind: kind, tracker: tracker)
         case .exponentStart:
             if byte == Self.plus || byte == Self.minus {
-                phase = .number(.exponentSign, kind)
-                return .consumed
+                return advanceNumber(to: .exponentSign, kind: kind, tracker: tracker, byte: byte)
             }
             if Self.isDigit(byte) {
-                phase = .number(.exponentDigits, kind)
-                return .consumed
+                return advanceNumber(to: .exponentDigits, kind: kind, tracker: tracker, byte: byte)
             }
             return .rejected
         case .exponentSign:
             guard Self.isDigit(byte) else { return .rejected }
-            phase = .number(.exponentDigits, kind)
-            return .consumed
+            return advanceNumber(to: .exponentDigits, kind: kind, tracker: tracker, byte: byte)
         case .exponentDigits:
-            if Self.isDigit(byte) { return .consumed }
-            return terminateNumber(byte, kind: kind)
+            if Self.isDigit(byte) {
+                return advanceNumber(to: .exponentDigits, kind: kind, tracker: tracker, byte: byte)
+            }
+            return terminateNumber(byte, kind: kind, tracker: tracker)
         }
     }
 
-    /// A terminable number ends here: reprocess the terminating byte in the
-    /// next phase (`.complete` at the root, `.afterValue` inside a container).
-    private mutating func terminateNumber(_ byte: UInt8, kind: NumberKind) -> StepOutcome {
+    /// Completes a syntax transition into `state`: advances the constraint
+    /// tracker (when present), rejects the byte when no accepted completion
+    /// remains, and installs the new phase.
+    private mutating func advanceNumber(
+        to state: NumberState, kind: NumberKind, tracker: NumberTracker?, byte: UInt8
+    ) -> StepOutcome {
+        guard let tracker else {
+            phase = .number(state, kind, nil)
+            return .consumed
+        }
+        var updated = tracker
+        updated.consume(byte)
+        guard updated.allowsCompletion else { return .rejected }
+        phase = .number(state, kind, updated)
+        return .consumed
+    }
+
+    /// A terminable number ends here: the exact completed value must satisfy
+    /// every declared constraint, then the terminating byte is reprocessed in
+    /// the next phase (`.complete` at the root, `.afterValue` inside a
+    /// container).
+    private mutating func terminateNumber(
+        _ byte: UInt8, kind: NumberKind, tracker: NumberTracker?
+    ) -> StepOutcome {
         guard Self.isValueTerminator(byte) else { return .rejected }
+        if let tracker {
+            guard let value = tracker.exactValue, tracker.constraints.accepts(value) else {
+                return .rejected
+            }
+        }
         phase = valueCompletedPhase()
         return .retry
     }
@@ -916,6 +974,91 @@ public struct JSONGrammarState: Sendable, Equatable {
                 scalar: UInt32(lead & 0x07), remaining: 3, nextByteRange: 0x80...0x8F, scalarRange: 0x100000...0x10FFFF)
         default:
             return nil
+        }
+    }
+}
+
+// MARK: - Number constraint tracker
+
+/// Mirrors the JSON number syntax the grammar accepts for one constrained
+/// field and answers, after every byte, whether some completion of the
+/// current prefix is still accepted by the compiled numeric constraints —
+/// plus the exact-value check at number termination.
+///
+/// The tracker is only built for `number`/`integer` fields that declare
+/// constraints (bounds, `multipleOf`, or an enum); unconstrained numbers keep
+/// the original untracked path.
+struct NumberTracker: Equatable {
+    let constraints: NumericConstraintSet
+    let isIntegerKind: Bool
+    var prefix = NumberPrefix()
+
+    var kind: CompiledJSONSchema.ScalarType { isIntegerKind ? .integer : .number }
+
+    /// The exact value of a terminable literal; nil while the prefix cannot
+    /// terminate yet (the grammar's syntax states gate this defensively).
+    var exactValue: DecimalLiteral? {
+        var exponent = -prefix.fractionDigits.count
+        if let exponentPrefix = prefix.exponent {
+            switch exponentPrefix {
+            case .bare, .sign:
+                return nil
+            case .digits(let negative, let digits):
+                var value = 0
+                for digit in digits {
+                    value = value * 10 + Int(digit)
+                    if value > 1_000_000 { return nil }
+                }
+                exponent += negative ? -value : value
+            }
+        }
+        return DecimalLiteral(
+            negative: prefix.negative, digits: prefix.intDigits + prefix.fractionDigits, exponent: exponent)
+    }
+
+    /// True when some accepted completion of the current prefix exists.
+    var allowsCompletion: Bool {
+        constraints.hasCompletion(prefix: prefix, kind: kind)
+    }
+
+    /// Consumes the number's first byte (`-`, `0`, or `1`-`9`).
+    mutating func consumeStart(_ byte: UInt8) {
+        if byte == UInt8(ascii: "-") {
+            prefix.negative = true
+        } else {
+            prefix.intDigits.append(byte - 0x30)
+        }
+    }
+
+    /// Consumes one syntax-valid continuation byte. The grammar has already
+    /// checked the byte is legal JSON number syntax for the current state.
+    mutating func consume(_ byte: UInt8) {
+        switch byte {
+        case UInt8(ascii: "-"):
+            if case .bare = prefix.exponent { prefix.exponent = .sign(negative: true) }
+        case UInt8(ascii: "+"):
+            if case .bare = prefix.exponent { prefix.exponent = .sign(negative: false) }
+        case UInt8(ascii: "."):
+            prefix.hasFraction = true
+        case UInt8(ascii: "e"), UInt8(ascii: "E"):
+            prefix.exponent = .bare
+        default:
+            let digit = byte - 0x30
+            switch prefix.exponent {
+            case .bare:
+                prefix.exponent = .digits(negative: false, digits: [digit])
+            case .sign(let negative):
+                prefix.exponent = .digits(negative: negative, digits: [digit])
+            case .digits(let negative, var digits):
+                digits.append(digit)
+                prefix.exponent = .digits(negative: negative, digits: digits)
+            case nil:
+                if prefix.hasFraction {
+                    prefix.fractionDigits.append(digit)
+                } else {
+                    prefix.intDigits.append(digit)
+                }
+            }
         }
     }
 }

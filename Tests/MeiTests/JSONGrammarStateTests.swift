@@ -528,6 +528,210 @@ final class JSONGrammarStateTests: XCTestCase {
     }
 
 
+    // MARK: - Schema matrix: numeric constraints, enums, array counts
+
+    /// One object with a single constrained scalar field.
+    private func scalarState(_ fieldSchemaJSON: String) throws -> JSONGrammarState {
+        let schema = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "matrix", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"v": \#(fieldSchemaJSON)}, "required": ["v"], "additionalProperties": false}"#
+                )))
+        return JSONGrammarState(schema: schema)
+    }
+
+    func testIntegerBoundsAndMultipleOfGrammar() throws {
+        let state = try scalarState(#"{"type": "integer", "minimum": 10, "maximum": 99, "multipleOf": 5}"#)
+        assertAccepts(#"{"v":15}"#, state)
+        assertAccepts(#"{"v":10}"#, state)
+        assertAccepts(#"{"v":95}"#, state)
+        assertAccepts(" { \"v\" : 20 } ", state)
+        // `12` cannot be completed to a multiple of 5 in range: the second
+        // digit is already a dead end and must be rejected.
+        assertRejected(#"{"v":12}"#, state)
+        // `1` is a legal prefix (`15`, `10`), but terminating at `1` is below
+        // the minimum: the closing brace must be rejected.
+        assertRejected(#"{"v":1}"#, state)
+        // A prefix above the maximum can never come back.
+        assertRejected(#"{"v":100}"#, state)
+        // A negative value is outside the range: even the sign is a dead end.
+        assertRejected(#"{"v":-15}"#, state)
+        // Integer fields reject fractions at the syntax level.
+        assertRejected(#"{"v":15.5}"#, state)
+        assertRejected(#"{"v":15e1}"#, state)
+    }
+
+    func testNumberExclusiveBoundsAndFractionalMultipleGrammar() throws {
+        let state = try scalarState(#"{"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1, "multipleOf": 0.25}"#)
+        assertAccepts(#"{"v":0.25}"#, state)
+        assertAccepts(#"{"v":0.5}"#, state)
+        assertAccepts(#"{"v":0.75}"#, state)
+        // Exponent spellings are exact decimal values: 2.5e-1 == 0.25 and
+        // 25e-2 == 0.25 are both accepted.
+        assertAccepts(#"{"v":2.5e-1}"#, state)
+        assertAccepts(#"{"v":25e-2}"#, state)
+        // The exclusive bounds reject both endpoints.
+        assertRejected(#"{"v":0}"#, state)
+        assertRejected(#"{"v":1}"#, state)
+        // In range but not a multiple of 0.25.
+        assertRejected(#"{"v":0.3}"#, state)
+        assertRejected(#"{"v":0.2}"#, state)
+        assertRejected(#"{"v":1.25e-1}"#, state)
+        // `1e-1` is 0.1: no exponent completion of `1e` can be a multiple of
+        // 0.25 inside (0, 1), so the exponent marker itself is rejected.
+        assertRejected(#"{"v":1e-1}"#, state)
+        // 1.5e-1 == 0.15, also not a multiple.
+        assertRejected(#"{"v":1.5e-1}"#, state)
+    }
+
+    func testNumberAndIntegerEnumGrammar() throws {
+        let integerEnum = try scalarState(#"{"type": "integer", "enum": [0, 1, 2]}"#)
+        assertAccepts(#"{"v":0}"#, integerEnum)
+        assertAccepts(#"{"v":1}"#, integerEnum)
+        assertAccepts(#"{"v":2}"#, integerEnum)
+        assertAccepts(#"{"v":-0}"#, integerEnum)
+        // No completion of `3...` can be 0, 1, or 2.
+        assertRejected(#"{"v":3}"#, integerEnum)
+        assertRejected(#"{"v":10}"#, integerEnum)
+        assertRejected(#"{"v":-1}"#, integerEnum)
+
+        let numberEnum = try scalarState(#"{"type": "number", "enum": [100]}"#)
+        assertAccepts(#"{"v":100}"#, numberEnum)
+        assertAccepts(#"{"v":100.0}"#, numberEnum)
+        assertAccepts(#"{"v":1e2}"#, numberEnum)
+        assertAccepts(#"{"v":10.0e1}"#, numberEnum)
+        assertRejected(#"{"v":99}"#, numberEnum)
+        assertRejected(#"{"v":100.5}"#, numberEnum)
+        assertRejected(#"{"v":1e3}"#, numberEnum)
+        assertRejected(#"{"v":1000}"#, numberEnum)
+
+        let booleanEnum = try scalarState(#"{"type": "boolean", "enum": [true]}"#)
+        assertAccepts(#"{"v":true}"#, booleanEnum)
+        assertRejected(#"{"v":false}"#, booleanEnum)
+    }
+
+    func testNullableIntegerEnumGrammar() throws {
+        let state = try scalarState(#"{"type": ["integer", "null"], "enum": [0, 1, 2, null]}"#)
+        assertAccepts(#"{"v":null}"#, state)
+        assertAccepts(#"{"v":1}"#, state)
+        assertRejected(#"{"v":3}"#, state)
+        assertRejected(#"{"v":true}"#, state)
+
+        // An enum without null rejects null even though the union allows it.
+        let withoutNull = try scalarState(#"{"type": ["integer", "null"], "enum": [1]}"#)
+        assertRejected(#"{"v":null}"#, withoutNull)
+        assertAccepts(#"{"v":1}"#, withoutNull)
+    }
+
+    func testArrayCountConstraintsGrammar() throws {
+        let state = try scalarState(
+            #"{"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 3}"#)
+        assertAccepts(#"{"v":[1,2]}"#, state)
+        assertAccepts(#"{"v":[1,2,3]}"#, state)
+        assertRejected(#"{"v":[]}"#, state)
+        assertRejected(#"{"v":[1]}"#, state)
+        assertRejected(#"{"v":[1,2,3,4]}"#, state)
+        // The count gate applies before the item type gate can be relaxed.
+        assertRejected(#"{"v":["x"]}"#, state)
+    }
+
+    func testZeroMaxItemsArrayAcceptsOnlyTheEmptyArray() throws {
+        let state = try scalarState(#"{"type": "array", "items": {"type": "integer"}, "maxItems": 0}"#)
+        assertAccepts(#"{"v":[]}"#, state)
+        assertAccepts(" { \"v\" : [ ] } \n", state)
+        // maxItems 0 gates the first item too: after `[` only `]` may follow,
+        // so an item start is rejected instead of bypassing `canAddMember`.
+        assertRejected(#"{"v":[1]}"#, state)
+        assertRejected(#"{"v":[1,2]}"#, state)
+        assertRejected(#"{"v":[}"#, state)
+        assertRejected(#"{"v":[,]}"#, state)
+        assertRejected(#"{"v":[[]]}"#, state)
+    }
+
+    func testIntegerFractionalMultipleOfGrammar() throws {
+        // Integer values that are multiples of 1.5 are exactly the multiples
+        // of 3: [1, 4] is satisfiable via 3, and `1`/`2`/`4` are dead ends.
+        let state = try scalarState(#"{"type": "integer", "minimum": 1, "maximum": 4, "multipleOf": 1.5}"#)
+        assertAccepts(#"{"v":3}"#, state)
+        assertAccepts(" { \"v\" : 3 } ", state)
+        assertIncomplete(#"{"v":3"#, state)
+        assertRejected(#"{"v":1}"#, state)
+        assertRejected(#"{"v":2}"#, state)
+        assertRejected(#"{"v":4}"#, state)
+        assertRejected(#"{"v":-3}"#, state)
+
+        // A negative range is reachable through the same adjustment.
+        let negative = try scalarState(#"{"type": "integer", "minimum": -4, "maximum": -1, "multipleOf": 1.5}"#)
+        assertAccepts(#"{"v":-3}"#, negative)
+        assertRejected(#"{"v":-1}"#, negative)
+        assertRejected(#"{"v":-2}"#, negative)
+        assertRejected(#"{"v":-4}"#, negative)
+    }
+
+    func testLargeIntegerBoundsGrammar() throws {
+        // 1e18-scale bounds: the digit-prefix windows only need the decades
+        // that can meet the bounds (previously a ~19-iteration walk).
+        let large = try scalarState(#"{"type": "integer", "minimum": 1e18, "maximum": 9e18}"#)
+        assertAccepts(#"{"v":1000000000000000000}"#, large)
+        assertAccepts(#"{"v":9000000000000000000}"#, large)
+        assertRejected(#"{"v":100000000000000000}"#, large)
+        assertRejected(#"{"v":10000000000000000000}"#, large)
+
+        // 1e300-scale bounds: same contract at the pathological decade gap.
+        let huge = try scalarState(#"{"type": "integer", "minimum": 1e300, "maximum": 9e300}"#)
+        assertAccepts(#"{"v":1"# + String(repeating: "0", count: 300) + #"}"#, huge)
+        assertAccepts(#"{"v":9"# + String(repeating: "0", count: 300) + #"}"#, huge)
+        assertRejected(#"{"v":1"# + String(repeating: "0", count: 299) + #"}"#, huge)
+        assertRejected(#"{"v":1"# + String(repeating: "0", count: 301) + #"}"#, huge)
+    }
+
+    func testNestedNumericConstraintsGrammar() throws {
+        let schema = try JSONSchemaCompiler.compile(
+            JSONSchemaFormat(
+                name: "rows", strict: true,
+                schema: try mei(
+                    #"{"type": "object", "properties": {"rows": {"type": "array", "items": {"type": "object", "properties": {"v": {"type": "integer", "minimum": 1, "maximum": 9, "multipleOf": 3}}, "required": ["v"], "additionalProperties": false}, "minItems": 1, "maxItems": 2}}, "required": ["rows"], "additionalProperties": false}"#
+                )))
+        let state = JSONGrammarState(schema: schema)
+        assertAccepts(#"{"rows":[{"v":3},{"v":6}]}"#, state)
+        assertAccepts(#"{"rows":[{"v":9}]}"#, state)
+        assertRejected(#"{"rows":[]}"#, state)
+        assertRejected(#"{"rows":[{"v":4}]}"#, state)
+        assertRejected(#"{"rows":[{"v":3},{"v":6},{"v":9}]}"#, state)
+    }
+
+    func testSchemaMatrixFixtureGrammar() throws {
+        let state = JSONGrammarState(schema: try SchemaMatrixFixture.schema())
+        assertAccepts(SchemaMatrixFixture.document, state)
+        assertAccepts(
+            #"{"level":20,"ratio":0.75,"mode":"slow","retries":1,"ok":true,"flags":[false]}"#, state)
+        assertAccepts(
+            #"{"level":15,"ratio":2.5e-1,"mode":"fast","retries":null,"ok":true,"flags":[true,false]}"#, state)
+
+        // Constraint boundaries, one field at a time.
+        assertRejected(
+            #"{"level":12,"ratio":0.5,"mode":"fast","retries":null,"ok":true,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.3,"mode":"fast","retries":null,"ok":true,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":1,"mode":"fast","retries":null,"ok":true,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.5,"mode":"nope","retries":null,"ok":true,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.5,"mode":"fast","retries":3,"ok":true,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.5,"mode":"fast","retries":null,"ok":false,"flags":[true]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.5,"mode":"fast","retries":null,"ok":true,"flags":[]}"#, state)
+        assertRejected(
+            #"{"level":15,"ratio":0.5,"mode":"fast","retries":null,"ok":true,"flags":[true,false,true]}"#, state)
+        assertIncomplete(
+            #"{"level":15,"ratio":0.5,"mode":"fast","retries":null,"ok":true,"flags":[true,false]"#, state)
+    }
+
+
+
     // MARK: - Lifecycle
 
     func testResetRestoresInitialState() throws {

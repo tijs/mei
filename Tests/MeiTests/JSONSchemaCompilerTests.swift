@@ -311,12 +311,13 @@ final class JSONSchemaCompilerTests: XCTestCase {
         ) { error in
             XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumDuplicated("e", "null"))
         }
-        XCTAssertThrowsError(
-            try compileSchema(
-                #"{"type": "object", "properties": {"e": {"type": ["integer", "null"], "enum": [1]}}, "required": ["e"], "additionalProperties": false}"#)
-        ) { error in
-            XCTAssertEqual(error as? JSONSchemaCompileError, .propertyEnumRequiresStringType("e"))
-        }
+        // Integer enums are supported now; a nullable integer enum still
+        // carries the nullable-union semantics.
+        let nullableIntegerEnum = try compileSchema(
+            #"{"type": "object", "properties": {"e": {"type": ["integer", "null"], "enum": [1, null]}}, "required": ["e"], "additionalProperties": false}"#)
+        XCTAssertTrue(nullableIntegerEnum.validate(try mei(#"{"e": 1}"#)))
+        XCTAssertTrue(nullableIntegerEnum.validate(try mei(#"{"e": null}"#)))
+        XCTAssertFalse(nullableIntegerEnum.validate(try mei(#"{"e": 2}"#)))
     }
 
     // MARK: - Unsupported constructs fail closed
@@ -358,9 +359,9 @@ final class JSONSchemaCompilerTests: XCTestCase {
             XCTAssertEqual(error as? JSONSchemaCompileError, .arrayItemsInvalid("a"))
         }
         let arrayBadKeyword =
-            #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "string"}, "minItems": 1}}, "required": ["a"], "additionalProperties": false}"#
+            #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}, "required": ["a"], "additionalProperties": false}"#
         XCTAssertThrowsError(try compileSchema(arrayBadKeyword)) { error in
-            XCTAssertEqual(error as? JSONSchemaCompileError, .arrayKeywordUnsupported("a", "minItems"))
+            XCTAssertEqual(error as? JSONSchemaCompileError, .arrayKeywordUnsupported("a", "uniqueItems"))
         }
         let itemsBadType =
             #"{"type": "object", "properties": {"a": {"type": "array", "items": {"type": "null"}}}, "required": ["a"], "additionalProperties": false}"#
@@ -458,7 +459,7 @@ final class JSONSchemaCompilerTests: XCTestCase {
             ),
             (
                 #"{"type": "object", "properties": {"s": {"type": "string", "enum": [1]}}, "required": ["s"], "additionalProperties": false}"#,
-                .propertyEnumInvalid("s")
+                .propertyEnumValueTypeMismatch("s")
             ),
             (
                 #"{"type": "object", "properties": {"s": {"type": "string", "enum": "ok"}}, "required": ["s"], "additionalProperties": false}"#,
@@ -470,7 +471,7 @@ final class JSONSchemaCompilerTests: XCTestCase {
             ),
             (
                 #"{"type": "object", "properties": {"n": {"type": "number", "enum": ["ok"]}}, "required": ["n"], "additionalProperties": false}"#,
-                .propertyEnumRequiresStringType("n")
+                .propertyEnumValueTypeMismatch("n")
             ),
         ]
         for (schema, expected) in cases {
