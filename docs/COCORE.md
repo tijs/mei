@@ -20,13 +20,19 @@ that, and proxies jobs to it over loopback HTTP. This is the integration
 surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
-> **CoCore compatibility status.** Mei 0.7.0 implements token-level `response_format`
-> constrained decoding. The exact CoCore structured-output canary and the full
-> 9-test live acceptance suite passed with `mlx-community/Qwen3-4B-4bit` on
-> Sulaco. This support is **checkpoint-specific**: Qwen3.6 text-only, Qwen3.6
-> vision, and Ornith failed their live canaries and remain unavailable for
-> schema jobs; CoCore must not advertise them for structured output. Plain-text
-> and tool-calling behavior is separate from the structured-output gate.
+> **CoCore compatibility status.** The released Mei 0.7.0 binary implements
+> token-level `response_format` constrained decoding; its exact CoCore
+> structured-output canary and full 9-test live acceptance suite passed with
+> `mlx-community/Qwen3-4B-4bit` on Sulaco. An unreleased Mei candidate
+> (`ea5a67a`) has now passed the same full live acceptance suite 9/9 on Qwen3.6
+> text-only, Qwen3.6 vision, and aligned Ornith, including buffered and SSE
+> canaries, ordinary text/tool regressions, and fail-closed truncation checks.
+> This does not change the released 0.7.0 binary. CoCore's attached-agent
+> capability readback for these newly verified checkpoints is still pending;
+> do not claim the current CoCore agent advertises them. The Qwen3.6 vision
+> test used a text-only prompt; image-conditioned structured output remains
+> unverified. Plain-text and tool-calling behavior is separate from the
+> structured-output gate.
 >
 > The feature enforces only the documented strict subset and rejects unsupported
 > or unsatisfiable schemas before generation. A tokenizer/template preflight

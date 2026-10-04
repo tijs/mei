@@ -23,11 +23,15 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **0.7.0** adds token-level constrained structured output (`json_object` and a
 strict recursive `json_schema` subset), plus exact-decimal numeric constraints
-and fail-closed schema validation. The feature passed the full test suite and
-live CoCore/acceptance checks with `mlx-community/Qwen3-4B-4bit`. **This is
-model-specific:** Qwen3.6 and Ornith fail the structured-output canary and are
-not eligible for schema jobs until revalidated successfully. See
-[CoCore compatibility](docs/COCORE.md) and the [compatibility matrix](docs/OPENAI-COMPATIBILITY.md).
+and fail-closed schema validation. The released 0.7.0 binary passed the full
+live CoCore/acceptance checks with `mlx-community/Qwen3-4B-4bit`. An unreleased
+candidate (`ea5a67a`) now also passes Mei's 9/9 live acceptance suite on Qwen3.6
+text-only, Qwen3.6 vision, and aligned Ornith. This candidate result does not
+change the 0.7.0 binary or mean CoCore currently advertises those checkpoints;
+the attached-agent capability readback is still pending. Qwen3.6 vision was
+tested with a text-only canary prompt; image-conditioned structured output is
+not part of this evidence. See [CoCore compatibility](docs/COCORE.md) and the
+[compatibility matrix](docs/OPENAI-COMPATIBILITY.md).
 
 Earlier releases fixed prefix reuse, added cross-conversation prefix anchors,
 per-request instrumentation, and source-built Metal kernel packaging; see
