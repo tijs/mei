@@ -205,15 +205,21 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   model to produce JSON / the API will throw an error if the string `JSON`
   does not appear in the context" safeguard is deliberately **not**
   replicated: CoCore's exact canary prompt contains no such instruction, and
-  constrained decoding structurally prevents non-JSON output (a whitespace-only
-  unterminated run fails closed as `engine_error`/`stream_error`, rather than
-  being returned as a successful length-truncated response).
+  constrained decoding structurally prevents non-JSON output (an unterminated
+  run fails closed as `engine_error`/`stream_error`, rather than being
+  returned as a successful length-truncated response).
 - Structured requests are compiled **before generation** (HTTP 400 on any
   unsupported construct, including for streaming requests — the SSE response
   has not started), and enforced token-by-token by `JSONGrammarLogitProcessor`
   riding the ordinary single-sequence, non-speculative decode path through the
   vmlx `additionalProcessor:` seam, composed **after** the built-in penalty
-  processors. The response DTOs are unchanged (same `completionResponse` /
+  processors. The token mask is a strict subset of the byte grammar: while the
+  root value is incomplete it bounds whitespace runs to one whitespace-only
+  token, so a checkpoint that prefers whitespace over structural bytes cannot
+  spend the whole budget without making progress; after the root value
+  completes, trailing whitespace is unbounded. Nothing the mask admits is
+  rewritten, and the byte grammar's accepted language is unchanged. The
+  response DTOs are unchanged (same `completionResponse` /
   SSE chunk shape as any other completion).
 - Guarantee: content returned with `finish_reason: "stop"` is a complete JSON
   value — for `json_schema`, exactly the compiled value shape (no prose, no
