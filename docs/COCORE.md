@@ -27,12 +27,15 @@ ones Mei is tested against.
 > (`ea5a67a`) has now passed the same full live acceptance suite 9/9 on Qwen3.6
 > text-only, Qwen3.6 vision, and aligned Ornith, including buffered and SSE
 > canaries, ordinary text/tool regressions, and fail-closed truncation checks.
-> This does not change the released 0.7.0 binary. CoCore's attached-agent
-> capability readback for these newly verified checkpoints is still pending;
-> do not claim the current CoCore agent advertises them. The Qwen3.6 vision
-> test used a text-only prompt; image-conditioned structured output remains
-> unverified. Plain-text and tool-calling behavior is separate from the
-> structured-output gate.
+> A separate CoCore `AttachedEngine` live probe reported
+> `ready=true structured_output=true` for all three; its forced-tool canary
+> reported `tool_calls=false` for both Qwen3.6 profiles and `true` for Ornith.
+> This does not change the released 0.7.0 binary. CoCore's LaunchAgent is not
+> currently online, so provider Register/PDS advertisement of these candidate
+> IDs is not yet verified; do not claim the current CoCore agent advertises
+> them. The Qwen3.6 vision test used a text-only prompt; image-conditioned
+> structured output remains unverified. Plain-text and tool-calling behavior
+> is separate from the structured-output gate.
 >
 > The feature enforces only the documented strict subset and rejects unsupported
 > or unsatisfiable schemas before generation. A tokenizer/template preflight
