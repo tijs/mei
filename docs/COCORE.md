@@ -1,6 +1,6 @@
 # CoCore attached-engine integration
 
-This document records how Mei (0.7.0) interoperates with the
+This document records how Mei (0.7.1) interoperates with the
 [CoCore](https://github.com/graze-social/cocore) agent's **attached engine**
 mode, shipped in
 [graze-social/cocore PR #237](https://github.com/graze-social/cocore/pull/237)
@@ -10,7 +10,7 @@ mlx_lm) + per-model admission gate", merged as commit
 description of the same feature is `docs/attached-engine.md` in that
 repository; this page is the Mei-side mirror: what Mei must serve, what
 CoCore proves at startup, what the canaries expect, and what remains
-model-specific in Mei 0.7.0. The wire contract Mei implements is
+model-specific in Mei 0.7.1. The wire contract Mei implements is
 frozen in **[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md)**; this
 page assumes it.
 
@@ -20,13 +20,20 @@ that, and proxies jobs to it over loopback HTTP. This is the integration
 surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
-> **CoCore compatibility status.** Mei 0.7.0 implements token-level `response_format`
-> constrained decoding. The exact CoCore structured-output canary and the full
-> 9-test live acceptance suite passed with `mlx-community/Qwen3-4B-4bit` on
-> Sulaco. This support is **checkpoint-specific**: Qwen3.6 text-only, Qwen3.6
-> vision, and Ornith failed their live canaries and remain unavailable for
-> schema jobs; CoCore must not advertise them for structured output. Plain-text
-> and tool-calling behavior is separate from the structured-output gate.
+> **CoCore compatibility status.** Mei 0.7.1 fixes two token-level grammar
+> liveness defects while preserving strict constraints and fail-closed behavior.
+> Runtime source commit `ea5a67a` (included in 0.7.1; subsequently only the
+> version constant changed) passed Mei's live 9-test acceptance suite on Qwen3.6
+> text-only, Qwen3.6 vision (text-only requests), and aligned Ornith; the
+> previous 0.7.0 Qwen3-4B pass remains valid. CoCore's actual `AttachedEngine`
+> readback returned `ready=true structured_output=true` for all three; its tool
+> canary returned `tool_calls=false` for both Qwen3.6 profiles and `true` for
+> Ornith. The built 0.7.1 package was not loaded against large models during this
+> release run. The LaunchAgent is currently offline and the provider
+> Register/PDS advertisement for these IDs has not been verified; Mei's release
+> does not alter that state. Image-conditioned structured output on Qwen3.6
+> vision remains unverified. Plain-text and tool-calling behavior are separate
+> capability gates.
 >
 > The feature enforces only the documented strict subset and rejects unsupported
 > or unsatisfiable schemas before generation. A tokenizer/template preflight
@@ -38,7 +45,7 @@ Mei runs as **one server per model process**. For the CoCore recipe on
 Apple Silicon (from PR #237):
 
 ```bash
-brew install tijs/tap/mei                 # mei 0.7.0
+brew install tijs/tap/mei                 # mei 0.7.1
 mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
     --served-model-id mlx-community/Qwen3-4B-4bit
 ```
@@ -215,22 +222,19 @@ Also exactly as CoCore sends it (`structured_output_canary_body`):
   `0151475bf8c98de10a64cab51c23a46dd84a8fe1` also reported readiness, passed
   the tool and structured canaries, and successfully proxied buffered and SSE
   structured jobs.
-- **Per-checkpoint, not model-general:** the same exact canary was run
-  against Qwen3.6 and Ornith using the 0.7.0 release-candidate feature build;
-  all failed closed. Qwen3.6 text-only
-  (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, revision
-  `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`) and its vision sibling
-  (`mlx-community/Qwen3.6-35B-A3B-4bit`) returned HTTP 500 `engine_error`
-  (`structured output constraint failed: generation stopped before a complete
-  JSON value was produced`); Ornith returned HTTP 500 `engine_error`
-  (`structured output constraint failed: no token in the vocabulary can
-  advance the grammar`). Plain text still works on the Qwen3.6 text-only
-  process, so normal serving is unaffected. A failed canary means CoCore
-  simply does not advertise the model for schema jobs: these checkpoints must
-  stay disabled until a fix lands and a live canary passes. Per-model
-  evidence table: [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
+- **Per-checkpoint, not model-general:** the exact canary now passes on Qwen3.6
+  text-only (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, revision
+  `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`), its vision sibling
+  (`mlx-community/Qwen3.6-35B-A3B-4bit`; text-only request), and aligned Ornith
+  (`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`) on Mei 0.7.1. Each passed
+  Mei's live 9-test suite and CoCore's attached-engine buffered/SSE canary.
+  The Qwen3.6 tool canaries failed, while Ornith's passed; do not infer tool
+  support from structured-output support. Provider Register/PDS advertisement
+  remains unverified because the CoCore LaunchAgent is offline and its
+  configured model list is unchanged. See the per-model table in
+  [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
 - **Still not proven:** full CoCore advisor connection/Register-frame
-  capability readback for Mei 0.7.0. The attached-engine result is direct
+  capability readback for these model IDs. The attached-engine result is direct
   client/engine evidence, not a claim that advisor registration was observed.
 
 ## Streamed jobs and budgets
@@ -271,7 +275,7 @@ saturated the job is refused up front with HTTP 503 `no-capacity`.
 | `engine-map-invalid` fault | Map URL must be the **server root** without `/v1` (a trailing `/v1` is rejected), `http://` only, one `model = url` per line. |
 | Readiness passes but jobs 404 | Map URL has a path prefix; CoCore appends `/v1/...` itself, so the prefix must sit before `/v1` (e.g. `http://127.0.0.1:8024/llm`). |
 | Model not advertised / model miss | Engine-map key must **exactly equal** the served id. Read it from `GET /v1/models` or the startup line `mei: no --served-model-id given; serving as …`; then `mei --served-model-id <that id>`. |
-| `structured-output-unsupported` on schema jobs | Expected for Qwen3.6 and Ornith until their live canaries pass; only `mlx-community/Qwen3-4B-4bit` is verified for structured output in Mei 0.7.0. |
+| `structured-output-unsupported` on schema jobs | Expected for a checkpoint whose strict canary fails. Qwen3-4B, Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and aligned Ornith passed Mei's live canaries on their documented versions; CoCore's installed provider advertisement for the three new IDs is not verified. See the per-checkpoint matrix. |
 | `engine-busy` refusals | Gate is full (1 running + 1 queued). One model per process — start another `mei` on its own port for more concurrency. |
 | Job times out waiting for first token | First-token budget is 300 s. Cold prefill of a 20k-token system+tools prompt can take ~50 s; if it exceeds the budget, the model is not actually ready — watch `mei:` startup logs. |
 | Tool canary fails intermittently | `tool_choice` is now pinned to `report_status` in Mei (nested `function.name` extraction); verify with the regression test. Template-level forced-call fidelity still depends on the model. |

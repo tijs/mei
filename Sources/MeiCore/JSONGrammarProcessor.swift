@@ -68,6 +68,13 @@ public struct StaticTokenFragmentTable: TokenFragmentTable {
 /// illegal sampled token throws and poisons the state (`grammarFailed`); a
 /// premature EOS throws (`prematureEndOfSequence`). None of these may be
 /// reported as a successful structured response.
+///
+/// The token-level mask is a strict subset of the byte grammar: while the
+/// root value is incomplete it bounds whitespace runs (one whitespace-only
+/// token at a time) so a model that prefers whitespace over structural bytes
+/// cannot pad the budget without progress. Everything the mask admits still
+/// satisfies the byte grammar; whitespace outside the run bound simply goes
+/// unsampled rather than being rewritten.
 public struct JSONGrammarProcessor: Sendable {
 
     /// The compiled format this processor enforces.
@@ -79,6 +86,20 @@ public struct JSONGrammarProcessor: Sendable {
 
     private let table: any TokenFragmentTable
     private var state: JSONGrammarState
+
+    /// True when the most recently consumed token's fragment was whitespace
+    /// only. While the root value is incomplete the mask refuses a second
+    /// consecutive whitespace-only token: JSON whitespace is legal at every
+    /// structural position, so a model that prefers whitespace when its
+    /// natural continuation is masked would otherwise pad the whole token
+    /// budget without ever starting the value (observed live on the Qwen3.6
+    /// checkpoints: 64 leading whitespace tokens, `incompleteAtStop`).
+    /// Bounding the run forces structural progress; every emitted document is
+    /// still valid JSON, and the byte grammar still accepts arbitrary
+    /// whitespace — only the token-level mask is stricter. After the root
+    /// value completes, trailing whitespace is unbounded again (a completed
+    /// run is already reportable).
+    private var previousFragmentWasWhitespaceOnly = false
 
     /// Builds a processor for a compiled format. `.text` has no grammar and
     /// throws `unconstrainedFormat`.
@@ -109,9 +130,10 @@ public struct JSONGrammarProcessor: Sendable {
 
     // MARK: Lifecycle
 
-    /// Prompt-reset hook: starts a fresh grammar for a new request.
+    /// Prompt-reset hook: starts a fresh grammar for the new request.
     public mutating func reset() {
         state.reset()
+        previousFragmentWasWhitespaceOnly = false
     }
 
     /// A copy whose mutable state is independent of the receiver's. All
@@ -124,13 +146,17 @@ public struct JSONGrammarProcessor: Sendable {
     // MARK: Allowed-token decisions
 
     /// Whether `tokenId` can be sampled in the current state. EOS is allowed
-    /// only after a complete root value.
+    /// only after a complete root value; while the root value is incomplete a
+    /// whitespace-only fragment is refused when the previous fragment was also
+    /// whitespace only (the anti-stall rule; see
+    /// `previousFragmentWasWhitespaceOnly`).
     public func isAllowed(tokenId: Int) -> Bool {
         guard tokenId >= 0, tokenId < table.vocabularySize else { return false }
         if table.endOfSequenceTokenIds.contains(tokenId) {
             return state.status == .complete
         }
         guard let fragment = table.fragment(forTokenId: tokenId), !fragment.isEmpty else { return false }
+        if isStalledWhitespace(fragment) { return false }
         var trial = state
         return trial.consume(fragment: fragment)
     }
@@ -209,8 +235,28 @@ public struct JSONGrammarProcessor: Sendable {
         guard let fragment = table.fragment(forTokenId: tokenId), !fragment.isEmpty else {
             throw JSONGrammarError.illegalToken(tokenId)
         }
+        guard !isStalledWhitespace(fragment) else {
+            throw JSONGrammarError.illegalToken(tokenId)
+        }
         guard state.consume(fragment: fragment) else {
             throw JSONGrammarError.illegalToken(tokenId)
         }
+        previousFragmentWasWhitespaceOnly = Self.isWhitespaceOnly(fragment)
+    }
+
+    // MARK: Anti-stall whitespace bound
+
+    /// True when admitting this fragment would extend a whitespace run while
+    /// the root value is incomplete: the mask (and `consume`) refuse it so a
+    /// whitespace-preferring model cannot stall generation without structural
+    /// progress. See `previousFragmentWasWhitespaceOnly`.
+    private func isStalledWhitespace(_ fragment: [UInt8]) -> Bool {
+        state.status == .inProgress && previousFragmentWasWhitespaceOnly
+            && Self.isWhitespaceOnly(fragment)
+    }
+
+    /// JSON whitespace bytes only (`space`, tab, newline, carriage return).
+    private static func isWhitespaceOnly(_ fragment: [UInt8]) -> Bool {
+        fragment.allSatisfy { $0 == 0x20 || $0 == 0x09 || $0 == 0x0A || $0 == 0x0D }
     }
 }

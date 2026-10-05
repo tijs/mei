@@ -10,23 +10,27 @@ labeled with the exact source location; anything not yet pinned by tests is
 explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
-- Mei release pin: `ServerConfig.version = "0.7.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  planned release tag `v0.7.0` (2026-10-02).
+- Mei release pin: `ServerConfig.version = "0.7.1"` (`Sources/MeiCore/ServerConfig.swift:7`),
+  release tag `v0.7.1` (2026-10-05).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
-- Mei 0.7.0 engine pin: `tijs/vmlx-swift`
-  `633fe166630ef04310aea7d5a1795555ab32970d`, pushed to the public fork. The
+- Mei 0.7.1 engine pin: `tijs/vmlx-swift`
+  `633fe166630ef04310aea7d5a1795555ab32970d`, unchanged since 0.7.0. The
   released 0.6.1 binary used `fef563a5`; structured output requires the newer
   seam.
 
-> **Mei 0.7.0 structured-output status.** `response_format` is shipped and
-> enforced by token-level constrained decoding. The exact CoCore canary and
-> the full 9-test live acceptance suite passed with `mlx-community/Qwen3-4B-4bit`.
-> Structured-output compatibility remains checkpoint-specific: Qwen3.6
-> (text-only and vision) and Ornith fail closed; they must not be advertised for
-> schema jobs until their canaries pass. The shipped 0.7.0 release uses the
-> `633fe166` vmlx seam; 0.6.1 used `fef563a5`. Full CoCore advisor
-> Register-frame capability readback is not claimed here. Everything else
-> below records the broader Chat Completions contract and deferred fields.
+> **Mei 0.7.1 structured-output status.** `response_format` remains enforced
+> by token-level constrained decoding. 0.7.1 fixes tokenizer escape-prefix
+> dead ends and whitespace-only stalls without relaxing the schema grammar.
+> Mei's full live 9-test acceptance suite and CoCore's attached-engine buffered
+> and SSE strict canaries passed on Qwen3.6 text-only, Qwen3.6 vision (text-only
+> request), and aligned Ornith; Qwen3-4B remains a previously verified pass.
+> CoCore's attached engine reports `structured_output=true` on the three new
+> checkpoints. Its tool canary failed for both Qwen3.6 profiles and passed for
+> Ornith, so tool support is distinct. CoCore's installed LaunchAgent/provider
+> Register advertisement is not verified. Image-conditioned structured output
+> for Qwen3.6 vision and post-fix Qwen3-8B remain unverified. The shipped 0.7.1
+> release uses the `633fe166` vmlx seam; 0.6.1 used `fef563a5`. Everything
+> else below records the broader Chat Completions contract and deferred fields.
 
 ## 1. Official reference pin
 
@@ -104,9 +108,11 @@ Shipped and covered by tests at this pin:
    `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`/`multipleOf` —
    with exact decimal semantics; see §3/§4). Model-free tests cover
    decode/compile/mask/response paths; the exact CoCore canary passed in live
-   buffered and SSE runs on `mlx-community/Qwen3-4B-4bit` — the only
-   checkpoint that has passed so far; no other tested checkpoint has passed,
-   and the shipped Qwen3.6 and Ornith profiles fail closed (§4, §8).
+   buffered and SSE runs on `mlx-community/Qwen3-4B-4bit`. Mei 0.7.1 also
+   passed the live canary on Qwen3.6 text-only, Qwen3.6 vision (text-only
+   requests), and aligned Ornith (§8). Qwen3.6 tool-call support is not
+   established; the CoCore attached engine reported it false. The Qwen3.6
+   vision model was not tested with image input.
 
 Everything else from the official reference is **deferred** (§7).
 
@@ -205,15 +211,21 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   model to produce JSON / the API will throw an error if the string `JSON`
   does not appear in the context" safeguard is deliberately **not**
   replicated: CoCore's exact canary prompt contains no such instruction, and
-  constrained decoding structurally prevents non-JSON output (a whitespace-only
-  unterminated run fails closed as `engine_error`/`stream_error`, rather than
-  being returned as a successful length-truncated response).
+  constrained decoding structurally prevents non-JSON output (an unterminated
+  run fails closed as `engine_error`/`stream_error`, rather than being
+  returned as a successful length-truncated response).
 - Structured requests are compiled **before generation** (HTTP 400 on any
   unsupported construct, including for streaming requests — the SSE response
   has not started), and enforced token-by-token by `JSONGrammarLogitProcessor`
   riding the ordinary single-sequence, non-speculative decode path through the
   vmlx `additionalProcessor:` seam, composed **after** the built-in penalty
-  processors. The response DTOs are unchanged (same `completionResponse` /
+  processors. The token mask is a strict subset of the byte grammar: while the
+  root value is incomplete it bounds whitespace runs to one whitespace-only
+  token, so a checkpoint that prefers whitespace over structural bytes cannot
+  spend the whole budget without making progress; after the root value
+  completes, trailing whitespace is unbounded. Nothing the mask admits is
+  rewritten, and the byte grammar's accepted language is unchanged. The
+  response DTOs are unchanged (same `completionResponse` /
   SSE chunk shape as any other completion).
 - Guarantee: content returned with `finish_reason: "stop"` is a complete JSON
   value — for `json_schema`, exactly the compiled value shape (no prose, no
@@ -260,14 +272,11 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   "stop"` and six completion tokens in both runs. The live server for the
   original canary runs used `--enable-thinking false`, `--compiled-decode
   false`, and `--cache-reuse false` — the ordinary single-sequence,
-  non-compiled decode path (thinking off; prefix cache disabled). This
-  proves one real
-  tokenizer/vocabulary/chat-template path, not all model families — no other
-  checkpoint has passed: the Qwen3.6 text-only, Qwen3.6 vision, and Ornith
-  profiles each fail the canary closed in the Mei 0.7.0 feature build
-  (§8). The expanded numeric/array schema features (`minimum`/`maximum`,
-  `multipleOf`, scalar enums, `minItems`/`maxItems`) also passed live buffered
-  + SSE on this checkpoint.
+  non-compiled decode path (thinking off; prefix cache disabled). The expanded
+  numeric/array schema features (`minimum`/`maximum`, `multipleOf`, scalar
+  enums, `minItems`/`maxItems`) also passed live buffered + SSE on that
+  checkpoint. Mei 0.7.1 subsequently passed strict canaries on Qwen3.6
+  text-only, Qwen3.6 vision (text input only), and aligned Ornith; see §8.
 - CoCore evidence: the merged attached-engine implementation at commit
   `0151475bf8c98de10a64cab51c23a46dd84a8fe1` reported readiness, tool canary
   pass, structured-output canary pass, and successful buffered/streaming proxy
@@ -464,49 +473,62 @@ black-box probes):
 ### Structured-output live model matrix
 
 Live evidence is **per checkpoint**: a pass on one checkpoint is not evidence
-for any other model family, and a tokenizer/template preflight is not evidence
-at all — only a completed canary run is. The Qwen3-4B row is verified on the
-Mei 0.7.0 release binary (source commit `107414a`); its full live acceptance
-suite passed 9/9 on 2026-10-02. Qwen3.6 and Ornith have separate failed-canary
-results against the same feature implementation and remain unsupported for
-schema jobs. A checkpoint that does not pass is **not advertised** (CoCore
-lists a model only after its structured canary passes) and must remain disabled
-pending a fix and a successful live canary. A failed structured canary does not
-change normal serving compatibility (plain text, tool calls), which is tracked
-separately from this matrix.
+for another model family, and a tokenizer/template preflight is not evidence at
+all — only a completed canary run is. The released Mei 0.7.0 binary passed the
+full `MeiAcceptanceTests` suite 9/9 on `mlx-community/Qwen3-4B-4bit` on
+2026-10-02. The runtime fix at commit `ea5a67a` passed the same 9-test live
+suite on Qwen3.6 text-only, Qwen3.6 vision, and aligned Ornith on 2026-10-04;
+this code is included in 0.7.1, whose only later product-source change is the
+version constant. CoCore's actual `AttachedEngine` independently passed its
+buffered and SSE canaries on all three. The packaged 0.7.1 binary was not
+loaded against models during this release run. The vision checkpoint was
+exercised with text-only requests; image-conditioned structured output is
+unverified. Provider Register/PDS advertisement remains unverified; a
+checkpoint that fails its canary must remain unadvertised.
 
 | Checkpoint (HF revision) | Result | Live evidence |
 |---|---|---|
 | `mlx-community/Qwen3-4B-4bit` (`4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25`) | **PASS** | Mei 0.7.0 release binary passed the full `MeiAcceptanceTests` suite **9/9** on 2026-10-02, including buffered and streaming structured canaries and both fail-closed truncation transports. Expanded schema features also passed live buffered + SSE: integer `count = 3` under bounds 3..3, number `ratio = 0.3` with exact `multipleOf: 0.1`, and `labels = ["alpha","beta"]` with enum items and item count 2; unsupported `pattern` → HTTP 400 `response_format_unsupported` before generation. |
-| Qwen3.6-35B-A3B **text-only** (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`; profile `qwen3.6-35b-a3b-text`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`generation stopped before a complete JSON value was produced`) at both 64- and 16-token budgets; a plain prompt on the same process returned HTTP 200 text (`hello`), so normal generation works and the failure is specific to structured output; no streaming run was made. Not supported — keep disabled. |
-| Qwen3.6-35B-A3B **vision** (`mlx-community/Qwen3.6-35B-A3B-4bit`, `38740b847e4cb78f352aba30aa41c76e08e6eb46`; profile `qwen3.6-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (same incomplete-JSON failure), tested independently of the text-only sibling; no streaming run was made. Not supported — keep disabled. |
-| **Ornith 1.5 35B-A3B** (`ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit`, `19504d912fa8fc7622bf6b1de3db5d5d890b1f02`, aligned repack; profile `ornith-1.5-35b-a3b`) | **FAIL CLOSED** | Exact canary → HTTP 500 `engine_error` (`no token in the vocabulary can advance the grammar`); matches the offline preflight warning that Ornith's tokenizer backend/template differs; no streaming run was made. Not supported — keep disabled. |
-| `mlx-community/Qwen3-8B-4bit` (`545dc4251c05440727734bcd94334791f6ab0192`) | fail (not promoted) | Plain completion, tool calls, and fail-closed truncation transport passed live; the structured canary did not complete — the checkpoint spent its structured token budget emitting whitespace, and Mei correctly returned `engine_error`/`stream_error`. Not structured-success evidence. |
+| Qwen3.6-35B-A3B **text-only** (`Tostibrown/Qwen3.6-35B-A3B-4bit-textonly`, `693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56`; profile `qwen3.6-35b-a3b-text`) | **PASS on 0.7.1 runtime source (`ea5a67a`)** | Runtime fix commit `ea5a67a` passed live `MeiAcceptanceTests` **9/9** on 2026-10-04. Buffered and SSE exact CoCore canaries passed; ordinary text, both tool paths, and both fail-closed truncation transports also passed. CoCore `AttachedEngine` separately read back `ready=true structured_output=true tool_calls=false`; its buffered/SSE schema canary passed. Provider Register/PDS readback was not run. The packaged 0.7.1 binary was not model-loaded; only the version constant changed after this test source. |
+| Qwen3.6-35B-A3B **vision** (`mlx-community/Qwen3.6-35B-A3B-4bit`, `38740b847e4cb78f352aba30aa41c76e08e6eb46`; profile `qwen3.6-35b-a3b`) | **PASS on 0.7.1 runtime source (`ea5a67a`, text input only)** | Runtime fix commit `ea5a67a` passed live `MeiAcceptanceTests` **9/9** on 2026-10-04: buffered + SSE exact canaries, ordinary text, both tool paths, and both fail-closed truncation transports. CoCore `AttachedEngine` separately read back `ready=true structured_output=true tool_calls=false`; its buffered/SSE schema canary passed. Provider Register/PDS readback was not run. Request contained text only; image-conditioned structured output was not tested. The packaged 0.7.1 binary was not model-loaded; only the version constant changed after this test source. |
+| **Ornith 1.5 35B-A3B aligned** (`Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned`, `ddce5cd6e3d8bc720a5bac5a68c22f406f90403d`; profile `ornith-1.5-35b-a3b`) | **PASS on 0.7.1 runtime source (`ea5a67a`)** | Runtime fix commit `ea5a67a` passed live `MeiAcceptanceTests` **9/9** on 2026-10-04: buffered + SSE exact canaries, ordinary text, both tool paths, and both fail-closed truncation transports. CoCore `AttachedEngine` separately read back `ready=true structured_output=true tool_calls=true`; its buffered/SSE schema canary passed. Provider Register/PDS readback was not run. Structured path used ordinary single-sequence, non-compiled decode. The packaged 0.7.1 binary was not model-loaded; only the version constant changed after this test source. |
+| `mlx-community/Qwen3-8B-4bit` (`545dc4251c05440727734bcd94334791f6ab0192`) | **NOT RETESTED after fix** | Its earlier pre-fix live canary stalled on whitespace and failed closed. Candidate `ea5a67a` adds an anti-stall whitespace mask, but this checkpoint has not been re-run on the candidate; do not promote it yet. |
 | `mlx-community/Qwen2.5-3B-Instruct-4bit` (`4f83f8f146fdf28b512a06562b671d7af4fab457`) | fail (not promoted) | Downloaded and exercised as a second family checkpoint; its live acceptance run did not pass the full structured canary class. Not promoted as structured-output evidence. |
 | `mlx-community/Llama-3.2-3B-Instruct-4bit` (`7f0dc925e0d0afb0322d96f9255cfddf2ba5636e`) | fail closed | Plain completion and fail-closed truncation transport passed live; the structured canary failed closed when the tokenizer path reached a state with no legal advancing token; tool-call canaries also did not pass. No structured-success claim. |
 | `mlx-community/gemma-4-12B-it-4bit` (`73bcf09092aa277861d5a191b989b666f7f32e8f`) | fail closed | Attempted once with the exact strict CoCore canary (thinking disabled, `max_tokens` 64, buffered only): generation stopped before a complete JSON value → HTTP 500 `engine_error`; no streaming run was made. No structured-success claim; cache removed after the test. |
 
-Checkpoint facts for the passing row: `tokenizer_class: Qwen2Tokenizer`; the
-4116-char chat template branches on `enable_thinking` and emits the
-`<think>`/`</think>` reasoning delimiters (added tokens 151667/151668);
-`config.json` sets `eos_token_id: 151645`; the tokenizer maps `<|im_end|>` →
-151645, `<|im_start|>` → 151644, and `<|endoftext|>` → 151643. The live
-server for the original canary runs used `--enable-thinking false`,
-`--compiled-decode false`, `--cache-reuse false` — the ordinary
-single-sequence, non-compiled decode path. Only this checkpoint is promoted as structured-success evidence.
+Checkpoint facts for the released Qwen3-4B row: `tokenizer_class:
+Qwen2Tokenizer`; its chat template branches on `enable_thinking` and emits
+`<think>`/`</think>` delimiters (added tokens 151667/151668); its `eos_token_id`
+is 151645. The 2026-10-02 release canary used thinking=false, compiled-decode
+false, and cache-reuse=false.
+
+Candidate-matrix tokenizer facts (metadata preflight, followed by successful
+runtime canaries): Qwen3.6 text-only reports `TokenizersBackend`, vocab size
+248044 in tokenizer metadata, EOS 248046; its vision sibling has the same
+`tokenizer.json` hash, vocabulary, special tokens, and chat template. Ornith
+reports `Qwen2Tokenizer`, the same token-to-ID mapping and EOS 248046, but a
+different tokenizer hash and chat template. On these three roots the exact
+canary tokenizes as `[4754, 2738, 3147, 547, 8934]` (`{"`, `status`, `":"`,
+`ok`, `"}`). With `enable_thinking=false`, the templates render an empty think
+block before assistant generation. The candidate live runs used each model's
+named profile, `--compiled-decode false`, and the ordinary single-sequence
+structured path; no batch or speculative structured path was enabled. The
+vision canary had text input only.
 
 Not yet pinned by tests (do not claim as verified): §6 policy statements,
 `max_completion_tokens` inertness, unknown-field ignorance, the complete
 400/404/413/500 error-envelope matrix, and non-function tool pass-through.
-The live evidence is checkpoint-specific: only `mlx-community/Qwen3-4B-4bit`
-has passed the structured canary; the Qwen3.6 (text-only and vision) and
-Ornith checkpoints failed closed (above) and remain unsupported for
-structured output. Full CoCore advisor connection/Register-frame capability
-readback remains unverified; this evidence covers Mei's live canaries and
-attached-engine proxy calls, not advisor registration. The live probes are
-`MeiAcceptanceTests.testCoCoreStructuredOutputCanaryNonStreaming` and
-`testCoCoreStructuredOutputCanaryStreaming`; they require a running server with
-an available local model.
+The Mei 0.7.1 candidate passed strict structured canaries on Qwen3.6 text-only,
+Qwen3.6 vision (text requests only), and aligned Ornith, as well as the
+previously verified released Qwen3-4B checkpoint. Qwen3-8B has not been
+retested after the anti-stall fix. CoCore's actual `AttachedEngine` returned
+`ready=true structured_output=true` for the three newly tested checkpoints;
+its tool canary passed only for Ornith. The local CoCore LaunchAgent is not
+loaded and its doctor reports the advisor offline; configured model list
+remains Qwen3-4B, so provider Register/PDS advertisement of the new model IDs
+is not verified. The live Mei/attached-engine results are not evidence that
+the current advisor registered or advertises those model IDs.
 
 ## 9. Open ambiguities
 

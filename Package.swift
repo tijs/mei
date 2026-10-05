@@ -47,6 +47,11 @@ let package = Package(
                 "MeiCore",
                 .product(name: "MLX", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
+                // The structured-output model matrix tests load the staged
+                // checkpoints' real tokenizer.json through the same
+                // `#huggingFaceTokenizerLoader()` bridge the Engine uses.
+                .product(name: "MLXHuggingFace", package: "vmlx-swift"),
+                .product(name: "VMLXTokenizers", package: "vmlx-swift"),
             ]
         ),
     ]

@@ -708,6 +708,16 @@ public struct JSONGrammarState: Sendable, Equatable {
         guard let nibble = Self.hexNibble(byte) else { return .rejected }
         let newValue = (value << 4) | UInt32(nibble)
         guard nibbles == 3 else {
+            // Liveness: a partially consumed escape must keep some completion
+            // the role can accept. Without this check `\u00e` could be
+            // consumed for a key that needs `t` next — every 4-nibble
+            // completion of 0x00Ex is rejected by the matcher — and the next
+            // mask would be empty (`noLegalContinuation`, observed live on the
+            // Ornith checkpoint's `{"s\u00e` path).
+            guard
+                escapeCompletionIsFeasible(
+                    role: role, partial: newValue, remainingNibbles: 3 - nibbles)
+            else { return .rejected }
             phase = .unicodeEscape(role, nibbles: nibbles + 1, value: newValue)
             return .consumed
         }
@@ -745,6 +755,15 @@ public struct JSONGrammarState: Sendable, Equatable {
             if nibbleIndex == 1, !(0xC...0xF).contains(nibble) { return .rejected }
             let newValue = (value << 4) | UInt32(nibble)
             guard nibbleIndex == 3 else {
+                // Liveness: the pending low-surrogate nibbles must still be
+                // able to reach a scalar the role accepts (e.g. U+1F600 pairs
+                // 0xD83D with 0xDE00, so `\uD83D\uDC…` can never complete it
+                // and must be masked before the dead-end is entered).
+                guard
+                    lowSurrogateCompletionIsFeasible(
+                        role: role, high: high, partialLow: newValue,
+                        remainingNibbles: 3 - nibbleIndex)
+                else { return .rejected }
                 phase = .lowSurrogateEscape(role, high: high, offset: offset + 1, value: newValue)
                 return .consumed
             }
@@ -787,6 +806,58 @@ public struct JSONGrammarState: Sendable, Equatable {
         case .key(let matcher), .enumValue(let matcher):
             return matcher.canAppend(scalarIn: range)
         }
+    }
+
+    /// True when at least one completion of a partially consumed `\uXXXX`
+    /// escape can still be appended to the current string role.
+    ///
+    /// The pending nibbles complete to a contiguous scalar range; the role
+    /// must accept some scalar in it — directly (non-surrogate scalars) or
+    /// through a surrogate pair (a completed high surrogate pairs into
+    /// U+10000...U+10FFFF). `plain`/`freeKey` roles accept every scalar, so
+    /// only key/enum matchers can be infeasible.
+    private func escapeCompletionIsFeasible(
+        role: StringRole, partial: UInt32, remainingNibbles: Int
+    ) -> Bool {
+        let shift = UInt32(4 * remainingNibbles)
+        let low = partial << shift
+        let high = low | ((UInt32(1) << shift) - 1)
+        return scalarRangeIsFeasible(role: role, low: low, high: high)
+    }
+
+    /// True when some completion of the pending low-surrogate nibbles can
+    /// still produce a scalar the role accepts. `partialLow` only holds the
+    /// nibbles consumed so far; the remaining ones complete a contiguous
+    /// 0xDC00...0xDFFF low-surrogate range that maps to supplementary scalars.
+    private func lowSurrogateCompletionIsFeasible(
+        role: StringRole, high: UInt32, partialLow: UInt32, remainingNibbles: Int
+    ) -> Bool {
+        let shift = UInt32(4 * remainingNibbles)
+        let rawLow = partialLow << shift
+        let rawHigh = rawLow | ((UInt32(1) << shift) - 1)
+        let lowLow = Swift.max(rawLow, 0xDC00)
+        let lowHigh = Swift.min(rawHigh, 0xDFFF)
+        guard lowLow <= lowHigh else { return false }
+        let base = 0x10000 + ((high - 0xD800) << 10)
+        return roleAllowsScalarRange(role, (base + (lowLow - 0xDC00))...(base + (lowHigh - 0xDC00)))
+    }
+
+    /// True when the role accepts some scalar in `low...high`, considering
+    /// both direct (non-surrogate) scalars and the supplementary planes
+    /// reachable through a surrogate pair.
+    private func scalarRangeIsFeasible(role: StringRole, low: UInt32, high: UInt32) -> Bool {
+        if low <= 0xD7FF, roleAllowsScalarRange(role, low...Swift.min(high, 0xD7FF)) {
+            return true
+        }
+        if high >= 0xE000,
+            roleAllowsScalarRange(role, Swift.max(low, 0xE000)...Swift.min(high, 0x10FFFF))
+        {
+            return true
+        }
+        if low <= 0xDBFF, high >= 0xD800, roleAllowsScalarRange(role, 0x10000...0x10FFFF) {
+            return true
+        }
+        return false
     }
 
     // MARK: Numbers and literals
