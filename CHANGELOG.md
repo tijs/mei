@@ -2,6 +2,28 @@
 
 All notable changes to Mei are documented here.
 
+## [0.7.1] - 2026-10-05
+
+Strict structured output now passes the exact buffered and streaming CoCore
+canaries on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and aligned
+Ornith. The previous tokenizer grammar could admit an escape prefix that no
+schema-valid key/value could complete, leaving no legal next token; repeated
+JSON-whitespace tokens could also consume the entire token budget without
+starting a value. The grammar now rejects infeasible escape/surrogate prefixes,
+and the token mask bounds consecutive whitespace-only tokens while a value is
+incomplete. Both changes preserve token-level enforcement and fail-closed
+responses; no prompt-only JSON instruction or output repair is used.
+
+The runtime fix at commit `ea5a67a` passed the live 9-test Mei acceptance
+suite on all three checkpoints; that commit is included in 0.7.1, with the
+version constant as the only later product-source change. CoCore's
+attached-engine canary separately read back `structured_output=true` for all
+three. Its tool-call canary passed on aligned Ornith, but not on the two
+Qwen3.6 profiles; tool-call support is a separate capability. The Qwen3.6
+vision test used text input only; image-conditioned structured output was not
+exercised. CoCore's LaunchAgent/provider record is not automatically
+reconfigured by this release.
+
 ## [0.7.0] - 2026-10-02
 
 Strict structured output is now available through token-level constrained
