@@ -19,22 +19,29 @@ architectures, and **in-process KV/prefix reuse** across turns. It is a focused
 runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Current stable release: **0.7.1**.
+[`NOTICE.md`](NOTICE.md). Current stable release: **0.8.0**.
 
 **0.7.0** introduced token-level constrained structured output (`json_object`
 and a strict recursive `json_schema` subset), plus exact-decimal numeric
-constraints and fail-closed schema validation. **0.7.1** fixes escape-prefix
-dead ends and whitespace-only generation stalls. Runtime source commit
-`ea5a67a`, included in 0.7.1, passed the exact buffered and streaming CoCore
-canaries on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and aligned
-Ornith, as well as the existing Qwen3-4B checkpoint. The built 0.7.1 binary
-was not loaded against large models during this release run; its only runtime
-source change after those probes was the version string. CoCore's attached
-engine independently read back `structured_output=true` for these three
-models; its tool-call canary passed only for Ornith. The CoCore LaunchAgent /
-provider model list is not changed by Mei's release. Image-conditioned
+constraints and fail-closed schema validation. **0.7.1** fixed escape-prefix
+dead ends and whitespace-only generation stalls. **0.8.0** adds bounded
+admission scheduling in front of the strict single-flight execution slot — a
+bounded local queue (`--max-queue-depth`), a queue-wait budget
+(`--queue-wait-ms`), `mei_priority` interactive/background classes,
+end-to-end cancellation, and a `/v1/mei/status` scheduler block; overload
+refusals are HTTP 429 `queue_full` / 503 `queue_timeout`, and execution stays
+one generation at a time. The scheduling slice is verified by model-free
+tests and a 10-check live HTTP integration run against the packaged 0.8.0
+binary with `mlx-community/Qwen3-4B-4bit` (queue-full HTTP status, priority
+field behavior, disconnect cancellation, and queue-order readback). This is
+scheduler/HTTP lifecycle evidence, not a model-quality claim or evidence for
+overlapping generation. The latest live structured-output evidence remains
+the 0.7.1 runtime source (`ea5a67a`): the exact buffered and streaming CoCore
+canaries passed on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and
+aligned Ornith, as well as the existing Qwen3-4B checkpoint; image-conditioned
 structured output on Qwen3.6 vision remains unverified. See
-[CoCore compatibility](docs/COCORE.md) and the
+[inference scheduling](docs/INFERENCE-SCHEDULING.md),
+[CoCore compatibility](docs/COCORE.md), and the
 [compatibility matrix](docs/OPENAI-COMPATIBILITY.md).
 
 Earlier releases fixed prefix reuse, added cross-conversation prefix anchors,
@@ -161,7 +168,7 @@ pull` handles this; details in [docs/MODELS.md](docs/MODELS.md).
 Deeper detail on the runtime, optimization profiles, memory behavior, and
 design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## Install on Apple Silicon (stable 0.7.1)
+## Install on Apple Silicon (stable 0.8.0)
 
 Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
@@ -169,17 +176,17 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.7.1
+mei --version     # -> mei 0.8.0
 ```
 
-**Manual — release asset:** download `mei-0.7.1-macos-arm64.tar.gz` from the
+**Manual — release asset:** download `mei-0.8.0-macos-arm64.tar.gz` from the
 GitHub release page, verify the `.sha256`, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
 
 See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
 source-built `scripts/install_mei.sh` installer. Release notes:
-[`docs/RELEASE-0.7.1.md`](docs/RELEASE-0.7.1.md).
+[`docs/RELEASE-0.8.0.md`](docs/RELEASE-0.8.0.md).
 
 ## One-time prerequisite: `hf`
 
@@ -245,15 +252,22 @@ mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
 mlx-community/Qwen3-4B-4bit = http://127.0.0.1:8024
 ```
 
-Mei **0.7.1** passes strict structured-output canaries on Qwen3.6 text-only,
-Qwen3.6 vision (text-only request), and aligned Ornith; 0.7.0's Qwen3-4B pass
-also remains valid. CoCore's attached engine reads structured-output support
-for all three new checkpoints, while forced-tool support passed only for
-Ornith. The installed CoCore LaunchAgent/provider advertisement is not updated
-or verified by this release. Qwen3-8B has not been retested after the fix, and
-image-conditioned structured output on Qwen3.6 vision remains unverified. See
-[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md) §8 and
-[docs/COCORE.md](docs/COCORE.md) for exact evidence.
+Mei **0.8.0** carries the 0.7.1 structured-output fixes; the latest live
+verification is the 0.7.1 runtime source (`ea5a67a`), which passed strict
+structured-output canaries on Qwen3.6 text-only, Qwen3.6 vision (text-only
+request), and aligned Ornith; 0.7.0's Qwen3-4B pass also remains valid.
+CoCore's attached engine reads structured-output support for all three new
+checkpoints, while forced-tool support passed only for Ornith. The installed
+CoCore LaunchAgent/provider advertisement is not updated or verified by this
+release. Qwen3-8B has not been retested after the fix, and image-conditioned
+structured output on Qwen3.6 vision remains unverified. 0.8.0 also admits
+requests through a bounded local queue in front of its single execution slot
+(429 `queue_full` / 503 `queue_timeout` refusals) — a backstop behind CoCore's
+gate, not a change to single-flight execution. See
+[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md) §8,
+[docs/COCORE.md](docs/COCORE.md), and
+[docs/INFERENCE-SCHEDULING.md](docs/INFERENCE-SCHEDULING.md) for exact
+evidence.
 
 ## Build
 

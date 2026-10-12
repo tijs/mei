@@ -4,6 +4,8 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 Bounded admission and a cancellable lifecycle in front of the strict
 single-flight execution slot — the first implementation slice of the
 inference-scheduling plan for Peixinho (Kiem plan `820814e1`, stages 3–4).
@@ -45,7 +47,12 @@ timings), and the `--request-log` JSONL gains `priority` and `queue_wait_ms`
 per run. Full contract: `docs/INFERENCE-SCHEDULING.md`. Verified by
 model-free tests (`RequestSchedulerTests`, `CancellableStreamTests`,
 `AdmissionContractTests`, scheduling-flag cases in
-`ServerConfigParsingTests`); no live-model behavior is claimed by this entry.
+`ServerConfigParsingTests`) and a 10-check live HTTP integration run against
+the packaged Mei 0.8.0 binary with `mlx-community/Qwen3-4B-4bit`. The live run
+covered real 429-before-SSE refusal, `mei_priority`/standard `priority`
+handling, disconnect cancellation, and interactive-before-background order;
+it is scheduler/HTTP lifecycle evidence, not a model-quality claim or evidence
+for overlapping generation.
 
 ## [0.7.1] - 2026-10-05
 
