@@ -4,6 +4,8 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 Bounded admission and a cancellable lifecycle in front of the strict
 single-flight execution slot — the first implementation slice of the
 inference-scheduling plan for Peixinho (Kiem plan `820814e1`, stages 3–4).

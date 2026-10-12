@@ -60,7 +60,7 @@ Options: `--prefix DIR` (default `$HOME/.local/bin`), `--binary PATH`,
 installer. Safety contract: writes only to `$PREFIX`; refuses to overwrite a
 differing installed file unless `--force`; idempotent on identical rerun;
 never handles weights. The authoritative install docs —
-including the **stable v0.2.0 Homebrew / release-asset paths** — are
+including the **stable v0.8.0 Homebrew / release-asset paths** — are
 [`docs/INSTALL.md`](INSTALL.md). Deterministic tests:
 `scripts/test_install_mei.sh`.
 
@@ -68,7 +68,7 @@ including the **stable v0.2.0 Homebrew / release-asset paths** — are
 
 ```bash
 # Build a downloadable Apple Silicon release bundle (dist/.../mei-<v>-macos-arm64.tar.gz + .sha256):
-scripts/package_release.sh 0.2.0 --skip-build
+scripts/package_release.sh 0.8.0 --skip-build
 scripts/test_package_release.sh         # packaging/install/version smoke checks
 ```
 

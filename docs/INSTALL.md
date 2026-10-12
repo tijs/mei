@@ -4,19 +4,19 @@ This document covers the **source-built / user-local path** — installing a
 `mei` binary you have *already built* into a single destination directory via
 [`scripts/install_mei.sh`](../scripts/install_mei.sh).
 
-Most end users should instead install the **stable v0.2.0 prebuilt release:**
+Most end users should instead install the **stable v0.8.0 prebuilt release:**
 
 - **Homebrew (recommended):**
   ```bash
   brew install tijs/tap/mei
-  mei --version     # -> mei 0.2.0
+  mei --version     # -> mei 0.8.0
   ```
 - **Manual — GitHub release asset:**
   ```bash
-  curl -fLO https://github.com/tijs/mei/releases/download/v0.2.0/mei-0.2.0-macos-arm64.tar.gz
-  shasum -a 256 -c mei-0.2.0-macos-arm64.tar.gz.sha256
-  tar -xzf mei-0.2.0-macos-arm64.tar.gz
-  ./mei-0.2.0-macos-arm64/bin/mei --version
+  curl -fLO https://github.com/tijs/mei/releases/download/v0.8.0/mei-0.8.0-macos-arm64.tar.gz
+  shasum -a 256 -c mei-0.8.0-macos-arm64.tar.gz.sha256
+  tar -xzf mei-0.8.0-macos-arm64.tar.gz
+  ./mei-0.8.0-macos-arm64/bin/mei --version
   ```
 
 Both already carry the prebuilt `mei` binary and its `mlx.metallib` companion.
@@ -28,7 +28,7 @@ The **source tree** contains no binary and no model weights. That is unchanged
 whether you build from source or pull the release. The two differ in what the
 release bundle actually ships:
 
-- The **stable v0.2.0 release bundle includes the prebuilt binary** (and its
+- The **stable v0.8.0 release bundle includes the prebuilt binary** (and its
   `mlx.metallib`) — download and run, no build step.
 - This **installer copies an already-built binary** into a single, user-local
   destination directory. It never builds, downloads, or handles weights, and

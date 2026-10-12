@@ -1,6 +1,6 @@
 # CoCore attached-engine integration
 
-This document records how Mei (0.7.1) interoperates with the
+This document records how Mei (0.8.0) interoperates with the
 [CoCore](https://github.com/graze-social/cocore) agent's **attached engine**
 mode, shipped in
 [graze-social/cocore PR #237](https://github.com/graze-social/cocore/pull/237)
@@ -10,7 +10,7 @@ mlx_lm) + per-model admission gate", merged as commit
 description of the same feature is `docs/attached-engine.md` in that
 repository; this page is the Mei-side mirror: what Mei must serve, what
 CoCore proves at startup, what the canaries expect, and what remains
-model-specific in Mei 0.7.1. The wire contract Mei implements is
+model-specific in Mei 0.8.0. The wire contract Mei implements is
 frozen in **[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md)**; this
 page assumes it.
 
@@ -20,20 +20,22 @@ that, and proxies jobs to it over loopback HTTP. This is the integration
 surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
-> **CoCore compatibility status.** Mei 0.7.1 fixes two token-level grammar
-> liveness defects while preserving strict constraints and fail-closed behavior.
-> Runtime source commit `ea5a67a` (included in 0.7.1; subsequently only the
-> version constant changed) passed Mei's live 9-test acceptance suite on Qwen3.6
-> text-only, Qwen3.6 vision (text-only requests), and aligned Ornith; the
-> previous 0.7.0 Qwen3-4B pass remains valid. CoCore's actual `AttachedEngine`
-> readback returned `ready=true structured_output=true` for all three; its tool
-> canary returned `tool_calls=false` for both Qwen3.6 profiles and `true` for
-> Ornith. The built 0.7.1 package was not loaded against large models during this
-> release run. The LaunchAgent is currently offline and the provider
-> Register/PDS advertisement for these IDs has not been verified; Mei's release
-> does not alter that state. Image-conditioned structured output on Qwen3.6
-> vision remains unverified. Plain-text and tool-calling behavior are separate
-> capability gates.
+> **CoCore compatibility status.** Mei 0.8.0 adds a bounded local admission
+> queue in front of the single execution slot (a model-free-verified
+> scheduling slice; no live-model behavior is claimed for it) and carries the
+> 0.7.1 fixes to two token-level grammar liveness defects while preserving
+> strict constraints and fail-closed behavior. Runtime source commit `ea5a67a`
+> (included in 0.7.1 and carried into 0.8.0) passed Mei's live 9-test
+> acceptance suite on Qwen3.6 text-only, Qwen3.6 vision (text-only requests),
+> and aligned Ornith; the previous 0.7.0 Qwen3-4B pass remains valid. CoCore's
+> actual `AttachedEngine` readback returned `ready=true structured_output=true`
+> for all three; its tool canary returned `tool_calls=false` for both Qwen3.6
+> profiles and `true` for Ornith. The built 0.7.1 package was not loaded
+> against large models during this release run. The LaunchAgent is currently
+> offline and the provider Register/PDS advertisement for these IDs has not
+> been verified; Mei's release does not alter that state. Image-conditioned
+> structured output on Qwen3.6 vision remains unverified. Plain-text and
+> tool-calling behavior are separate capability gates.
 >
 > The feature enforces only the documented strict subset and rejects unsupported
 > or unsatisfiable schemas before generation. A tokenizer/template preflight
@@ -45,7 +47,7 @@ Mei runs as **one server per model process**. For the CoCore recipe on
 Apple Silicon (from PR #237):
 
 ```bash
-brew install tijs/tap/mei                 # mei 0.7.1
+brew install tijs/tap/mei                 # mei 0.8.0
 mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
     --served-model-id mlx-community/Qwen3-4B-4bit
 ```
