@@ -47,19 +47,28 @@ public enum StreamEvent: Sendable {
 }
 
 /// Engine is a strict single-flight inference actor: one generation at a
-/// time, slot state mutated only by generations that acquire the flight
-/// token, matching the benchmark's "never launch two servers concurrently"
-/// discipline and keeping KV-reuse semantics deterministic.
+/// time, admitted through a bounded, priority-ordered queue
+/// (`RequestScheduler`) that preserves the previous serialization guarantees
+/// and adds deterministic overload refusals plus a cancellable lifecycle.
+/// Slot state is mutated only by generations that hold the flight token,
+/// matching the benchmark's "never launch two servers concurrently"
+/// discipline and keeping KV-reuse semantics deterministic. Overlapping
+/// generation is NOT enabled: more than one active sequence stays behind the
+/// plan's correctness and hardware gates (see docs/INFERENCE-SCHEDULING.md).
 public actor Engine {
     private let container: ModelContainer
     public let config: ServerConfig
     private let logger = Logger(subsystem: "mei.engine", category: "engine")
 
+    /// Bounded admission in front of the single execution slot.
+    /// `nonisolated let` so the status surface can read scheduling state
+    /// while the actor itself is busy inside a long generation.
+    private nonisolated let scheduler: RequestScheduler
+
     // In-process prefix reuse is owned by the container's CacheCoordinator
     // (see Engine.load): hash-chained paged KV blocks plus hybrid companion
     // state (Ornith GatedDelta), with the chat template's generation-prompt
     // suffix stripped at store time so growing transcripts hit.
-    private var queueTail: Task<Void, Never>?
     /// The tokens this chat template appends after the history to open the
     /// assistant turn, learned from the first request that renders both forms.
     /// Lets every later turn find its history boundary with array work instead
@@ -80,6 +89,9 @@ public actor Engine {
         self.container = container
         self.config = config
         self.loadMemory = loadMemory
+        self.scheduler = RequestScheduler(limits: .init(
+            maxQueueDepth: config.maxQueueDepth,
+            queueWaitTimeoutMilliseconds: config.queueWaitTimeoutMilliseconds))
     }
 
     /// Load a model from a local directory (config.json + safetensors +
@@ -213,23 +225,13 @@ public actor Engine {
             device: .init(architecture: info.architecture, memoryBytes: info.memorySize))
     }
 
-    // MARK: - Serialized execution
+    // MARK: - Admission and the execution slot
 
-    private func serialized<T: Sendable>(
-        _ operation: @escaping @Sendable () async throws -> T
-    ) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            let previous = queueTail
-            queueTail = Task {
-                _ = await previous?.value
-                do {
-                    let result = try await operation()
-                    continuation.resume(returning: result)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+    /// Live admission/scheduling counters for /v1/mei/status. Nonisolated:
+    /// like `liveMemoryReport`, it must answer while the actor is busy inside
+    /// a long generation.
+    public nonisolated func schedulerSnapshot() async -> RequestScheduler.Snapshot {
+        await scheduler.snapshot()
     }
 
     /// Live coordinator counters for /v1/mei/status (nil when cache reuse is
@@ -241,26 +243,27 @@ public actor Engine {
     // MARK: - Chat completion
 
     public func chatRun(request: ChatRequest) async throws -> GenerationRun {
-        try await serialized {
-            try await self.chatRunLocked(request: request)
+        try await scheduler.submit(priority: request.priority) { grant in
+            try await self.chatRunLocked(request: request, grant: grant)
         }
     }
 
     public func chatRunStreaming(request: ChatRequest) -> AsyncThrowingStream<StreamEvent, Error> {
-        AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    try await self.serialized {
-                        try await self.runStreamingLocked(request: request, continuation: continuation)
-                    }
-                } catch {
-                    continuation.finish(throwing: error)
-                }
+        // The producer task is cancelled when the stream's consuming task is
+        // cancelled (a client disconnect). That cancellation reaches the
+        // generation through `runStreamingLocked`, which stops the vmlx
+        // producer and suppresses the success finish frame for a cancelled
+        // run.
+        makeCancellableStream { continuation in
+            try await self.scheduler.submit(priority: request.priority) { grant in
+                try await self.runStreamingLocked(
+                    request: request, grant: grant, continuation: continuation)
             }
         }
     }
 
-    private func chatRunLocked(request: ChatRequest) async throws -> GenerationRun {
+    private func chatRunLocked(request: ChatRequest, grant: SlotGrant) async throws -> GenerationRun {
+        try Task.checkCancellation()
         // Structured requests: compile + build the constraint processor
         // BEFORE any tokenization work, and force thinking off (the grammar
         // constrains the first sampled token to start a JSON value).
@@ -290,7 +293,8 @@ public actor Engine {
             parameters: parameters,
             tools: request.tools,
             cachePrefixCounts: prefixCounts,
-            structuredPlan: structuredPlan)
+            structuredPlan: structuredPlan,
+            grant: grant)
         return run
     }
 
@@ -407,7 +411,8 @@ public actor Engine {
         parameters: GenerateParameters,
         tools: [MeiJSONValue]?,
         cachePrefixCounts: [Int]? = nil,
-        structuredPlan: StructuredGeneration.Plan? = nil
+        structuredPlan: StructuredGeneration.Plan? = nil,
+        grant: SlotGrant
     ) async throws -> GenerationRun {
         // Emit the token array as `[1, T]` (batch-first), matching the raw
         // completions path and the vmlx cache-restore rebuild. A multimodal
@@ -463,36 +468,52 @@ public actor Engine {
             toolSchemas: MessageMapping.templateTools(tools))
 
         var run = GenerationRun()
+        run.priority = grant.priority.rawValue
+        run.queueWaitMilliseconds = grant.queueWaitMilliseconds
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
-        for await item in stream {
-            switch item {
-            case .chunk(let chunk):
-                run.text += chunk
-            case .reasoning(let reason):
-                run.reasoning += reason
-            case .toolCall(let call):
-                run.toolCalls.append(.init(
-                    id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
-                    name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call, tools: tools)))
-            case .toolCallProgress:
-                break  // assembled into .toolCall on envelope close
-            case .prefillProgress(let progress):
-                if config.logRequests {
-                    logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+        // Cancellation reaches the engine through the caller's task. Stop
+        // vmlx's producer task: its decode loop checks `Task.isCancelled`
+        // between tokens (and the chunked prefill between chunks) and still
+        // runs its post-answer drain and cache store before the stream ends,
+        // so the execution slot is not released until that cleanup is done.
+        await withTaskCancellationHandler {
+            for await item in stream {
+                switch item {
+                case .chunk(let chunk):
+                    run.text += chunk
+                case .reasoning(let reason):
+                    run.reasoning += reason
+                case .toolCall(let call):
+                    run.toolCalls.append(.init(
+                        id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
+                        name: call.function.name,
+                        argumentsJSON: Self.toolArgumentsJSON(call, tools: tools)))
+                case .toolCallProgress:
+                    break  // assembled into .toolCall on envelope close
+                case .prefillProgress(let progress):
+                    if config.logRequests {
+                        logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+                    }
+                case .info(let completionInfo):
+                    info = completionInfo
                 }
-            case .info(let completionInfo):
-                info = completionInfo
             }
+        } onCancel: {
+            task.cancel()
         }
         await task.value
+        let cancelled = Task.isCancelled
 
         // A captured constraint failure — or a stop that contradicts the
         // constraint (no complete root value while the response would report
         // `stop`) — means the answer cannot be trusted to satisfy the
         // request: fail it instead of returning an unconstrained answer.
-        if let error = StructuredGeneration.postGenerationError(
+        // A cancelled run is exempt: the client is gone, stopping the
+        // generation leaves an incomplete root by design, and the run is
+        // recorded once as `cancelled` below — never as a structured-output
+        // failure.
+        if !cancelled, let error = StructuredGeneration.postGenerationError(
             plan: structuredPlan, stopReason: info?.stopReason,
             toolCallCount: run.toolCalls.count) {
             throw error
@@ -502,8 +523,18 @@ public actor Engine {
             &run, info: info, fallbackPromptTokens: tokens.count,
             restoreTracker: restoreTracker, iterationStart: iterationStart)
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
+        if cancelled {
+            // The client went away: this run is not an answer. The request
+            // log records it as `cancelled` (the one place a cancelled run
+            // is recorded) and the request fails instead of reporting
+            // success to a caller that is no longer listening.
+            run.finishReason = "cancelled"
+        }
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat")
+        if cancelled {
+            throw CancellationError()
+        }
 
         if config.logRequests {
             print("mei: run tokens \(run.promptTokenCount) cached \(run.cachedTokenCount) decode \(String(format: "%.1f", run.decodeTokensPerSecond)) tok/s")
@@ -514,8 +545,10 @@ public actor Engine {
 
     private func runStreamingLocked(
         request: ChatRequest,
+        grant: SlotGrant,
         continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation
     ) async throws {
+        try Task.checkCancellation()
         // Structured requests: same pre-generation plan as the buffered path.
         let structuredPlan = try await makeStructuredPlan(for: request)
         let (template, tokens, context) = try await renderChatTemplate(
@@ -573,87 +606,113 @@ public actor Engine {
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         var run = GenerationRun()
+        run.priority = grant.priority.rawValue
+        run.queueWaitMilliseconds = grant.queueWaitMilliseconds
         // Set when vmlx's `.info` lands; the producer keeps working after it.
         var infoObservedAt: Date?
         var finished = false
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
-        streamLoop: for await item in stream {
-            switch item {
-            case .chunk(let chunk):
-                run.text += chunk
-                continuation.yield(.chunk(chunk))
-            case .reasoning(let reason):
-                run.reasoning += reason
-                continuation.yield(.reasoning(reason))
-            case .toolCall(let call):
-                let emitting = GenerationRun.ToolCallEmitting(
-                    id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
-                    name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call, tools: request.tools))
-                // Distinct tool calls must stream under distinct OpenAI indexes;
-                // clients merge deltas keyed by index, so two calls at index 0
-                // would otherwise concatenate name/arguments.
-                let index = run.toolCalls.count
-                run.toolCalls.append(emitting)
-                continuation.yield(.toolCall(index: index, call: emitting))
-            case .toolCallProgress:
-                break
-            case .prefillProgress(let progress):
-                if config.logRequests {
-                    logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+        // True when the terminal frame was withheld because the request was
+        // cancelled (client disconnect): a cancelled run must never look like
+        // a completed one, in the stream or in the request log.
+        var terminalCancelled = false
+        // Cancellation reaches the engine through the producer task. Stop
+        // vmlx's producer: its decode loop checks `Task.isCancelled` between
+        // tokens (and the chunked prefill between chunks) and still runs its
+        // post-answer drain and cache store before the stream ends, so the
+        // execution slot is not released until that cleanup is done.
+        await withTaskCancellationHandler {
+            streamLoop: for await item in stream {
+                switch item {
+                case .chunk(let chunk):
+                    run.text += chunk
+                    continuation.yield(.chunk(chunk))
+                case .reasoning(let reason):
+                    run.reasoning += reason
+                    continuation.yield(.reasoning(reason))
+                case .toolCall(let call):
+                    let emitting = GenerationRun.ToolCallEmitting(
+                        id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
+                        name: call.function.name,
+                        argumentsJSON: Self.toolArgumentsJSON(call, tools: request.tools))
+                    // Distinct tool calls must stream under distinct OpenAI indexes;
+                    // clients merge deltas keyed by index, so two calls at index 0
+                    // would otherwise concatenate name/arguments.
+                    let index = run.toolCalls.count
+                    run.toolCalls.append(emitting)
+                    continuation.yield(.toolCall(index: index, call: emitting))
+                case .toolCallProgress:
+                    break
+                case .prefillProgress(let progress):
+                    if config.logRequests {
+                        logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+                    }
+                    continuation.yield(.prefill(completed: progress.completedUnitCount, total: progress.totalUnitCount))
+                case .info(let completionInfo):
+                    // The constraint already failed, or the stop contradicts it
+                    // (no complete root value while the finish would say `stop`):
+                    // never emit a success finish frame. Stop consuming; the
+                    // check after `task.value` fails the stream instead.
+                    if StructuredGeneration.postGenerationError(
+                        plan: structuredPlan, stopReason: completionInfo.stopReason,
+                        toolCallCount: run.toolCalls.count) != nil {
+                        break streamLoop
+                    }
+                    // vmlx yields `.info` as soon as generation is complete and
+                    // BEFORE the post-answer GPU drain, cache store and advisor
+                    // drain; only the STREAM END covers those. Its generate loop
+                    // states the contract explicitly: "Safety is preserved by the
+                    // STREAM END, not by `.info` ordering ... Consumers acting on
+                    // `.info` alone get exactly the intended early spinner-off;
+                    // they cannot reach the model without the lease." Mei's lease
+                    // is the scheduler slot held by this function, so handing
+                    // the client its finish frame and usage here is safe: the
+                    // slot is still held until `task.value` returns
+                    // below, and the cache store still cannot race the next
+                    // request.
+                    info = completionInfo
+                    infoObservedAt = Date()
+                    Self.completeRunForClient(
+                        &run, info: completionInfo, fallbackPromptTokens: tokens.count,
+                        restoreTracker: restoreTracker, iterationStart: iterationStart)
+                    terminalCancelled = Task.isCancelled
+                    if !terminalCancelled {
+                        continuation.yield(.finish(run))
+                    }
+                    continuation.finish()
+                    finished = true
                 }
-                continuation.yield(.prefill(completed: progress.completedUnitCount, total: progress.totalUnitCount))
-            case .info(let completionInfo):
-                // The constraint already failed, or the stop contradicts it
-                // (no complete root value while the finish would say `stop`):
-                // never emit a success finish frame. Stop consuming; the
-                // check after `task.value` fails the stream instead.
-                if StructuredGeneration.postGenerationError(
-                    plan: structuredPlan, stopReason: completionInfo.stopReason,
-                    toolCallCount: run.toolCalls.count) != nil {
-                    break streamLoop
-                }
-                // vmlx yields `.info` as soon as generation is complete and
-                // BEFORE the post-answer GPU drain, cache store and advisor
-                // drain; only the STREAM END covers those. Its generate loop
-                // states the contract explicitly: "Safety is preserved by the
-                // STREAM END, not by `.info` ordering ... Consumers acting on
-                // `.info` alone get exactly the intended early spinner-off;
-                // they cannot reach the model without the lease." Mei's lease
-                // is this function's position inside `serialized`, so handing
-                // the client its finish frame and usage here is safe: the
-                // single-flight token is still held until `task.value` returns
-                // below, and the cache store still cannot race the next
-                // request.
-                info = completionInfo
-                infoObservedAt = Date()
-                Self.completeRunForClient(
-                    &run, info: completionInfo, fallbackPromptTokens: tokens.count,
-                    restoreTracker: restoreTracker, iterationStart: iterationStart)
-                continuation.yield(.finish(run))
-                continuation.finish()
-                finished = true
             }
+        } onCancel: {
+            task.cancel()
         }
         await task.value
         // A captured constraint failure — or a stop that contradicts the
         // constraint (no complete root value while the finish would say
         // `stop`) — fails the stream (the SSE handler turns the thrown error
         // into a stream error frame): the client never receives a finish
-        // frame for an unconstrained answer.
-        if let error = StructuredGeneration.postGenerationError(
+        // frame for an unconstrained answer. A cancelled run is exempt: the
+        // client is gone, stopping the generation leaves an incomplete root
+        // by design, and the run is recorded once as `cancelled` below —
+        // never as a structured-output failure or success.
+        let cancelled = Task.isCancelled
+        if !cancelled, let error = StructuredGeneration.postGenerationError(
             plan: structuredPlan, stopReason: info?.stopReason,
             toolCallCount: run.toolCalls.count) {
             throw error
         }
         if !finished {
-            // No `.info` at all (cancelled or failed producer): the client still
-            // needs a terminal frame, so finish here exactly as before.
             Self.completeRunForClient(
                 &run, info: info, fallbackPromptTokens: tokens.count,
                 restoreTracker: restoreTracker, iterationStart: iterationStart)
-            continuation.yield(.finish(run))
+            terminalCancelled = Task.isCancelled
+            if !terminalCancelled {
+                // No `.info` at all and not cancelled (failed producer): the
+                // client still needs a terminal frame, so finish here exactly
+                // as before.
+                continuation.yield(.finish(run))
+            }
             continuation.finish()
         }
 
@@ -662,6 +721,9 @@ public actor Engine {
         // advisor) the client no longer waits for before its finish frame.
         run.finalizeMilliseconds = infoObservedAt.map { Date().timeIntervalSince($0) * 1000 } ?? 0
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
+        if terminalCancelled {
+            run.finishReason = "cancelled"
+        }
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat_stream")
     }
@@ -669,12 +731,13 @@ public actor Engine {
     // MARK: - Text completion (/v1/completions)
 
     public func completionRun(request: CompletionRequest) async throws -> GenerationRun {
-        try await serialized {
-            try await self.completionRunLocked(request: request)
+        try await scheduler.submit(priority: request.priority) { grant in
+            try await self.completionRunLocked(request: request, grant: grant)
         }
     }
 
-    private func completionRunLocked(request: CompletionRequest) async throws -> GenerationRun {
+    private func completionRunLocked(request: CompletionRequest, grant: SlotGrant) async throws -> GenerationRun {
+        try Task.checkCancellation()
         let tokenizer = await container.tokenizer
         let tokens = tokenizer.encode(text: request.prompt)
         guard !tokens.isEmpty else { throw EngineError.emptyPrompt }
@@ -727,31 +790,47 @@ public actor Engine {
             toolSchemas: nil)
 
         var run = GenerationRun()
+        run.priority = grant.priority.rawValue
+        run.queueWaitMilliseconds = grant.queueWaitMilliseconds
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
-        for await item in stream {
-            switch item {
-            case .chunk(let chunk): run.text += chunk
-            case .toolCall(let call):
-                run.toolCalls.append(.init(
-                    id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
-                    name: call.function.name,
-                    argumentsJSON: Self.toolArgumentsJSON(call, tools: nil)))
-            case .prefillProgress(let progress):
-                if config.logRequests {
-                    logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+        // Same cancellation contract as generateLocked: stop vmlx's producer
+        // task and wait for its drain/cache-store cleanup before the slot is
+        // released; a cancelled run is never reported as a success.
+        await withTaskCancellationHandler {
+            for await item in stream {
+                switch item {
+                case .chunk(let chunk): run.text += chunk
+                case .toolCall(let call):
+                    run.toolCalls.append(.init(
+                        id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
+                        name: call.function.name,
+                        argumentsJSON: Self.toolArgumentsJSON(call, tools: nil)))
+                case .prefillProgress(let progress):
+                    if config.logRequests {
+                        logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
+                    }
+                case .info(let completionInfo): info = completionInfo
+                default: break
                 }
-            case .info(let completionInfo): info = completionInfo
-            default: break
             }
+        } onCancel: {
+            task.cancel()
         }
         await task.value
         Self.completeRunForClient(
             &run, info: info, fallbackPromptTokens: tokens.count,
             restoreTracker: restoreTracker, iterationStart: iterationStart)
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
+        let cancelled = Task.isCancelled
+        if cancelled {
+            run.finishReason = "cancelled"
+        }
         captureRunMemory(&run)
         RequestLog.record(run, kind: "completion")
+        if cancelled {
+            throw CancellationError()
+        }
         return run
     }
 

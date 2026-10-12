@@ -118,31 +118,32 @@ Everything else from the official reference is **deferred** (§7).
 
 ## 3. Request surface (shipped)
 
-Decoder: `ChatRequest(json:)` — `Sources/MeiCore/OpenAITypes.swift:218-314`;
-router dispatch — `Sources/MeiCore/Router.swift:59-116`.
+Decoder: `ChatRequest(json:)` — `Sources/MeiCore/OpenAITypes.swift:288-393`;
+router dispatch — `Sources/MeiCore/Router.swift:51-66`.
 
 | Field | Type | Shipped behavior / notes |
 |---|---|---|
 | `model` | string, **required** | Decoded, but **not validated** against the served id (no comparison anywhere in `Router`/`Engine`). Any string or `null` value is accepted. |
 | `messages` | array, **required** | Roles are passed through to the chat template **unvalidated** (`MessageMapping.templateDictionary`, `Sources/MeiCore/MessageMapping.swift:9-49`); `user`/`system`/`assistant`/`tool` are the exercised ones. |
-| `messages[].content` | string or array | Array of `{"type":"text","text":...}` parts joined with `"\n"`; parts without a text field are dropped (`FlexibleString`, `OpenAITypes.swift:159-171`). Image/audio parts are not decoded. |
+| `messages[].content` | string or array | Array of `{"type":"text","text":...}` parts joined with `"\n"`; parts without a text field are dropped (`FlexibleString`, `OpenAITypes.swift:172-184`). Image/audio parts are not decoded. |
 | `messages[].tool_call_id` | string | Passed as `tool_call_id` for `role:"tool"` (`MessageMapping.swift:28-30`). |
-| `messages[].tool_calls` | array | `{id?, type?, function:{name, arguments}}`; `name` required, `arguments` defaults to `"{}"` (`OpenAITypes.swift:266-286`). |
+| `messages[].tool_calls` | array | `{id?, type?, function:{name, arguments}}`; `name` required, `arguments` defaults to `"{}"` (`OpenAITypes.swift:323-345`). |
 | `messages[].reasoning_content` | string | Passed through to the template (`MessageMapping.swift:20-23`). |
-| `temperature` | number | Not range-validated (no 0–2 clamp); request wins over server default 0.6 (`Engine.swift:900-947`). |
+| `temperature` | number | Not range-validated (no 0–2 clamp); request wins over server default 0.6 (`Engine.swift:1048-1101`). |
 | `top_p` | number | No range validation; default 0.95. |
 | `top_k` | integer | Mei extension (not in upstream reference); default 20; `FlexibleInt` also accepts numeric strings/floats (truncated). |
 | `min_p` | number | Mei extension; default 0.0. |
-| `max_tokens` | integer | See §6. `FlexibleInt` (`OpenAITypes.swift:184-196`). |
+| `max_tokens` | integer | See §6. `FlexibleInt` (`OpenAITypes.swift:197-210`). |
 | `stream` | boolean | Default `false`. `true` switches to SSE streaming. |
-| `stop` | string or array | Up to N sequences passed as `extraStopStrings`; single string normalized to one-element array (`FlexibleStop`, `OpenAITypes.swift:198-210`). Cardinality not validated. |
+| `stop` | string or array | Up to N sequences passed as `extraStopStrings`; single string normalized to one-element array (`FlexibleStop`, `OpenAITypes.swift:211-223`). Cardinality not validated. |
 | `tools` | array | Function tools are the supported P0 case; entries are copied verbatim into the template context (`MessageMapping.templateTools`, `MessageMapping.swift:51-63`). Non-function tool types are also passed through unvalidated — no acceptance coverage exists for them. |
 | `tool_choice` | string or object | `"none"`/`"auto"`/`"required"` map to the template's `tool_choice` verbatim; any other string is a forced tool name (`tool_choice:"required"` + `tool_choice_name`). The nested OpenAI forced form `{"type":"function","function":{"name":X}}` extracts the name from `function.name` — a top-level `name` still wins when both are present — and pins it as `tool_choice_name` (`MessageMapping.additionalContext`, `MessageMapping.swift:65-112`). CoCore's forced-tool canary shape (`report_status`, nested `tool_choice`, strict schema, `max_tokens` 96, `temperature` 0; graze-social/cocore PR #237) is covered by `OpenAITypesTests.testCoCoreForcedToolCanaryPinsReportStatus`. |
 | `repetition_penalty` / `presence_penalty` / `frequency_penalty` | number | Passed to the generator (defaults from config). |
 | `seed` | unsigned int | Honored (`parameters.randomSeed`). Deprecated upstream; Mei keeps it for reproducible benchmark rows (§7). |
-| `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:261,285-286,342-349`). Values are not whitelisted. |
-| `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:311-313`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
+| `reasoning_effort` | string | Passed into the engine's thinking decision (`Engine.swift:274-275,390-401,557-558`). Values are not whitelisted. |
+| `stream_options.include_usage` | boolean | Probed from the raw top level of the payload (`OpenAITypes.swift:388-390`); when `true` the stream's terminal sequence includes a usage chunk. Not gated on `stream:true` (upstream says only set when streaming). |
 | `response_format` **(shipped in Mei 0.7.0)** | object | Chat-completions only. Decoded by `ResponseFormat.decode` (`Sources/MeiCore/ResponseFormat.swift:134-184`): `{"type":"text"}` (also absent/`null`) keeps the ordinary path byte-compatible; `{"type":"json_object"}` guarantees a syntactically valid JSON value; `{"type":"json_schema","json_schema":{name,strict,schema}}` accepts only `strict: true` with the recursive subset — root `type: "object"`; every object node declares `properties`, `required`, and `additionalProperties: false`; a property value may be a scalar (`string`/`number`/`integer`/`boolean`), a nullable union (`type: [scalar, "null"]`), a nested strict object, or an array (`items` required, same recursive value space, optional `minItems`/`maxItems`); `enum` is supported on every scalar type — string, number/integer (compared by exact decimal value), and boolean — and on nullable fields may include `null` (which then also decides whether null is accepted); `number`/`integer` scalars additionally accept `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and `multipleOf` (finite JSON numbers, `multipleOf` strictly positive) with exact decimal semantics (schema numbers use their shortest round-trip decimal form, so `multipleOf: 0.1` accepts `0.3`); a schema whose declared constraints are unsatisfiable for the declared type (and cannot be null) is rejected. Everything else — constraints (`minLength`, `maxLength`, `pattern`, `format`, `uniqueItems`, `minProperties`, …), `$ref`/`oneOf`/`anyOf`/`allOf`, unions other than exactly one scalar plus `"null"`, non-strict forms, malformed envelopes — → 400 `param: "response_format"` **before generation**. Structured + non-empty `tools` is rejected (400); thinking is forced off. Not decoded on `/v1/completions` (still inert there). |
+| `mei_priority` **(shipped with admission scheduling)** | string | Mei extension (not in the upstream reference), on `/v1/chat/completions` **and** `/v1/completions`. `"interactive"` (default when absent/`null`) or `"background"`; any other value, or a non-string, is rejected 400 `invalid_priority`, `param: "mei_priority"` (`RequestPriority.decode`, `OpenAITypes.swift`). Namespaced deliberately: an unqualified top-level `priority` means an integer scheduling priority in other OpenAI-compatible servers (e.g. vLLM), so Mei never reads it — a standard `priority` is ignored under the unknown-field rule below. Queued interactive requests outrank queued background requests; priority never preempts a running generation, and a queued background request can be overtaken indefinitely by continual interactive arrivals (bounded only by `--queue-wait-ms`). See [`docs/INFERENCE-SCHEDULING.md`](INFERENCE-SCHEDULING.md). |
 | Any other field | — | **Silently ignored** — `JSONDecoder` is non-strict; unknown keys produce no error. This is shipped behavior and the reason §7 fields are "inert" rather than rejected. |
 
 Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
@@ -153,7 +154,7 @@ Missing `model` or `messages`, or unparseable JSON, throws during decode → 400
 Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
 (`Router.swift:8-13`).
 
-### Non-streaming `POST /v1/chat/completions` — `Router.completionResponse` (`Router.swift:158-173`)
+### Non-streaming `POST /v1/chat/completions` — `Router.completionResponse` (`Router.swift:293-308`)
 
 - `object: "chat.completion"`, `id: "chatcmpl-" + 24 lowercase hex`,
   `created`: unix seconds, `model`: exact served model id.
@@ -161,42 +162,54 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
 - `message`: `role: "assistant"`; `content` present unless the run produced only
   tool calls (then `content` is null); `tool_calls: [{id, type: "function",
   function: {name, arguments}}]` where the call id defaults to `"call_unknown"`
-  when the engine emits none (`Router.swift:161-163`); `reasoning_content`
+  when the engine emits none (`Router.swift:294-299`); `reasoning_content`
   present iff `--emit-reasoning` and the run produced reasoning text.
-- `finish_reason` mapping (`Engine.mapStopReason`, `Engine.swift:1000-1008`):
+- `finish_reason` mapping (`Engine.mapStopReason`, `Engine.swift:1187-1195`):
   upstream `stop`→`"stop"`, `length`→`"length"`, `cancelled`→`"stop"`; any
   completion with tool calls reports `"tool_calls"` even if the underlying stop
   reason was `length`. Pinned by `CacheRestoreTrackerTests` (4 cases).
 - `usage` **always present** non-streaming: `prompt_tokens`, `completion_tokens`,
   `total_tokens` (= prompt + completion), `prompt_tokens_details.cached_tokens`,
-  plus Mei extensions when > 0 (`Router.usage`, `Router.swift:143-156`). Pinned
+  plus Mei extensions when > 0 (`Router.usage`, `Router.swift:278-291`). Pinned
   by `OpenAITypesTests.testUsageContractFieldTypesAndArithmetic` and
   `testNonStreamingResponsesAlwaysIncludeUsage`.
 - Absent vs upstream sample: no `refusal`, `annotations`, `system_fingerprint`,
   `service_tier`, `completion_tokens_details` (Mei has no tokenizer-level
   breakdown), `audio_tokens`.
 
-### Streaming — `ResponseWriter.streamSSE` (`HTTPServer.swift:51-73`), `Router.sseFrame` (`Router.swift:235-269`)
+### Streaming — `ResponseWriter.streamSSE` (`HTTPServer.swift:71-112`), `Router.sseFrame` (`Router.swift:397-429`)
 
 - Headers: `content-type: text/event-stream`, `cache-control: no-cache`,
   `connection: keep-alive`, `x-accel-buffering: no` (`Router.sseHeaders`,
-  `Router.swift:271-278`). Status 200.
+  `Router.swift:431-438`). Status 200.
+- The head is **deferred until the engine produces its first event** (the
+  first chunk, tool call, or prefill-progress tick — a tick starts the head
+  without producing a visible frame): any failure before that point is
+  delivered as a real HTTP status — admission refusals 429/503, decode
+  errors 400, pre-generation engine failures 400/500 — because no response
+  bytes have been written; once an event has been produced the 200 status is
+  committed and later failures travel in-band. Header-timeout implication: a
+  client's header/response timeout must cover the whole queue wait plus
+  time-to-first-token; a shorter timeout gives up on requests the server is
+  still processing normally.
 - Frames are `data: <json>\n\n`: `object: "chat.completion.chunk"` with
   `choices[0].delta` carrying `content`, `reasoning_content` (iff
   `--emit-reasoning`), or `tool_calls: [{index, id?, type?, function:{name?,
   arguments?}}]` fragments. No `role` is ever emitted in a delta (upstream
   sends `role: "assistant"` in the first chunk) — a known cosmetic deviation.
-- Terminal sequence (`Router.finishSSEData`, `Router.swift:180-207`): a finish
+- Terminal sequence (`Router.finishSSEData`, `Router.swift:315-342`): a finish
   chunk `delta: {}` + `finish_reason`, then — iff `stream_options.include_usage`
   — a usage chunk with `choices: []`, then `data: [DONE]`.
 - Streaming usage counts are byte-identical in value to the non-streaming
   response for the same run: pinned by
   `OpenAItypesTests.testStreamingFinishUsageCountParityWithNonStreaming` and
   `testStreamingUsageAbsentWhenIncludeUsageFalse`.
-- A generation error after headers are sent is emitted as an SSE `data:` frame
-  carrying the error envelope with `code: "stream_error"`; the HTTP status
-  stays 200 (`HTTPServer.swift:65-70`, `Router.streamErrorSSEData`,
-  `Router.swift:318-320`).
+- A failure after the first event is emitted as an SSE `data:` frame carrying
+  the error envelope with `code: "stream_error"`; the HTTP status stays 200
+  (`HTTPServer.swift:97-111`, `Router.streamErrorSSEData`,
+  `Router.swift:391-393`). The pre-header/post-start decision is the pure
+  `ResponseWriter.failureResponse` (`HTTPServer.swift:129-144`), pinned by
+  `AdmissionContractTests` (model-free).
 
 ### Structured outputs (`response_format`) — shipped in Mei 0.7.0
 
@@ -251,12 +264,20 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   vocabulary mismatch) or a stop that contradicts the constraint (no complete
   root value while the response would report `stop`) fails the request — HTTP
   500 `engine_error` non-streaming; for streaming, the SSE error frame
-  (`code: "stream_error"`) after the HTTP 200 head, never a success finish
-  frame (`StructuredGeneration.postGenerationError`,
-  `StructuredGeneration.swift:151-168`).
+  (`code: "stream_error"`) after the HTTP 200 head — or a real HTTP 500 when
+  the failure occurs before the stream's first event and the head has not
+  been written — never a success finish frame
+  (`StructuredGeneration.postGenerationError`,
+  `StructuredGeneration.swift:151-168`). A **cancelled** structured run is
+  exempt on both transports: stopping the generation leaves an incomplete
+  root by design, so cancellation is never surfaced as a structured-output
+  failure (or success) and the run is recorded once as `finish: "cancelled"`
+  in the request log.
 - An incomplete structured root fails closed regardless of the producer stop
   reason, including `length`: buffered requests return HTTP 500 with
-  `engine_error`; streaming requests return an in-band `stream_error`, with no
+  `engine_error`; streaming requests return an in-band `stream_error` once
+  the first event has been produced (a failure with no event at all is
+  answered with HTTP 500 — the head was never written), with no
   success finish frame or `[DONE]` after the error. Clients should retry with a
   larger budget when appropriate. The implementation never rewrites an
   incomplete root to a successful `stop` or `length` response.
@@ -303,7 +324,7 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
 
 ## 5. Status codes and error envelope (shipped)
 
-Envelope shape — `APIErrorEnvelope`, `OpenAITypes.swift:523-531`:
+Envelope shape — `APIErrorEnvelope`, `OpenAITypes.swift:602-614`:
 
 ```json
 {"error": {"message": "<string>", "type": "<string>", "code": "<string|null>"}}
@@ -319,26 +340,32 @@ all pre-existing errors keep their previous bytes (no `param`).
 
 | Status | When | Envelope details | Source |
 |---|---|---|---|
-| 200 | Success (all JSON routes and streams) | n/a | `Router.swift:53-128` |
-| 200 + SSE error frame | Streaming generation error after headers sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:65-70` |
-| 400 | JSON decode failure (missing `model`/`messages`, malformed body) | `type: invalid_request_error`, no code | `Router.swift:113-115` |
-| 400 | `response_format` decode/validation failure (not an object, missing/wrong `type`, missing `json_schema`/`name`/`schema`, non-strict, structured + non-empty `tools`) | `code: "invalid_response_format"` (structured + tools: `"response_format_unsupported"`), `param: "response_format"` | `Router.errorResult` (`Router.swift:136-173`), `ResponseFormat.swift` |
+| 200 | Success (all JSON routes and streams) | n/a | `Router.swift:51-146` |
+| 200 + SSE error frame | Streaming generation error after the first event has been sent | `type: invalid_request_error`, `code: "stream_error"` | `HTTPServer.swift:97-111` |
+| 400 | JSON decode failure (missing `model`/`messages`, malformed body) | `type: invalid_request_error`, no code | `Router.swift:130,143-144` |
+| 400 | `response_format` decode/validation failure (not an object, missing/wrong `type`, missing `json_schema`/`name`/`schema`, non-strict, structured + non-empty `tools`) | `code: "invalid_response_format"` (structured + tools: `"response_format_unsupported"`), `param: "response_format"` | `Router.errorResult` (`Router.swift:163-246`), `ResponseFormat.swift` |
 | 400 | Schema outside the supported strict subset (unsupported keywords at any level, unions other than exactly one scalar plus `"null"`, arrays without a supported `items`, malformed shapes, duplicate/invalid names) | message prefixed `response_format.json_schema.schema: `; nested locations are named in the message (`at 'meta.id': …`), `code: "response_format_unsupported"`, `param: "response_format"` | `Router.errorResult`, `JSONSchemaCompiler.swift` |
-| 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112`, `EngineError.emptyPrompt` (`Engine.swift:29,594`) |
-| 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:132-138`), `Engine.swift:903-904,951-952` |
-| 404 | Unmatched route | `type: invalid_request_error`, `code: "not_found"` | `HTTPServer.swift:139-143` |
-| 413 | Body > 64 MiB | `type: invalid_request_error`, `code: "payload_too_large"` | `HTTPRequestLimiter` (`HTTPServer.swift:156-176`), `HTTPServer.swift:124-131` |
-| 500 | Engine failure (`modelDirectoryMissing`, `modelNotLoaded`, `generationFailed`) | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:111-112` |
+| 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:139,143-144`, `EngineError.emptyPrompt` (`Engine.swift:19,743`) |
+| 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:267-273`), `Engine.swift:1056,1108` |
+| 404 | Unmatched route | `type: invalid_request_error`, `code: "not_found"` | `HTTPServer.swift:209-213` |
+| 413 | Body > 64 MiB | `type: invalid_request_error`, `code: "payload_too_large"` | `HTTPRequestLimiter` (`HTTPServer.swift:228-246`), `HTTPServer.swift:195-201` |
+| 429 | Admission refusal: the bounded queue already holds `--max-queue-depth` waiting requests (never enqueued) — even for a streaming request, because the SSE head is deferred until the first event | `type: rate_limit_error`, `code: "queue_full"` | `Router.errorPlain` (`Router.swift`), `RequestScheduler` (`Scheduling.swift`) |
+| 503 | Admission refusal: the request waited past `--queue-wait-ms` for the execution slot (never started) — even for a streaming request, because the SSE head is deferred until the first event | `type: server_error`, `code: "queue_timeout"` | `Router.errorPlain`, `RequestScheduler` |
+| 500 | Engine failure (`modelDirectoryMissing`, `modelNotLoaded`, `generationFailed`) | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:139,143-144` |
 | 500 | Structured-generation construction failure (unreadable `config.json`, no identifiable EOS, mismatched vocabulary) | `code: "engine_error"` | `Router.errorResult`, `StructuredGeneration.swift`, `TokenizerFragmentTable.swift` |
-| 500 | Structured constraint failure, or a stop that contradicts the constraint (incomplete root value while the response would report `stop`) | message `structured output constraint failed: …`, `code: "engine_error"` | `StructuredGeneration.postGenerationError` (`StructuredGeneration.swift:151-168`), `Engine.swift:495,612,645` |
-| 500 | Channel-level handler error | `type: invalid_request_error`, `code: "internal_error"` | `HTTPServer.swift:147-153` |
+| 500 | Structured constraint failure, or a stop that contradicts the constraint (incomplete root value while the response would report `stop`) — non-streaming, or streaming when no event was produced before the failure (a later streaming failure stays HTTP 200 + `stream_error`) | message `structured output constraint failed: …`, `code: "engine_error"` | `StructuredGeneration.postGenerationError` (`StructuredGeneration.swift:151-168`), `Engine.swift:516,657,700` |
+| 500 | Channel-level handler error | `type: invalid_request_error`, `code: "internal_error"` | `HTTPServer.swift:217-223` |
 | 500 (payload) | Serializer encoding failure (theoretically unreachable for encodable DTOs) | literal `{"error":{"message":"encoding failure","type":"internal_error"}}` | `Router.swift:18-19` |
 
 Deviations vs upstream (deliberate, local-server scope): **no authentication**
-— no `Authorization: Bearer` check, so no 401/403 paths exist; **no 429/503**
-(no rate limiting or quota); **no 422** (input validation is minimal by
-design, §3); errors after a stream starts keep HTTP 200 with an SSE error
-frame; unknown JSON fields never error.
+— no `Authorization: Bearer` check, so no 401/403 paths exist; the only
+429/503 responses are the admission refusals above (`queue_full` /
+`queue_timeout`), not rate limiting or quota; **no 422** (input validation is
+minimal by design, §3); errors after a stream starts keep HTTP 200 with an
+SSE error frame — but any failure before the stream's first event (admission
+refusals, decode failures, pre-generation engine failures) arrives **before**
+the SSE headers are sent, as the real HTTP status, because the head is
+deferred until that first event; unknown JSON fields never error.
 
 ## 6. `max_completion_tokens` versus `max_tokens` policy
 
@@ -347,14 +374,14 @@ frame; unknown JSON fields never error.
 does not document the both-supplied conflict (§1 open ambiguity).
 
 **Shipped (Mei 0.7.0):**
-- Only `max_tokens` is decoded (`OpenAITypes.swift:228,244,299`).
+- Only `max_tokens` is decoded (`OpenAITypes.swift:297,314,370`).
 - `max_completion_tokens` has **no code path anywhere** in `Sources/` or
   `Tests/` (verified by whole-tree search, 2026-09-23). Because unknown keys are
   ignored, a request that sends it is accepted silently and its value has zero
   effect — it neither errors nor influences generation.
-- Effective per-request cap (`Engine.swift:941-943,986-988`):
+- Effective per-request cap (`Engine.swift:1097-1099,1142-1144`):
   `maxTokens = min(request.maxTokens ?? config.maxTokensDefault, max(1, maxKVSize − promptTokens))`
-  with `maxKVSize = contextCap + 4096` (`ServerConfig.swift:114`). A request
+  with `maxKVSize = contextCap + 4096` (`ServerConfig.swift:125`). A request
   with no `max_tokens` uses the server default (`--max-tokens`, default 32768,
   or the profile's measured cap). A prompt longer than `--context-cap` is
   rejected with 400 before this formula applies.
@@ -426,6 +453,12 @@ parent's separate acceptance run):
 - `CacheRestoreTrackerTests` — `mapStopReason` finish-reason mapping (4 cases).
 - `RouterSSEToolCallIndexingTests`, `ToolArgumentNormalizerTests` — streaming
   tool-call indexing and arguments normalization.
+- `AdmissionContractTests` — the `mei_priority` request extension (default,
+  explicit classes, rejection with `param: "mei_priority"`, and the standard
+  `priority` field ignored), the 429/503 admission error mapping, the
+  streaming failure-status decision (pre-first-event → HTTP status;
+  post-start → in-band `stream_error`; cancellation → nothing), and the
+  `/v1/mei/status` scheduler block.
 
 Structured-output suites (shipped in Mei 0.7.0; model-free core plus live
 black-box probes):

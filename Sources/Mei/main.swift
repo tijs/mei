@@ -144,6 +144,10 @@ struct MeiMain {
             exit(1)
         }
         print("mei: listening on http://\(config.host):\(config.port) (context cap \(config.contextCap), prefill step \(config.prefillStepSize), max-tokens \(config.maxTokensDefault), kv-bits \(config.kvBits.map(String.init) ?? "none"))")
+        let queueWait = config.queueWaitTimeoutMilliseconds == 0
+            ? "unlimited"
+            : "\(config.queueWaitTimeoutMilliseconds) ms"
+        print("mei: admission: strict single-flight execution, queue depth \(config.maxQueueDepth), queue wait \(queueWait) (docs/INFERENCE-SCHEDULING.md)")
         fflush(stdout)
 
         do {

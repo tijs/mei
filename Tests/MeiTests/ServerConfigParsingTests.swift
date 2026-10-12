@@ -248,6 +248,28 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.cacheLimitBytes, 8_589_934_592)
     }
 
+    func testSchedulingFlagsParseWithProvisionalDefaults() throws {
+        // Defaults: bounded queue of 32 waiting requests, 10-minute wait
+        // budget. Both are provisional until the plan's benchmark stage sets
+        // them (docs/INFERENCE-SCHEDULING.md).
+        let defaults = try parse([])
+        XCTAssertEqual(defaults.maxQueueDepth, 32)
+        XCTAssertEqual(defaults.queueWaitTimeoutMilliseconds, 600_000)
+
+        let configured = try parse(["--max-queue-depth", "4", "--queue-wait-ms", "1500"])
+        XCTAssertEqual(configured.maxQueueDepth, 4)
+        XCTAssertEqual(configured.queueWaitTimeoutMilliseconds, 1_500)
+
+        // 0 is a meaningful value on both flags: no queue / unlimited wait.
+        let zeroes = try parse(["--max-queue-depth", "0", "--queue-wait-ms", "0"])
+        XCTAssertEqual(zeroes.maxQueueDepth, 0)
+        XCTAssertEqual(zeroes.queueWaitTimeoutMilliseconds, 0)
+
+        XCTAssertThrowsError(try parse(["--max-queue-depth", "-1"]))
+        XCTAssertThrowsError(try parse(["--queue-wait-ms", "-1"]))
+        XCTAssertThrowsError(try parse(["--max-queue-depth", "many"]))
+    }
+
     func testPrefillStepAndContextValidation() throws {
         XCTAssertEqual(try parse(["--prefill-step-size", "2048"]).prefillStepSize, 2048)
         XCTAssertThrowsError(try parse(["--prefill-step-size", "0"])) { error in

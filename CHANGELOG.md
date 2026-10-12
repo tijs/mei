@@ -2,6 +2,51 @@
 
 All notable changes to Mei are documented here.
 
+## [Unreleased]
+
+Bounded admission and a cancellable lifecycle in front of the strict
+single-flight execution slot — the first implementation slice of the
+inference-scheduling plan for Peixinho (Kiem plan `820814e1`, stages 3–4).
+Execution stays one generation at a time; overlapping generation is still not
+enabled. Requests may now carry the Mei-local `mei_priority` field
+(`"interactive"` default, `"background"`; the unqualified `priority` field
+used by other OpenAI-compatible servers, e.g. vLLM's integer scheduling
+priority, is ignored): queued interactive requests
+outrank queued background requests, FIFO within a class, and priority never
+preempts a running generation. A queued background request can be overtaken
+indefinitely by continual interactive arrivals; the only bound is the finite
+`--queue-wait-ms` budget (with `--queue-wait-ms 0` there is none). The
+waiting queue is bounded by
+`--max-queue-depth` (default 32; 0 = no queue) — an over-limit arrival gets
+HTTP 429 `rate_limit_error` / `queue_full` without being enqueued — and the
+wait budget is `--queue-wait-ms` (default 600000; 0 = unlimited) — an
+expired wait gets HTTP 503 / `queue_timeout` without ever starting. Both
+defaults are provisional until the plan's benchmark stage measures the
+interactive latency ceiling.
+
+Cancellation now propagates end to end: a client disconnect removes a queued
+request without running it, and stops a running generation (the pinned vmlx
+`generateTask` checks cancellation per decode token and its chunked prefill
+per chunk) with the slot released exactly once, after the generation's own
+drain and cache store. A cancelled streaming run terminates without a
+`.finish` event, so no client ever sees `finish_reason: "stop"` for a
+truncated answer, and the request log records `finish: "cancelled"` — for
+structured requests too, whose incomplete root is the expected result of the
+stop and is never surfaced as a structured-generation failure.
+Streaming responses no longer send their SSE headers before the engine
+produces its first event, so any failure before that first event (an
+admission refusal, a pre-generation error, a structured-constraint failure
+with no event) is delivered as a real HTTP status instead of an empty 200;
+clients whose header timeout is shorter than queue wait + time-to-first-token
+must allow for that. `GET /v1/mei/status` gains a
+`scheduler` block (queue depth and priority mix, overload/cancellation
+counters, slot releases, queue-wait and cancellation-to-slot-release
+timings), and the `--request-log` JSONL gains `priority` and `queue_wait_ms`
+per run. Full contract: `docs/INFERENCE-SCHEDULING.md`. Verified by
+model-free tests (`RequestSchedulerTests`, `CancellableStreamTests`,
+`AdmissionContractTests`, scheduling-flag cases in
+`ServerConfigParsingTests`); no live-model behavior is claimed by this entry.
+
 ## [0.7.1] - 2026-10-05
 
 Strict structured output now passes the exact buffered and streaming CoCore

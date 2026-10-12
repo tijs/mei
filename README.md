@@ -282,3 +282,6 @@ installer both assume an already-built (or prebuilt) binary.
   engine map, canaries, streaming, and model-specific structured-output support.
 - **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
   upstream-PR workflow (authoritative).
+- **[docs/INFERENCE-SCHEDULING.md](docs/INFERENCE-SCHEDULING.md)** — admission
+  and scheduling: the bounded queue, `mei_priority` classes, overload refusals,
+  cancellation semantics, and the `/v1/mei/status` scheduler counters.

@@ -126,6 +126,11 @@ public struct ChatRequest: Sendable {
     /// token-level constrained decoding in the engine
     /// (`StructuredGeneration`, `JSONGrammarLogitProcessor`).
     public var responseFormat: ResponseFormat
+    /// Mei-local scheduling extension (absent in the OpenAI reference):
+    /// generic queue class for this request, decoded from the `mei_priority`
+    /// request field (namespaced so the standard `priority` field used by
+    /// other OpenAI-compatible servers is ignored). Absent → `.interactive`.
+    public var priority: RequestPriority
 }
 
 public struct APIMessage: Sendable {
@@ -158,6 +163,8 @@ public struct CompletionRequest: Sendable {
     public var frequencyPenalty: Double?
     public var seed: UInt64?
     public var includeUsage: Bool
+    /// Mei-local scheduling extension; see `ChatRequest.priority`.
+    public var priority: RequestPriority
 }
 
 // MARK: - Decoding
@@ -218,6 +225,62 @@ private struct FlexibleStop: Decodable {
 private extension KeyedDecodingContainer {
     func optional<T: Decodable>(_ key: KeyedDecodingContainer.Key) -> T? {
         (try? decodeIfPresent(T.self, forKey: key)) ?? nil
+    }
+}
+
+// MARK: - Mei-local extension fields
+
+/// Validation failures for Mei-local request extension fields, mapped to
+/// HTTP 400 with the offending field named (`Router.errorPlain`).
+public enum RequestFieldError: LocalizedError, Sendable, Equatable {
+    /// `mei_priority` was present but not one of the supported classes.
+    case invalidPriority(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidPriority(let raw):
+            "invalid value for 'mei_priority': \(raw); expected \"interactive\" or \"background\""
+        }
+    }
+
+    /// OpenAI-style `param` naming the offending request field.
+    public var param: String {
+        switch self {
+        case .invalidPriority: "mei_priority"
+        }
+    }
+
+    /// Stable machine-readable code for the error envelope.
+    public var code: String {
+        switch self {
+        case .invalidPriority: "invalid_priority"
+        }
+    }
+}
+
+extension RequestPriority {
+    /// Decode the Mei-local `mei_priority` extension field from a request
+    /// body's raw JSON object. Absent or null → `.interactive`, which is
+    /// exactly the pre-extension behavior for every existing client. A
+    /// present value must be a known class: silently mis-scheduling a
+    /// request is worse than a 400 that names the field.
+    ///
+    /// The field is namespaced deliberately: an unqualified top-level
+    /// `priority` already means something else in other OpenAI-compatible
+    /// servers (vLLM reads it as an integer scheduling priority), so Mei
+    /// never reads it — a standard `priority` is ignored like any other
+    /// unknown field, and only `mei_priority` selects the class.
+    static func decode(from root: [String: Any]) throws -> RequestPriority {
+        guard let raw = root["mei_priority"], !(raw is NSNull) else { return .interactive }
+        guard let string = raw as? String, let priority = RequestPriority(rawValue: string) else {
+            throw RequestFieldError.invalidPriority(describe(raw))
+        }
+        return priority
+    }
+
+    private static func describe(_ raw: Any) -> String {
+        if let string = raw as? String { return "\"\(string)\"" }
+        return String(describing: raw)
     }
 }
 
@@ -320,10 +383,12 @@ extension ChatRequest {
             self.responseFormat = .text
         }
         // stream_options.include_usage lives at the top level of the payload,
-        // not inside messages; pull it via a raw JSON probe.
+        // not inside messages; pull it via a raw JSON probe. The Mei-local
+        // `mei_priority` extension is read from the same probe.
         let root = try JSONSerialization.jsonObject(with: json) as? [String: Any]
         let options = root?["stream_options"] as? [String: Any]
         self.includeUsage = (options?["include_usage"] as? Bool) ?? false
+        self.priority = try RequestPriority.decode(from: root ?? [:])
     }
 }
 
@@ -373,6 +438,7 @@ extension CompletionRequest {
         let root = try JSONSerialization.jsonObject(with: json) as? [String: Any]
         let options = root?["stream_options"] as? [String: Any]
         self.includeUsage = (options?["include_usage"] as? Bool) ?? false
+        self.priority = try RequestPriority.decode(from: root ?? [:])
     }
 }
 
@@ -576,6 +642,12 @@ public struct GenerationRun: Sendable {
     public var memoryActiveBytes = 0
     public var memoryCacheBytes = 0
     public var memoryPeakBytes = 0
+    /// Scheduling class this run was admitted under (Mei-local extension;
+    /// see `RequestPriority`).
+    public var priority: String = RequestPriority.interactive.rawValue
+    /// Time this request spent waiting for the single execution slot before
+    /// its generation started (0 when the slot was idle on arrival).
+    public var queueWaitMilliseconds: Double = 0
 
     public struct ToolCallEmitting: Sendable {
         public var id: String?
@@ -621,6 +693,41 @@ public struct MeiStatusResponse: Sendable, Codable {
     /// Live prefix-cache counters when the coordinator is enabled (nil when
     /// --cache-reuse false or before the first request).
     public var cache: MeiCacheStatus?
+
+    /// Admission/scheduling state: queue depth, priority mix, and the
+    /// overload/cancellation counters of the bounded single-flight
+    /// scheduler (see `docs/INFERENCE-SCHEDULING.md`).
+    public var scheduler: MeiSchedulerStatus?
+}
+
+/// Admission/scheduling counters surfaced by /v1/mei/status (translated from
+/// `RequestScheduler.Snapshot` so the JSON shape stays stable).
+public struct MeiSchedulerStatus: Sendable, Codable {
+    /// True while a generation holds the single execution slot.
+    public var running: Bool
+    /// Requests currently waiting for the slot.
+    public var queueDepth: Int
+    public var queuedInteractive: Int
+    public var queuedBackground: Int
+    /// Bounded admission limits this process started with.
+    public var maxQueueDepth: Int
+    /// Queue wait budget in milliseconds (0 = unlimited).
+    public var queueWaitTimeoutMs: Int
+    public var admitted: Int
+    public var completed: Int
+    public var failed: Int
+    public var cancelledQueued: Int
+    public var cancelledActive: Int
+    public var rejectedQueueFull: Int
+    public var rejectedTimeout: Int
+    /// Every release of the execution slot — the slot-release signal.
+    public var slotReleases: Int
+    public var lastQueueWaitMs: Double
+    public var maxQueueWaitMs: Double
+    /// Time from first observed cancellation of an active request to the
+    /// slot release; nil until the first active cancellation.
+    public var lastCancelToReleaseMs: Double?
+    public var maxCancelToReleaseMs: Double?
 }
 
 /// Prefix-cache counters surfaced by /v1/mei/status (translated from the

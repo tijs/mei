@@ -104,6 +104,17 @@ public struct ServerConfig: Sendable {
     /// memory at the cost of slower first touch.
     public var useMmapSafetensors: Bool = true
 
+    /// Bounded admission queue length: how many requests may wait for the
+    /// single execution slot (0 = no queue: reject whenever the slot is
+    /// busy). Over-limit arrivals get HTTP 429 `queue_full`. Provisional
+    /// default; the plan's stage-7 benchmark sets the final values (see
+    /// docs/INFERENCE-SCHEDULING.md).
+    public var maxQueueDepth: Int = 32
+    /// Queue wait budget in milliseconds before a waiting request is refused
+    /// with HTTP 503 `queue_timeout` (0 = wait forever). Provisional default
+    /// like `maxQueueDepth`.
+    public var queueWaitTimeoutMilliseconds: Int = 600_000
+
     public init(modelDirectory: String, servedModelID: String) {
         self.modelDirectory = modelDirectory
         self.servedModelID = servedModelID
@@ -255,6 +266,10 @@ public extension ServerConfig {
                 ssmAnchorBoundariesExplicit = true
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
+            case "--max-queue-depth":
+                config.maxQueueDepth = try parseInt(flag, value())
+            case "--queue-wait-ms":
+                config.queueWaitTimeoutMilliseconds = try parseInt(flag, value())
             case "-h", "--help":
                 print(usage)
                 exit(0)
@@ -381,6 +396,12 @@ public extension ServerConfig {
         guard config.contextCap > 0 else {
             throw ConfigError.invalidValue("--context-cap must be > 0")
         }
+        guard config.maxQueueDepth >= 0 else {
+            throw ConfigError.invalidValue("--max-queue-depth must be >= 0 (0 = no queue)")
+        }
+        guard config.queueWaitTimeoutMilliseconds >= 0 else {
+            throw ConfigError.invalidValue("--queue-wait-ms must be >= 0 (0 = wait forever)")
+        }
         return config
     }
 
@@ -433,6 +454,21 @@ public extension ServerConfig {
     Caching:
       --cache-reuse BOOL        In-process KV/prefix reuse across turns (default true)
       --max-cache-slot-tokens N Reset the reused slot above this size (default 131072)
+
+    Scheduling (strict single-flight execution with bounded admission;
+    see docs/INFERENCE-SCHEDULING.md):
+      --max-queue-depth N    How many requests may wait for the execution slot
+                             (default 32; 0 = no queue, refuse immediately
+                             whenever the slot is busy). Over-limit requests
+                             get HTTP 429 queue_full.
+      --queue-wait-ms N      Queue wait budget in milliseconds before a
+                             waiting request gets HTTP 503 queue_timeout
+                             (default 600000; 0 = wait forever). Requests
+                             cancelled while queued or running are removed
+                             without a success finish; a request body may
+                             carry the Mei-local \"mei_priority\" field
+                             (\"interactive\" default, or \"background\";
+                             the standard \"priority\" field is ignored).
 
     Memory:
       --memory-limit-bytes N    Explicit MLX allocator limit (default 0 = MLX

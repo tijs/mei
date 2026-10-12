@@ -254,13 +254,19 @@ a second `mei` instance on its own port, each with its own map entry
 also assumes single-flight servers: **one generation running + one queued
 per model**, then an immediate typed `engine-busy` refusal (ceiling
 advertised as `model_capacity: 2`); when every candidate serving a model is
-saturated the job is refused up front with HTTP 503 `no-capacity`.
+saturated the job is refused up front with HTTP 503 `no-capacity`. Mei
+itself now also admits through a bounded local queue in front of its single
+execution slot (`--max-queue-depth`, default 32; refusals are HTTP 429
+`queue_full` / 503 `queue_timeout`) — a backstop behind CoCore's gate, not a
+change to single-flight execution. See
+[`docs/INFERENCE-SCHEDULING.md`](INFERENCE-SCHEDULING.md).
 
 ## Security model
 
 - Loopback HTTP/1.1, **no TLS, no authentication** — by design on both
-  sides. Mei's compatibility contract lists the missing auth/401/403/429/503
-  paths as deliberate local-server deviations.
+  sides. Mei's compatibility contract lists the missing auth/401/403 paths
+  as deliberate local-server deviations; its 429/503 responses exist only
+  for the admission refusals above (`queue_full` / `queue_timeout`).
 - CoCore rejects `https://` URLs (the client has no TLS) and warns loudly on
   non-loopback hosts: decrypted prompts would cross the network in the
   clear. Keep the map on `127.0.0.1`.

@@ -14,6 +14,11 @@ import Foundation
 /// run is finalized and before it leaves the engine actor, so every response
 /// shape is covered — non-streaming chat, streaming chat (which reports
 /// usage only when the client asks for it), and `/v1/completions`.
+/// `priority` and `queue_wait_ms` record the admission side of the run: the
+/// scheduling class it was admitted under and how long it waited for the
+/// single execution slot (see docs/INFERENCE-SCHEDULING.md). A run that was
+/// cancelled is logged once with `finish: "cancelled"`; it is the only place
+/// a cancelled run is recorded.
 ///
 /// `finalize_ms` splits the post-token tail out of `wall_ms`: the time from
 /// vmlx's `.info` (generation complete) to the producer's stream end, which is
@@ -72,6 +77,8 @@ public enum RequestLog {
         {"t":\(num(now.timeIntervalSince1970)),\
         "uptime_s":\(num(now.timeIntervalSince(startedAt))),\
         "kind":"\(kind)",\
+        "priority":"\(run.priority)",\
+        "queue_wait_ms":\(num(run.queueWaitMilliseconds)),\
         "prompt_tokens":\(run.promptTokenCount),\
         "cached_tokens":\(run.cachedTokenCount),\
         "cache_hit":\(run.cacheHit),\
