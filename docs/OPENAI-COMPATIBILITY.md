@@ -11,7 +11,7 @@ explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
 - Mei release pin: `ServerConfig.version = "0.8.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  planned release tag `v0.8.0` (2026-10-12).
+  release tag `v0.8.0` (2026-10-12).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
 - Mei 0.8.0 engine pin: `tijs/vmlx-swift`
   `633fe166630ef04310aea7d5a1795555ab32970d`, unchanged since 0.7.0. The
@@ -19,12 +19,13 @@ behavior.
   seam.
 
 > **Mei 0.8.0 structured-output status.** `response_format` remains enforced
-> by token-level constrained decoding. The 0.8.0 scheduling slice (bounded
-> admission queue and cancellable lifecycle) is verified by model-free tests;
-> no live-model behavior is claimed for it. The 0.7.1 fixes to tokenizer
-> escape-prefix dead ends and whitespace-only stalls are carried in this
-> release without relaxing the schema grammar. On the 0.7.1 runtime source
-> (`ea5a67a`), Mei's full live 9-test acceptance suite and CoCore's
+> by token-level constrained decoding. The 0.8.0 scheduling slice passed
+> model-free tests plus a 10-check live HTTP integration run against the
+> packaged binary on `mlx-community/Qwen3-4B-4bit`; this covers scheduler and
+> HTTP lifecycle behavior, not model quality or overlapping generation. The
+> 0.7.1 fixes to tokenizer escape-prefix dead ends and whitespace-only
+> stalls are carried in this release without relaxing the schema grammar. On
+> the 0.7.1 runtime source (`ea5a67a`), Mei's full live 9-test acceptance suite and CoCore's
 > attached-engine buffered and SSE strict canaries passed on Qwen3.6
 > text-only, Qwen3.6 vision (text-only request), and aligned Ornith; Qwen3-4B
 > remains a previously verified pass. CoCore's attached engine reports

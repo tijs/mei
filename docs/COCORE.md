@@ -21,10 +21,12 @@ surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
 > **CoCore compatibility status.** Mei 0.8.0 adds a bounded local admission
-> queue in front of the single execution slot (a model-free-verified
-> scheduling slice; no live-model behavior is claimed for it) and carries the
-> 0.7.1 fixes to two token-level grammar liveness defects while preserving
-> strict constraints and fail-closed behavior. Runtime source commit `ea5a67a`
+> queue in front of the single execution slot. It passed model-free tests and a
+> 10-check live HTTP integration run against the packaged 0.8.0 binary on
+> Qwen3-4B; that integration covers admission/status/cancellation behavior, not
+> model quality or concurrent generation. This release carries the 0.7.1 fixes
+> to two token-level grammar liveness defects while preserving strict
+> constraints and fail-closed behavior. Runtime source commit `ea5a67a`
 > (included in 0.7.1 and carried into 0.8.0) passed Mei's live 9-test
 > acceptance suite on Qwen3.6 text-only, Qwen3.6 vision (text-only requests),
 > and aligned Ornith; the previous 0.7.0 Qwen3-4B pass remains valid. CoCore's

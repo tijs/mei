@@ -31,12 +31,15 @@ bounded local queue (`--max-queue-depth`), a queue-wait budget
 end-to-end cancellation, and a `/v1/mei/status` scheduler block; overload
 refusals are HTTP 429 `queue_full` / 503 `queue_timeout`, and execution stays
 one generation at a time. The scheduling slice is verified by model-free
-tests; no live-model behavior is claimed for it. The latest live
-structured-output evidence remains the 0.7.1 runtime source (`ea5a67a`): the
-exact buffered and streaming CoCore canaries passed on Qwen3.6 text-only,
-Qwen3.6 vision (text-only requests), and aligned Ornith, as well as the
-existing Qwen3-4B checkpoint; image-conditioned structured output on Qwen3.6
-vision remains unverified. See
+tests and a 10-check live HTTP integration run against the packaged 0.8.0
+binary with `mlx-community/Qwen3-4B-4bit` (queue-full HTTP status, priority
+field behavior, disconnect cancellation, and queue-order readback). This is
+scheduler/HTTP lifecycle evidence, not a model-quality claim or evidence for
+overlapping generation. The latest live structured-output evidence remains
+the 0.7.1 runtime source (`ea5a67a`): the exact buffered and streaming CoCore
+canaries passed on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and
+aligned Ornith, as well as the existing Qwen3-4B checkpoint; image-conditioned
+structured output on Qwen3.6 vision remains unverified. See
 [inference scheduling](docs/INFERENCE-SCHEDULING.md),
 [CoCore compatibility](docs/COCORE.md), and the
 [compatibility matrix](docs/OPENAI-COMPATIBILITY.md).

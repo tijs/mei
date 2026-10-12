@@ -41,9 +41,13 @@ Full contract: [docs/INFERENCE-SCHEDULING.md](INFERENCE-SCHEDULING.md).
 
 ## Verification
 
-The scheduling slice is verified by model-free tests (`RequestSchedulerTests`,
-`CancellableStreamTests`, `AdmissionContractTests`, and scheduling-flag cases
-in `ServerConfigParsingTests`); no live-model behavior is claimed for it.
+The scheduling slice passed the model-free suites and a 10-check live HTTP
+integration run against the packaged 0.8.0 binary on
+`mlx-community/Qwen3-4B-4bit`. The integration exercised real queue-full HTTP
+429-before-SSE behavior, invalid priority errors, standard `priority` ignoring,
+disconnect cancellation, and interactive-before-background request-log
+readback. This is scheduler/HTTP lifecycle evidence on one checkpoint, not a
+model-quality claim and not evidence for overlapping generation.
 
 Structured-output model support is carried from 0.7.1: the runtime source at
 commit `ea5a67a` (included in 0.7.1 and 0.8.0) passed the exact buffered and
