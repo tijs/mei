@@ -74,6 +74,26 @@ and `--compiled-decode-threshold` gate the graph-traced compiled decode;
 skipping the upstream default promptOffset-sized trace avoids a multi-minute
 prefill tax at 45K.
 
+## Admission and scheduling
+
+Mei executes generations strictly single-flight: one generation at a time,
+with the slot released only after the generation's post-answer GPU drain and
+cache store. In front of that slot sits a bounded admission queue
+(`RequestScheduler`): requests wait in a queue bounded by
+`--max-queue-depth`, ordered interactive-before-background and FIFO within a
+class, with a `--queue-wait-ms` budget. Over-limit arrivals get HTTP 429
+`queue_full`; over-budget waits get HTTP 503 `queue_timeout`. The optional
+request field `mei_priority` (`"interactive"` default,
+`"background"`; the unqualified `priority` field used by other
+OpenAI-compatible servers is ignored) selects
+the class. A cancelled request — client disconnect — is removed from the
+queue, or has its generation cancelled and cleaned up, without ever emitting
+a success finish; `GET /v1/mei/status` exposes the queue, counters, and
+cancellation-to-slot-release timing. Overlapping generation is deliberately
+not enabled: more than one active sequence stays behind the correctness,
+memory, and latency gates of the scheduling plan. Full contract:
+[`docs/INFERENCE-SCHEDULING.md`](INFERENCE-SCHEDULING.md).
+
 ## KV / prefix reuse
 
 - In-process (and cross-restart, via an on-disk tier) prefix reuse is owned by

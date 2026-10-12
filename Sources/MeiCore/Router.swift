@@ -84,6 +84,7 @@ public final class Router: @unchecked Sendable {
                 ssmMisses: stats.ssmStats.misses,
                 isHybrid: stats.isHybrid)
         }
+        let scheduler = Self.schedulerStatus(await engine.schedulerSnapshot())
         let response = MeiStatusResponse(
             status: "ok",
             model: config.servedModelID,
@@ -94,8 +95,34 @@ public final class Router: @unchecked Sendable {
             cacheReuse: config.cacheReuse,
             uptimeSeconds: Int(Date().timeIntervalSince(startedAt)),
             memory: report,
-            cache: cache)
+            cache: cache,
+            scheduler: scheduler)
         return .plain(status: .ok, contentType: "application/json", body: serializer.json(response))
+    }
+
+    /// Map the scheduler's live snapshot onto the wire shape of
+    /// /v1/mei/status. Pure and static so the shape is unit-testable without
+    /// an Engine.
+    public static func schedulerStatus(_ snapshot: RequestScheduler.Snapshot) -> MeiSchedulerStatus {
+        MeiSchedulerStatus(
+            running: snapshot.running,
+            queueDepth: snapshot.queueDepth,
+            queuedInteractive: snapshot.queuedInteractive,
+            queuedBackground: snapshot.queuedBackground,
+            maxQueueDepth: snapshot.limits.maxQueueDepth,
+            queueWaitTimeoutMs: snapshot.limits.queueWaitTimeoutMilliseconds,
+            admitted: snapshot.counters.admitted,
+            completed: snapshot.counters.completed,
+            failed: snapshot.counters.failed,
+            cancelledQueued: snapshot.counters.cancelledQueued,
+            cancelledActive: snapshot.counters.cancelledActive,
+            rejectedQueueFull: snapshot.counters.rejectedQueueFull,
+            rejectedTimeout: snapshot.counters.rejectedTimeout,
+            slotReleases: snapshot.counters.slotReleases,
+            lastQueueWaitMs: snapshot.counters.lastQueueWaitMilliseconds,
+            maxQueueWaitMs: snapshot.counters.maxQueueWaitMilliseconds,
+            lastCancelToReleaseMs: snapshot.counters.lastCancelToReleaseMilliseconds,
+            maxCancelToReleaseMs: snapshot.counters.maxCancelToReleaseMilliseconds)
     }
 
     private func chat(body: Data) async -> RouteResult {
@@ -134,42 +161,88 @@ public final class Router: @unchecked Sendable {
     /// sees. Pure and static so the error contract is unit-testable without
     /// an Engine; the existing 400/500 shapes stay byte-compatible.
     public static func errorResult(_ error: Error, serializer: ResponseSerializer) -> RouteResult {
+        let plain = errorPlain(error, serializer: serializer)
+        return .plain(status: plain.status, contentType: plain.contentType, body: plain.body)
+    }
+
+    /// The non-streaming error response for a thrown request/engine error, as
+    /// a plain tuple so the streaming handler's pre-header failure path
+    /// (admission refusals, pre-generation engine failures) shares exactly
+    /// the same mapping as `errorResult`.
+    public static func errorPlain(
+        _ error: Error, serializer: ResponseSerializer
+    ) -> (status: HTTPResponseStatus, contentType: String, body: String) {
         if let formatError = error as? ResponseFormatError {
-            return .plain(
-                status: .badRequest, contentType: "application/json",
-                body: serializer.errorPayload(formatError.message, code: formatError.code, param: formatError.param))
+            return (
+                .badRequest, "application/json",
+                serializer.errorPayload(formatError.message, code: formatError.code, param: formatError.param)
+            )
         }
         if let compileError = error as? JSONSchemaCompileError {
             // A well-formed request whose schema uses a construct outside the
             // supported strict subset. The compiler message names the precise
             // offending keyword; the HTTP shape names the request field.
-            return .plain(
-                status: .badRequest, contentType: "application/json",
-                body: serializer.errorPayload(
+            return (
+                .badRequest, "application/json",
+                serializer.errorPayload(
                     "response_format.json_schema.schema: \(compileError.message)",
-                    code: "response_format_unsupported", param: "response_format"))
+                    code: "response_format_unsupported", param: "response_format")
+            )
+        }
+        if let fieldError = error as? RequestFieldError {
+            return (
+                .badRequest, "application/json",
+                serializer.errorPayload(
+                    fieldError.localizedDescription, code: fieldError.code, param: fieldError.param)
+            )
+        }
+        if let admissionError = error as? AdmissionError {
+            // Overload refusals: retryable, never the request's fault. The
+            // 429 mirrors OpenAI's rate-limit semantics; the 503 marks the
+            // bounded-wait expiry. Both name their exact condition so a
+            // scheduler (Peix) can tell queue-full from queue-timeout.
+            switch admissionError {
+            case .queueFull:
+                return (
+                    .tooManyRequests, "application/json",
+                    serializer.errorPayload(
+                        admissionError.localizedDescription, type: "rate_limit_error",
+                        code: admissionError.code)
+                )
+            case .queueWaitTimeout:
+                return (
+                    .serviceUnavailable, "application/json",
+                    serializer.errorPayload(
+                        admissionError.localizedDescription, type: "server_error",
+                        code: admissionError.code)
+                )
+            }
         }
         if let engineError = error as? EngineError {
-            return .plain(
-                status: errorStatus(engineError), contentType: "application/json",
-                body: serializer.errorPayload(engineError.localizedDescription, code: "engine_error"))
+            return (
+                errorStatus(engineError), "application/json",
+                serializer.errorPayload(engineError.localizedDescription, code: "engine_error")
+            )
         }
         // Structured-generation construction failures (unreadable model
         // config, no identifiable EOS, mismatched vocabulary) are server-side:
         // the request itself is well-formed and cannot be fixed by the client.
         if let structuredError = error as? StructuredGenerationError {
-            return .plain(
-                status: .internalServerError, contentType: "application/json",
-                body: serializer.errorPayload(structuredError.message, code: "engine_error"))
+            return (
+                .internalServerError, "application/json",
+                serializer.errorPayload(structuredError.message, code: "engine_error")
+            )
         }
         if let tableError = error as? TokenizerFragmentTableError {
-            return .plain(
-                status: .internalServerError, contentType: "application/json",
-                body: serializer.errorPayload(tableError.message, code: "engine_error"))
+            return (
+                .internalServerError, "application/json",
+                serializer.errorPayload(tableError.message, code: "engine_error")
+            )
         }
-        return .plain(
-            status: .badRequest, contentType: "application/json",
-            body: serializer.errorPayload(error.localizedDescription))
+        return (
+            .badRequest, "application/json",
+            serializer.errorPayload(error.localizedDescription)
+        )
     }
 
     /// Pre-generation validation for structured requests, replacing the

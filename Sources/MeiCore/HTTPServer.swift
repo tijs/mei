@@ -48,11 +48,35 @@ final class ResponseWriter: @unchecked Sendable {
         end()
     }
 
+    /// Stream one chat completion as SSE.
+    ///
+    /// The response headers are deliberately NOT sent until the engine
+    /// produces its first event: any failure before the first event — an
+    /// admission refusal (429 `queue_full`, 503 `queue_timeout`), a
+    /// pre-generation engine failure, or a structured-constraint failure that
+    /// emitted nothing — is answerable with a real HTTP status, not a 200
+    /// whose SSE body turns out empty. Once the first event has been
+    /// produced the status is committed and later failures keep the existing
+    /// contract — HTTP 200 with an in-band `stream_error` frame.
+    ///
+    /// Consequence for clients: the response head is not written until the
+    /// first event, so a client-side header/response timeout must cover the
+    /// whole queue wait plus time-to-first-token; a shorter timeout gives up
+    /// on requests the server is still processing normally.
+    ///
+    /// Cancellation: when this connection's request task is cancelled (client
+    /// disconnect), the engine stream is terminated by the consumer, its
+    /// producer observes the cancellation and stops the generation; there is
+    /// no client left to answer, so the channel is simply closed.
     func streamSSE(request: ChatRequest, engine: Engine, config: ServerConfig) async {
-        begin(.ok, headers: router.sseHeaders())
         let stream = await engine.chatRunStreaming(request: request)
+        var started = false
         do {
             for try await event in stream {
+                if !started {
+                    begin(.ok, headers: router.sseHeaders())
+                    started = true
+                }
                 let frame = router.sseFrame(
                     id: chunkID, event: event,
                     model: config.servedModelID,
@@ -62,13 +86,60 @@ final class ResponseWriter: @unchecked Sendable {
                     body(frame)
                 }
             }
+            if !started {
+                // The stream ended without producing anything and without an
+                // error. Only reachable when the consumer was already gone;
+                // answer with a well-formed empty SSE response anyway.
+                begin(.ok, headers: router.sseHeaders())
+            }
+            end()
+            close()
         } catch {
-            var buffer = channel.allocator.buffer(capacity: 256)
-            buffer.writeString(Router.streamErrorSSEData(error))
-            write(.body(.byteBuffer(buffer)))
+            switch Self.failureResponse(
+                for: error, streamStarted: started, serializer: router.serializer) {
+            case .httpError(let status, let contentType, let body):
+                jsonResponse(status: status, contentType: contentType, body: body)
+            case .sseErrorFrame(let frame):
+                var buffer = channel.allocator.buffer(capacity: 256)
+                buffer.writeString(frame)
+                write(.body(.byteBuffer(buffer)))
+                end()
+            case .noResponse:
+                break
+            }
+            close()
         }
-        end()
-        close()
+    }
+}
+
+/// How a failed streaming request is answered. The decision is pure
+/// (`ResponseWriter.failureResponse`) so the pre-header/post-start split is
+/// unit-testable without a channel; `streamSSE` uses exactly this.
+enum StreamingFailureResponse: Equatable {
+    /// No response bytes have been written yet: the failure is delivered as a
+    /// real HTTP status, exactly as it would be for a non-streaming request.
+    case httpError(status: HTTPResponseStatus, contentType: String, body: String)
+    /// The 200 SSE head is already committed: the failure travels in-band as
+    /// a `stream_error` frame.
+    case sseErrorFrame(String)
+    /// The client is gone (the request was cancelled): no response is owed.
+    case noResponse
+}
+
+extension ResponseWriter {
+    /// The response for a failed `streamSSE` iteration, given whether the SSE
+    /// head has already been written. Cancellation is always answered with
+    /// nothing — the client is gone — and is checked first so a cancelled
+    /// request can never be reported as an HTTP error or an error frame.
+    static func failureResponse(
+        for error: Error,
+        streamStarted: Bool,
+        serializer: ResponseSerializer
+    ) -> StreamingFailureResponse {
+        if error is CancellationError { return .noResponse }
+        if streamStarted { return .sseErrorFrame(Router.streamErrorSSEData(error)) }
+        let plain = Router.errorPlain(error, serializer: serializer)
+        return .httpError(status: plain.status, contentType: plain.contentType, body: plain.body)
     }
 }
 
