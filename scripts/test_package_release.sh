@@ -13,6 +13,8 @@
 #   - the extracted bundle exposes bin/mei, executable, reporting "mei <VERSION>"
 #   - no model-weight blobs (.safetensors/.gguf/.bin) are bundled
 #   - Metal kernel libraries (mlx.metallib) are present next to the binary
+#   - docs/INFERENCE-SCHEDULING.md ships in the bundle and documents the
+#     opt-in --max-active-generations flag
 #   - API identity: GET /v1/models requires a live server + model, so identity
 #     is asserted via the version string; runtime load probes are out of scope
 #     here (they need a stage + GPU on a target machine).
@@ -74,6 +76,11 @@ assert test -f "$B/bin/mlx.metallib"
 assert test -f "$B/LICENSE"
 assert test -f "$B/CHANGELOG.md"
 assert test -f "$B/README.md"
+# feature-contract doc: the release notes link docs/INFERENCE-SCHEDULING.md,
+# so the bundle must ship it with the opt-in overlap flag documented
+assert test -f "$B/docs/INFERENCE-SCHEDULING.md"
+assert grep -q -- "--max-active-generations" "$B/docs/INFERENCE-SCHEDULING.md"
+assert grep -q "opt-in" "$B/docs/INFERENCE-SCHEDULING.md"
 
 # version + API identity (version string is the offline /v1/models identity proxy)
 if "$B/bin/mei" --version > "$T/ver.txt" 2>&1; then

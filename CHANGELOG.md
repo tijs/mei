@@ -4,6 +4,8 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-13
+
 Opt-in bounded-overlap concurrency — the stage 5+ slice of the
 inference-scheduling plan for Peixinho (Kiem plan `820814e1`). Mei keeps
 strict single-flight execution as the default: `--max-active-generations`
@@ -24,25 +26,33 @@ releases exactly its own slot — the surviving generation is untouched.
 never exceeded), and `running` keeps its 0.8.0 meaning
 (`activeGenerations > 0`).
 
-The overlap mode ships behind measured acceptance gates (isolation canaries
-against single-flight references, ≥20% aggregate throughput over a
-serialized pair, TTFT ceiling, memory reserve, cancel-to-release latency)
-enforced by the new opt-in live client
-`scripts/test_concurrent_generations_integration.py`. **Measured outcome on
-this candidate (October 2026, 32-GiB Mac Studio, pinned vmlx): the
-throughput gate FAILED on both tested profiles** — 0.899 (net-negative) on
-Qwen3.6-35B-A3B-4bit text-only and 1.088 on Qwen3-4B-4bit against the
-required 1.20, with isolation (G1), cancellation (G5), and the default/cap
-guarantees (G6) passing; TTFT and memory gates pass on the 4B and fail on
-the 35B. Interleaved single-sequence execution shares one MLX stream, so a
-pair's GPU work is additive and the gate is structurally unreachable without
-continuous batching. The pinned vmlx revision is additionally not safe for
-two concurrent prompt prefills (intermittent SIGTRAP in the Qwen3.5-MoE
-forward path), so this candidate keeps prompt prefill on the engine actor in
-every mode. Full evidence: `artifacts/concurrent-generations-rlog.md`.
-**The default stays one slot; overlap remains experimental, must not be
-enabled by default, and its measured results do not generalize beyond the
-tested profiles.**
+The first throughput-oriented experiment used the original strict gates
+(isolation, ≥20% aggregate throughput over a serialized pair, TTFT, memory,
+cancellation). That specific benchmark missed +20% on both profiles (ratios
+0.899 on Qwen3.6-35B-A3B text-only and 1.088 on Qwen3-4B), and the 35B also
+missed its TTFT and memory gates. These remain measurements, not hard gates for
+the revised Peix task-overlap objective.
+
+The Peix-like stand-in (`--mode peix-like`) runs independent tasks against one
+Mei process, verifies a four-task burst queues two tasks before any slot release,
+checks task/result isolation, tools/structured output and cancellation-peer
+isolation, then compares against one-slot serial mode. On Qwen3-4B-4bit the
+functional/resource gates passed in **10/10 paired runs**: interactive TTFT p95
+was 1.486 s over 30 samples (serial 3.552 s), with at least 12.25 GiB
+reclaimable memory, no pressure warnings or swap growth; burst makespan was a
+median 1.42× faster than serial. Qwen3.6-35B-A3B text-only failed the 4-GiB
+memory reserve in the base, named-profile, and 25-GiB memory-cap trials (3.32,
+3.43, and 3.37 GiB respectively), despite no pressure warnings or swap growth.
+It is not accepted for this workload on the tested device. Memory pressure is
+not established as the cause of the 35B result. Peix's actual durable
+orchestration is still unverified because its agent harness does not yet exist.
+Full evidence: `artifacts/concurrent-generations-rlog.md`.
+
+The pinned vmlx revision also produced an intermittent SIGTRAP when an
+experimental path constructed two prompt prefills concurrently; that path was
+reverted, and this candidate keeps prefill serialized on the engine actor.
+**One slot remains the default, overlap remains opt-in and capped at two, and
+the 4B result does not generalize to other models/devices.**
 
 ## [0.8.0] - 2026-10-12
 

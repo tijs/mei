@@ -3,7 +3,7 @@
 # from the explicit allowlist and verify the staging boundary mechanically.
 #
 # Usage: scripts/stage_release_candidate.sh [VERSION]
-#   VERSION defaults to 0.2.0.
+#   VERSION defaults to ServerConfig.version (the repo's current release).
 #
 # Produces dist/mei-<VERSION>-src/ (gitignored) with:
 #   - exactly the allowlisted files (configs/release-allowlist.json)
@@ -14,7 +14,13 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-0.2.0}"
+VERSION="${1:-}"
+if [[ -z "$VERSION" ]]; then
+  VERSION="$(sed -n 's/.*static let version = "\([^"]*\)".*/\1/p' \
+    "$REPO/Sources/MeiCore/ServerConfig.swift" | head -1)"
+  [[ -n "$VERSION" ]] || { echo "FATAL: could not read ServerConfig.version" >&2; exit 1; }
+  echo "== version not given; using ServerConfig.version = $VERSION =="
+fi
 ALLOWLIST="$REPO/configs/release-allowlist.json"
 STAGE_ROOT="$REPO/dist"
 STAGE_DIR="$STAGE_ROOT/mei-${VERSION}-src"
@@ -120,11 +126,19 @@ check "no weight blobs staged" \
   bash -c "cd '$STAGE_DIR' && ! find . -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \) | grep -q ."
 
 # 5. release version metadata consistent across the three locations
-check "version metadata consistent (0.2.0)" \
+check "version metadata consistent ($VERSION)" \
   bash -c "
 grep -q 'static let version = \"$VERSION\"' '$STAGE_DIR/Sources/MeiCore/ServerConfig.swift' &&
 grep -q '## \[$VERSION\]' '$STAGE_DIR/CHANGELOG.md' &&
 grep -q 'Mei ${VERSION}' '$STAGE_DIR/docs/RELEASE-${VERSION}.md'"
+
+# 5b. allowlist release metadata matches the version being staged
+check "allowlist release metadata matches $VERSION" \
+  python3 -c "
+import json,sys
+d=json.load(open('configs/release-allowlist.json'))
+sys.exit(0 if d['release'] == '$VERSION' else 1)
+"
 
 # 6. per-file sha256 manifest, then verify it round-trips
 check "manifest writes + verifies" \

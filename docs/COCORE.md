@@ -1,6 +1,6 @@
 # CoCore attached-engine integration
 
-This document records how Mei (0.8.0) interoperates with the
+This document records how Mei (0.9.0) interoperates with the
 [CoCore](https://github.com/graze-social/cocore) agent's **attached engine**
 mode, shipped in
 [graze-social/cocore PR #237](https://github.com/graze-social/cocore/pull/237)
@@ -10,7 +10,7 @@ mlx_lm) + per-model admission gate", merged as commit
 description of the same feature is `docs/attached-engine.md` in that
 repository; this page is the Mei-side mirror: what Mei must serve, what
 CoCore proves at startup, what the canaries expect, and what remains
-model-specific in Mei 0.8.0. The wire contract Mei implements is
+model-specific in Mei 0.9.0. The wire contract Mei implements is
 frozen in **[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md)**; this
 page assumes it.
 
@@ -20,14 +20,19 @@ that, and proxies jobs to it over loopback HTTP. This is the integration
 surface the PR was built around for Mei and its requirements below are the
 ones Mei is tested against.
 
-> **CoCore compatibility status.** Mei 0.8.0 adds a bounded local admission
-> queue in front of the single execution slot. It passed model-free tests and a
+> **CoCore compatibility status.** Mei 0.9.0 adds *opt-in* bounded-overlap
+> concurrency (`--max-active-generations 2`, experimental; the default remains
+> strict single-flight — one generation at a time) on top of the 0.8.0 bounded
+> local admission queue. The 0.8.0 queue passed model-free tests and a
 > 10-check live HTTP integration run against the packaged 0.8.0 binary on
 > Qwen3-4B; that integration covers admission/status/cancellation behavior, not
-> model quality or concurrent generation. This release carries the 0.7.1 fixes
+> model quality. The 0.9.0 overlap mode's Peix-like live stand-in passed 10/10
+> paired runs on Qwen3-4B-4bit; the Qwen3.6-35B-A3B text-only profile failed
+> the 4-GiB memory reserve for that workload on the tested device (details:
+> docs/RELEASE-0.9.0.md). This release carries the 0.7.1 fixes
 > to two token-level grammar liveness defects while preserving strict
 > constraints and fail-closed behavior. Runtime source commit `ea5a67a`
-> (included in 0.7.1 and carried into 0.8.0) passed Mei's live 9-test
+> (included in 0.7.1 and carried into 0.8.0 and 0.9.0) passed Mei's live 9-test
 > acceptance suite on Qwen3.6 text-only, Qwen3.6 vision (text-only requests),
 > and aligned Ornith; the previous 0.7.0 Qwen3-4B pass remains valid. CoCore's
 > actual `AttachedEngine` readback returned `ready=true structured_output=true`
@@ -49,7 +54,7 @@ Mei runs as **one server per model process**. For the CoCore recipe on
 Apple Silicon (from PR #237):
 
 ```bash
-brew install tijs/tap/mei                 # mei 0.8.0
+brew install tijs/tap/mei                 # mei 0.9.0
 mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
     --served-model-id mlx-community/Qwen3-4B-4bit
 ```
@@ -259,10 +264,11 @@ also assumes single-flight servers: **one generation running + one queued
 per model**, then an immediate typed `engine-busy` refusal (ceiling
 advertised as `model_capacity: 2`); when every candidate serving a model is
 saturated the job is refused up front with HTTP 503 `no-capacity`. Mei
-itself now also admits through a bounded local queue in front of its single
-execution slot (`--max-queue-depth`, default 32; refusals are HTTP 429
-`queue_full` / 503 `queue_timeout`) — a backstop behind CoCore's gate, not a
-change to single-flight execution. See
+itself now also admits through a bounded local queue in front of its execution
+slot (`--max-queue-depth`, default 32; refusals are HTTP 429
+`queue_full` / 503 `queue_timeout`) — a backstop behind CoCore's gate. The
+default remains strict single-flight execution; 0.9.0's overlap mode
+(`--max-active-generations 2`) is opt-in and experimental. See
 [`docs/INFERENCE-SCHEDULING.md`](INFERENCE-SCHEDULING.md).
 
 ## Security model
@@ -286,7 +292,7 @@ change to single-flight execution. See
 | Readiness passes but jobs 404 | Map URL has a path prefix; CoCore appends `/v1/...` itself, so the prefix must sit before `/v1` (e.g. `http://127.0.0.1:8024/llm`). |
 | Model not advertised / model miss | Engine-map key must **exactly equal** the served id. Read it from `GET /v1/models` or the startup line `mei: no --served-model-id given; serving as …`; then `mei --served-model-id <that id>`. |
 | `structured-output-unsupported` on schema jobs | Expected for a checkpoint whose strict canary fails. Qwen3-4B, Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and aligned Ornith passed Mei's live canaries on their documented versions; CoCore's installed provider advertisement for the three new IDs is not verified. See the per-checkpoint matrix. |
-| `engine-busy` refusals | Gate is full (1 running + 1 queued). One model per process — start another `mei` on its own port for more concurrency. |
+| `engine-busy` refusals | CoCore's own admission cap is full (1 running + 1 queued per model; ceiling advertised as `model_capacity: 2`). It is separate from Mei's local queue and execution slots: raising Mei's `--max-active-generations` alone does not alter CoCore's gate. Mei's overlap mode is opt-in and capped at 2 (`--max-active-generations 2`, experimental; the default is strict single-flight). Do not start duplicate `mei` processes for the same model as a slot workaround. |
 | Job times out waiting for first token | First-token budget is 300 s. Cold prefill of a 20k-token system+tools prompt can take ~50 s; if it exceeds the budget, the model is not actually ready — watch `mei:` startup logs. |
 | Tool canary fails intermittently | `tool_choice` is now pinned to `report_status` in Mei (nested `function.name` extraction); verify with the regression test. Template-level forced-call fidelity still depends on the model. |
 | Non-loopback warning in CoCore | The map points at another host; prompts travel in the clear. Keep `127.0.0.1`. |

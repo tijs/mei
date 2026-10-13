@@ -22,7 +22,7 @@ claim they are in the lineup.
 Status above describes **normal serving** (load, plain text, tools, context).
 Structured output (`response_format`) shipped in Mei 0.7.0 and has a separate
 per-checkpoint boundary: the runtime fix at commit `ea5a67a`, included in
-Mei 0.7.1 and carried into 0.8.0, passed the live strict canary on
+Mei 0.7.1 and carried into 0.8.0 and 0.9.0, passed the live strict canary on
 `mlx-community/Qwen3-4B-4bit`, Qwen3.6 text-only, Qwen3.6 vision (text-only
 requests), and aligned Ornith.
 The packaged 0.7.1 binary was not model-loaded during the release run. CoCore's
@@ -132,7 +132,7 @@ quantization) are **not** part of this preset and remain off/unvalidated.
 
 > **Structured output (`response_format`, Mei 0.7.1):** The aligned checkpoint
 > passed the exact buffered and SSE CoCore canaries on runtime source commit
-> `ea5a67a`, included in 0.7.1 and carried into 0.8.0. CoCore's `AttachedEngine`
+> `ea5a67a`, included in 0.7.1 and carried into 0.8.0 and 0.9.0. CoCore's `AttachedEngine`
 > also read back `structured_output=true` and `tool_calls=true`. The packaged
 > 0.7.1 binary was
 > not model-loaded during the release run; normal-serving lineup and performance
@@ -178,7 +178,7 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
 > Omitted experimental knobs remain off/unvalidated.
 >
 > **Structured output (`response_format`, Mei 0.7.1): live canary passed on
-> runtime source commit `ea5a67a`, included in 0.7.1 and carried into 0.8.0.**
+> runtime source commit `ea5a67a`, included in 0.7.1 and carried into 0.8.0 and 0.9.0.**
 > Both the text-only
 > and vision checkpoints passed the exact buffered and SSE CoCore canaries in
 > Mei's 9/9 live acceptance suite. CoCore's attached engine read

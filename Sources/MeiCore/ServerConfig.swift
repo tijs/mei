@@ -4,7 +4,7 @@ import MLX
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.8.0"
+    public static let version = "0.9.0"
     public var modelDirectory: String
     public var servedModelID: String
     /// Set when --served-model-id was omitted and defaulted from the
@@ -115,12 +115,12 @@ public struct ServerConfig: Sendable {
     /// like `maxQueueDepth`.
     public var queueWaitTimeoutMilliseconds: Int = 600_000
     /// Maximum number of generations that may run at once. **1 is the
-    /// default and the only shipping mode** — strict single-flight,
-    /// byte-compatible with 0.8.0. 2 is the explicit opt-in bounded-overlap
-    /// mode (stage 5+ of the plan), for operators who accept the measured
-    /// trade-offs; values outside 1...2 are rejected at parse time. The
-    /// overlap mode never changes the default behavior of a process started
-    /// without this flag.
+    /// default strict single-flight mode** — byte-compatible with 0.8.0,
+    /// including when this flag is absent. 2 is shipped as the explicit
+    /// opt-in bounded-overlap mode (stage 5+ of the plan), for operators
+    /// who accept the measured trade-offs; values outside 1...2 are
+    /// rejected at parse time. The overlap mode never changes the default
+    /// behavior of a process started without this flag.
     public var maxActiveGenerations: Int = 1
 
     public init(modelDirectory: String, servedModelID: String) {

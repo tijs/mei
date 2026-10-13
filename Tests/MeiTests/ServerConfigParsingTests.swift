@@ -271,8 +271,8 @@ final class ServerConfigParsingTests: XCTestCase {
     }
 
     func testMaxActiveGenerationsDefaultsToStrictSingleFlight() throws {
-        // One active generation is the default and the only shipping mode;
-        // overlap requires the explicit opt-in flag.
+        // One active generation is the default mode; two is shipped as the
+        // explicit opt-in mode (overlap requires the flag).
         XCTAssertEqual(try parse([]).maxActiveGenerations, 1)
         XCTAssertEqual(try parse(["--max-active-generations", "1"]).maxActiveGenerations, 1)
         XCTAssertEqual(try parse(["--max-active-generations", "2"]).maxActiveGenerations, 2)

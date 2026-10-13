@@ -10,19 +10,24 @@ labeled with the exact source location; anything not yet pinned by tests is
 explicitly marked **planned acceptance** and must not be presented as runtime
 behavior.
 
-- Mei release pin: `ServerConfig.version = "0.8.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
-  release tag `v0.8.0` (2026-10-12).
+- Mei release pin: `ServerConfig.version = "0.9.0"` (`Sources/MeiCore/ServerConfig.swift:7`),
+  release tag `v0.9.0` (2026-10-13).
 - Base URL: `http://127.0.0.1:8024/v1` (default; `--host`/`--port` reconfigurable).
-- Mei 0.8.0 engine pin: `tijs/vmlx-swift`
+- Mei 0.9.0 engine pin: `tijs/vmlx-swift`
   `633fe166630ef04310aea7d5a1795555ab32970d`, unchanged since 0.7.0. The
   released 0.6.1 binary used `fef563a5`; structured output requires the newer
   seam.
 
-> **Mei 0.8.0 structured-output status.** `response_format` remains enforced
-> by token-level constrained decoding. The 0.8.0 scheduling slice passed
-> model-free tests plus a 10-check live HTTP integration run against the
-> packaged binary on `mlx-community/Qwen3-4B-4bit`; this covers scheduler and
-> HTTP lifecycle behavior, not model quality or overlapping generation. The
+> **Mei 0.9.0 structured-output status.** `response_format` remains enforced
+> by token-level constrained decoding. The 0.9.0 release adds opt-in
+> bounded-overlap concurrency (experimental; the default stays strict
+> single-flight — one generation at a time) and carries the 0.8.0 bounded
+> admission queue (model-free tests plus a 10-check live HTTP integration run
+> against the packaged binary on `mlx-community/Qwen3-4B-4bit`; that covers
+> scheduler and HTTP lifecycle behavior, not model quality). The overlap
+> mode's Peix-like live stand-in passed 10/10 paired runs on Qwen3-4B-4bit;
+> the Qwen3.6-35B-A3B text-only profile failed the 4-GiB memory reserve for
+> that workload. The
 > 0.7.1 fixes to tokenizer escape-prefix dead ends and whitespace-only
 > stalls are carried in this release without relaxing the schema grammar. On
 > the 0.7.1 runtime source (`ea5a67a`), Mei's full live 9-test acceptance suite and CoCore's
@@ -33,7 +38,7 @@ behavior.
 > failed for both Qwen3.6 profiles and passed for Ornith, so tool support is
 > distinct. CoCore's installed LaunchAgent/provider Register advertisement is
 > not verified. Image-conditioned structured output for Qwen3.6 vision and
-> post-fix Qwen3-8B remain unverified. The 0.8.0 release uses the `633fe166`
+> post-fix Qwen3-8B remain unverified. The 0.9.0 release uses the `633fe166`
 > vmlx seam; 0.6.1 used `fef563a5`. Everything else below records the broader
 > Chat Completions contract and deferred fields.
 
@@ -517,7 +522,7 @@ full `MeiAcceptanceTests` suite 9/9 on `mlx-community/Qwen3-4B-4bit` on
 2026-10-02. The runtime fix at commit `ea5a67a` passed the same 9-test live
 suite on Qwen3.6 text-only, Qwen3.6 vision, and aligned Ornith on 2026-10-04;
 this code is included in 0.7.1 (the version constant was its only later
-product-source change) and carried into 0.8.0. CoCore's actual `AttachedEngine`
+product-source change) and carried into 0.8.0 and 0.9.0. CoCore's actual `AttachedEngine`
 independently passed its
 buffered and SSE canaries on all three. The packaged 0.7.1 binary was not
 loaded against models during this release run. The vision checkpoint was

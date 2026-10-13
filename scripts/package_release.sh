@@ -6,7 +6,7 @@
 #   dist/mei-<VERSION>-macos-arm64/
 #     LICENSE NOTICE.md CHANGELOG.md README.md
 #     bin/mei  bin/mlx.metallib  bin/default.metallib  bin/mlx.metallib.provenance
-#     docs/INSTALL.md  docs/RELEASE-<VERSION>.md  docs/VMLX-FORK.md
+#     docs/INSTALL.md  docs/RELEASE-<VERSION>.md  docs/INFERENCE-SCHEDULING.md  docs/VMLX-FORK.md
 #   dist/mei-<VERSION>-macos-arm64.tar.gz
 #   dist/mei-<VERSION>-macos-arm64.tar.gz.sha256
 #
@@ -136,7 +136,7 @@ chmod 755 "$BUNDLE_DIR/bin/mei"
 for f in LICENSE NOTICE.md CHANGELOG.md README.md; do
   [[ -f "$REPO/$f" ]] && cp -p "$REPO/$f" "$BUNDLE_DIR/$f"
 done
-for f in INSTALL.md RELEASE-${VERSION}.md VMLX-FORK.md; do
+for f in INSTALL.md RELEASE-${VERSION}.md INFERENCE-SCHEDULING.md VMLX-FORK.md; do
   [[ -f "$REPO/docs/$f" ]] && cp -p "$REPO/docs/$f" "$BUNDLE_DIR/docs/$f" || true
 done
 
