@@ -267,3 +267,49 @@ Next blocker for a future attempt: (1) continuous batching in vmlx (out of scope
 here), and (2) a vmlx-side fix for concurrent first forwards (the R5a crash), which
 is a dependency change the plan rules out for this experiment.
 
+### Peix-like functional follow-up (revised plan 820814e1)
+
+The acceptance objective was then reframed from a mandatory throughput win to
+bounded, safe overlap for multiple independent Peix logical-agent tasks, with a
+modest slowdown acceptable inside the task latency and resource envelope. The
+original +20% aggregate tok/s and ≤1.20× TTFT-ratio results above remain
+measurements; they are not the functional pass gates for this workload.
+
+Added `--mode peix-like` to `scripts/test_concurrent_generations_integration.py`
+and the cohesive offline fixture module `scripts/integration/peix_like.py`.
+The client runs one server at a time with the explicit binary/model, a dynamic
+loopback port, and artifacts outside the checkout; it compares a synchronized
+pair, a staged four-task burst, and cancellation/failure isolation against the
+same one-slot serial baseline. The staged burst holds every active slot before
+submitting the remaining agents and asserts queue depth before any slot release.
+Queue-wait values use exact server request-log data when attribution is unique;
+watcher-derived values are explicitly labeled estimates and any discrepancy is
+reported, not hidden.
+
+Live evidence (artifacts under `~/.local/share/mei-concurrent-generations/artifacts/`):
+
+| Model/config | Functional verdict | Reclaimable / pressure / swap | Interactive p95 TTFT | Burst makespan overlap / serial |
+| --- | --- | --- | --- | --- |
+| Qwen3-4B-4bit | **PASS 10/10 runs**; mapping/isolation, two active, two queued before release, peer-safe cancel all pass | overlap min 12.25 GiB / 0 warned / 0 swap growth | 1.486 s (30 samples; serial 3.552 s) | median serial/overlap 1.420× (range 1.406–1.453 across 10 runs) |
+| Qwen3.6-35B-A3B-4bit-textonly, 26-GiB cap | **FAIL** memory-reserve gate only; remaining gates pass | 3.32 GiB / 0 warned / 0 swap growth | 2.370 s (3 samples) | 7.08 / 9.64 s (1.363×) |
+| Same 35B weights, `qwen3.6-35b-a3b-text` profile | **FAIL** memory-reserve gate only; remaining gates pass | 3.43 GiB / 0 warned / 0 swap growth | 2.813 s (3 samples) | 6.83 / 9.84 s (1.440×) |
+| Same 35B weights, 25-GiB cap | **FAIL** memory-reserve gate only; remaining gates pass | 3.37 GiB / 0 warned / 0 swap growth | 2.172 s (3 samples) | 6.61 / 9.84 s (1.489×) |
+
+The 4B verdict is backed by ten full paired stand-in runs (30 interactive
+samples per arm); every overlap functional, latency, and memory gate passed.
+The three 35B configuration comparisons are single exploratory runs; none
+clears the 4-GiB reserve. The 25-GiB cap shifted reclaimable memory only about
+0.05 GiB vs the unprofiled 26-GiB cap, and the named profile about 0.1 GiB.
+No swap growth or pressure warnings appeared, so memory pressure is **not
+established as the cause** of prior speed results. Model inventory found no
+runnable mixed-quant or lighter 27B weights staged (only provenance/config
+records); no `Berger` implementation/model was found in the workspace or Kiem,
+so the term is unresolved and cannot be tested without clarification. The 4B
+is the only tested profile that meets the workload's current memory and
+interactive-latency envelope.
+
+The Peixinho checkout contains design documents, not an agent runtime/harness;
+this client does not verify Peix durable conversations, task orchestration, or
+hosted-fallback behavior. Those remain a future Peix-side E2E gate, not a Mei
+implementation result. The three 35B exploratory runs have only three
+interactive samples each; the 4B p95 is the 30-sample functional profile result.
