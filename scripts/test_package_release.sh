@@ -10,6 +10,7 @@
 # Verifies:
 #   - package_release.sh exists, is executable, and fails on a version mismatch
 #   - the produced tarball exists, sha256 round-trips, member list is sane
+#   - no synthetic AppleDouble (._*) sidecar members are in the tarball
 #   - the extracted bundle exposes bin/mei, executable, reporting "mei <VERSION>"
 #   - no model-weight blobs (.safetensors/.gguf/.bin) are bundled
 #   - Metal kernel libraries (mlx.metallib) are present next to the binary
@@ -65,7 +66,28 @@ ok "tarball produced: $(basename "$TARBALL")"
 ( cd "$DIST" && shasum -a 256 -c "mei-${VERSION}-macos-arm64.tar.gz.sha256" ) >/dev/null 2>&1
 ok "sha256 round-trips"
 
-# --- 4. extract + structured checks -------------------------------------------
+# --- 4. no synthetic AppleDouble (._*) sidecars in the tarball ----------------
+# macOS bsdtar synthesizes AppleDouble ._<name> members from extended
+# attributes unless COPYFILE_DISABLE=1 is set for the tar process (see
+# package_release.sh). bsdtar -t HIDES those members when listing, so read
+# raw member names via Python's tarfile instead of trusting `tar -tzf`.
+if ! sidecars="$(python3 - "$TARBALL" <<'PY'
+import sys, tarfile
+with tarfile.open(sys.argv[1]) as tf:
+    print("\n".join(
+        n for n in tf.getnames()
+        if any(part.startswith("._") for part in n.split("/"))
+    ))
+PY
+)"; then
+  bad "could not read raw member list from $(basename "$TARBALL")"
+elif [[ -n "$sidecars" ]]; then
+  bad "tarball contains AppleDouble sidecar members: $(printf '%s' "$sidecars" | tr '\n' ' ')"
+else
+  ok "no AppleDouble (._*) sidecar members in tarball"
+fi
+
+# --- 5. extract + structured checks -------------------------------------------
 echo "== extracted bundle checks =="
 tar_path="$T"
 tar -xzf "$TARBALL" -C "$tar_path" 2>/dev/null && ok "tarball extracts" || bad "tarball extracts"
@@ -100,7 +122,7 @@ else
   ok "no model-weight blobs bundled"
 fi
 
-# --- 5. bundle dir still present in dist (artifact) ---------------------------
+# --- 6. bundle dir still present in dist (artifact) ---------------------------
 assert test -f "$BUNDLE/bin/mei"
 
 echo

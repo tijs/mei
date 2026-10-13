@@ -162,9 +162,12 @@ MTIME="$(git -C "$REPO" log -1 --format=%cd --date=format:%Y%m%d%H%M.%S 2>/dev/n
 sed -i.bak "s/^installed_at: .*/installed_at: $RELEASE_DATE/" "$BUNDLE_DIR/bin/mlx.metallib.provenance" 2>/dev/null || true
 rm -f "$BUNDLE_DIR/bin/mlx.metallib.provenance.bak"
 find "$BUNDLE_DIR" -exec touch -t "$MTIME" {} +
+# COPYFILE_DISABLE=1 stops macOS bsdtar from storing extended attributes
+# (every bundled file carries com.apple.provenance) as synthetic AppleDouble
+# ._<name> sidecar members; without it the tarball carries one per file.
 (
   cd "$DIST" && find "mei-${VERSION}-macos-arm64" -type f | sort \
-    | tar -c -f - -T - | gzip -n > "$TARBALL"
+    | COPYFILE_DISABLE=1 tar -c -f - -T - | gzip -n > "$TARBALL"
 )
 echo "== sha256 =="
 shasum -a 256 "$TARBALL" > "$TARBALL.sha256"
