@@ -126,38 +126,96 @@ The overlap contract adds two guarantees on top of the single-flight one:
 - **Slot-exact release**: cancelling one of two active requests releases one
   slot; the surviving generation keeps running and its output is unaffected.
 
-The overlap mode is an experiment with its own gates (isolation canaries,
-≥20% aggregate throughput over a serialized pair, TTFT ceiling, memory
-reserve, cancel-to-release latency; see the plan `820814e1` stages 5–8).
+The overlap mode's original experiment used strict performance gates (isolation,
+≥20% aggregate throughput over a serialized pair, TTFT ceiling, memory reserve,
+cancel-to-release latency; see the plan `820814e1`). The initial measurements
+below remain evidence, but the +20% throughput and ≤1.20×-alone TTFT ratio are
+not hard acceptance gates for the revised Peix use case: Peix needs independent
+agent tasks to overlap, and a modest slowdown may be an acceptable tradeoff.
 
-### Measured results (October 2026, 32-GiB Mac Studio, pinned vmlx)
+### Initial measurements (October 2026, 32-GiB Mac Studio, pinned vmlx)
 
-Two profiles were tested against all gates with a purpose-built integration
-client (`scripts/test_concurrent_generations_integration.py`, artifacts under
-`~/.local/share/mei-concurrent-generations/artifacts/`):
+Two profiles were tested with the model-backed integration client; artifacts
+are under `~/.local/share/mei-concurrent-generations/artifacts/`:
 
-| Gate | Qwen3.6-35B-A3B-4bit text-only | Qwen3-4B-4bit |
+| Measurement | Qwen3.6-35B-A3B-4bit text-only | Qwen3-4B-4bit |
 | --- | --- | --- |
-| G1 isolation/lifecycle canaries | PASS | PASS |
-| G2 aggregate tok/s ≥ +20% over serialized pair | **FAIL 0.899** (30 paired trials) | **FAIL 1.088** (30 paired trials) |
-| G3 p95 TTFT ≤5 s and ≤1.20× alone | **FAIL 1.635×** | PASS 1.137× |
-| G4 ≥4 GiB reclaimable at peak | **FAIL 3.36 GiB** | PASS 11.83 GiB |
-| G5 cancel-to-release p95 ≤2 s | PASS | PASS |
-| G6 one slot default, cap two | PASS | PASS |
+| Isolation/lifecycle canaries | PASS | PASS |
+| Aggregate tok/s ratio (two-slot vs serialized pair; 1.20 was the original target) | **0.899** (about 10% lower) | **1.088** (about 9% higher, below original target) |
+| p95 TTFT alone → two-slot | 2.894 → 4.731 s (1.635×) | 2.813 → 3.198 s (1.137×) |
+| Peak reclaimable memory | **3.36 GiB** (below reserve) | 11.83 GiB |
+| Cancel-to-release p95 | PASS | PASS |
+| Default one slot / cap two | PASS | PASS |
 
-**The ≥20% throughput gate is not reachable by interleaved single-sequence
-execution on this runtime.** Both generations share one MLX default stream, so
-a pair's GPU work is additive; only CPU gaps and per-request setup are
-recoverable (measured sharing efficiency is slightly *negative* on the 35B and
-caps near +12% on the 4B). A verified win needs continuous batching, which is
-out of scope for this slice. Separately, the pinned vmlx revision is not safe
-for two concurrent prompt prefills (intermittent SIGTRAP in the Qwen3.5-MoE
-forward path — see `artifacts/concurrent-generations-rlog.md`, R5a); this
-candidate therefore keeps prompt prefill on the engine actor in every mode.
+The existing acceptance client now has a `--mode peix-like` stand-in for
+independent logical agents (same one-process launcher, no duplicate harness).
+It runs a synchronized two-task pair, a staged four-agent burst at two active
+slots with the remaining two verified queued before any release, and a
+cancellation/peer-isolation case; then runs the identical task set serially.
+Task/agent IDs, isolated histories/nonces, streaming, tool calls, structured
+output, queue-wait sources, TTFT, makespan, throughput, memory, pressure, swap,
+and cancellation evidence are saved outside the repo. The client validates
+Mei-facing behavior only, not Peix persistence or orchestration.
 
-**Do not enable overlap by default, and treat the flag as experimental and
-unverified for throughput**: the measured evidence on both tested profiles is
-negative for G2. Results do not generalize beyond the tested profiles.
+### Peix-like live results (October 2026, 32-GiB Mac Studio)
+
+| Model/config | Functional verdict | Interactive p95 TTFT | Reclaimable memory / swap | Burst makespan overlap vs serial |
+| --- | --- | --- | --- | --- |
+| Qwen3-4B-4bit | **PASS 10/10 runs**; two-active, queue depth 2 before release, mapping/isolation, cancel-peer all pass | 1.486 s (30 samples; serial 3.552 s) | overlap minimum 12.25 GiB; 0 warned, 0 swap growth | median serial/overlap 1.420× (range 1.406–1.453; 10 runs) |
+| Qwen3.6-35B-A3B-4bit-textonly, default memory cap 26 GiB | **FAIL memory floor**; remaining overlap and task gates pass | 2.370 s (3 samples) | 3.32 GiB; 0 warned, 0 swap growth | 7.08 vs 9.64 s (1.363×) |
+| Same 35B weights, `qwen3.6-35b-a3b-text` profile | **FAIL memory floor**; remaining overlap and task gates pass | 2.813 s (3 samples) | 3.43 GiB; 0 warned, 0 swap growth | 6.83 vs 9.84 s (1.440×) |
+| Same 35B weights, 25-GiB memory cap | **FAIL memory floor**; remaining overlap and task gates pass | 2.172 s (3 samples) | 3.37 GiB; 0 warned, 0 swap growth | 6.61 vs 9.84 s (1.489×) |
+
+The 4B results cover ten identical one-slot/two-slot stand-in comparisons and
+30 interactive TTFT samples per arm. All ten functional/memory runs passed;
+the old +20% throughput gate is not applied. Each 35B profile/cap result is one
+exploratory run, not enough to establish a latency or throughput improvement.
+None clears the 4-GiB reserve. The cap change only moved reclaimable memory by
+about 0.05 GiB from the unprofiled baseline, and the named profile by about
+0.1 GiB. No pressure warning or swap growth was observed in any 35B run; these
+measurements do not establish memory pressure as the cause of its latency or
+throughput behavior. The 4B is the only tested profile that currently clears
+the workload's memory and interactive-latency gates. Results do not generalize
+beyond these models and this device.
+
+**Current working acceptance for the Peix use case:**
+
+- One Mei process/model serves multiple independent task clients; at least two
+  requests overlap, while requests above capacity queue. Every task completes
+  and maps to the correct caller, with no cross-agent state leakage or crashes.
+- One slot remains the default and opt-in overlap is capped at two. Cancellation
+  releases only its own slot within 2 seconds p95; queued work and surviving
+  tasks remain healthy. The stand-in cancellation-peer check is a functional
+  sample; the existing 20-trial G5 test supplies the separate cancellation p95.
+- Preserve the 4-GiB free+inactive/reclaimable memory reserve, no sustained
+  yellow/red pressure or test-induced swap growth, and a 5-second absolute
+  interactive p95 TTFT ceiling. User-approved exceptions must be explicit and
+  recorded per model profile.
+- Measure task-level TTFT, completion, queue wait, makespan, aggregate
+  throughput, memory pressure, and swap against an identical one-slot run.
+  Aggregate +20% gain and ≤1.20×-alone TTFT are reported, not required; a
+  modest throughput regression can be acceptable if the multi-agent workflow
+  works within the agreed task-level latency/resource envelope. Server request
+  log queue waits are exact when task attribution is unique; watcher-derived
+  waits are labeled estimates and disagreements are reported.
+- Peix end-to-end persistence/orchestration remains unverified because its
+  checked-out project is still design-only. The stand-in validates Mei-facing
+  behavior only; it does not close Peix-specific durability or fallback gates.
+
+No mixed-quant or lighter 27B alternative weights are staged for a same-device
+comparison; their provenance/config records are not runnable model bundles. No
+`Berger` model-handling component/model was found in the workspace or Kiem, so
+that term is unresolved and cannot be tested without clarification. The staged
+same-weights Qwen profile was tried as above; it does not make the 35B profile
+pass memory reserve. A future optimization study should test a genuinely
+staged alternative or changed model-management setting with paired workloads
+and pressure/swap traces; do not claim memory causality from these runs.
+
+The pinned vmlx revision also produced an intermittent SIGTRAP during an
+experimental path that constructed two prompt prefills concurrently. That path
+was reverted; the candidate serializes prefill on the engine actor. Any future
+concurrent-prefill design requires a vmlx-side fix or re-pin and fresh crash and
+isolation validation. See `artifacts/concurrent-generations-rlog.md`, R5a.
 
 ## Cancellation contract
 

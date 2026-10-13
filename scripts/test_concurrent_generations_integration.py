@@ -38,11 +38,56 @@ Usage:
   scripts/test_concurrent_generations_integration.py --self-check
   scripts/test_concurrent_generations_integration.py --dry-run \
       --binary ... --model-dir ...
-  scripts/test_concurrent_generations_integration.py --mode canaries|benchmark|cancellation|all \
+  scripts/test_concurrent_generations_integration.py --mode canaries|benchmark|cancellation|peix-like|all \
       --binary /path/to/mei --model-dir /path/to/model-bundle \
       [--served-model-id ID] [--artifacts-dir DIR] [--trials N] [--warmup N]
       [--timeout S] [--startup-timeout S] [--extra-args STRING]
       [--memory-limit-bytes N] [--keep-temp]
+
+Modes:
+  canaries      Gate G1 isolation/lifecycle canaries + overload + restart.
+  benchmark     Gates G2/G3/G4: paired counterbalanced throughput/TTFT/memory.
+  cancellation  Gate G5: active cancel-to-slot-release with both slots busy.
+  peix-like     Peix-style independent logical-agent workload (Kiem plan
+                820814e1 stages 7-8): the same stand-in task set (a
+                synchronized 2-task pair, a staged 4-task burst, and a
+                cancellation scenario with a deliberately invalid request)
+                is run against one explicit Mei binary/model in BOTH arms —
+                opt-in overlap (--max-active-generations 2) and one-slot
+                serial mode (--max-active-generations 1, the default) —
+                launching one server process at a time, never two. The
+                burst and cancellation scenarios are staged: their long
+                first tasks must verifiably occupy every slot (checked from
+                /v1/mei/status), only then are the remaining tasks
+                submitted, and they must be observed queued above capacity
+                before any first task releases — a race there fails the run
+                loudly instead of silently degrading the queue evidence.
+                Per-task TTFT, completion, queue wait (an estimate derived
+                from observed slot-release transitions, plus the engine's
+                exact request-log value when the line-to-task match is
+                unique; the exact value is authoritative and any
+                disagreement is reported), makespan, aggregate throughput,
+                memory/pressure/swap, and cancellation data are recorded in
+                the artifacts directory.
+                Active-workload acceptance gates: every task completes and
+                maps to its own task ID, observed peak active == the
+                configured slots and never > 2, queueing above capacity is
+                observed, cancelling one task leaves its peers healthy,
+                interactive p95 TTFT <= 5 s, >= 4 GiB reclaimable at peak,
+                no sustained yellow/red pressure and no test-induced swap
+                growth. The legacy >= 1.20x aggregate-throughput and
+                <= 1.20x-alone TTFT-ratio gates are measurements only here
+                (plan stage 7), never functional pass gates. This validates
+                Mei-facing request behavior for Peix-like workloads; it is
+                NOT Peix end-to-end verification (the Peix harness does not
+                exist yet). `--mode all` keeps its original three modes.
+  all           canaries + benchmark + cancellation (unchanged; peix-like
+                is opt-in and not part of `all`).
+
+The peix-like fixtures/helpers live in `scripts/integration/peix_like.py`
+(kept cohesive there; this client stays canonical for launching, live
+requests, and artifacts). If that module is missing, the other modes are
+unaffected and `--self-check` reports the failure.
 
 Safety contract (unchanged from the 0.8.0 scheduling client):
   - --binary and --model-dir are required explicitly for every live mode.
@@ -78,6 +123,28 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
+# Peix-like fixtures (scripts/integration/peix_like.py)
+# ---------------------------------------------------------------------------
+#
+# The peix-like mode's task envelopes, stand-in workloads, offline gate math
+# and the self-check stub server live in a cohesive fixtures module next to
+# this script. Import failure must never break the other modes: the module is
+# loaded best-effort and its absence is reported by --self-check and by
+# --mode peix-like only.
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_INTEGRATION_DIR = _SCRIPT_DIR / "integration"
+try:
+    if str(_INTEGRATION_DIR) not in sys.path:
+        sys.path.insert(0, str(_INTEGRATION_DIR))
+    import peix_like  # noqa: E402  # type: ignore[import-not-found]
+
+    PEIX_LIKE_IMPORT_ERROR: Optional[str] = None
+except Exception as _peix_exc:  # noqa: BLE001 - reported verbatim
+    peix_like = None  # type: ignore[assignment]
+    PEIX_LIKE_IMPORT_ERROR = f"{type(_peix_exc).__name__}: {_peix_exc}"
+
+# ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
@@ -97,6 +164,16 @@ CANCEL_RELEASE_P95_GATE_MS = 2000.0   # G5: <= 2 s p95
 TRIALS_DEFAULT = 30                   # G2: >= 30 paired trials per arm
 WARMUP_DEFAULT = 2
 TTFT_PROMPT_TOKEN_CAP = 1000          # G3 scope: interactive prompts <= 1000
+
+# Peix-like staged-orchestration bounds (see peix_execute_burst_scenario).
+# A staged scheduler state (all slots occupied, then all remaining tasks
+# queued before any release) must appear promptly; if it cannot, the run
+# fails loudly instead of degrading the queue-depth evidence.
+STAGED_WAIT_CAP_SECONDS = 15.0
+STAGED_WAIT_POLL_SECONDS = 0.01
+# Between scenarios, wait for the previous scenario's slots to drain before
+# submitting anything new (a slot release lags client-visible completion).
+DRAIN_WAIT_CAP_SECONDS = 30.0
 
 # Server flags this client owns; --extra-args must not override them.
 OWNED_FLAGS = (
@@ -538,19 +615,24 @@ def wait_scheduler(
     predicate: Callable[[Dict[str, Any]], bool],
     timeout: float,
     what: str,
-    proc: subprocess.Popen,
-    log_path: Path,
+    proc: Optional[subprocess.Popen] = None,
+    log_path: Optional[Path] = None,
     early_fail: Optional[Callable[[Dict[str, Any]], Optional[str]]] = None,
     poll: float = 0.1,
 ) -> Dict[str, Any]:
-    """Poll /v1/mei/status until `predicate` holds (bounded, with diagnostics)."""
+    """Poll /v1/mei/status until `predicate` holds (bounded, with diagnostics).
+
+    `proc` is the launched server (when this client owns one); offline
+    callers (the self-check stub) pass None.
+    """
     deadline = time.monotonic() + timeout
     last: Optional[Dict[str, Any]] = None
     last_err = "no attempt yet"
     while time.monotonic() < deadline:
-        if proc.poll() is not None:
+        if proc is not None and proc.poll() is not None:
             raise TestFailure(
-                f"server exited mid-test (code {proc.returncode}); server log tail:\n{tail_file(log_path)}"
+                f"server exited mid-test (code {proc.returncode}); server log tail:\n"
+                f"{tail_file(log_path) if log_path is not None else '<no log>'}"
             )
         try:
             last = fetch_scheduler(port, timeout=min(timeout, 10.0))
@@ -770,7 +852,7 @@ def evaluate_cancellation_gate(server_ms: List[float], client_ms: List[float]) -
 
 def chat_payload(
     model: str,
-    content: str,
+    content: str = "",
     *,
     stream: bool = True,
     max_tokens: Optional[int] = None,
@@ -780,10 +862,17 @@ def chat_payload(
     tools: Optional[List[Dict[str, Any]]] = None,
     response_format: Optional[Dict[str, Any]] = None,
     include_usage: bool = True,
+    messages: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
+    """Build a chat request payload.
+
+    `messages` (peix-like task envelopes) supplies an explicit isolated
+    message history; when it is None the single `content` user turn is used,
+    exactly as before.
+    """
     payload: Dict[str, Any] = {
         "model": model,
-        "messages": [{"role": "user", "content": content}],
+        "messages": list(messages) if messages is not None else [{"role": "user", "content": content}],
         "stream": stream,
     }
     if max_tokens is not None:
@@ -1075,14 +1164,26 @@ def memory_preflight() -> Dict[str, Any]:
 
 
 def server_command(args: argparse.Namespace, binary: Path, port: int,
-                   request_log_path: Path, cache_reuse: bool) -> List[str]:
+                   request_log_path: Path, cache_reuse: bool,
+                   max_active: int = 2,
+                   max_queue_depth: Optional[int] = None) -> List[str]:
+    """The exact server argv this client launches.
+
+    `max_active` must stay 1 or 2 (the settled cap; no third slot), and the
+    queue depth may only be sized up to fit a workload — never left
+    unvalidated.
+    """
+    check(max_active in (1, 2),
+          f"this client launches only 1 or 2 active generations (got {max_active}); no third slot")
+    queue_depth = args.max_queue_depth if max_queue_depth is None else int(max_queue_depth)
+    check(queue_depth >= 1, f"--max-queue-depth must be >= 1 (got {queue_depth})")
     cmd = [
         str(binary),
         "--model-dir", str(Path(args.model_dir).expanduser().resolve()),
         "--host", LOOPBACK,
         "--port", str(port),
-        "--max-active-generations", "2",
-        "--max-queue-depth", str(args.max_queue_depth),
+        "--max-active-generations", str(max_active),
+        "--max-queue-depth", str(queue_depth),
         "--queue-wait-ms", str(args.queue_wait_ms),
         "--cache-reuse", "true" if cache_reuse else "false",
         "--enable-thinking", "false",
@@ -1101,8 +1202,11 @@ def server_command(args: argparse.Namespace, binary: Path, port: int,
 def launch_server(
     args: argparse.Namespace, binary: Path, port: int, tmp: Path,
     request_log_path: Path, cache_reuse: bool,
+    max_active: int = 2,
+    max_queue_depth: Optional[int] = None,
 ) -> subprocess.Popen:
-    cmd = server_command(args, binary, port, request_log_path, cache_reuse)
+    cmd = server_command(args, binary, port, request_log_path, cache_reuse,
+                         max_active=max_active, max_queue_depth=max_queue_depth)
     print("launching: " + shlex.join(cmd), flush=True)
     env = dict(os.environ)
     if args.fused_gate_up_limit_env:
@@ -1215,7 +1319,11 @@ class SchedulerWatcher:
     def _loop(self) -> None:
         while not self._stop.is_set():
             try:
-                self.samples.append(fetch_scheduler(self.port, timeout=5.0))
+                sample = fetch_scheduler(self.port, timeout=5.0)
+                # Monotonic observation time: the peix-like runner derives
+                # slot-release/admission timelines from consecutive samples.
+                sample["at"] = time.monotonic()
+                self.samples.append(sample)
             except Exception:
                 pass
             self._stop.wait(self.interval)
@@ -1884,6 +1992,741 @@ def run_cancellation(args: argparse.Namespace, binary: Path, model_dir: Path,
 
 
 # ---------------------------------------------------------------------------
+# Mode: peix-like (independent logical-agent tasks; Kiem 820814e1 stages 7-8)
+# ---------------------------------------------------------------------------
+#
+# Stand-in workload for Peix-style independent logical agents: task envelopes
+# (task/agent ID, isolated history, role/instructions, priority class, stream
+# mode, optional tools/response format, token budget) sent to ONE explicitly
+# launched Mei server/model — never a duplicate process, one arm at a time.
+# The same task set runs in both arms (opt-in overlap with
+# --max-active-generations 2, and one-slot serial mode with the default 1).
+# The fixtures, workload, admission attribution, gate evaluation and the
+# offline stub live in scripts/integration/peix_like.py.
+
+
+class PeixTaskHandle:
+    """One live task: its envelope, session (streaming), result and error."""
+
+    def __init__(self, envelope: Any) -> None:
+        self.envelope = envelope
+        self.session: Optional[Session] = None
+        self.result: Optional[Dict[str, Any]] = None
+        self.error: Optional[str] = None
+        self.cancelled = False
+        self.submitted_at: Optional[float] = None
+        self.done = threading.Event()
+        self.thread: Optional[threading.Thread] = None
+
+
+def peix_task_payload(model_id: str, envelope: Any) -> Dict[str, Any]:
+    """The wire payload for one task envelope (isolated history included)."""
+    return chat_payload(
+        model_id,
+        stream=envelope.stream,
+        max_tokens=envelope.max_tokens,
+        temperature=envelope.temperature,
+        mei_priority=envelope.priority,
+        tools=envelope.tools,
+        response_format=envelope.response_format,
+        messages=envelope.messages(),
+    )
+
+
+def peix_start_task(handle: PeixTaskHandle, payload: Dict[str, Any], port: int,
+                    timeout: float, barrier: Optional[threading.Barrier],
+                    delay_s: float, lock: threading.Lock) -> None:
+    """Start one task on its own connection/thread (barrier-synchronized)."""
+
+    def body() -> None:
+        try:
+            if barrier is not None:
+                barrier.wait(timeout=timeout + 30)
+            if delay_s > 0:
+                time.sleep(delay_s)
+            handle.submitted_at = time.monotonic()
+            if handle.envelope.stream:
+                session = open_stream(port, payload, timeout)
+                with lock:
+                    handle.session = session
+                session.wait_done(timeout)
+                result = extract_stream_result(session)
+                result["aborted"] = session.resp.aborted
+            else:
+                resp = fetch(port, "/v1/chat/completions", payload, timeout=timeout)
+                result = extract_buffered_result(resp)
+                result["aborted"] = resp.aborted
+            handle.result = result
+        except Exception as exc:  # noqa: BLE001 - reported per task
+            handle.error = f"{type(exc).__name__}: {exc}"
+        finally:
+            handle.done.set()
+
+    handle.thread = threading.Thread(
+        target=body, name=f"peix-{handle.envelope.task_id}", daemon=True)
+    handle.thread.start()
+
+
+def peix_wait_task_done(handle: PeixTaskHandle, timeout: float, what: str) -> None:
+    if not handle.done.wait(timeout):
+        raise TestFailure(
+            f"{what}: task {handle.envelope.task_id} did not finish within {timeout:g}s")
+
+
+def peix_wait_first_content(handle: PeixTaskHandle, timeout: float, what: str) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if handle.error is not None:
+            raise TestFailure(
+                f"{what}: task {handle.envelope.task_id} failed before producing tokens: {handle.error}")
+        session = handle.session
+        if session is not None and session.resp.first_content_at is not None:
+            return
+        if handle.done.is_set():
+            break
+        time.sleep(0.01)
+    raise TestFailure(
+        f"{what}: task {handle.envelope.task_id} produced no content within {timeout:g}s")
+
+
+def peix_wait_drained(port: int, timeout: float, proc: Optional[subprocess.Popen],
+                      log_path: Optional[Path], what: str) -> None:
+    """Wait until the scheduler shows no active or queued generations.
+
+    Scenarios run back-to-back against one server and a slot release lags the
+    client-visible completion (post-token drain + cache store), so every
+    scenario starts from a clean scheduler instead of racing the previous
+    scenario's tail; otherwise a new scenario's first requests would queue
+    behind the tail and break the staged admission assumptions.
+    """
+    wait_scheduler(
+        port,
+        lambda s: int(s["activeGenerations"]) == 0 and int(s["queueDepth"]) == 0,
+        min(timeout, DRAIN_WAIT_CAP_SECONDS),
+        f"{what}: the scheduler to drain before submitting tasks",
+        proc, log_path, poll=0.05)
+
+
+def request_log_lines(path: Path) -> List[str]:
+    """Complete JSONL lines currently in the request log (a partial tail is ignored)."""
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return []
+    if "\n" not in text:
+        return []
+    return text[: text.rfind("\n")].split("\n")
+
+
+def wait_request_log_records(path: Path, minimum: int, timeout: float) -> List[str]:
+    deadline = time.monotonic() + timeout
+    lines = request_log_lines(path)
+    while len(lines) < minimum and time.monotonic() < deadline:
+        time.sleep(0.1)
+        lines = request_log_lines(path)
+    return lines
+
+
+def parse_request_log_lines(lines: List[str]) -> List[Dict[str, Any]]:
+    parsed: List[Dict[str, Any]] = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            entry = {"unparsed": line}
+        if isinstance(entry, dict):
+            parsed.append(entry)
+    return parsed
+
+
+def peix_execute_burst_scenario(scenario: Dict[str, Any], model_id: str, port: int,
+                                timeout: float, watcher_interval: float,
+                                proc: Optional[subprocess.Popen],
+                                log_path: Optional[Path]) -> Dict[str, Any]:
+    """Run one burst scenario (the pair, or the staged 4-task burst).
+
+    A non-staged scenario (the pair) submits every task as one synchronized
+    burst, exactly as before. A staged scenario (the burst) makes the
+    queue-above-capacity state deterministic instead of racing the first
+    tasks' completions:
+
+      1. submit the first `peak_active` tasks (the fixture's long hold
+         tasks) together and require the scheduler to show every slot
+         occupied and the queue empty;
+      2. check none of them has finished, then submit the remaining tasks
+         while every slot is verifiably held;
+      3. require the scheduler to show `active == peak_active` AND
+         `queue == expected queue` in one snapshot with no slot release
+         since step 1 (the queued state must exist before any first task
+         releases). If a first task releases first, the run fails loudly.
+
+    The step-3 snapshot is added to the scenario's samples, so the queue
+    gate is backed by an asserted observation, not only by best-effort
+    watcher sampling.
+    """
+    envelopes = scenario["tasks"]
+    payloads = {env.task_id: peix_task_payload(model_id, env) for env in envelopes}
+    handles = [PeixTaskHandle(env) for env in envelopes]
+    by_id = {handle.envelope.task_id: handle for handle in handles}
+    lock = threading.Lock()
+    stagger = float(scenario.get("stagger_seconds", 0.0))
+    expected_peak = int(scenario["expected"]["peak_active"])
+    queue_target = scenario["expected"].get("queue_depth")
+    expected_queue = int(queue_target) if queue_target is not None else 0
+    staged = bool(scenario.get("staged"))
+    first: List[Any] = []
+    rest: List[Any] = []
+    if staged:
+        check(queue_target is not None and expected_queue > 0,
+              f"staged scenario {scenario['name']} must expect queueing above capacity")
+        check(expected_queue == len(envelopes) - expected_peak,
+              f"staged scenario {scenario['name']}: queue target {queue_target} != "
+              f"{len(envelopes)} tasks - {expected_peak} slots")
+        first = list(envelopes[:expected_peak])
+        rest = list(envelopes[expected_peak:])
+
+    peix_wait_drained(port, timeout, proc, log_path, f"scenario {scenario['name']}")
+    watcher = SchedulerWatcher(port, interval=watcher_interval)
+    watcher.start()
+    t0 = time.monotonic()
+    observation_samples: List[Dict[str, Any]] = []
+    staged_evidence: Optional[Dict[str, Any]] = None
+
+    if not staged:
+        barrier = threading.Barrier(len(envelopes))
+        for index, handle in enumerate(handles):
+            peix_start_task(handle, payloads[handle.envelope.task_id], port, timeout,
+                            barrier, index * stagger, lock)
+    else:
+        # Stage 1: the long hold tasks; every slot must be occupied before
+        # anything else is submitted.
+        barrier = threading.Barrier(len(first))
+        for index, env in enumerate(first):
+            peix_start_task(by_id[env.task_id], payloads[env.task_id], port, timeout,
+                            barrier, index * stagger, lock)
+        baseline = wait_scheduler(
+            port,
+            lambda s: (int(s["activeGenerations"]) == expected_peak
+                       and int(s["queueDepth"]) == 0),
+            min(timeout, STAGED_WAIT_CAP_SECONDS),
+            f"scenario {scenario['name']}: the first {expected_peak} tasks to occupy every slot",
+            proc, log_path, poll=STAGED_WAIT_POLL_SECONDS)
+        for env in first:
+            handle = by_id[env.task_id]
+            check(not handle.done.is_set(),
+                  f"scenario {scenario['name']}: stage-1 task {env.task_id} finished before "
+                  f"the remaining tasks could be submitted (its budget is too small to hold "
+                  f"its slot across the stage-2 window on this host)")
+        releases_before = int(baseline["slotReleases"])
+        stage2_submitted_at = time.monotonic()
+
+        def released_early(s: Dict[str, Any]) -> Optional[str]:
+            if int(s["slotReleases"]) > releases_before:
+                return (
+                    f"scenario {scenario['name']}: a first task released (slotReleases "
+                    f"{s['slotReleases']} > {releases_before}) before all "
+                    f"{expected_queue} remaining tasks were observed queued; the "
+                    f"queueing above capacity could not be verified with this timing")
+            return None
+
+        # Stage 2: submit the rest while both slots are verifiably held, then
+        # require every one of them queued before any first task releases.
+        barrier = threading.Barrier(len(rest))
+        for index, env in enumerate(rest):
+            peix_start_task(by_id[env.task_id], payloads[env.task_id], port, timeout,
+                            barrier, index * stagger, lock)
+        observed = wait_scheduler(
+            port,
+            lambda s: (int(s["activeGenerations"]) == expected_peak
+                       and int(s["queueDepth"]) == expected_queue),
+            min(timeout, STAGED_WAIT_CAP_SECONDS),
+            f"scenario {scenario['name']}: all {expected_queue} remaining tasks queued "
+            f"while every slot is still busy (before any first task releases)",
+            proc, log_path, early_fail=released_early, poll=STAGED_WAIT_POLL_SECONDS)
+        observed_at = time.monotonic()
+        if int(observed["slotReleases"]) != releases_before:
+            raise TestFailure(
+                f"scenario {scenario['name']}: the queued state was observed after a slot "
+                f"release (slotReleases {observed['slotReleases']} != {releases_before}); "
+                f"the queue-depth evidence is not attributable")
+        snapshot = dict(observed)
+        snapshot["at"] = observed_at
+        snapshot["staged_observation"] = True
+        observation_samples.append(snapshot)
+        staged_evidence = {
+            "stage1_task_ids": [env.task_id for env in first],
+            "stage2_task_ids": [env.task_id for env in rest],
+            "expected_active": expected_peak,
+            "expected_queue": expected_queue,
+            "releases_before_stage2": releases_before,
+            "stage2_submitted_at": stage2_submitted_at,
+            "observed_at": observed_at,
+            "observed": {key: observed.get(key) for key in (
+                "activeGenerations", "queueDepth", "slotReleases",
+                "peakActiveGenerations", "maxActiveGenerations")},
+            "queue_observed_before_any_release": True,
+        }
+
+    for handle in handles:
+        peix_wait_task_done(handle, timeout + 60, f"scenario {scenario['name']}")
+    t1 = time.monotonic()
+    watcher.stop()
+    return {"handles": handles, "samples": watcher.samples, "t0": t0, "t1": t1,
+            "cancel_to_release_ms": None, "staged": staged_evidence,
+            "observation_samples": observation_samples}
+
+
+def peix_execute_cancel_scenario(scenario: Dict[str, Any], model_id: str, port: int,
+                                 timeout: float, watcher_interval: float,
+                                 proc: Optional[subprocess.Popen],
+                                 log_path: Optional[Path]) -> Dict[str, Any]:
+    """Cancellation scenario: long victim + long peer, two queued tasks, one
+    deliberately invalid request; cancel the victim and watch everyone else.
+
+    Staged like the burst: the two long tasks must verifiably occupy every
+    slot (and the victim must be visibly producing tokens) before the queue
+    is filled, and the queued tasks must be observed queued above capacity
+    before any slot release.
+    """
+    envelopes = scenario["tasks"]
+    check(len(envelopes) >= 4,
+          f"cancel scenario {scenario['name']} needs victim/peer/queued tasks")
+    victim_id = scenario["cancel_task_id"]
+    first = envelopes[:2]
+    queued = [env for env in envelopes[2:] if env.expect_rejection is None]
+    invalid = [env for env in envelopes if env.expect_rejection is not None]
+    payloads = {env.task_id: peix_task_payload(model_id, env) for env in envelopes}
+    handles = {env.task_id: PeixTaskHandle(env) for env in envelopes}
+    lock = threading.Lock()
+    peix_wait_drained(port, timeout, proc, log_path, f"scenario {scenario['name']}")
+    watcher = SchedulerWatcher(port, interval=watcher_interval)
+    watcher.start()
+    t0 = time.monotonic()
+    stagger = float(scenario.get("stagger_seconds", 0.0))
+    expected_peak = int(scenario["expected"]["peak_active"])
+    expected_queue = int(scenario["expected"]["queue_depth"] or 0)
+    observation_samples: List[Dict[str, Any]] = []
+    staged_evidence: Optional[Dict[str, Any]] = None
+
+    # 1. The long tasks go first; the victim must be visibly producing tokens
+    #    (and, under overlap, the peer too) before the queue is filled.
+    barrier = threading.Barrier(len(first))
+    for index, env in enumerate(first):
+        peix_start_task(handles[env.task_id], payloads[env.task_id], port, timeout,
+                        barrier, index * stagger, lock)
+    wait_scheduler(
+        port,
+        lambda s: (s["activeGenerations"] == expected_peak
+                   and s["queueDepth"] >= len(first) - expected_peak),
+        timeout, "the long tasks to start", proc, log_path)
+    victim = handles[victim_id]
+    peix_wait_first_content(victim, timeout, f"cancel scenario {scenario['name']}")
+    if scenario.get("peer_active_before_cancel"):
+        peix_wait_first_content(handles[first[1].task_id], timeout,
+                                f"cancel scenario {scenario['name']} (peer)")
+    for env in first:
+        handle = handles[env.task_id]
+        check(handle.session is not None and not handle.session.resp.saw_done,
+              f"cancel scenario: {env.task_id} finished before it could be cancelled "
+              f"(raise its max_tokens)")
+
+    # 2. Fill the queue above capacity while the long tasks still hold the
+    #    slots; a slot release before the queue is observed means the long
+    #    tasks are too short and the run fails loudly.
+    queue_releases_before = int(fetch_scheduler(port, timeout)["slotReleases"])
+    stage2_submitted_at = time.monotonic()
+
+    def released_early(s: Dict[str, Any]) -> Optional[str]:
+        if int(s["slotReleases"]) > queue_releases_before:
+            return (
+                f"cancel scenario {scenario['name']}: a long task released (slotReleases "
+                f"{s['slotReleases']} > {queue_releases_before}) before all {expected_queue} "
+                f"queued tasks were observed queued; the queueing above capacity could not "
+                f"be verified with this timing")
+        return None
+
+    barrier = threading.Barrier(len(queued))
+    for index, env in enumerate(queued):
+        peix_start_task(handles[env.task_id], payloads[env.task_id], port, timeout,
+                        barrier, index * stagger, lock)
+    observed = wait_scheduler(port, lambda s: s["queueDepth"] == expected_queue, timeout,
+                              "the queue to fill above capacity", proc, log_path,
+                              early_fail=released_early, poll=STAGED_WAIT_POLL_SECONDS)
+    observed_at = time.monotonic()
+    if int(observed["slotReleases"]) != queue_releases_before:
+        raise TestFailure(
+            f"cancel scenario {scenario['name']}: the queued state was observed after a "
+            f"slot release (slotReleases {observed['slotReleases']} != {queue_releases_before})")
+    snapshot = dict(observed)
+    snapshot["at"] = observed_at
+    snapshot["staged_observation"] = True
+    observation_samples.append(snapshot)
+    staged_evidence = {
+        "stage1_task_ids": [env.task_id for env in first],
+        "stage2_task_ids": [env.task_id for env in queued],
+        "expected_active": expected_peak,
+        "expected_queue": expected_queue,
+        "releases_before_stage2": queue_releases_before,
+        "stage2_submitted_at": stage2_submitted_at,
+        "observed_at": observed_at,
+        "observed": {key: observed.get(key) for key in (
+            "activeGenerations", "queueDepth", "slotReleases",
+            "peakActiveGenerations", "maxActiveGenerations")},
+        "queue_observed_before_any_release": True,
+    }
+
+    # 3. The deliberately invalid request must be refused without disturbing
+    #    the active/queued state (failure isolation for one logical agent).
+    for env in invalid:
+        handle = handles[env.task_id]
+        handle.submitted_at = time.monotonic()
+        refusal = fetch(port, "/v1/chat/completions", payloads[env.task_id], timeout=timeout)
+        result = extract_buffered_result(refusal)
+        result["aborted"] = refusal.aborted
+        handle.result = result
+        handle.done.set()
+    wait_scheduler(
+        port,
+        lambda s: s["activeGenerations"] == expected_peak and s["queueDepth"] == expected_queue,
+        timeout, "the scheduler to be unchanged by the refused request", proc, log_path)
+
+    # 4. Cancel exactly the victim; measure the client-observed release.
+    check(not victim.done.is_set(),
+          "cancellation scenario: the long victim finished before cancellation "
+          "(raise its max_tokens)")
+    victim_session = victim.session
+    if victim_session is None:
+        raise TestFailure("cancellation scenario: the victim has no open session")
+    releases_before = int(fetch_scheduler(port, timeout)["slotReleases"])
+    t_abort = time.monotonic()
+    victim.cancelled = True
+    victim_session.abort()
+    # abort() is the client-side terminal event for this response. On some
+    # hosts shutdown()/close() does not wake a reader blocked in recv() on a
+    # timeout socket, so mark the response done here to let the task thread
+    # finish deterministically (the reader thread's own finally is
+    # idempotent and `aborted` records why the stream ended).
+    if not victim_session.resp.done:
+        victim_session.resp.done_at = time.monotonic()
+        victim_session.resp.done = True
+    cancel_to_release_ms: Optional[float] = None
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if proc is not None and proc.poll() is not None:
+            raise TestFailure(
+                "server exited during the cancellation scenario; log tail:\n"
+                f"{tail_file(log_path) if log_path is not None else '<no log>'}")
+        try:
+            snapshot = fetch_scheduler(port, timeout)
+        except (OSError, TestFailure, ValueError):
+            continue
+        if int(snapshot["slotReleases"]) >= releases_before + 1:
+            cancel_to_release_ms = (time.monotonic() - t_abort) * 1000.0
+            break
+        time.sleep(0.02)
+    check(cancel_to_release_ms is not None,
+          "cancellation scenario: the victim's slot release was not observed")
+    for env in envelopes:
+        peix_wait_task_done(handles[env.task_id], timeout + 60,
+                            f"cancel scenario {scenario['name']}")
+    wait_scheduler(port, lambda s: s["activeGenerations"] == 0 and s["queueDepth"] == 0,
+                   timeout, "the scheduler to drain after cancellation", proc, log_path)
+    t1 = time.monotonic()
+    watcher.stop()
+    return {"handles": [handles[env.task_id] for env in envelopes],
+            "samples": watcher.samples, "t0": t0, "t1": t1,
+            "cancel_to_release_ms": cancel_to_release_ms,
+            "staged": staged_evidence, "observation_samples": observation_samples}
+
+
+def peix_assemble_scenario(scenario: Dict[str, Any], execution: Dict[str, Any],
+                           log_path: Optional[Path],
+                           log_lines_before: int) -> Dict[str, Any]:
+    """Turn one scenario's execution into per-task + observed evidence."""
+    module = peix_like
+    if module is None:
+        raise TestFailure(
+            "scripts/integration/peix_like.py is required for --mode peix-like "
+            f"(import failed: {PEIX_LIKE_IMPORT_ERROR})")
+    handles = execution["handles"]
+    envelopes = scenario["tasks"]
+    # The staged observations (asserted scheduler states from the orchestrator)
+    # join the watcher samples, so the observed peak/queue metrics rest on
+    # asserted evidence as well as best-effort sampling.
+    samples = list(execution["samples"]) + list(execution.get("observation_samples") or [])
+    samples.sort(key=lambda s: float(s.get("at", 0.0)))
+    observations = module.observations_from_samples(samples)
+    submissions: List[Dict[str, Any]] = []
+    for handle in handles:
+        # A deliberately invalid request is refused before admission: it is
+        # never queued and carries no queue wait.
+        if handle.envelope.expect_rejection is not None:
+            continue
+        sent_at = None
+        if handle.result is not None:
+            sent_at = handle.result.get("sent_at")
+        if sent_at is None:
+            sent_at = handle.submitted_at if handle.submitted_at is not None else execution["t0"]
+        submissions.append({"task_id": handle.envelope.task_id,
+                            "priority": handle.envelope.priority,
+                            "sent_at": sent_at})
+    admissions = module.attribute_admissions(
+        submissions, int(scenario["expected"]["peak_active"]),
+        observations["slot_release_times"])
+
+    results: Dict[str, Optional[Dict[str, Any]]] = {}
+    errors: Dict[str, Optional[str]] = {}
+    cancelled_ids: List[str] = []
+    for handle in handles:
+        task_id = handle.envelope.task_id
+        results[task_id] = handle.result
+        errors[task_id] = handle.error
+        if handle.cancelled:
+            cancelled_ids.append(task_id)
+    records = module.build_task_records(envelopes, results, errors, cancelled_ids, admissions)
+    summary = module.summarize_records(records)
+
+    # The window during which every submitted task was still awaiting its
+    # response (all in flight at once).
+    all_in_flight = None
+    sent = [r["sent_at"] for r in records if r.get("sent_at") is not None]
+    done = [r["done_at"] for r in records if r.get("done_at") is not None]
+    if sent and done:
+        all_in_flight = max(0.0, min(done) - max(sent))
+
+    # Server-side request-log slice for this scenario (exact queue waits when
+    # the line-to-task attribution is unambiguous).
+    request_log: Optional[Dict[str, Any]] = None
+    if log_path is not None:
+        expected_total = log_lines_before + sum(1 for e in envelopes if e.expect_rejection is None)
+        lines = wait_request_log_records(log_path, expected_total, 15.0)
+        slice_lines = parse_request_log_lines(lines[log_lines_before:expected_total])
+        attribution = module.attribute_request_log(records, slice_lines)
+        for record in records:
+            entry = attribution["per_task"].get(record["task_id"])
+            if entry:
+                record["queue_wait_ms_server"] = entry.get("queue_wait_ms")
+                record["request_log"] = entry
+        request_log = {
+            "path": str(log_path),
+            "lines": len(slice_lines),
+            "attributed": attribution["attributed"],
+            "notes": attribution["notes"],
+        }
+
+    # Pick the authoritative queue wait per task (the exact server value when
+    # the match is unique, else the labeled estimate) and audit the two
+    # sources against each other.
+    queue_wait_audit = module.resolve_queue_waits(records)
+
+    entry: Dict[str, Any] = {
+        "name": scenario["name"],
+        "tasks": records,
+        "expected": dict(scenario["expected"]),
+        "observed": observations,
+        "all_in_flight_seconds": all_in_flight,
+        "makespan_seconds": summary["makespan_seconds"],
+        "aggregate_completion_tokens": summary["aggregate_completion_tokens"],
+        "aggregate_tokens_per_second": summary["aggregate_tokens_per_second"],
+        "tasks_completed": summary["tasks_completed"],
+        "tasks_cancelled": summary["tasks_cancelled"],
+        "tasks_rejected": summary["tasks_rejected"],
+        "request_log": request_log,
+        "queue_wait_audit": queue_wait_audit,
+        "staged": execution.get("staged"),
+        "t0": execution["t0"],
+        "t1": execution["t1"],
+        "memory": None,
+    }
+    if scenario.get("cancel_task_id"):
+        entry["cancel"] = {
+            "victim": scenario["cancel_task_id"],
+            "cancel_to_release_ms": execution.get("cancel_to_release_ms"),
+        }
+    return entry
+
+
+def peix_run_arm(arm_name: str, max_active: int, scenarios: List[Dict[str, Any]],
+                 model_id: str, port: int, timeout: float, *,
+                 watcher_interval: float = 0.05,
+                 proc: Optional[subprocess.Popen] = None,
+                 log_path: Optional[Path] = None,
+                 sample_memory: bool = True) -> Dict[str, Any]:
+    """Run one arm (overlap or serial) of the peix-like workload."""
+    arm: Dict[str, Any] = {"arm": arm_name, "max_active": max_active, "scenarios": []}
+    sampler: Optional[MemorySampler] = None
+    arm_swap_before: Optional[int] = None
+    if sample_memory:
+        arm_swap_before = system_memory_sample()["swap_used_bytes"]
+        sampler = MemorySampler(port, interval=0.25)
+        sampler.start()
+    log_lines_before = len(request_log_lines(log_path)) if log_path is not None else 0
+    try:
+        for scenario in scenarios:
+            swap_before = system_memory_sample()["swap_used_bytes"] if sample_memory else None
+            print(f"   [{arm_name}] scenario {scenario['name']}: "
+                  f"{len(scenario['tasks'])} tasks, peak target "
+                  f"{scenario['expected']['peak_active']}, queue target "
+                  f"{scenario['expected']['queue_depth']}", flush=True)
+            if scenario.get("cancel_task_id"):
+                execution = peix_execute_cancel_scenario(
+                    scenario, model_id, port, timeout, watcher_interval, proc, log_path)
+            else:
+                execution = peix_execute_burst_scenario(
+                    scenario, model_id, port, timeout, watcher_interval, proc, log_path)
+            swap_after = system_memory_sample()["swap_used_bytes"] if sample_memory else None
+            entry = peix_assemble_scenario(scenario, execution, log_path, log_lines_before)
+            log_lines_before += sum(
+                1 for e in scenario["tasks"] if e.expect_rejection is None)
+            if sample_memory and sampler is not None:
+                window = [s for s in sampler.samples
+                          if execution["t0"] <= float(s.get("at", 0.0)) <= execution["t1"]]
+                entry["memory"] = evaluate_memory_gate(window, int(swap_before or 0), int(swap_after or 0))
+                entry["memory_window_samples"] = len(window)
+            arm["scenarios"].append(entry)
+            print(f"   [{arm_name}] {scenario['name']}: peak={entry['observed']['peak_active']} "
+                  f"queue={entry['observed']['max_queue_depth']} "
+                  f"makespan={_fmt_seconds(entry['makespan_seconds'])} "
+                  f"tok/s={_fmt_rate(entry['aggregate_tokens_per_second'])} "
+                  f"completed={entry['tasks_completed']}/{len(entry['tasks'])}", flush=True)
+            staged = entry.get("staged") or {}
+            if staged:
+                print(f"   [{arm_name}] {scenario['name']}: staged — "
+                      f"stage1={','.join(staged['stage1_task_ids'])} held with "
+                      f"active={staged['observed'].get('activeGenerations')}, then "
+                      f"stage2={','.join(staged['stage2_task_ids'])} observed queued "
+                      f"(queue={staged['observed'].get('queueDepth')}) before any slot "
+                      f"release (slotReleases {staged['releases_before_stage2']})", flush=True)
+            audit = entry.get("queue_wait_audit") or {}
+            if audit.get("compared"):
+                note = (" (disagreement beyond tolerance; the exact server request-log "
+                        "values are authoritative)" if audit.get("disagreement") else "")
+                print(f"   [{arm_name}] {scenario['name']}: queue-wait audit — "
+                      f"{audit['compared']} task(s) with both sources, max "
+                      f"|derived-server| {audit['max_abs_delta_ms']:.0f} ms{note}", flush=True)
+    finally:
+        if sampler is not None:
+            sampler.stop()
+    if sample_memory and sampler is not None:
+        arm["memory_gate"] = evaluate_memory_gate(
+            sampler.samples, int(arm_swap_before or 0),
+            system_memory_sample()["swap_used_bytes"])
+        arm["memory_samples"] = len(sampler.samples)
+    else:
+        arm["memory_gate"] = None
+    arm["interactive_ttft_gated_seconds"] = [
+        float(task["ttft_seconds"])
+        for scenario in arm["scenarios"]
+        if scenario["expected"].get("gate_interactive_ttft")
+        for task in scenario["tasks"]
+        if task["priority"] == "interactive"
+        and not task["expected_cancelled"]
+        and not task["expected_rejected"]
+        and task["finish_reason"] in ("stop", "length", "tool_calls")
+        and task["ttft_seconds"] is not None
+    ]
+    return arm
+
+
+def _fmt_seconds(value: Optional[float]) -> str:
+    return "n/a" if value is None else f"{value:.2f}s"
+
+
+def _fmt_rate(value: Optional[float]) -> str:
+    return "n/a" if value is None else f"{value:.2f}"
+
+
+def run_peix_like(args: argparse.Namespace, binary: Path, model_dir: Path,
+                  artifacts: Path) -> Dict[str, Any]:
+    """--mode peix-like: the stand-in independent-agent workload in both arms."""
+    print("\n-- peix-like: independent logical-agent task envelopes against one "
+          "Mei server/model", flush=True)
+    if peix_like is None:
+        raise TestFailure(
+            "scripts/integration/peix_like.py is required for --mode peix-like "
+            f"(import failed: {PEIX_LIKE_IMPORT_ERROR})")
+    evidence: Dict[str, Any] = {
+        "mode": "peix-like",
+        "note": ("stand-in workload for Peix-style independent logical agents; the real Peix "
+                 "harness does not exist, so this is Mei-facing request behavior verification, "
+                 "not Peix end-to-end verification"),
+        "arms": {},
+    }
+    arms: Dict[str, Dict[str, Any]] = {}
+    try:
+        for arm_name, max_active in (("overlap", 2), ("serial", 1)):
+            scenarios = peix_like.peix_scenarios(max_active)
+            queue_depth = max(args.max_queue_depth,
+                              peix_like.required_queue_depth(scenarios, max_active))
+            port = pick_free_port()
+            check(port != PREEXISTING_PORT, "the allocated port must never be 8024")
+            arm_dir = artifacts / f"peix-like-{arm_name}"
+            arm_dir.mkdir(parents=True, exist_ok=True)
+            log_path = arm_dir / "requests.jsonl"
+            print(f"\n   [{arm_name}] one server, --max-active-generations {max_active}, "
+                  f"--max-queue-depth {queue_depth} (queue sized to fit the burst; "
+                  f"request log: {log_path.name})", flush=True)
+            proc = launch_server(args, binary, port, arm_dir, log_path, cache_reuse=False,
+                                 max_active=max_active, max_queue_depth=queue_depth)
+            try:
+                wait_health(port, proc, args.startup_timeout, arm_dir / "server.log")
+                model_id = resolve_model_id(port, args, args.timeout)
+                arm = peix_run_arm(arm_name, max_active, scenarios, model_id, port,
+                                   args.timeout, proc=proc, log_path=log_path,
+                                   sample_memory=True)
+                arm["model_id"] = model_id
+                arm["port"] = port
+                arm["queue_depth"] = queue_depth
+                arm["workload"] = peix_like.workload_summary(scenarios)
+                arms[arm_name] = arm
+            finally:
+                terminate(proc)
+        evidence["arms"] = arms
+        verdict = peix_like.peix_verdict(arms)
+        evidence["verdict"] = verdict
+
+        print("\n   peix-like gate results ([gate] counts toward acceptance):")
+        for arm_name, gates in verdict["gates"].items():
+            for gate_name, gate in gates.items():
+                marker = "gate" if gate["acceptance"] else "measurement"
+                print(f"   {arm_name:>7}  {'PASS' if gate['passed'] else 'FAIL':>4}  "
+                      f"{gate_name} [{marker}]  {gate['detail']}", flush=True)
+        measurements = verdict["measurements"]
+        burst = measurements.get("burst_throughput")
+        if burst:
+            print(f"\n   measurement: burst aggregate tokens/s — overlap "
+                  f"{burst['overlap_tokens_per_second']:.2f}, serial "
+                  f"{burst['serial_tokens_per_second']:.2f}, ratio "
+                  f"{burst['ratio_overlap_over_serial']:.3f} (not a gate)")
+        makespan = measurements.get("burst_makespan")
+        if makespan:
+            print(f"   measurement: burst makespan — overlap "
+                  f"{makespan['overlap_seconds']:.2f}s, serial "
+                  f"{makespan['serial_seconds']:.2f}s, serial/overlap "
+                  f"{makespan['serial_over_overlap_ratio']:.3f}")
+        ttft = measurements.get("interactive_ttft")
+        if ttft:
+            for arm_name, summary in ttft.items():
+                print(f"   measurement: interactive TTFT p95 ({arm_name}) "
+                      f"{summary['p95_seconds']:.3f}s over {summary['samples']} task(s)")
+        print(f"\n   peix-like verdict: {'PASS' if verdict['passed'] else 'FAIL'}"
+              + (f" (failed: {', '.join(verdict['failed'])})" if verdict["failed"] else ""),
+              flush=True)
+        write_evidence(artifacts, "peix-like", evidence)
+    except TestFailure:
+        evidence["arms"] = arms
+        try:
+            write_evidence(artifacts, "peix-like-partial", evidence)
+        except OSError:
+            pass
+        raise
+    return evidence
+
+
+# ---------------------------------------------------------------------------
 # Dry run and self-check (both launch nothing)
 # ---------------------------------------------------------------------------
 
@@ -1906,6 +2749,23 @@ def dry_run(args: argparse.Namespace, binary: Path, model_dir: Path) -> None:
           f"swap growth < {SWAP_GROWTH_GATE_BYTES / 1024**2:.0f} MiB")
     print(f"    G5 cancellation: p95 <= {CANCEL_RELEASE_P95_GATE_MS:.0f} ms, no orphan")
     print("    G6 defaults: overlap only via --max-active-generations 2 (runtime rejects >2)")
+    print("\n  peix-like mode (--mode peix-like; one server process at a time, per arm):")
+    if peix_like is None:
+        print(f"    UNAVAILABLE: scripts/integration/peix_like.py did not import "
+              f"({PEIX_LIKE_IMPORT_ERROR})")
+    else:
+        for arm_name, max_active in (("overlap", 2), ("serial", 1)):
+            scenarios = peix_like.peix_scenarios(max_active)
+            depth = max(args.max_queue_depth, peix_like.required_queue_depth(scenarios, max_active))
+            tasks = sum(len(s["tasks"]) for s in scenarios)
+            print(f"    {arm_name}: --max-active-generations {max_active}, "
+                  f"--max-queue-depth {depth}, {tasks} tasks in "
+                  + ", ".join(f"{s['name']}({len(s['tasks'])})" for s in scenarios))
+        print("    acceptance gates: tasks complete+map, peak==slots and never >2, queueing above")
+        print("      capacity, cancel peer isolation, interactive p95 TTFT <= 5s, >= 4 GiB")
+        print("      reclaimable, no sustained pressure/swap growth")
+        print("    measurements only (not gates): overlap/serial throughput + makespan; the legacy")
+        print("      +20% throughput and 1.20x TTFT ratios are not applied in peix-like mode")
     print("\n  memory preflight:")
     try:
         sample = memory_preflight()
@@ -2244,6 +3104,499 @@ def self_check() -> int:
         finally:
             listener.close()
 
+    # -- peix-like offline cases -------------------------------------------
+
+    def expect_value_error(fn: Callable[[], Any]) -> None:
+        try:
+            fn()
+        except ValueError:
+            return
+        raise AssertionError("expected ValueError, but the call succeeded")
+
+    def peix_fixtures_case() -> None:
+        """Envelopes validate; the stand-in workloads carry the required mix."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+        pair = module.pair_envelopes()
+        burst = module.burst_envelopes()
+        cancel = module.cancel_envelopes()
+        for workload in (pair, burst, cancel):
+            module.validate_workload(workload)
+        check_eq(len(pair), 2, "pair task count")
+        check_eq({env.priority for env in pair}, {"interactive", "background"}, "pair mixes classes")
+        check_eq(len(burst), 4, "burst task count")
+        check_eq([env.task_id for env in burst],
+                 ["burst-topic-long", "burst-tool-runner",
+                  "burst-general-quick", "burst-structured-report"],
+                 "burst order: the long stage-1 hold tasks first, the short general + "
+                 "structured tasks queued")
+        check(burst[0].kind == "background-long" and burst[0].max_tokens >= 128,
+              "the burst's first task is the long hold task")
+        check(burst[1].expect_tool is not None,
+              "the burst's second stage-1 task is the tool task (its slot must be held too)")
+        check(burst[2].kind == "interactive-short" and burst[2].priority == "interactive",
+              "the short General-like interactive task is in the queued stage")
+        check(burst[3].expect_structured is not None,
+              "the structured task is in the queued stage")
+        check(sum(1 for env in burst if env.priority == "background") == 2, "burst has two background tasks")
+        check(any(env.expect_tool for env in burst), "burst includes a tool task")
+        check(any(env.expect_structured for env in burst), "burst includes a structured task")
+        check(any(not env.stream for env in burst), "burst includes a buffered task")
+        check(all(env.max_tokens >= 1 for env in pair + burst + cancel), "token budgets present")
+        nonces = [env.nonce for env in pair + burst + cancel if env.nonce]
+        check_eq(len(nonces), len(set(nonces)), "all nonces are distinct")
+        tokens = [env.session_token for env in pair + burst + cancel]
+        check_eq(len(tokens), len(set(tokens)), "all session tokens are distinct")
+        check_eq([env.describe() for env in burst],
+                 [env.describe() for env in module.burst_envelopes()],
+                 "workload envelopes are deterministic across calls")
+        for env in pair + burst + cancel:
+            messages = env.messages()
+            check(messages[0]["role"] == "system", f"{env.task_id}: history starts with its role")
+            check(messages[-1]["role"] == "user" and env.instructions in messages[-1]["content"],
+                  f"{env.task_id}: instructions are its own user turn")
+        # malformed envelopes are rejected
+        expect_value_error(lambda: module.validate_envelope(module.TaskEnvelope(
+            task_id="bad-priority", agent_id="a", kind="k", role="r", instructions="x",
+            priority="urgent", max_tokens=8)))
+        expect_value_error(lambda: module.validate_envelope(module.TaskEnvelope(
+            task_id="no-nonce", agent_id="a", kind="k", role="r", instructions="x",
+            expect_own_nonce=True)))
+        expect_value_error(lambda: module.validate_envelope(module.TaskEnvelope(
+            task_id="tool-without-schema", agent_id="a", kind="k", role="r", instructions="x",
+            expect_tool={"name": "add_numbers"})))
+        expect_value_error(lambda: module.validate_workload(pair + [pair[0]]))
+        # both arms run the same task set; only the expectations differ
+        overlap_scenarios = module.peix_scenarios(2)
+        serial_scenarios = module.peix_scenarios(1)
+        check_eq([s["name"] for s in overlap_scenarios], ["pair", "burst", "cancel"],
+                 "scenario names")
+        check_eq([[t.task_id for t in s["tasks"]] for s in overlap_scenarios],
+                 [[t.task_id for t in s["tasks"]] for s in serial_scenarios],
+                 "the serial and overlap arms run the identical task set")
+        check_eq(overlap_scenarios[1]["expected"]["queue_depth"], 2, "overlap burst queues 2")
+        check_eq(serial_scenarios[1]["expected"]["queue_depth"], 3, "serial burst queues 3")
+        check_eq(module.required_queue_depth(serial_scenarios, 1), 3,
+                 "serial arm needs a queue depth of 3")
+        check_eq(overlap_scenarios[0]["stagger_seconds"], 0.0,
+                 "the pair is the synchronized test (no stagger)")
+        check(overlap_scenarios[1]["stagger_seconds"] > 0 and overlap_scenarios[2]["stagger_seconds"] > 0,
+              "burst and cancel submissions are staggered for a deterministic arrival order")
+        check_eq(overlap_scenarios[0]["staged"], False,
+                 "the pair stays a single synchronized burst (no staging)")
+        check_eq(overlap_scenarios[1]["staged"], True,
+                 "the burst is staged (hold the first tasks, then assert the queue)")
+        check_eq(overlap_scenarios[2]["staged"], True,
+                 "the cancellation scenario is staged too")
+        check_eq(serial_scenarios[1]["staged"], True, "the serial burst is staged too")
+        check_eq(module.workload_summary(overlap_scenarios)[1]["staged"], True,
+                 "the workload summary carries the staging contract")
+        expect_value_error(lambda: module.peix_scenarios(3))
+        # staged submission without queueing is a misconfiguration
+        with_scenario = module.peix_scenarios(2)
+        check_eq(with_scenario[1]["expected"]["queue_depth"], 2,
+                 "the staged burst's queue target matches tasks - slots")
+        check_eq(with_scenario[1]["expected"]["queue_depth"],
+                 len(with_scenario[1]["tasks"]) - with_scenario[1]["expected"]["peak_active"],
+                 "stage-2 count == tasks - stage-1 count")
+
+    def peix_attribution_case() -> None:
+        """Admission/queue-wait attribution from observed slot releases."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+        submissions = [
+            {"task_id": "a", "priority": "interactive", "sent_at": 0.0},
+            {"task_id": "b", "priority": "interactive", "sent_at": 0.01},
+            {"task_id": "bg", "priority": "background", "sent_at": 0.02},
+            {"task_id": "fg", "priority": "interactive", "sent_at": 0.03},
+        ]
+        admissions = module.attribute_admissions(submissions, 2, [5.0, 6.0])
+        check_eq(admissions["a"]["basis"], "immediate", "first arrival admitted on its slot")
+        check_eq(admissions["a"]["queue_wait_ms"], 0.0, "immediate queue wait is 0")
+        check_eq(admissions["b"]["basis"], "immediate", "second arrival admitted on its slot")
+        check_eq(admissions["fg"]["basis"], "slot-release", "the queued interactive task waited")
+        check(abs(admissions["fg"]["queue_wait_ms"] - 4970.0) < 1.0,
+              "queued interactive outranks the queued background task (first release)")
+        check(abs(admissions["bg"]["queue_wait_ms"] - 5980.0) < 1.0,
+              "background task admitted on the second release")
+        admissions = module.attribute_admissions(submissions, 2, [5.0])
+        check_eq(admissions["bg"]["basis"], "unattributed", "missing release -> unattributed")
+        # observations derived from watcher samples
+        samples = [
+            {"at": 0.0, "activeGenerations": 1, "peakActiveGenerations": 1,
+             "queueDepth": 0, "slotReleases": 0},
+            {"at": 0.5, "activeGenerations": 2, "peakActiveGenerations": 2,
+             "queueDepth": 1, "slotReleases": 0},
+            {"at": 1.0, "activeGenerations": 2, "peakActiveGenerations": 2,
+             "queueDepth": 2, "slotReleases": 1},
+            {"at": 1.5, "activeGenerations": 3, "peakActiveGenerations": 3,
+             "queueDepth": 0, "slotReleases": 2},
+        ]
+        observed = module.observations_from_samples(samples)
+        check_eq(observed["peak_active"], 3, "peak active from samples")
+        check(observed["saw_above_two"], "three active generations must be flagged")
+        check_eq(observed["max_queue_depth"], 2, "max queue depth from samples")
+        check(abs(observed["two_active_seconds"] - 1.0) < 1e-9, "two-active window from samples")
+        check_eq(len(observed["slot_release_times"]), 2, "two slot releases observed")
+
+    def peix_gate_case() -> None:
+        """The peix-like gate evaluation accepts a healthy arm, catches every
+        failure mode, and keeps the serial arm's slow-but-expected values as
+        measurements."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+
+        def task_record(task_id, priority="interactive", finish="stop", mapping=True,
+                        ttft=1.0, cancelled=False, rejected=False):
+            return {
+                "task_id": task_id, "priority": priority,
+                "finish_reason": None if (cancelled or rejected) else finish,
+                "mapping_ok": mapping, "mapping_detail": "ok" if mapping else "mismatch",
+                "expected_cancelled": cancelled, "expected_rejected": rejected,
+                "cancelled_observed": cancelled, "error": None, "stream_error": None,
+                "ttft_seconds": ttft,
+            }
+
+        def make_arm(arm_name, max_active, *, peak=None, saw_above=False, queue_depth=None,
+                     mapping=True, ttft=1.0, cancel_clean=True, memory_ok=True,
+                     two_active=None):
+            peak = max_active if peak is None else peak
+            if queue_depth is None:
+                queue_depth = 4 - max_active
+            if two_active is None:
+                two_active = 1.0 if max_active > 1 else 0.0
+            victim = task_record("c-victim", priority="background", cancelled=True)
+            if not cancel_clean:
+                victim["finish_reason"] = "stop"
+
+            def scenario(name, tasks, expected_queue, require_overlap, gate_ttft, cancel=None):
+                return {
+                    "name": name, "tasks": tasks,
+                    "expected": {"peak_active": max_active, "queue_depth": expected_queue,
+                                 "require_overlap": require_overlap,
+                                 "gate_interactive_ttft": gate_ttft},
+                    "observed": {"peak_active": peak, "peak_counter": peak,
+                                 "max_queue_depth": queue_depth if expected_queue else 0,
+                                 "saw_above_two": saw_above, "two_active_seconds": two_active},
+                    "all_in_flight_seconds": 1.0,
+                    "cancel": cancel,
+                }
+
+            return {
+                "arm": arm_name, "max_active": max_active,
+                "scenarios": [
+                    scenario("pair", [task_record("p1", ttft=ttft),
+                                      task_record("p2", priority="background")],
+                             None, max_active > 1, True),
+                    scenario("burst", [task_record("b1", ttft=ttft),
+                                       task_record("b2", priority="background"),
+                                       task_record("b3", priority="background"),
+                                       task_record("b4", priority="background")],
+                             4 - max_active, max_active > 1, True),
+                    scenario("cancel", [victim,
+                                        task_record("c-peer", priority="background"),
+                                        task_record("c-queued1", mapping=mapping),
+                                        task_record("c-queued2", priority="background")],
+                             4 - max_active, False, False,
+                             cancel={"victim": "c-victim", "cancel_to_release_ms": 500.0}),
+                ],
+                "memory_gate": {"passed": memory_ok},
+                "interactive_ttft_gated_seconds": [ttft, ttft],
+            }
+
+        healthy = {"overlap": make_arm("overlap", 2),
+                   "serial": make_arm("serial", 1, ttft=20.0)}
+        verdict = module.peix_verdict(healthy)
+        check(verdict["passed"],
+              f"a healthy arm pair must pass (failed: {verdict['failed']})")
+        check(all(gate["passed"] for gate in verdict["gates"]["overlap"].values()),
+              "every overlap-arm gate passes on the healthy arm")
+        check(verdict["gates"]["serial"]["interactive_ttft_p95_within_ceiling"]["acceptance"] is False,
+              "serial-arm TTFT is a measurement, not an acceptance gate")
+        check(not verdict["gates"]["serial"]["interactive_ttft_p95_within_ceiling"]["passed"],
+              "the serial arm's slow TTFT is still reported")
+
+        def expect_gate_failure(arms, arm_name, gate_name):
+            result = module.peix_verdict(arms)
+            check(not result["passed"], f"{arm_name}/{gate_name} must fail the verdict")
+            check(not result["gates"][arm_name][gate_name]["passed"],
+                  f"{arm_name}/{gate_name} must be reported as failed")
+            check(f"{arm_name}/{gate_name}" in result["failed"],
+                  f"{arm_name}/{gate_name} must be named in the failed list")
+
+        overlap_only = lambda **kwargs: {"overlap": make_arm("overlap", 2, **kwargs),
+                                         "serial": make_arm("serial", 1, ttft=20.0)}
+        expect_gate_failure(overlap_only(peak=3, saw_above=True), "overlap",
+                            "peak_active_exactly_max_and_never_above")
+        expect_gate_failure(overlap_only(queue_depth=1), "overlap", "queueing_above_capacity")
+        expect_gate_failure(overlap_only(two_active=0.0), "overlap", "overlap_observed")
+        expect_gate_failure(overlap_only(mapping=False), "overlap", "task_mapping_correct")
+        expect_gate_failure(overlap_only(ttft=5.5), "overlap", "interactive_ttft_p95_within_ceiling")
+        expect_gate_failure(overlap_only(cancel_clean=False), "overlap", "cancellation_peer_isolation")
+        expect_gate_failure(overlap_only(memory_ok=False), "overlap", "memory_envelope")
+        # a wrong serial-arm peak is a serial acceptance failure
+        wrong_serial = {"overlap": make_arm("overlap", 2),
+                        "serial": make_arm("serial", 1, peak=2)}
+        expect_gate_failure(wrong_serial, "serial", "peak_active_exactly_max_and_never_above")
+        # and an incomplete task fails the completion gate
+        broken = overlap_only()
+        broken["overlap"]["scenarios"][1]["tasks"][0]["finish_reason"] = "length_error"
+        expect_gate_failure(broken, "overlap", "all_tasks_complete")
+
+    def peix_request_log_case() -> None:
+        """Request-log line attribution: exact matches only, cancelled runs by
+        their finish, ambiguity and leftovers reported and never trusted."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+
+        def record(task_id, priority, finish, tokens, cancelled=False, rejected=False):
+            return {"task_id": task_id, "priority": priority, "finish_reason": None if cancelled else finish,
+                    "completion_tokens": tokens, "expected_cancelled": cancelled,
+                    "expected_rejected": rejected}
+
+        records = [
+            record("t1", "interactive", "stop", 2),
+            record("t2", "background", "stop", 50),
+            record("t3", "background", "stop", 50),   # ambiguous twin of t2
+            record("t4", "background", "stop", 7),
+            record("victim", "background", "stop", 3, cancelled=True),
+            record("bad", "urgent", None, None, rejected=True),
+        ]
+        lines = [
+            {"priority": "interactive", "finish": "stop", "completion_tokens": 2, "queue_wait_ms": 0.0},
+            {"priority": "background", "finish": "stop", "completion_tokens": 50, "queue_wait_ms": 120.0},
+            {"priority": "background", "finish": "stop", "completion_tokens": 50, "queue_wait_ms": 0.0},
+            {"priority": "background", "finish": "stop", "completion_tokens": 7, "queue_wait_ms": 40.0},
+            {"priority": "background", "finish": "cancelled", "completion_tokens": 3, "queue_wait_ms": 5.0},
+        ]
+        attribution = module.attribute_request_log(records, lines)
+        check_eq(attribution["per_task"]["t1"]["queue_wait_ms"], 0.0, "t1 matched by exact tuple")
+        check_eq(attribution["per_task"]["victim"]["queue_wait_ms"], 5.0,
+                 "the cancelled run matched by its cancelled finish")
+        check(not attribution["attributed"], "ambiguous twins must not count as attributed")
+        check(any("t2" in note or "t3" in note for note in attribution["notes"]),
+              f"the ambiguity must be reported: {attribution['notes']}")
+        # a clean, unambiguous slice is attributed
+        clean = module.attribute_request_log(records[:2] + [records[4]],
+                                            [lines[0], lines[1], lines[4]])
+        check(clean["attributed"], f"clean slice must be attributed: {clean['notes']}")
+        check_eq(clean["unused_lines"], 0, "no leftover lines")
+        # a missing line is reported, never invented
+        missing = module.attribute_request_log(records[:1], [])
+        check(not missing["attributed"], "missing line must not be attributed")
+        check_eq(missing["per_task"], {}, "no fabricated attribution")
+
+    def peix_queue_wait_audit_case() -> None:
+        """The queue-wait audit prefers the exact server value, labels the
+        derived estimate, and reports disagreement between the two sources."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+        records = [
+            {"task_id": "a", "queue_wait_ms_derived": 910.3, "queue_wait_ms_server": 177.586},
+            {"task_id": "b", "queue_wait_ms_derived": 120.0, "queue_wait_ms_server": 180.0},
+            {"task_id": "c", "queue_wait_ms_derived": 50.0, "queue_wait_ms_server": None},
+            {"task_id": "bad", "queue_wait_ms_derived": None, "queue_wait_ms_server": None},
+        ]
+        audit = module.resolve_queue_waits(records)
+        check_eq(records[0]["queue_wait_ms"], 177.586,
+                 "the exact server request-log value is authoritative")
+        check_eq(records[0]["queue_wait_ms_source"], "server-request-log", "server source labeled")
+        check(records[0]["queue_wait_ms_exact"] is True, "the server value is exact")
+        check_eq(records[1]["queue_wait_ms"], 180.0, "a within-tolerance server value still wins")
+        check_eq(records[2]["queue_wait_ms"], 50.0, "the estimate is used when no server value exists")
+        check_eq(records[2]["queue_wait_ms_source"], "slot-release-estimate",
+                 "the estimate source is labeled")
+        check(records[2]["queue_wait_ms_exact"] is False, "an estimate is never exact")
+        check_eq(records[3]["queue_wait_ms"], None, "no source -> no value")
+        check_eq(records[3]["queue_wait_ms_source"], "unattributed", "unattributed labeled")
+        check_eq(audit["compared"], 2, "two tasks carry both sources")
+        check(abs(audit["max_abs_delta_ms"] - 732.714) < 1e-6,
+              f"max |delta| must be the 733 ms gap, got {audit['max_abs_delta_ms']}")
+        check(audit["disagreement"], "a 733 ms gap must be flagged as a disagreement")
+        check(any("authoritative" in note for note in audit["notes"]),
+              f"the disagreement note must name the authoritative source: {audit['notes']}")
+        check(any("estimate" in note for note in audit["notes"]),
+              "the sources note must label the derived value as an estimate")
+        check_eq(audit["tolerance_ms"], module.QUEUE_WAIT_AUDIT_TOLERANCE_MS,
+                 "the tolerance is reported with the audit")
+        clean = [{"task_id": "x", "queue_wait_ms_derived": 100.0, "queue_wait_ms_server": 120.0}]
+        clean_audit = module.resolve_queue_waits(clean)
+        check(not clean_audit["disagreement"], "a within-tolerance gap is not a disagreement")
+        check_eq(clean_audit["compared"], 1, "one compared task")
+
+    def peix_staged_strictness_case() -> None:
+        """The staged burst is a real assertion: when the required scheduler
+        state cannot be reached (one slot; or a queue too small to hold the
+        staged tasks), the run must fail loudly, never degrade silently."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+
+        def run_burst_against_stub(stub_kwargs, timeout):
+            stub = module.StubMeiServer(**stub_kwargs)
+            stub_port = stub.start()
+            try:
+                scenarios = [s for s in module.peix_scenarios(2) if s["name"] == "burst"]
+                for scenario in scenarios:
+                    scenario["stagger_seconds"] = 0.02  # keep the offline run quick
+                return peix_run_arm(
+                    "overlap", 2, scenarios, "stub-model", stub_port,
+                    timeout=timeout, watcher_interval=0.01,
+                    proc=None, log_path=None, sample_memory=False)
+            finally:
+                stub.stop()
+
+        # One slot can never show the two active generations the staged
+        # scenario requires: the stage-1 wait must time out, not pass.
+        expect_failure(lambda: run_burst_against_stub(
+            {"max_active": 1, "prefill_delay": 0.05, "per_token_delay": 0.01,
+             "count_cap": 30, "min_stream_seconds": 0.3}, 2.0))
+        # A queue that can hold only one request can never show both remaining
+        # tasks queued: the stage-2 wait must fail (a release happens first).
+        expect_failure(lambda: run_burst_against_stub(
+            {"max_active": 2, "max_queue_depth": 1, "prefill_delay": 0.05,
+             "per_token_delay": 0.01, "count_cap": 30, "min_stream_seconds": 0.3}, 2.0))
+
+    def peix_stub_case() -> None:
+        """The real peix-like scenario machinery against the offline stub:
+        pair overlap, burst queueing, cancellation peer isolation, gates."""
+        module = peix_like
+        if module is None:
+            raise AssertionError(f"scripts/integration/peix_like.py did not import: {PEIX_LIKE_IMPORT_ERROR}")
+
+        def run_against_stub(max_active, scenario_names):
+            stub = module.StubMeiServer(
+                max_active=max_active, prefill_delay=0.3, per_token_delay=0.01,
+                count_cap=60, min_stream_seconds=0.45)
+            stub_port = stub.start()
+            try:
+                scenarios = [s for s in module.peix_scenarios(max_active)
+                             if s["name"] in scenario_names]
+                for scenario in scenarios:
+                    if scenario["name"] != "pair":
+                        scenario["stagger_seconds"] = 0.02  # keep the offline run quick
+                return peix_run_arm(
+                    "overlap" if max_active == 2 else "serial", max_active, scenarios,
+                    "stub-model", stub_port, timeout=30, watcher_interval=0.01,
+                    proc=None, log_path=None, sample_memory=False)
+            finally:
+                stub.stop()
+
+        overlap_arm = run_against_stub(2, ("pair", "burst", "cancel"))
+        serial_arm = run_against_stub(1, ("burst",))
+        verdict = module.peix_verdict({"overlap": overlap_arm, "serial": serial_arm})
+        check(verdict["passed"],
+              "stub verdict must pass; failed: " + json.dumps(
+                  {arm: {name: gate["detail"] for name, gate in gates.items() if not gate["passed"]}
+                   for arm, gates in verdict["gates"].items()}))
+
+        pair, burst, cancel = overlap_arm["scenarios"]
+        check_eq(pair["observed"]["peak_active"], 2, "stub pair observed peak active 2")
+        check(pair["observed"]["two_active_seconds"] > 0.05, "stub pair observed a two-active window")
+        check(pair["staged"] is None, "stub pair is not staged (single synchronized burst)")
+        check(burst["observed"]["peak_active"] == 2, "stub burst peak active 2")
+        check(not burst["observed"]["saw_above_two"], "stub burst never exceeded two active")
+        check(burst["observed"]["max_queue_depth"] >= 2, "stub burst queued above capacity")
+        check_eq(burst["tasks_completed"], 4, "stub burst completed every task")
+        queued = [task for task in burst["tasks"] if task["admission_basis"] == "slot-release"]
+        check_eq(len(queued), 2, "stub burst: two tasks were admitted from the queue")
+        check(all((task["queue_wait_ms_derived"] or 0.0) > 0 for task in queued),
+              "stub burst: queued tasks have a positive derived queue wait")
+        check(all(task["mapping_ok"] for task in burst["tasks"]),
+              "stub burst: every response mapped to its own task")
+        # The staged orchestration evidence: long first tasks held every slot,
+        # the remaining two were asserted queued before any release.
+        staged = burst.get("staged") or {}
+        check_eq(staged.get("stage1_task_ids"),
+                 ["burst-topic-long", "burst-tool-runner"], "stub burst stage-1 hold tasks")
+        check_eq(staged.get("stage2_task_ids"),
+                 ["burst-general-quick", "burst-structured-report"],
+                 "stub burst stage-2 queued tasks")
+        check_eq(staged.get("observed", {}).get("activeGenerations"), 2,
+                 "stub burst: two active generations at the staged observation")
+        check_eq(staged.get("observed", {}).get("queueDepth"), 2,
+                 "stub burst: both remaining tasks observed queued")
+        check(staged.get("queue_observed_before_any_release") is True,
+              "stub burst: the queue was observed before any first task released")
+        check_eq(staged.get("observed", {}).get("slotReleases"),
+                 staged.get("releases_before_stage2"),
+                 "stub burst: no slot release between the stage-1 hold and the observation")
+        check(staged.get("observed_at", 0) >= staged.get("stage2_submitted_at", 0),
+              "stub burst: the staged observation follows the stage-2 submission")
+        cancel_staged = cancel.get("staged") or {}
+        check_eq(cancel_staged.get("stage1_task_ids"),
+                 ["cancel-long-victim", "cancel-long-peer"],
+                 "stub cancel: the long tasks are the staged stage-1")
+        check_eq(cancel_staged.get("stage2_task_ids"),
+                 ["cancel-queued-interactive", "cancel-queued-background"],
+                 "stub cancel: the queued tasks are the staged stage-2")
+        check_eq(cancel_staged.get("observed", {}).get("queueDepth"), 2,
+                 "stub cancel: the queue was observed above capacity")
+        check(cancel["cancel"]["cancel_to_release_ms"] is not None,
+              "stub cancel: slot release observed")
+        check_eq(cancel["tasks_rejected"], 1, "stub cancel: the invalid request was refused")
+        check_eq(cancel["tasks_cancelled"], 1, "stub cancel: exactly one cancellation")
+        serial_burst = serial_arm["scenarios"][0]
+        check_eq(serial_burst["observed"]["peak_active"], 1, "stub serial burst peak active 1")
+        check(serial_burst["observed"]["max_queue_depth"] >= 3,
+              "stub serial burst queued the other three tasks")
+        check_eq(serial_burst["tasks_completed"], 4, "stub serial burst completed every task")
+        serial_staged = serial_burst.get("staged") or {}
+        check_eq(serial_staged.get("stage1_task_ids"), ["burst-topic-long"],
+                 "stub serial burst stage-1 is the single long task")
+        check_eq(serial_staged.get("stage2_task_ids"),
+                 ["burst-tool-runner", "burst-general-quick", "burst-structured-report"],
+                 "stub serial burst stage-2 is the other three tasks")
+        check_eq(serial_staged.get("observed", {}).get("queueDepth"), 3,
+                 "stub serial burst: all three remaining tasks observed queued")
+        # Without a request log the queue waits are labeled estimates, and the
+        # audit reports no derived-vs-server comparison.
+        check_eq(burst["queue_wait_audit"]["compared"], 0,
+                 "stub burst: no request log means no derived-vs-server comparison")
+        check(all(task["queue_wait_ms_exact"] is False for task in burst["tasks"]),
+              "stub burst: queue waits are labeled estimates without a request log")
+        check(any(task["queue_wait_ms_source"] == "slot-release-estimate"
+                  for task in burst["tasks"] if not task["expected_rejected"]),
+              "stub burst: the estimate source is labeled")
+
+    def chat_payload_messages_case() -> None:
+        payload = chat_payload("m", "ignored", messages=[
+            {"role": "system", "content": "sys"},
+            {"role": "user", "content": "task"},
+        ])
+        check_eq(payload["messages"],
+                 [{"role": "system", "content": "sys"}, {"role": "user", "content": "task"}],
+                 "an explicit message history is used as given")
+        payload = chat_payload("m", "hello")
+        check_eq(payload["messages"], [{"role": "user", "content": "hello"}],
+                 "the content-only payload is unchanged")
+        check_eq(payload["stream_options"], {"include_usage": True}, "include_usage unchanged")
+
+    def server_command_case() -> None:
+        args = argparse.Namespace(model_dir="/tmp/model", served_model_id="x", model_profile=None,
+                                  max_queue_depth=2, queue_wait_ms=1000, memory_limit_bytes=0,
+                                  extra_tokens=[], fused_gate_up_limit_env=True)
+        cmd = server_command(args, Path("/bin/mei"), 1234, Path("/tmp/log"), cache_reuse=False)
+        check_eq(cmd[cmd.index("--max-active-generations") + 1], "2",
+                 "the default server command keeps the two-slot opt-in")
+        cmd = server_command(args, Path("/bin/mei"), 1234, Path("/tmp/log"), cache_reuse=False,
+                             max_active=1)
+        check_eq(cmd[cmd.index("--max-active-generations") + 1], "1",
+                 "the serial arm launches exactly one slot")
+        cmd = server_command(args, Path("/bin/mei"), 1234, Path("/tmp/log"), cache_reuse=False,
+                             max_queue_depth=3)
+        check_eq(cmd[cmd.index("--max-queue-depth") + 1], "3", "the queue depth can be sized up")
+        check_eq(cmd[cmd.index("--port") + 1], "1234", "the port is the one this client allocated")
+        expect_failure(lambda: server_command(args, Path("/bin/mei"), 1234, Path("/tmp/log"),
+                                               cache_reuse=False, max_active=3))
+        expect_failure(lambda: server_command(args, Path("/bin/mei"), 1234, Path("/tmp/log"),
+                                               cache_reuse=False, max_queue_depth=0))
+
     case("parse_head parses status line and headers", head_case)
     case("ChunkedDecoder decodes split chunked bodies", chunked_case)
     case("SSEParser extracts data frames across split reads", sse_case)
@@ -2264,6 +3617,15 @@ def self_check() -> int:
     case("stream result extraction assembles text/tools/usage", stream_result_case)
     case("comparable() pins the deterministic response surface", comparable_case)
     case("loopback stub: two concurrent SSE streams + scheduler + refusal", stub_case)
+    case("chat payload accepts an explicit isolated message history", chat_payload_messages_case)
+    case("server command pins 1-2 slots and sizes the queue explicitly", server_command_case)
+    case("peix fixtures validate, stay deterministic, and share one task set", peix_fixtures_case)
+    case("peix admission attribution maps queued tasks to slot releases", peix_attribution_case)
+    case("peix gate evaluation enforces the active-workload acceptance set", peix_gate_case)
+    case("peix request-log attribution matches exactly and reports ambiguity", peix_request_log_case)
+    case("peix queue-wait audit prefers exact server values and reports disagreement", peix_queue_wait_audit_case)
+    case("peix staged burst fails loudly when the required queue state is unreachable", peix_staged_strictness_case)
+    case("peix stub: pair+burst+cancel run end to end offline (staged)", peix_stub_case)
 
     failed = [entry for entry in results if not entry[1]]
     for name, passed, detail in results:
@@ -2304,8 +3666,9 @@ def parse_args(argv: Optional[List[str]]) -> argparse.Namespace:
     parser.add_argument("--model-dir", help="model bundle directory to serve (required; must contain config.json)")
     parser.add_argument("--served-model-id", help="passed through to the server; default: derived from the dir name")
     parser.add_argument("--model-profile", help="optional --model-profile NAME passed through to the server")
-    parser.add_argument("--mode", choices=["canaries", "benchmark", "cancellation", "all"],
-                        default="all", help="which acceptance mode(s) to run (default: all)")
+    parser.add_argument("--mode", choices=["canaries", "benchmark", "cancellation", "peix-like", "all"],
+                        default="all", help="which acceptance mode(s) to run (default: all; "
+                        "'all' stays canaries+benchmark+cancellation — peix-like is opt-in)")
     parser.add_argument("--artifacts-dir", help="directory for evidence/logs (default: ~/.local/share/mei-concurrent-generations/artifacts)")
     parser.add_argument("--startup-timeout", type=float, default=600.0,
                         help="seconds to wait for model load + /healthz (default: 600)")
@@ -2386,6 +3749,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         dry_run(args, binary, model_dir)
         return 0
 
+    if args.mode == "peix-like" and peix_like is None:
+        print(f"error: --mode peix-like requires scripts/integration/peix_like.py next to this "
+              f"script (import failed: {PEIX_LIKE_IMPORT_ERROR})", file=sys.stderr)
+        return 2
+
     print("mei bounded-overlap concurrency acceptance client (MODEL-BACKED, opt-in)")
     print(f"  binary:    {binary}")
     print(f"  model dir: {model_dir}")
@@ -2450,6 +3818,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                     evidence["cancellation"] = result
                     evidence["gate_results"]["G5"] = "PASS" if result["gate5"]["passed"] else "FAIL"
                     if not result["gate5"]["passed"]:
+                        exit_code = 1
+                elif mode == "peix-like":
+                    result = run_peix_like(args, binary, model_dir, artifacts)
+                    evidence["peix_like"] = result
+                    evidence["gate_results"]["peix-like"] = (
+                        "PASS" if result["verdict"]["passed"] else "FAIL")
+                    if not result["verdict"]["passed"]:
                         exit_code = 1
             except TestFailure as exc:
                 print(f"\nFAIL ({mode}): {exc}", file=sys.stderr)
