@@ -4,6 +4,46 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+Opt-in bounded-overlap concurrency — the stage 5+ slice of the
+inference-scheduling plan for Peixinho (Kiem plan `820814e1`). Mei keeps
+strict single-flight execution as the default: `--max-active-generations`
+defaults to **1** and a process started without the flag behaves exactly as
+0.8.0 did. `--max-active-generations 2` is the explicit opt-in bounded
+overlap mode: at most two generations run at once — never more, no
+continuous batching, no preemption — with the same bounded queue, priority
+ordering, and cancellation contract as before. Values outside 1...2 are
+rejected at parse time.
+
+With overlap enabled, a second arriving request is admitted immediately
+while one generation runs; further arrivals queue as before, and every slot
+release hands free capacity to the best queued request (interactive before
+background, FIFO within a class). Cancelling one of two active requests
+releases exactly its own slot — the surviving generation is untouched.
+`GET /v1/mei/status` gains `activeGenerations`, `maxActiveGenerations`, and
+`peakActiveGenerations` (the audit trail that the configured maximum was
+never exceeded), and `running` keeps its 0.8.0 meaning
+(`activeGenerations > 0`).
+
+The overlap mode ships behind measured acceptance gates (isolation canaries
+against single-flight references, ≥20% aggregate throughput over a
+serialized pair, TTFT ceiling, memory reserve, cancel-to-release latency)
+enforced by the new opt-in live client
+`scripts/test_concurrent_generations_integration.py`. **Measured outcome on
+this candidate (October 2026, 32-GiB Mac Studio, pinned vmlx): the
+throughput gate FAILED on both tested profiles** — 0.899 (net-negative) on
+Qwen3.6-35B-A3B-4bit text-only and 1.088 on Qwen3-4B-4bit against the
+required 1.20, with isolation (G1), cancellation (G5), and the default/cap
+guarantees (G6) passing; TTFT and memory gates pass on the 4B and fail on
+the 35B. Interleaved single-sequence execution shares one MLX stream, so a
+pair's GPU work is additive and the gate is structurally unreachable without
+continuous batching. The pinned vmlx revision is additionally not safe for
+two concurrent prompt prefills (intermittent SIGTRAP in the Qwen3.5-MoE
+forward path), so this candidate keeps prompt prefill on the engine actor in
+every mode. Full evidence: `artifacts/concurrent-generations-rlog.md`.
+**The default stays one slot; overlap remains experimental, must not be
+enabled by default, and its measured results do not generalize beyond the
+tested profiles.**
+
 ## [0.8.0] - 2026-10-12
 
 Bounded admission and a cancellable lifecycle in front of the strict

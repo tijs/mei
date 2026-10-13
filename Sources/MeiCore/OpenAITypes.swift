@@ -703,9 +703,15 @@ public struct MeiStatusResponse: Sendable, Codable {
 /// Admission/scheduling counters surfaced by /v1/mei/status (translated from
 /// `RequestScheduler.Snapshot` so the JSON shape stays stable).
 public struct MeiSchedulerStatus: Sendable, Codable {
-    /// True while a generation holds the single execution slot.
+    /// True while at least one generation holds an execution slot.
     public var running: Bool
-    /// Requests currently waiting for the slot.
+    /// Generations currently active (0, 1, or 2 in opt-in overlap mode).
+    public var activeGenerations: Int
+    /// Configured maximum concurrent generations (1 = strict single-flight).
+    public var maxActiveGenerations: Int
+    /// Highest simultaneous active count observed since startup.
+    public var peakActiveGenerations: Int
+    /// Requests currently waiting for a slot.
     public var queueDepth: Int
     public var queuedInteractive: Int
     public var queuedBackground: Int

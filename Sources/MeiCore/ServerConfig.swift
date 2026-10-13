@@ -104,16 +104,24 @@ public struct ServerConfig: Sendable {
     /// memory at the cost of slower first touch.
     public var useMmapSafetensors: Bool = true
 
-    /// Bounded admission queue length: how many requests may wait for the
-    /// single execution slot (0 = no queue: reject whenever the slot is
-    /// busy). Over-limit arrivals get HTTP 429 `queue_full`. Provisional
-    /// default; the plan's stage-7 benchmark sets the final values (see
+    /// Bounded admission queue length: how many requests may wait for an
+    /// execution slot (0 = no queue: reject whenever every slot is busy).
+    /// Over-limit arrivals get HTTP 429 `queue_full`. Provisional default;
+    /// the plan's stage-7 benchmark sets the final values (see
     /// docs/INFERENCE-SCHEDULING.md).
     public var maxQueueDepth: Int = 32
     /// Queue wait budget in milliseconds before a waiting request is refused
     /// with HTTP 503 `queue_timeout` (0 = wait forever). Provisional default
     /// like `maxQueueDepth`.
     public var queueWaitTimeoutMilliseconds: Int = 600_000
+    /// Maximum number of generations that may run at once. **1 is the
+    /// default and the only shipping mode** — strict single-flight,
+    /// byte-compatible with 0.8.0. 2 is the explicit opt-in bounded-overlap
+    /// mode (stage 5+ of the plan), for operators who accept the measured
+    /// trade-offs; values outside 1...2 are rejected at parse time. The
+    /// overlap mode never changes the default behavior of a process started
+    /// without this flag.
+    public var maxActiveGenerations: Int = 1
 
     public init(modelDirectory: String, servedModelID: String) {
         self.modelDirectory = modelDirectory
@@ -270,6 +278,19 @@ public extension ServerConfig {
                 config.maxQueueDepth = try parseInt(flag, value())
             case "--queue-wait-ms":
                 config.queueWaitTimeoutMilliseconds = try parseInt(flag, value())
+            case "--max-active-generations":
+                // Explicit opt-in bounded overlap. The settled plan caps the
+                // experiment at two active generations and keeps one as the
+                // default; anything else is a configuration error, not a
+                // silently-clamped request.
+                let requested = try parseInt(flag, value())
+                guard (1...2).contains(requested) else {
+                    throw ConfigError.invalidValue(
+                        "--max-active-generations must be 1 (strict single-flight, default) "
+                        + "or 2 (opt-in bounded overlap); got \(requested). Values above 2 are "
+                        + "not supported: Mei has no continuous batching and no preemption.")
+                }
+                config.maxActiveGenerations = requested
             case "-h", "--help":
                 print(usage)
                 exit(0)
@@ -469,6 +490,12 @@ public extension ServerConfig {
                              carry the Mei-local \"mei_priority\" field
                              (\"interactive\" default, or \"background\";
                              the standard \"priority\" field is ignored).
+      --max-active-generations N
+                             How many generations may run at once: 1
+                             (default) = strict single-flight; 2 = explicit
+                             opt-in bounded overlap. The overlap mode is an
+                             experiment with measured trade-offs; the default
+                             never changes without this flag.
 
     Memory:
       --memory-limit-bytes N    Explicit MLX allocator limit (default 0 = MLX

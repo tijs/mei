@@ -219,14 +219,18 @@ final class AdmissionContractTests: XCTestCase {
         counters.maxCancelToReleaseMilliseconds = 20
         let snapshot = RequestScheduler.Snapshot(
             running: true,
+            activeGenerations: 2,
             queueDepth: 2,
             queuedInteractive: 1,
             queuedBackground: 1,
-            limits: .init(maxQueueDepth: 9, queueWaitTimeoutMilliseconds: 500),
+            limits: .init(maxQueueDepth: 9, queueWaitTimeoutMilliseconds: 500, maxActiveGenerations: 2),
             counters: counters)
 
         let status = Router.schedulerStatus(snapshot)
         XCTAssertTrue(status.running)
+        XCTAssertEqual(status.activeGenerations, 2)
+        XCTAssertEqual(status.maxActiveGenerations, 2)
+        XCTAssertEqual(status.peakActiveGenerations, 0)
         XCTAssertEqual(status.queueDepth, 2)
         XCTAssertEqual(status.queuedInteractive, 1)
         XCTAssertEqual(status.queuedBackground, 1)
@@ -243,6 +247,9 @@ final class AdmissionContractTests: XCTestCase {
     func testSchedulerStatusEncodesAndOmitsNilTimings() throws {
         let status = MeiSchedulerStatus(
             running: false,
+            activeGenerations: 0,
+            maxActiveGenerations: 1,
+            peakActiveGenerations: 0,
             queueDepth: 0,
             queuedInteractive: 0,
             queuedBackground: 0,

@@ -106,6 +106,9 @@ public final class Router: @unchecked Sendable {
     public static func schedulerStatus(_ snapshot: RequestScheduler.Snapshot) -> MeiSchedulerStatus {
         MeiSchedulerStatus(
             running: snapshot.running,
+            activeGenerations: snapshot.activeGenerations,
+            maxActiveGenerations: snapshot.limits.maxActiveGenerations,
+            peakActiveGenerations: snapshot.counters.peakActiveGenerations,
             queueDepth: snapshot.queueDepth,
             queuedInteractive: snapshot.queuedInteractive,
             queuedBackground: snapshot.queuedBackground,

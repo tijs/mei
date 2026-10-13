@@ -46,21 +46,25 @@ public enum StreamEvent: Sendable {
     case finish(GenerationRun)
 }
 
-/// Engine is a strict single-flight inference actor: one generation at a
-/// time, admitted through a bounded, priority-ordered queue
-/// (`RequestScheduler`) that preserves the previous serialization guarantees
-/// and adds deterministic overload refusals plus a cancellable lifecycle.
-/// Slot state is mutated only by generations that hold the flight token,
-/// matching the benchmark's "never launch two servers concurrently"
-/// discipline and keeping KV-reuse semantics deterministic. Overlapping
-/// generation is NOT enabled: more than one active sequence stays behind the
-/// plan's correctness and hardware gates (see docs/INFERENCE-SCHEDULING.md).
+/// Engine is an inference actor: generations are admitted through a
+/// bounded, priority-ordered queue (`RequestScheduler`) that preserves the
+/// serialization guarantees and adds deterministic overload refusals plus a
+/// cancellable lifecycle. The default remains strict single-flight — one
+/// generation at a time — matching the benchmark's "never launch two
+/// servers concurrently" discipline and keeping KV-reuse semantics
+/// deterministic. Explicit opt-in bounded overlap
+/// (`--max-active-generations 2`) allows at most two concurrent
+/// generations; it is an experiment with its own correctness, latency, and
+/// memory gates (see docs/INFERENCE-SCHEDULING.md), never the default.
+/// Prompt prefill stays on the engine actor in every mode: the pinned vmlx
+/// revision's model forward path is not proven safe for two concurrent
+/// prefills (see artifacts/concurrent-generations-rlog.md, R4).
 public actor Engine {
     private let container: ModelContainer
     public let config: ServerConfig
     private let logger = Logger(subsystem: "mei.engine", category: "engine")
 
-    /// Bounded admission in front of the single execution slot.
+    /// Bounded admission in front of the execution slot(s).
     /// `nonisolated let` so the status surface can read scheduling state
     /// while the actor itself is busy inside a long generation.
     private nonisolated let scheduler: RequestScheduler
@@ -91,7 +95,8 @@ public actor Engine {
         self.loadMemory = loadMemory
         self.scheduler = RequestScheduler(limits: .init(
             maxQueueDepth: config.maxQueueDepth,
-            queueWaitTimeoutMilliseconds: config.queueWaitTimeoutMilliseconds))
+            queueWaitTimeoutMilliseconds: config.queueWaitTimeoutMilliseconds,
+            maxActiveGenerations: config.maxActiveGenerations))
     }
 
     /// Load a model from a local directory (config.json + safetensors +

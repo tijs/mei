@@ -12,23 +12,25 @@ plumbing.
 
 Shipped in this slice:
 
-- **Strict single-flight execution, unchanged.** One generation runs at a
-  time, and the slot is mutated only by the generation that holds it, so
-  KV/prefix-reuse semantics stay deterministic. Overlapping generation is
-  **not enabled** — more than one active sequence stays behind the plan's
-  correctness, memory, and latency gates (stages 5–8).
-- **Bounded admission in front of the slot** (`RequestScheduler`): a bounded
+- **Strict single-flight execution by default, unchanged.** One generation
+  runs at a time, and slots are mutated only by the generations that hold
+  them, so KV/prefix-reuse semantics stay deterministic. **Bounded overlap
+  is opt-in only** (`--max-active-generations 2`): at most two generations
+  run at once, never more. The runtime rejects any other value at parse
+  time, and a process started without the flag behaves exactly as 0.8.0 did.
+- **Bounded admission in front of the slots** (`RequestScheduler`): a bounded
   waiting queue with deterministic ordering and deterministic refusals.
 - **Cancellable lifecycle**: a client disconnect (or any cancellation of the
   request task) removes a queued request without running it, and stops a
-  running generation without a false success finish; the slot is released
-  exactly once, after the generation's own cleanup.
+  running generation without a false success finish; each slot is released
+  exactly once, after that generation's own cleanup.
 - **Observability**: queue depth, priority mix, overload/cancellation
-  counters, and cancellation-to-slot-release timing on `GET /v1/mei/status`;
-  per-run `priority` and `queue_wait_ms` in the `--request-log` JSONL.
+  counters, cancellation-to-slot-release timing, and the active/peak active
+  generation counts on `GET /v1/mei/status`; per-run `priority` and
+  `queue_wait_ms` in the `--request-log` JSONL.
 
-Not in this slice: concurrent sequences, continuous batching, preemption of a
-running generation (priority orders the queue and nothing else), and any
+Not in this slice: continuous batching, preemption of a running generation
+(priority orders the queue and nothing else), more than two slots, and any
 Peix-side scheduling surface.
 
 ## Request contract
@@ -97,6 +99,66 @@ interactive-latency ceiling and memory reserve. The mechanism — bounds,
 refusals, ordering, cancellation — is deterministic and tested regardless of
 the values chosen.
 
+## Bounded overlap (opt-in, two active generations)
+
+`--max-active-generations N` is the number of generations that may run at
+once. **`1` is the default and the only mode a process started without the
+flag can be in** — strict single-flight, byte-compatible with 0.8.0. `2` is
+the explicit opt-in bounded-overlap mode; any other value is rejected at
+parse time (`--max-active-generations must be 1 … or 2`). There is no
+continuous batching, no preemption, and no third slot.
+
+With overlap enabled:
+
+| Condition | Behavior |
+| --- | --- |
+| Arrival while fewer than 2 generations run and no request waits | Admitted immediately; `queue_wait_ms = 0`. |
+| Arrival while 2 generations run (or a request waits) | Enqueued if below `--max-queue-depth`; runs when a slot frees, ordered interactive-first then FIFO. |
+| A generation finishes / is cancelled | Its slot is released exactly once; the best queued request (if any) is granted that slot, never more than the configured maximum. |
+| Queue at `--max-queue-depth` | HTTP 429 `queue_full`, unchanged. |
+| Cancellation | Releases exactly its own slot; the other active generation is untouched. |
+
+The overlap contract adds two guarantees on top of the single-flight one:
+
+- **Never more than `maxActiveGenerations`**: the scheduler grants only while
+  a slot is free and never lets an arrival overtake a waiting request; the
+  `peakActiveGenerations` counter on `/v1/mei/status` is the audit trail.
+- **Slot-exact release**: cancelling one of two active requests releases one
+  slot; the surviving generation keeps running and its output is unaffected.
+
+The overlap mode is an experiment with its own gates (isolation canaries,
+≥20% aggregate throughput over a serialized pair, TTFT ceiling, memory
+reserve, cancel-to-release latency; see the plan `820814e1` stages 5–8).
+
+### Measured results (October 2026, 32-GiB Mac Studio, pinned vmlx)
+
+Two profiles were tested against all gates with a purpose-built integration
+client (`scripts/test_concurrent_generations_integration.py`, artifacts under
+`~/.local/share/mei-concurrent-generations/artifacts/`):
+
+| Gate | Qwen3.6-35B-A3B-4bit text-only | Qwen3-4B-4bit |
+| --- | --- | --- |
+| G1 isolation/lifecycle canaries | PASS | PASS |
+| G2 aggregate tok/s ≥ +20% over serialized pair | **FAIL 0.899** (30 paired trials) | **FAIL 1.088** (30 paired trials) |
+| G3 p95 TTFT ≤5 s and ≤1.20× alone | **FAIL 1.635×** | PASS 1.137× |
+| G4 ≥4 GiB reclaimable at peak | **FAIL 3.36 GiB** | PASS 11.83 GiB |
+| G5 cancel-to-release p95 ≤2 s | PASS | PASS |
+| G6 one slot default, cap two | PASS | PASS |
+
+**The ≥20% throughput gate is not reachable by interleaved single-sequence
+execution on this runtime.** Both generations share one MLX default stream, so
+a pair's GPU work is additive; only CPU gaps and per-request setup are
+recoverable (measured sharing efficiency is slightly *negative* on the 35B and
+caps near +12% on the 4B). A verified win needs continuous batching, which is
+out of scope for this slice. Separately, the pinned vmlx revision is not safe
+for two concurrent prompt prefills (intermittent SIGTRAP in the Qwen3.5-MoE
+forward path — see `artifacts/concurrent-generations-rlog.md`, R5a); this
+candidate therefore keeps prompt prefill on the engine actor in every mode.
+
+**Do not enable overlap by default, and treat the flag as experimental and
+unverified for throughput**: the measured evidence on both tested profiles is
+negative for G2. Results do not generalize beyond the tested profiles.
+
 ## Cancellation contract
 
 Cancellation enters Mei as cancellation of the request's task: the HTTP
@@ -141,7 +203,8 @@ away.
 
 ```json
 "scheduler": {
-  "running": false, "queueDepth": 0,
+  "running": false, "activeGenerations": 0, "maxActiveGenerations": 1,
+  "peakActiveGenerations": 0, "queueDepth": 0,
   "queuedInteractive": 0, "queuedBackground": 0,
   "maxQueueDepth": 32, "queueWaitTimeoutMs": 600000,
   "admitted": 0, "completed": 0, "failed": 0,
@@ -151,6 +214,12 @@ away.
   "lastCancelToReleaseMs": null, "maxCancelToReleaseMs": null
 }
 ```
+
+`running` keeps its 0.8.0 meaning ("at least one generation active") and is
+now exactly `activeGenerations > 0`. `activeGenerations` /
+`maxActiveGenerations` / `peakActiveGenerations` are the overlap audit
+surface: `maxActiveGenerations` is what the process started with (1 by
+default), and `peakActiveGenerations` must never exceed it.
 
 `slotReleases` is the slot-release signal: a client polling status sees it
 advance exactly once per generation, after that generation's cleanup. (A
@@ -165,17 +234,20 @@ reads queue wait and the class mix from.
 
 | Concern | Where |
 | --- | --- |
-| Queue, ordering, bounds, timeouts, counters | `Sources/MeiCore/Scheduling.swift` (`RequestScheduler`) |
+| Queue, slots, ordering, bounds, timeouts, counters | `Sources/MeiCore/Scheduling.swift` (`RequestScheduler`) |
 | Stream lifecycle / consumer-cancellation propagation | `Sources/MeiCore/CancellableStream.swift` (`makeCancellableStream`) |
 | Slot lifecycle in the engine, vmlx task cancellation | `Sources/MeiCore/Engine.swift` |
 | `mei_priority` field decoding | `Sources/MeiCore/OpenAITypes.swift` |
 | 429/503 mapping, status surface | `Sources/MeiCore/Router.swift` |
 | Deferred SSE begin + failure-status decision | `Sources/MeiCore/HTTPServer.swift` (`ResponseWriter.failureResponse`) |
-| Flags | `ServerConfig.maxQueueDepth`, `queueWaitTimeoutMilliseconds` |
+| Flags | `ServerConfig.maxQueueDepth`, `queueWaitTimeoutMilliseconds`, `maxActiveGenerations` |
 
-Tests: `Tests/MeiTests/RequestSchedulerTests.swift`,
-`CancellableStreamTests.swift`, `AdmissionContractTests.swift`, plus the
-scheduling-flag cases in `ServerConfigParsingTests.swift`.
+Tests: `Tests/MeiTests/RequestSchedulerTests.swift` (including the bounded
+overlap section), `CancellableStreamTests.swift`, `AdmissionContractTests.swift`,
+plus the scheduling-flag cases in `ServerConfigParsingTests.swift`. Live
+acceptance + benchmark client:
+`scripts/test_concurrent_generations_integration.py` (opt-in, model-backed;
+`--self-check` runs offline).
 
 ## Relation to the rest of the plan
 
@@ -184,8 +256,11 @@ scheduling-flag cases in `ServerConfigParsingTests.swift`.
   between prefill chunks, both on the pinned revision — that is the
   cancellation primitive this slice relies on.
 - Stages 5–8 (isolation proof, bounded concurrency, benchmark, shipped
-  default) are untouched: no overlapping generation, no continuous batching,
-  no second model process. The single-flight fallback is the default and
-  remains available as the only mode until those gates pass.
-- Stage 9 (Peix end-to-end) consumes the contract here: `mei_priority` in the
-  request body, 429/503 refusals to retry on, and the status block.
+  default) are implemented as the **opt-in** overlap mode described above:
+  the evidence gates are enforced by the live acceptance client, and the
+  single-flight mode remains the default and the only mode without the
+  explicit flag.
+- Stage 9 (Peix end-to-end) consumes the contract here: `mei_priority` in
+  the request body, 429/503 refusals to retry on, the status block, and the
+  opt-in overlap decision for workloads that have passed the gates on their
+  own profile.

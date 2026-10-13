@@ -270,6 +270,30 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertThrowsError(try parse(["--max-queue-depth", "many"]))
     }
 
+    func testMaxActiveGenerationsDefaultsToStrictSingleFlight() throws {
+        // One active generation is the default and the only shipping mode;
+        // overlap requires the explicit opt-in flag.
+        XCTAssertEqual(try parse([]).maxActiveGenerations, 1)
+        XCTAssertEqual(try parse(["--max-active-generations", "1"]).maxActiveGenerations, 1)
+        XCTAssertEqual(try parse(["--max-active-generations", "2"]).maxActiveGenerations, 2)
+    }
+
+    func testMaxActiveGenerationsRejectsAnythingOutsideOneOrTwo() throws {
+        // The settled plan caps the experiment at two slots; >2 is a
+        // configuration error, never silently clamped, and 0/negative would
+        // deadlock every request.
+        for bad in ["0", "-1", "3", "8", "two", "2.5"] {
+            XCTAssertThrowsError(
+                try parse(["--max-active-generations", bad]),
+                "expected --max-active-generations \(bad) to be rejected"
+            ) { error in
+                guard case ConfigError.invalidValue = error else {
+                    return XCTFail("expected ConfigError.invalidValue, got \(error)")
+                }
+            }
+        }
+    }
+
     func testPrefillStepAndContextValidation() throws {
         XCTAssertEqual(try parse(["--prefill-step-size", "2048"]).prefillStepSize, 2048)
         XCTAssertThrowsError(try parse(["--prefill-step-size", "0"])) { error in

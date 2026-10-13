@@ -87,16 +87,30 @@ final class CancellationTimestamp: @unchecked Sendable {
     }
 }
 
-/// Bounded admission in front of Mei's single execution slot.
+/// Bounded admission in front of Mei's execution slot(s).
 ///
 /// Kiem plan `820814e1` (Mei inference scheduling for Peixinho), stages 3–4:
 /// Mei keeps strict single-flight execution — one generation at a time — and
 /// gains a bounded queue with deterministic overload behavior plus a
 /// cancellable lifecycle. This actor does not run generations itself: it
-/// hands out exactly one slot, in a deterministic order, and the caller runs
-/// the operation while holding it.
+/// hands out execution slots, in a deterministic order, and the caller runs
+/// the operation while holding one.
+///
+/// Bounded overlap (stage 5+, opt-in): `maxActiveGenerations` is the number
+/// of generations that may run at once. The default is **1** — strict
+/// single-flight, byte-compatible with 0.8.0 — and the only other value the
+/// runtime accepts is **2** (`--max-active-generations 2`), the explicit
+/// opt-in bounded-overlap mode. There is no continuous batching, no
+/// preemption, and no third slot: a waiting request runs only when a slot is
+/// actually free.
 ///
 /// Contract (the wire-level version is in `docs/INFERENCE-SCHEDULING.md`):
+/// - At most `maxActiveGenerations` requests run at any instant. With the
+///   default of 1 this is exactly the 0.8.0 single slot; with 2 the second
+///   arriving request is admitted immediately while the first runs.
+/// - A request arriving while every slot is taken queues (it never jumps a
+///   waiting request, and never starts while `waiters` is non-empty — the
+///   grant paths fill slots strictly in queue order).
 /// - Queue capacity is bounded (`maxQueueDepth` waiting requests). A request
 ///   arriving while the queue is full is rejected immediately with
 ///   `AdmissionError.queueFull` — never enqueued, never run.
@@ -115,15 +129,25 @@ final class CancellationTimestamp: @unchecked Sendable {
 public actor RequestScheduler {
     /// Admission bounds, snapshotted from `ServerConfig` at startup.
     public struct Limits: Sendable, Equatable {
-        /// Maximum number of requests waiting for the slot (0 = no queue:
-        /// reject immediately whenever the slot is busy).
+        /// Maximum number of requests waiting for a slot (0 = no queue:
+        /// reject immediately whenever every slot is busy).
         public var maxQueueDepth: Int
         /// Queue wait budget in milliseconds (0 = unlimited).
         public var queueWaitTimeoutMilliseconds: Int
+        /// Maximum number of generations that may run at once. 1 (default) =
+        /// strict single-flight; 2 = explicit opt-in bounded overlap. The
+        /// runtime rejects any other value at configuration parse time, and
+        /// this type clamps to >= 1 defensively.
+        public var maxActiveGenerations: Int
 
-        public init(maxQueueDepth: Int, queueWaitTimeoutMilliseconds: Int) {
+        public init(
+            maxQueueDepth: Int,
+            queueWaitTimeoutMilliseconds: Int,
+            maxActiveGenerations: Int = 1
+        ) {
             self.maxQueueDepth = maxQueueDepth
             self.queueWaitTimeoutMilliseconds = queueWaitTimeoutMilliseconds
+            self.maxActiveGenerations = max(1, maxActiveGenerations)
         }
     }
 
@@ -137,9 +161,13 @@ public actor RequestScheduler {
     ///   cancelled before the operation started. No generation work happened.
     /// - `cancelledActive`: cancelled after the operation started.
     /// - `rejectedQueueFull` / `rejectedTimeout`: admission refusals.
-    /// - `slotReleases`: every release of the execution slot (the
+    /// - `slotReleases`: every release of an execution slot (the
     ///   "slot-release signal": a client watching this counter advance knows
-    ///   the slot changed hands).
+    ///   a slot changed hands).
+    /// - `peakActiveGenerations`: the highest number of simultaneously
+    ///   active generations observed since startup. With the default limit
+    ///   of 1 this stays 0 or 1; it can reach 2 only in the explicit
+    ///   opt-in overlap mode, and must never exceed the configured limit.
     /// - `lastQueueWaitMilliseconds` / `maxQueueWaitMilliseconds`: queue wait
     ///   of the most recently granted request, and the running maximum.
     /// - `lastCancelToReleaseMilliseconds` /
@@ -155,6 +183,7 @@ public actor RequestScheduler {
         public var rejectedQueueFull = 0
         public var rejectedTimeout = 0
         public var slotReleases = 0
+        public var peakActiveGenerations = 0
         public var lastQueueWaitMilliseconds: Double = 0
         public var maxQueueWaitMilliseconds: Double = 0
         public var lastCancelToReleaseMilliseconds: Double?
@@ -163,7 +192,12 @@ public actor RequestScheduler {
 
     /// One consistent read of the scheduler's state.
     public struct Snapshot: Sendable, Equatable {
+        /// True while at least one generation is active (the 0.8.0 wire
+        /// meaning of `running`, preserved byte-compatibly).
         public var running: Bool
+        /// Generations currently active (0, 1, or — only in the opt-in
+        /// overlap mode — 2).
+        public var activeGenerations: Int
         public var queueDepth: Int
         public var queuedInteractive: Int
         public var queuedBackground: Int
@@ -199,7 +233,7 @@ public actor RequestScheduler {
     }
 
     private let limits: Limits
-    private var running = false
+    private var activeGenerations = 0
     private var waiters: [Waiter] = []
     private var nextWaiterID: UInt64 = 0
     private var counters = Counters()
@@ -211,7 +245,8 @@ public actor RequestScheduler {
     /// The live scheduling snapshot for `/v1/mei/status`.
     public func snapshot() -> Snapshot {
         Snapshot(
-            running: running,
+            running: activeGenerations > 0,
+            activeGenerations: activeGenerations,
             queueDepth: waiters.count,
             queuedInteractive: waiters.filter { $0.priority == .interactive }.count,
             queuedBackground: waiters.filter { $0.priority == .background }.count,
@@ -219,14 +254,14 @@ public actor RequestScheduler {
             counters: counters)
     }
 
-    /// Run `operation` while holding the single execution slot, after
-    /// bounded admission.
+    /// Run `operation` while holding an execution slot, after bounded
+    /// admission.
     ///
     /// Throws `AdmissionError` when the queue is full or the wait budget
     /// expires, and `CancellationError` when the caller's task is cancelled
     /// while queued (the operation then never runs). The slot is released
     /// exactly once — on the operation's return or throw — so a cancelled
-    /// generation still holds the slot until its own cleanup is complete.
+    /// generation still holds its slot until its own cleanup is complete.
     public func submit<T: Sendable>(
         priority: RequestPriority,
         operation: @escaping @Sendable (SlotGrant) async throws -> T
@@ -262,7 +297,7 @@ public actor RequestScheduler {
 
     // MARK: - Slot acquisition
 
-    /// Wait for the execution slot, or fail fast per the admission limits.
+    /// Wait for an execution slot, or fail fast per the admission limits.
     ///
     /// All state changes happen synchronously inside the continuation body
     /// (or in the settle paths), so admission decisions are atomic on the
@@ -277,8 +312,15 @@ public actor RequestScheduler {
                     continuation.resume(throwing: CancellationError())
                     return
                 }
-                if !running && waiters.isEmpty {
-                    running = true
+                // Fast path: a slot is free AND nobody is waiting. The
+                // `waiters.isEmpty` guard is what keeps the overlap mode
+                // fair — a request must never overtake a queued waiter, so
+                // with a non-empty queue every arrival joins the back of it
+                // even while a second slot is free (settle paths drain the
+                // queue synchronously, so in practice that window only opens
+                // across the grant of the last free slot).
+                if activeGenerations < limits.maxActiveGenerations && waiters.isEmpty {
+                    beginActiveGeneration()
                     continuation.resume(returning: SlotGrant(
                         queueWaitMilliseconds: 0, priority: priority))
                     return
@@ -334,12 +376,14 @@ public actor RequestScheduler {
             milliseconds: limits.queueWaitTimeoutMilliseconds))
     }
 
-    /// Hand the slot to the best waiting request: interactive before
-    /// background, FIFO within a class. Deterministic by construction —
-    /// waiter ids increase with arrival and the scan picks the lowest
-    /// (rank, id) pair.
+    /// Hand slots to the best waiting requests — interactive before
+    /// background, FIFO within a class — while any slot is free. In the
+    /// default single-flight mode this grants at most one waiter; in the
+    /// opt-in overlap mode it can fill both slots from the queue. Ordering
+    /// is deterministic by construction: waiter ids increase with arrival
+    /// and the scan picks the lowest (rank, id) pair.
     private func grantNextWaiter() {
-        while !waiters.isEmpty {
+        while activeGenerations < limits.maxActiveGenerations && !waiters.isEmpty {
             var bestIndex = 0
             for index in waiters.indices.dropFirst() {
                 let candidate = waiters[index]
@@ -356,14 +400,21 @@ public actor RequestScheduler {
             waiter.timeoutTask = nil
             guard let continuation = waiter.continuation else { continue }
             waiter.continuation = nil
-            running = true
+            beginActiveGeneration()
             let queueWait = Date().timeIntervalSince(waiter.enqueuedAt) * 1000
             counters.lastQueueWaitMilliseconds = queueWait
             counters.maxQueueWaitMilliseconds = max(counters.maxQueueWaitMilliseconds, queueWait)
             continuation.resume(returning: SlotGrant(
                 queueWaitMilliseconds: queueWait, priority: waiter.priority))
-            return
         }
+    }
+
+    /// Enter the active state exactly once per granted slot, maintaining the
+    /// peak-activity counter the status surface exposes.
+    private func beginActiveGeneration() {
+        activeGenerations += 1
+        counters.peakActiveGenerations = max(
+            counters.peakActiveGenerations, activeGenerations)
     }
 
     // MARK: - Slot release
@@ -379,7 +430,10 @@ public actor RequestScheduler {
         return error == nil ? .completed : .failed
     }
 
-    /// Release the slot exactly once and hand it to the next waiter.
+    /// Release a slot exactly once and hand free capacity to the next
+    /// waiter(s). The active count must never go negative — a double release
+    /// would break every overlap guarantee — so this fails closed in debug
+    /// and clamps in release rather than corrupting the count.
     private func release(grant: SlotGrant, outcome: ReleaseOutcome) {
         counters.slotReleases += 1
         switch outcome {
@@ -399,7 +453,8 @@ public actor RequestScheduler {
             // sample is meaningful.
             counters.cancelledQueued += 1
         }
-        running = false
+        assert(activeGenerations > 0, "slot released without a matching grant")
+        activeGenerations = max(0, activeGenerations - 1)
         grantNextWaiter()
     }
 }

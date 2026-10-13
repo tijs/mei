@@ -44,6 +44,16 @@ struct MeiMain {
             }
         }
 
+        // Explicit opt-in bounded overlap is never silent: it changes
+        // concurrency semantics, so say so at startup, with the one flag
+        // that returns the process to the default.
+        if config.maxActiveGenerations > 1 {
+            print("mei: bounded overlap ENABLED (--max-active-generations \(config.maxActiveGenerations)): "
+                + "up to \(config.maxActiveGenerations) generations may run concurrently. "
+                + "This is an opt-in experiment; omit the flag for strict single-flight.")
+            fflush(stdout)
+        }
+
         config.optimizationProfile.applyRuntimeEnvironment(
             force: config.requestedOptimizationProfile == .ornith,
             modelDirectory: config.modelDirectory)
@@ -147,7 +157,10 @@ struct MeiMain {
         let queueWait = config.queueWaitTimeoutMilliseconds == 0
             ? "unlimited"
             : "\(config.queueWaitTimeoutMilliseconds) ms"
-        print("mei: admission: strict single-flight execution, queue depth \(config.maxQueueDepth), queue wait \(queueWait) (docs/INFERENCE-SCHEDULING.md)")
+        let execution = config.maxActiveGenerations > 1
+            ? "bounded overlap (\(config.maxActiveGenerations) active generations, opt-in)"
+            : "strict single-flight execution"
+        print("mei: admission: \(execution), queue depth \(config.maxQueueDepth), queue wait \(queueWait) (docs/INFERENCE-SCHEDULING.md)")
         fflush(stdout)
 
         do {
