@@ -102,10 +102,14 @@ public actor Engine {
     /// Load a model from a local directory (config.json + safetensors +
     /// tokenizer files), using the pinned vmlx-swift stack.
     public static func load(config: ServerConfig) async throws -> Engine {
+        var config = config
         let directory = URL(fileURLWithPath: config.modelDirectory, isDirectory: true)
         guard FileManager.default.fileExists(atPath: directory.path) else {
             throw EngineError.modelDirectoryMissing(config.modelDirectory)
         }
+        let modelConfiguration = try await FlintSupport.prepare(
+            directory: directory, enabled: config.enableFlint)
+        try config.applyFlintGenerationDefaults()
         // A reported memory limit below the model's working set makes MLX
         // alloc calls wait on scheduled tasks instead of failing — the
         // "hang" failure mode. If the operator configured an explicit limit
@@ -119,6 +123,7 @@ public actor Engine {
         let container = try await loadModelContainer(
             from: directory,
             using: #huggingFaceTokenizerLoader(),
+            configuration: modelConfiguration,
             loadConfiguration: LoadConfiguration(
                 // MLXPress axis E (cold-weight tier). `.default` is
                 // `.auto(envFallback: true)`: it honours an explicit `MLXPRESS=N`

@@ -28,6 +28,7 @@ let package = Package(
             dependencies: [
                 .product(name: "VMLX", package: "vmlx-swift"),
                 .product(name: "MLX", package: "vmlx-swift"),
+                .product(name: "MLXNN", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
                 .product(name: "MLXLLM", package: "vmlx-swift"),
                 .product(name: "MLXHuggingFace", package: "vmlx-swift"),
@@ -46,6 +47,7 @@ let package = Package(
             dependencies: [
                 "MeiCore",
                 .product(name: "MLX", package: "vmlx-swift"),
+                .product(name: "MLXNN", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
                 // The structured-output model matrix tests load the staged
                 // checkpoints' real tokenizer.json through the same

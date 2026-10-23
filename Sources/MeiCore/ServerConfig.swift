@@ -1,5 +1,6 @@
 import Foundation
 import MLX
+import MLXLMCommon
 
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
@@ -7,6 +8,8 @@ public struct ServerConfig: Sendable {
     public static let version = "0.9.0"
     public var modelDirectory: String
     public var servedModelID: String
+    /// Experimental app-owned Flint affine architecture. Never auto-enabled.
+    public var enableFlint: Bool = false
     /// Set when --served-model-id was omitted and defaulted from the
     /// bundle directory name, so startup can report the chosen ID.
     public var servedModelIDWasDefaulted: Bool = false
@@ -35,9 +38,12 @@ public struct ServerConfig: Sendable {
     public var kvBits: Int? = nil
     public var kvGroupSize: Int = 64
     public var quantizedKVStart: Int = 0
-    public var temperature: Float = 0.6
-    public var topP: Float = 0.95
-    public var topK: Int = 20
+    public var temperature: Float = 0.6 { didSet { temperatureExplicit = true } }
+    public var topP: Float = 0.95 { didSet { topPExplicit = true } }
+    public var topK: Int = 20 { didSet { topKExplicit = true } }
+    private var temperatureExplicit = false
+    private var topPExplicit = false
+    private var topKExplicit = false
     public var minP: Float = 0.0
     public var repetitionPenalty: Float? = nil
     public var presencePenalty: Float? = nil
@@ -132,6 +138,32 @@ public struct ServerConfig: Sendable {
     /// generation headroom window.
     public var maxKVSize: Int { contextCap + 4096 }
 
+    /// Flint's selected bundle declares its sampler. Adopt only its authored
+    /// values when the operator did not set a CLI/programmatic override. This
+    /// is also called by Engine.load for library callers that bypass parsing.
+    mutating func applyFlintGenerationDefaults() throws {
+        guard enableFlint else { return }
+        let directory = URL(fileURLWithPath: modelDirectory)
+        guard let data = try? Data(contentsOf: directory.appendingPathComponent("config.json")),
+              try FlintSupport.modelType(data: data) == "flint" else { return }
+        // The pinned quantized-cache update traps through the ordinary KV API,
+        // and its public attention helper cannot carry Flint's learned sinks.
+        // Refuse before load rather than dropping sinks or ignoring the flag.
+        guard kvBits == nil else {
+            throw FlintError.unsupported("--kv-bits is not supported with Flint's learned attention sinks; omit it")
+        }
+        let defaults = try JSONDecoder.json5().decode(GenerationConfigFile.self,
+            from: Data(contentsOf: directory.appendingPathComponent("generation_config.json")))
+        guard let temperature = defaults.temperature, let topP = defaults.topP, let topK = defaults.topK,
+              temperature.isFinite, temperature >= 0, topP.isFinite, (0...1).contains(topP), topK >= 0,
+              defaults.doSample != false else {
+            throw FlintError.unsupported("generation_config.json must declare temperature/top_p/top_k with sampling enabled")
+        }
+        if !temperatureExplicit { self.temperature = temperature; temperatureExplicit = false }
+        if !topPExplicit { self.topP = topP; topPExplicit = false }
+        if !topKExplicit { self.topK = topK; topKExplicit = false }
+    }
+
     /// Deterministic disposable KV cache location for the model-aware safe
     /// default. Lives under the OS temp directory: OS-reclaimed, never
     /// pollutes the benchmark runtime, and consistent with this server's
@@ -199,6 +231,7 @@ public extension ServerConfig {
             switch flag {
             case "--model-dir": modelDirectory = try value()
             case "--served-model-id": servedModelID = try value()
+            case "--enable-flint": config.enableFlint = try parseBool(flag, value())
             case "--host": config.host = try value()
             case "--port":
                 config.port = try parseInt(flag, value())
@@ -423,6 +456,7 @@ public extension ServerConfig {
         guard config.queueWaitTimeoutMilliseconds >= 0 else {
             throw ConfigError.invalidValue("--queue-wait-ms must be >= 0 (0 = wait forever)")
         }
+        try config.applyFlintGenerationDefaults()
         return config
     }
 
@@ -448,6 +482,8 @@ public extension ServerConfig {
                              config.json, which are safe but not tuned. Explicit
                              flags always win over the profile.
       --version               Print the Mei release version
+      --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support
+                             (default false; no JANGH2/JANGTQ support)
 
     Network:
       --host HOST            (default 127.0.0.1)

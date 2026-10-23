@@ -18,6 +18,8 @@
 #   - MEI_MODEL_PROFILE is threaded into the launch as --model-profile
 #   - every flag the script hands the binary is accepted by that binary
 #     (skipped with a clear note when no built binary is available)
+#   - real dry-run argv keeps Flint opt-in and sampler overrides explicit,
+#     without creating model, build or runtime paths
 #
 # Usage: scripts/test_start_mei_server_flags.sh
 set -u
@@ -99,6 +101,12 @@ else
   if [[ $FAIL -eq 0 ]]; then
     ok "all launcher flags are accepted by $BIN ($untested checked)"
   fi
+fi
+
+if python3 "$SCRIPT_DIR/test_flint_launcher.py"; then
+  ok "Flint dry-run launch contract"
+else
+  bad "Flint dry-run launch contract"
 fi
 
 echo

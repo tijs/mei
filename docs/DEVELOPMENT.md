@@ -156,6 +156,13 @@ pin.
 agentic acceptance probes, then commit the pin update separately from
 unrelated source changes.
 
+## Experimental architecture paths
+
+[`FLINT.md`](FLINT.md) documents the default-off, app-registered Flint affine
+path, source/license provenance, model-free checks and remaining real-model
+admission gates. It does not change the pinned vMLX dependency or add a
+measured model profile.
+
 ## Process and contributing
 
 Keep model status/test phases in the lineup `configs/model-lineup.json` in

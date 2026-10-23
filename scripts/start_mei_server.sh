@@ -31,9 +31,13 @@ CONTEXT_CAP="${MEI_CONTEXT_CAP:-65536}"
 MAX_TOKENS="${MEI_MAX_TOKENS:-32768}"
 PREFILL_STEP_SIZE="${MEI_PREFILL_STEP_SIZE:-}"
 KV_BITS="${MEI_KV_BITS:-}"
-TEMPERATURE="${MEI_TEMPERATURE:-0.6}"
-TOP_P="${MEI_TOP_P:-0.95}"
-TOP_K="${MEI_TOP_K:-20}"
+# Omit unset samplers: the server can then honor Flint's generation_config.json.
+# Non-Flint server defaults remain 0.6 / 0.95 / 20.
+TEMPERATURE="${MEI_TEMPERATURE:-}"
+TOP_P="${MEI_TOP_P:-}"
+TOP_K="${MEI_TOP_K:-}"
+ENABLE_FLINT="${MEI_ENABLE_FLINT:-false}"
+DRY_RUN=false
 EMIT_REASONING="${MEI_EMIT_REASONING:-true}"
 CACHE_REUSE="${MEI_CACHE_REUSE:-true}"
 MEMORY_LIMIT_BYTES="${MEI_MEMORY_LIMIT_BYTES:-0}"
@@ -50,6 +54,9 @@ LOAD_MMAP="${MEI_LOAD_MMAP:-true}"
 usage() {
   cat <<EOF
 Usage: start_mei_server.sh [options]
+
+  --dry-run                  print argv; no build, model load or runtime writes
+  MEI_ENABLE_FLINT=true       opt into the experimental affine Flint architecture
 
 The full launch configuration is expressed through MEI_* environment
 variables (see the script); the bench config yaml sets them explicitly.
@@ -69,6 +76,7 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;
+    --dry-run) DRY_RUN=true; shift ;;
     *) echo "FATAL: unknown option $1" >&2; exit 2 ;;
   esac
 done
@@ -81,6 +89,30 @@ done
 if [[ -n "${MEI_OPTIMIZATION_PROFILE:-}" ]]; then
   echo "FATAL: MEI_OPTIMIZATION_PROFILE is obsolete and ignored; the flag it fed (--optimization-profile) was removed from the server, so this script could not start. Use MEI_MODEL_PROFILE=<model name> (names: 'mei pull' with no argument), or unset it to run on architecture defaults." >&2
   exit 2
+fi
+
+ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
+  --host 127.0.0.1 --port "$PORT"
+  --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
+  --enable-flint "$ENABLE_FLINT"
+  --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
+  --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
+  --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+[[ -n "$TEMPERATURE" ]] && ARGS+=(--temperature "$TEMPERATURE")
+[[ -n "$TOP_P" ]] && ARGS+=(--top-p "$TOP_P")
+[[ -n "$TOP_K" ]] && ARGS+=(--top-k "$TOP_K")
+[[ -n "$MODEL_PROFILE" ]] && ARGS+=(--model-profile "$MODEL_PROFILE")
+[[ -n "$PREFILL_STEP_SIZE" ]] && ARGS+=(--prefill-step-size "$PREFILL_STEP_SIZE")
+[[ -n "$COMPILED_DECODE_THRESHOLD" ]] && ARGS+=(--compiled-decode-threshold "$COMPILED_DECODE_THRESHOLD")
+[[ "$MAX_KV_WINDOW" != "0" && -n "$MAX_KV_WINDOW" ]] && ARGS+=(--max-kv-window "$MAX_KV_WINDOW")
+[[ "$SSM_ANCHOR_BOUNDARIES" != "0" && -n "$SSM_ANCHOR_BOUNDARIES" ]] && ARGS+=(--ssm-anchor-boundaries "$SSM_ANCHOR_BOUNDARIES")
+[[ -n "$KV_BITS" ]] && ARGS+=(--kv-bits "$KV_BITS")
+[[ -n "$KV_CACHE_DIR" ]] && ARGS+=(--kv-cache-dir "$KV_CACHE_DIR")
+
+if [[ "$DRY_RUN" == true ]]; then
+  printf '%q ' "$BUILD_DIR/release/mei" "${ARGS[@]}"
+  printf '\n'
+  exit 0
 fi
 
 [[ -d "$MODEL_DIR" ]] || { echo "FATAL: model directory missing: $MODEL_DIR (run scripts/stage_model.sh)" >&2; exit 1; }
@@ -121,21 +153,6 @@ BIN="$BUILD_DIR/release/mei"
 [[ -x "$BIN" ]] || { echo "FATAL: built binary missing at $BIN" >&2; exit 1; }
 MEI_VMLX_CHECKOUT="$BUILD_DIR/checkouts/vmlx-swift" \
   bash "$MEI_REPO/scripts/prepare_metallib.sh" "$BUILD_DIR/release" || { echo "FATAL: missing Metal kernel library" >&2; exit 1; }
-
-ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
-  --host 127.0.0.1 --port "$PORT"
-  --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
-  --temperature "$TEMPERATURE" --top-p "$TOP_P" --top-k "$TOP_K"
-  --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
-  --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
-  --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
-[[ -n "$MODEL_PROFILE" ]] && ARGS+=(--model-profile "$MODEL_PROFILE")
-[[ -n "$PREFILL_STEP_SIZE" ]] && ARGS+=(--prefill-step-size "$PREFILL_STEP_SIZE")
-[[ -n "$COMPILED_DECODE_THRESHOLD" ]] && ARGS+=(--compiled-decode-threshold "$COMPILED_DECODE_THRESHOLD")
-[[ "$MAX_KV_WINDOW" != "0" && -n "$MAX_KV_WINDOW" ]] && ARGS+=(--max-kv-window "$MAX_KV_WINDOW")
-[[ "$SSM_ANCHOR_BOUNDARIES" != "0" && -n "$SSM_ANCHOR_BOUNDARIES" ]] && ARGS+=(--ssm-anchor-boundaries "$SSM_ANCHOR_BOUNDARIES")
-[[ -n "$KV_BITS" ]] && ARGS+=(--kv-bits "$KV_BITS")
-[[ -n "$KV_CACHE_DIR" ]] && ARGS+=(--kv-cache-dir "$KV_CACHE_DIR")
 
 printf 'mei isolated launch: '
 printf '%q ' "$BIN" "${ARGS[@]}"
