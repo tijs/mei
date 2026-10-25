@@ -108,18 +108,13 @@ public actor Engine {
             throw EngineError.modelDirectoryMissing(config.modelDirectory)
         }
         let modelConfiguration = try await FlintSupport.prepare(
-            directory: directory, enabled: config.enableFlint)
+            directory: directory, enabled: config.enableFlint, janghEnabled: config.enableFlintJANGH)
         try config.applyFlintGenerationDefaults()
         // A reported memory limit below the model's working set makes MLX
         // alloc calls wait on scheduled tasks instead of failing — the
         // "hang" failure mode. If the operator configured an explicit limit
         // (bytes), apply it before the allocator starts seeing load traffic.
-        if config.memoryLimitBytes > 0 {
-            Memory.memoryLimit = config.memoryLimitBytes
-            if config.cacheLimitBytes > 0 {
-                Memory.cacheLimit = config.cacheLimitBytes
-            }
-        }
+        applyExplicitMemoryLimits(config)
         let container = try await loadModelContainer(
             from: directory,
             using: #huggingFaceTokenizerLoader(),
@@ -202,13 +197,15 @@ public actor Engine {
         // an explicit --memory-limit-bytes >= working set actually governs
         // inference (otherwise the 35B at 24GB active would hang alloca on
         // the 22.4GB default).
-        if config.memoryLimitBytes > 0 {
-            Memory.memoryLimit = config.memoryLimitBytes
-            if config.cacheLimitBytes > 0 {
-                Memory.cacheLimit = config.cacheLimitBytes
-            }
-        }
+        applyExplicitMemoryLimits(config)
         return Engine(container: container, config: config, loadMemory: Memory.snapshot())
+    }
+
+    /// Model loading can reset allocator policy. Reapply each operator limit
+    /// independently; a cache-only cap must not require a memory-limit override.
+    static func applyExplicitMemoryLimits(_ config: ServerConfig) {
+        if config.memoryLimitBytes > 0 { Memory.memoryLimit = config.memoryLimitBytes }
+        if config.cacheLimitBytes > 0 { Memory.cacheLimit = config.cacheLimitBytes }
     }
 
     public var servedModelID: String { config.servedModelID }

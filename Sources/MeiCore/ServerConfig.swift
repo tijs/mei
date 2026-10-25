@@ -10,6 +10,8 @@ public struct ServerConfig: Sendable {
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
     public var enableFlint: Bool = false
+    /// Separately gated, payload-preserving JANGH2 adapter.
+    public var enableFlintJANGH: Bool = false
     /// Set when --served-model-id was omitted and defaulted from the
     /// bundle directory name, so startup can report the chosen ID.
     public var servedModelIDWasDefaulted: Bool = false
@@ -232,6 +234,7 @@ public extension ServerConfig {
             case "--model-dir": modelDirectory = try value()
             case "--served-model-id": servedModelID = try value()
             case "--enable-flint": config.enableFlint = try parseBool(flag, value())
+            case "--enable-flint-jangh": config.enableFlintJANGH = try parseBool(flag, value())
             case "--host": config.host = try value()
             case "--port":
                 config.port = try parseInt(flag, value())
@@ -482,8 +485,9 @@ public extension ServerConfig {
                              config.json, which are safe but not tuned. Explicit
                              flags always win over the profile.
       --version               Print the Mei release version
+      --enable-flint-jangh BOOL  EXPERIMENTAL JANGH2 adapter (also enable Flint)
       --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support
-                             (default false; no JANGH2/JANGTQ support)
+                             (default false; JANGH2 requires its separate adapter flag)
 
     Network:
       --host HOST            (default 127.0.0.1)

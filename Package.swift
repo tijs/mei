@@ -1,8 +1,8 @@
 // swift-tools-version: 6.1
 // Mei — a narrow, native Swift/MLX OpenAI-compatible inference server.
 //
-// vmlx-swift is pinned to the pushed `main` of the Mei-maintained fork
-// (633fe166), which keeps upstream as its parent and carries the Mei
+// vmlx-swift is pinned to a published revision of the Mei-maintained fork
+// (ccbd1d33), which keeps upstream as its parent and carries the Mei
 // cache/generation commits, the request logit-processor seam, and the
 // associated focused tests. Each Mei change is a separate cherry-pickable
 // commit suitable for a later upstream PR.
@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "633fe166630ef04310aea7d5a1795555ab32970d"
+            revision: "ccbd1d337f82185d190be9e69890554ecf5fe796"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
@@ -28,6 +28,7 @@ let package = Package(
             dependencies: [
                 .product(name: "VMLX", package: "vmlx-swift"),
                 .product(name: "MLX", package: "vmlx-swift"),
+                .product(name: "MLXFast", package: "vmlx-swift"),
                 .product(name: "MLXNN", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
                 .product(name: "MLXLLM", package: "vmlx-swift"),
@@ -54,7 +55,8 @@ let package = Package(
                 // `#huggingFaceTokenizerLoader()` bridge the Engine uses.
                 .product(name: "MLXHuggingFace", package: "vmlx-swift"),
                 .product(name: "VMLXTokenizers", package: "vmlx-swift"),
-            ]
+            ],
+            exclude: ["Fixtures/JANGH2"]
         ),
     ]
 )

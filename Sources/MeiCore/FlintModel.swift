@@ -118,10 +118,12 @@ final class FlintDecoderLayer: Module {
     @ModuleInfo(key: "input_layernorm") var inputLayerNorm: RMSNorm
     @ModuleInfo(key: "post_attention_layernorm") var postAttentionLayerNorm: RMSNorm
 
-    init(_ c: FlintConfiguration, layer: Int) {
+    init(_ c: FlintConfiguration, layer: Int, jangh: JANGHFormatContract? = nil) {
         _attention.wrappedValue = FlintAttention(c, layer: layer)
-        mlp = c.mlpOnlyLayers.contains(layer)
-            ? FlintDenseMLP(hiddenSize: c.hiddenSize, intermediateSize: c.intermediateSize) : FlintSparseMLP(c)
+        if c.mlpOnlyLayers.contains(layer) {
+            mlp = FlintDenseMLP(hiddenSize: c.hiddenSize, intermediateSize: c.intermediateSize)
+        } else if let jangh { mlp = FlintJANGHSparseMLP(c, layer: layer, contract: jangh) }
+        else { mlp = FlintSparseMLP(c) }
         _inputLayerNorm.wrappedValue = RMSNorm(dimensions: c.hiddenSize, eps: c.rmsNormEps)
         _postAttentionLayerNorm.wrappedValue = RMSNorm(dimensions: c.hiddenSize, eps: c.rmsNormEps)
     }
@@ -137,9 +139,9 @@ final class FlintModelInner: Module {
     let layers: [FlintDecoderLayer]
     let norm: RMSNorm
 
-    init(_ c: FlintConfiguration) {
+    init(_ c: FlintConfiguration, jangh: JANGHFormatContract? = nil) {
         _embedTokens.wrappedValue = Embedding(embeddingCount: c.vocabularySize, dimensions: c.hiddenSize)
-        layers = (0..<c.hiddenLayers).map { FlintDecoderLayer(c, layer: $0) }
+        layers = (0..<c.hiddenLayers).map { FlintDecoderLayer(c, layer: $0, jangh: jangh) }
         norm = RMSNorm(dimensions: c.hiddenSize, eps: c.rmsNormEps)
     }
 }
@@ -157,10 +159,10 @@ final class FlintModel: Module, LLMModel {
     var preservesCheckpointParameterDTypes: Bool { true }
     var loraLayers: [Module] { model.layers }
 
-    init(_ c: FlintConfiguration) {
+    init(_ c: FlintConfiguration, jangh: JANGHFormatContract? = nil) {
         configuration = c
         vocabularySize = c.vocabularySize
-        model = FlintModelInner(c)
+        model = FlintModelInner(c, jangh: jangh)
         _lmHead.wrappedValue = Linear(c.hiddenSize, c.vocabularySize, bias: false)
     }
 

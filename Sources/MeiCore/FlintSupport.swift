@@ -14,12 +14,16 @@ enum FlintSupport {
     }
 
     static func prepare(
-        directory: URL, enabled: Bool, registry: ModelTypeRegistry = LLMTypeRegistry.shared
+        directory: URL, enabled: Bool, janghEnabled: Bool = false, registry: ModelTypeRegistry = LLMTypeRegistry.shared
     ) async throws -> ModelConfiguration {
         let data = try Data(contentsOf: directory.appendingPathComponent("config.json"))
         let type = try modelType(data: data)
         guard type == "flint" else { return ModelConfiguration(directory: directory) }
         guard enabled else { throw FlintError.disabled }
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let adapted = object?["mei_jangh_adapter_version"] != nil
+        if adapted && !janghEnabled { throw FlintError.unsupported("JANGH requires --enable-flint-jangh true") }
+        let jangh = adapted ? try FlintJANGHSupport.validate(directory: directory, ordinary: data) : nil
         _ = try FlintConfiguration(data: data)
         for name in jangConfigFileNames + ["jangtq_runtime.safetensors"] {
             if FileManager.default.fileExists(atPath: directory.appendingPathComponent(name).path) {
@@ -30,10 +34,10 @@ enum FlintSupport {
         if FileManager.default.fileExists(atPath: index.path) {
             struct Index: Decodable { let weight_map: [String: String] }
             let keys = try JSONDecoder().decode(Index.self, from: Data(contentsOf: index)).weight_map.keys
-            try validateWeightKeys(Array(keys))
+            if jangh == nil { try validateWeightKeys(Array(keys)) }
         }
         await registry.registerModelType("flint", creator: { (data: Data) in
-            FlintModel(try FlintConfiguration(data: data))
+            FlintModel(try FlintConfiguration(data: data), jangh: jangh)
         })
         // The pinned Evaluate.generateTask uses ReasoningParser.forPrompt,
         // not the stamp-only default: a template tail without <think> starts
