@@ -158,12 +158,13 @@ public actor Engine {
                 enableDiskCache: diskEnabled,
                 pagedBlockSize: 16,
                 maxCacheBlocks: 8192,
+                maxCacheBytes: config.prefixCacheLimitBytes,
                 diskCacheDir: diskCacheDir,
                 enableSSMReDerive: config.enableSSMReDerive,
                 modelKey: config.servedModelID))
             let topology = await container.cacheTopologySnapshot()
             let tier = diskEnabled ? "disk at \(config.kvCacheDir)" : "no disk"
-            print("mei: prefix cache enabled (paged in-memory + \(tier)); topology \(topology.topologyTags.joined(separator: " "))")
+            print("mei: prefix cache enabled (paged in-memory + \(tier), retained budget \(config.prefixCacheLimitBytes) bytes); topology \(topology.topologyTags.joined(separator: " "))")
 
             // Report settings that this topology will ignore. A flag that is
             // accepted, passed through and then silently dropped is the worst

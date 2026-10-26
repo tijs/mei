@@ -1,5 +1,5 @@
 {
-  "originHash" : "1bfa08b41619682611d40f09bf1fe29d8d2f35ad02920621a0504826b996cbca",
+  "originHash" : "fb02e2187dd074eca1ce7e0eae90434a9184df644313d5f1099ede895ca612c6",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -213,7 +213,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tijs/vmlx-swift.git",
       "state" : {
-        "revision" : "ccbd1d337f82185d190be9e69890554ecf5fe796"
+        "revision" : "5b2ffe15d7b88fe1eaebfbe51afcd81716f6a11f"
       }
     },
     {

@@ -744,6 +744,10 @@ public struct MeiCacheStatus: Sendable, Codable {
     public var pagedHits: Int
     public var pagedMisses: Int
     public var pagedEvictions: Int
+    /// Conservative retained compact KV + companion storage charge.
+    public var pagedResidentBytes: Int? = nil
+    public var pagedCompanionBytes: Int? = nil
+    public var pagedMaxResidentBytes: Int? = nil
     public var ssmHits: Int
     public var ssmMisses: Int
     public var isHybrid: Bool

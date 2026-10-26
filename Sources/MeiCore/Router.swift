@@ -80,6 +80,9 @@ public final class Router: @unchecked Sendable {
                 pagedHits: stats.pagedStats?.cacheHits ?? 0,
                 pagedMisses: stats.pagedStats?.cacheMisses ?? 0,
                 pagedEvictions: stats.pagedStats?.evictions ?? 0,
+                pagedResidentBytes: stats.pagedStats?.residentBytes,
+                pagedCompanionBytes: stats.pagedStats?.companionBytes,
+                pagedMaxResidentBytes: stats.pagedStats?.maxResidentBytes,
                 ssmHits: stats.ssmStats.hits,
                 ssmMisses: stats.ssmStats.misses,
                 isHybrid: stats.isHybrid)

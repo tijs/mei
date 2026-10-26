@@ -68,6 +68,9 @@ public struct ServerConfig: Sendable {
     /// hang failure mode — so benchmark configs set these explicitly.
     public var memoryLimitBytes: Int = 0
     public var cacheLimitBytes: Int = 0
+    /// Retained prefix KV/rotating-companion budget, distinct from freed
+    /// allocator buffers. No prompt or inference-memory cap is implied.
+    public var prefixCacheLimitBytes: Int = 536_870_912
     /// Directory for the coordinator's on-disk L2 KV tier (hybrid models
     /// like Ornith's mamba/GatedDelta layers are disk-backed-restore only,
     /// so in-process prefix reuse for them needs this tier; paged-in-memory
@@ -284,6 +287,8 @@ public extension ServerConfig {
                 config.memoryLimitBytes = try parseInt(flag, value())
             case "--cache-limit-bytes":
                 config.cacheLimitBytes = try parseInt(flag, value())
+            case "--prefix-cache-limit-bytes":
+                config.prefixCacheLimitBytes = try parseInt(flag, value())
             case "--kv-cache-dir":
                 config.kvCacheDir = try value()
                 config.kvCacheDirExplicit = true
@@ -459,6 +464,9 @@ public extension ServerConfig {
         guard config.queueWaitTimeoutMilliseconds >= 0 else {
             throw ConfigError.invalidValue("--queue-wait-ms must be >= 0 (0 = wait forever)")
         }
+        guard config.prefixCacheLimitBytes > 0 else {
+            throw ConfigError.invalidValue("--prefix-cache-limit-bytes must be > 0")
+        }
         try config.applyFlintGenerationDefaults()
         return config
     }
@@ -543,6 +551,8 @@ public extension ServerConfig {
                                 set this when the default limit is below the
                                 model working set, which otherwise hangs)
       --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
+      --prefix-cache-limit-bytes N Retained prefix KV/companion budget
+                                (default 536870912; separate from buffer pool)
       --kv-cache-dir DIR        On-disk KV cache dir for the prefix coordinator
                                 (hybrid models, dense qwen3_5/qwen3_8 and
                                 gemma4 checkpoints need the disk tier). With

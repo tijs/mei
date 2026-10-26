@@ -2,7 +2,7 @@
 // Mei — a narrow, native Swift/MLX OpenAI-compatible inference server.
 //
 // vmlx-swift is pinned to a published revision of the Mei-maintained fork
-// (ccbd1d33), which keeps upstream as its parent and carries the Mei
+// (5b2ffe15), which keeps upstream as its parent and carries the Mei
 // cache/generation commits, the request logit-processor seam, and the
 // associated focused tests. Each Mei change is a separate cherry-pickable
 // commit suitable for a later upstream PR.
@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "ccbd1d337f82185d190be9e69890554ecf5fe796"
+            revision: "5b2ffe15d7b88fe1eaebfbe51afcd81716f6a11f"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
