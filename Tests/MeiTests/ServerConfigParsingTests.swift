@@ -460,10 +460,8 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.optimizationProfile, .generic, file: file, line: line)
         XCTAssertTrue(config.cacheReuse, file: file, line: line)
         XCTAssertFalse(config.kvCacheDirExplicit, file: file, line: line)
-        XCTAssertEqual(
-            config.kvCacheDir,
-            ServerConfig.defaultDisposableKVCacheDir(servedModelID: servedModelID),
-            file: file, line: line)
+        XCTAssertTrue(config.disposableKVCache, file: file, line: line)
+        XCTAssertTrue(config.kvCacheDir.contains("mei-kv-cache"), file: file, line: line)
         XCTAssertTrue(config.kvCacheDir.contains(servedModelID.replacingOccurrences(of: "/", with: "-")), file: file, line: line)
     }
 
@@ -485,9 +483,8 @@ final class ServerConfigParsingTests: XCTestCase {
             "--served-model-id", "mlx-community/Qwen3.8-27B-4bit",
         ])
         XCTAssertNil(config.modelTuning, "no profile was named")
-        XCTAssertEqual(
-            config.kvCacheDir,
-            ServerConfig.defaultDisposableKVCacheDir(servedModelID: "mlx-community/Qwen3.8-27B-4bit"))
+        XCTAssertTrue(config.disposableKVCache)
+        XCTAssertTrue(config.kvCacheDir.contains("mei-kv-cache"))
     }
 
 

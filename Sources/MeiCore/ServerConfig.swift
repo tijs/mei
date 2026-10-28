@@ -58,31 +58,37 @@ public struct ServerConfig: Sendable {
     public var enableThinking: Bool? = nil
     public var reasoningEffort: String? = nil
     public var maxCacheSlotTokens: Int = 131_072
-    public var cacheReuse: Bool = true
+    public var cacheReuse: Bool = true { didSet { cacheReuseExplicit = true } }
+    var cacheReuseExplicit = false
+    public var cacheMode: CacheMode = .auto
+    public internal(set) var cacheDecision = "unresolved"
+    public internal(set) var disposableKVCache = false
+    public var mlxPressPolicy: WeightAdvicePolicy = .off {
+        didSet { mlxPressPolicySource = "programmatic" }
+    }
+    public internal(set) var mlxPressPolicySource = "default"
     public var logRequests: Bool = false
     /// Path for the per-request JSONL log (`--request-log`). Empty disables it.
     public var requestLogPath: String = ""
-    /// Explicit MLX allocator limits in bytes (0 = MLX default: 1.5x the
-    /// Metal recommended working set). A default limit below the model's
-    /// working set makes MLX malloc calls WAIT on scheduled tasks — the
-    /// hang failure mode — so benchmark configs set these explicitly.
+    /// MLX allocation budget: 0/omitted selects the backend default. This
+    /// is not a process RAM ceiling; an undersized budget can stall allocation.
     public var memoryLimitBytes: Int = 0
-    public var cacheLimitBytes: Int = 0
+    public var cacheLimitBytes: Int = 0 { didSet { cacheLimitExplicit = true } }
+    public private(set) var cacheLimitExplicit = false
     /// Retained prefix KV/rotating-companion budget, distinct from freed
     /// allocator buffers. No prompt or inference-memory cap is implied.
     public var prefixCacheLimitBytes: Int = 536_870_912
     /// Directory for the coordinator's on-disk L2 KV tier (hybrid models
     /// like Ornith's mamba/GatedDelta layers are disk-backed-restore only,
     /// so in-process prefix reuse for them needs this tier; paged-in-memory
-    /// alone covers non-hybrid topologies). "" = disabled. Dense
-    /// qwen3_5/qwen3_8 and gemma4 checkpoints get a disposable default when
-    /// the flag is omitted and cache reuse is on (see parse below).
-    public var kvCacheDir: String = ""
+    /// alone covers non-hybrid topologies). Empty means no directory has
+    /// been selected yet. cacheMode resolves whether a disk tier is needed.
+    public var kvCacheDir: String = "" { didSet { disposableKVCache = false } }
     /// Set when `--ssm-anchor-boundaries` caused a disposable KV directory to
     /// be created that the operator did not ask for, so startup can say so.
     public var autoEnabledAnchorKVCacheDir: Bool = false
     /// True when the operator passed `--kv-cache-dir` (even an empty value):
-    /// an explicit choice always wins over the model-aware safe default.
+    /// empty explicit paths fail if the model requires disk-backed reuse.
     public private(set) var kvCacheDirExplicit = false
     /// After each chat generation the coordinator runs one extra prompt-only
     /// pass to re-derive the hybrid SSM boundary state for reuse (upstream
@@ -169,17 +175,17 @@ public struct ServerConfig: Sendable {
         if !topKExplicit { self.topK = topK; topKExplicit = false }
     }
 
-    /// Deterministic disposable KV cache location for the model-aware safe
+    /// Instance-specific disposable KV cache location for the model-aware safe
     /// default. Lives under the OS temp directory: OS-reclaimed, never
-    /// pollutes the benchmark runtime, and consistent with this server's
-    /// single-process in-process-only reuse (no cross-restart persistence
-    /// claim). Sanitized per served model ID so concurrent servers never
-    /// share a cache.
+    /// pollutes a project directory. A random instance component prevents
+    /// two servers with the same served ID sharing mutable cache storage.
+    /// Explicit --kv-cache-dir is required for intentional persistence.
     public static func defaultDisposableKVCacheDir(servedModelID: String) -> String {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("mei-kv-cache", isDirectory: true)
         return root
             .appendingPathComponent(sanitizedModelKey(servedModelID), isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .path
     }
 
@@ -214,13 +220,15 @@ public extension ServerConfig {
     ///   affordability check. Defaults to asking the GPU.
     static func parse(
         arguments: [String] = Array(CommandLine.arguments.dropFirst()),
-        recommendedWorkingSetBytes: Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) }
+        recommendedWorkingSetBytes: Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) },
+        environment: [String: String] = ProcessInfo.processInfo.environment
     ) throws -> ServerConfig {
         var modelDirectory: String?
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
         var prefillStepSizeExplicit = false
         var ssmAnchorBoundariesExplicit = false
+        var mlxPressExplicit = false
         var config = ServerConfig(modelDirectory: "", servedModelID: "")
 
         var index = 0
@@ -279,6 +287,16 @@ public extension ServerConfig {
                 config.maxCacheSlotTokens = try parseInt(flag, value())
             case "--cache-reuse":
                 config.cacheReuse = try parseBool(flag, value())
+                config.cacheReuseExplicit = true
+            case "--cache-mode":
+                guard let mode = CacheMode(rawValue: try value()) else {
+                    throw ConfigError.invalidValue("--cache-mode expects auto, off, memory, or disk")
+                }
+                config.cacheMode = mode
+            case "--mlxpress":
+                config.mlxPressPolicy = try WeightAdvicePolicy(value())
+                config.mlxPressPolicySource = "cli"
+                mlxPressExplicit = true
             case "--log-requests":
                 config.logRequests = try parseBool(flag, value())
             case "--request-log":
@@ -407,22 +425,6 @@ public extension ServerConfig {
                 recommendedWorkingSetBytes: recommendedWorkingSetBytes)
         }
 
-        // Model-aware safe default: dense qwen3_5/qwen3_8-style checkpoints
-        // crash the in-memory-only paged KV tier (vmlx array.cpp:335
-        // 'SmallVector out of range'; trigger isolated by the 2026-09-02 2x2
-        // evidence) and gemma4 bundles do not restore exact-repeat prefixes
-        // on it (cached=0; disk tier restores 6173/6174, 2026-09-03
-        // evidence), so with cache reuse on and no explicit --kv-cache-dir
-        // they land on a disposable on-disk cache under the OS temp
-        // directory. Explicit --kv-cache-dir always wins; --cache-reuse
-        // false keeps caching fully disabled (no dir created).
-        if !config.kvCacheDirExplicit, config.cacheReuse,
-           ModelOptimizationProfile.needsDiskKVTier(
-               modelDirectory: config.modelDirectory) {
-            config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
-                servedModelID: config.servedModelID)
-        }
-
         // Architecture-validated generation cap. An explicit --max-tokens
         // always wins; see ModelOptimizationProfile.defaultMaxTokens for the
         // runaway evidence behind the ornith value.
@@ -431,26 +433,12 @@ public extension ServerConfig {
             config.maxTokensDefault = profileMax
         }
 
-        // Cross-conversation prefix reuse needs somewhere durable to keep the
-        // boundary snapshot. `needsDiskKVTier` deliberately excludes
-        // qwen3_5_moe so the cache stays operator-controlled for ordinary
-        // serving — but that lineage's hybrid cache (MambaCache on the
-        // GatedDelta layers, RotatingKVCache on the rest) cannot restore from
-        // the paged in-memory tier at all: the paged store writes zero blocks
-        // and every turn cold-prefills.
-        //
-        // So `--ssm-anchor-boundaries K` without `--kv-cache-dir` did exactly
-        // nothing on those models, silently — no error, no warning, and the
-        // headline 0.4.0 feature simply inert. Asking for anchors IS the
-        // operator opting in, so honour it with the same disposable cache the
-        // other affected lineages already get. Explicit --kv-cache-dir still
-        // wins; --cache-reuse false still disables caching entirely.
-        if !config.kvCacheDirExplicit, config.cacheReuse,
-           config.ssmAnchorBoundaryCount > 0, config.kvCacheDir.isEmpty {
-            config.kvCacheDir = ServerConfig.defaultDisposableKVCacheDir(
-                servedModelID: config.servedModelID)
-            config.autoEnabledAnchorKVCacheDir = true
+        if !mlxPressExplicit,
+           let key = ["MLXPRESS", "JANGPRESS"].first(where: { environment[$0] != nil }) {
+            config.mlxPressPolicy = try WeightAdvicePolicy(environment[key]!)
+            config.mlxPressPolicySource = "environment:" + key
         }
+        try config.resolveRuntimePolicies()
 
         guard config.prefillStepSize > 0 else {
             throw ConfigError.invalidValue("--prefill-step-size must be > 0")
@@ -546,23 +534,24 @@ public extension ServerConfig {
                              never changes without this flag.
 
     Memory:
-      --memory-limit-bytes N    Explicit MLX allocator limit (default 0 = MLX
-                                default of 1.5x Metal recommended working set;
+      --memory-limit-bytes N    Explicit MLX allocator limit (0/omitted = backend
+                                default, reported by /v1/mei/status;
                                 set this when the default limit is below the
                                 model working set, which otherwise hangs)
-      --cache-limit-bytes N     MLX buffer-pool cache limit (default 0 = limit)
+      --cache-mode MODE         Prefix reuse: auto (default), off, memory, disk.
+                                Auto selects disk when required by the model.
+                                Explicit memory refuses unsupported topologies.
+      --mlxpress POLICY         Experimental weight advice: off (default), auto,
+                                or 1..95 percent. CLI overrides MLXPRESS/JANGPRESS.
+      --cache-limit-bytes N     Freed allocator buffer cache: explicit 0 disables;
+                                omitted uses backend default. Not a RAM ceiling.
       --prefix-cache-limit-bytes N Retained prefix KV/companion budget
                                 (default 536870912; separate from buffer pool)
-      --kv-cache-dir DIR        On-disk KV cache dir for the prefix coordinator
-                                (hybrid models, dense qwen3_5/qwen3_8 and
-                                gemma4 checkpoints need the disk tier). With
-                                cache reuse on and this flag omitted, those
-                                model families default to a disposable cache
-                                under the OS temp dir (the in-memory-only tier
-                                crashes dense qwen3_5/qwen3_8, vmlx
-                                array.cpp:335, and never restores gemma4
-                                exact-repeat prefixes); explicit values always
-                                win
+      --kv-cache-dir DIR        Explicit disk-cache directory. Omit for an
+                                instance-specific temporary path when disk is
+                                selected. Conflicts with memory/off modes.
+                                Legacy --cache-reuse remains supported; prefer
+                                --cache-mode for new configurations.
 
     Misc:
       --log-requests BOOL  Log each request's token counts (default false)

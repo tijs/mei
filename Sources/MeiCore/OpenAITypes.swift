@@ -680,6 +680,7 @@ public struct MeiMemoryReport: Sendable, Codable {
 /// Shape of GET /v1/mei/status — convenience status surface for the
 /// benchmark harness (probe records it; OpenAI-compat surface stays clean).
 public struct MeiStatusResponse: Sendable, Codable {
+    public var runtimePolicies: MeiRuntimePolicies? = nil
     public var status: String
     public var model: String
     public var contextCap: Int

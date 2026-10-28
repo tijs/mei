@@ -1,0 +1,24 @@
+Test Suite 'Selected tests' started at 2026-10-28 23:26:24.163.
+Test Suite 'MeiTests.xctest' started at 2026-10-28 23:26:24.165.
+Test Suite 'RuntimePolicyTests' started at 2026-10-28 23:26:24.165.
+Test Case '-[MeiTests.RuntimePolicyTests testDiskDefaultsAreIsolatedStableAndDoNotCreateDirectories]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testDiskDefaultsAreIsolatedStableAndDoNotCreateDirectories]' passed (0.002 seconds).
+Test Case '-[MeiTests.RuntimePolicyTests testExplicitZeroSurvivesLoadPolicyAndAllocatorApplication]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testExplicitZeroSurvivesLoadPolicyAndAllocatorApplication]' passed (0.020 seconds).
+Test Case '-[MeiTests.RuntimePolicyTests testMLXPressDefaultAndPrecedenceAreExplicit]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testMLXPressDefaultAndPrecedenceAreExplicit]' passed (0.000 seconds).
+Test Case '-[MeiTests.RuntimePolicyTests testModesAndLegacyConflictsAreOrderIndependent]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testModesAndLegacyConflictsAreOrderIndependent]' passed (0.000 seconds).
+Test Case '-[MeiTests.RuntimePolicyTests testPolicyStatusSeparatesRequestsAndActualActivation]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testPolicyStatusSeparatesRequestsAndActualActivation]' passed (0.000 seconds).
+Test Case '-[MeiTests.RuntimePolicyTests testRequiredDiskPolicyAlsoAppliesToLibraryCallers]' started.
+Test Case '-[MeiTests.RuntimePolicyTests testRequiredDiskPolicyAlsoAppliesToLibraryCallers]' passed (0.001 seconds).
+Test Suite 'RuntimePolicyTests' passed at 2026-10-28 23:26:24.191.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+Test Suite 'ServerConfigParsingTests' started at 2026-10-28 23:26:24.191.
+Test Suite 'ServerConfigParsingTests' passed at 2026-10-28 23:26:24.233.
+	 Executed 38 tests, with 0 failures (0 unexpected) in 0.040 (0.042) seconds
+Test Suite 'MeiTests.xctest' passed at 2026-10-28 23:26:24.233.
+	 Executed 44 tests, with 0 failures (0 unexpected) in 0.065 (0.068) seconds
+Test Suite 'Selected tests' passed at 2026-10-28 23:26:24.233.
+	 Executed 44 tests, with 0 failures (0 unexpected) in 0.065 (0.070) seconds

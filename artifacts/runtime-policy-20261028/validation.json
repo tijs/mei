@@ -1,0 +1,28 @@
+{
+  "time": "2026-10-28T22:30:00.904190+00:00",
+  "base_mei_commit": "5c4b2c95d63de89c3a09ddac893fa4378f8be207",
+  "vmlx_commit": "5b2ffe15d7b88fe1eaebfbe51afcd81716f6a11f",
+  "focused_tests": {
+    "executed": 44,
+    "failures": 0
+  },
+  "offline_tests": {
+    "executed": 434,
+    "skipped": 2,
+    "failures": 0,
+    "command": "swift test -c release --scratch-path /Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025 --skip MeiAcceptanceTests"
+  },
+  "unfiltered_tests": {
+    "executed": 443,
+    "skipped": 2,
+    "failures": 9,
+    "reason": "all nine live MeiAcceptanceTests failed to connect to absent server; unit checks passed"
+  },
+  "benchmark_harness_tests": 550,
+  "launcher_tests": 14,
+  "ruff": "pass",
+  "ty": "pass",
+  "real_model_load": false,
+  "live_api_acceptance": "not run; resource blocker remains",
+  "release_binary_sha256": "95bb6142916b8cae1d78eb4e9fbe5c35e20a1b12fd636f56b290c986caf502bd"
+}

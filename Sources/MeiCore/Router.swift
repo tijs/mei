@@ -89,13 +89,14 @@ public final class Router: @unchecked Sendable {
         }
         let scheduler = Self.schedulerStatus(await engine.schedulerSnapshot())
         let response = MeiStatusResponse(
+            runtimePolicies: engine.runtimePolicyStatus(),
             status: "ok",
             model: config.servedModelID,
             contextCap: config.contextCap,
             prefillStepSize: config.prefillStepSize,
             maxTokens: config.maxTokensDefault,
             kvBits: config.kvBits,
-            cacheReuse: config.cacheReuse,
+            cacheReuse: engine.config.cacheReuse,
             uptimeSeconds: Int(Date().timeIntervalSince(startedAt)),
             memory: report,
             cache: cache,

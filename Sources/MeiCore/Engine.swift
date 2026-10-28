@@ -107,9 +107,12 @@ public actor Engine {
         guard FileManager.default.fileExists(atPath: directory.path) else {
             throw EngineError.modelDirectoryMissing(config.modelDirectory)
         }
+        try config.resolveRuntimePolicies()
         let modelConfiguration = try await FlintSupport.prepare(
             directory: directory, enabled: config.enableFlint, janghEnabled: config.enableFlintJANGH)
         try config.applyFlintGenerationDefaults()
+        print("mei: cache mode \(config.effectiveCacheMode.rawValue) (requested \(config.cacheMode.rawValue); \(config.cacheDecision))")
+        print("mei: MLXPress policy \(config.mlxPressPolicy.description) (source \(config.mlxPressPolicySource))")
         // A reported memory limit below the model's working set makes MLX
         // alloc calls wait on scheduled tasks instead of failing — the
         // "hang" failure mode. If the operator configured an explicit limit
@@ -119,31 +122,15 @@ public actor Engine {
             from: directory,
             using: #huggingFaceTokenizerLoader(),
             configuration: modelConfiguration,
-            loadConfiguration: LoadConfiguration(
-                // MLXPress axis E (cold-weight tier). `.default` is
-                // `.auto(envFallback: true)`: it honours an explicit `MLXPRESS=N`
-                // (`0` disables; N in [0,95] sets coldFraction N/100) and otherwise
-                // self-enables at coldFraction 0.70 only when the bundle is routed
-                // (MoE) AND its raw bytes exceed 50% of physical memory — which is
-                // exactly the 32 GB host / ~18 GiB qwen3_5_moe case.
-                //
-                // This was previously the init default `.disabled`, which
-                // short-circuits before any environment lookup — so `MLXPRESS=…`
-                // was silently inert on every Mei build to date.
-                //
-                // Runtime lifetime is handled: `ModelContext` stores
-                // `jangPressRuntime`, so holding the container holds the tiers.
-                jangPress: .default,
-                useMmapSafetensors: config.useMmapSafetensors)
+            loadConfiguration: config.modelLoadConfiguration
         )
         // In-process multi-tier KV reuse (the benchmark's growing-transcript
         // pattern): the coordinator owns prefix matching, block hashing, and
         // hybrid companion-state (GatedDelta/SSM) restore across requests —
         // the machinery the hand-rolled exact-extension slot could not
-        // provide for hybrid models. Paged (in-memory) tier on, disk tier
-        // off: this server is single-process and the plan explicitly defers
-        // cross-restart persistence. pagedBlockSize 16 follows upstream's
-        // hybrid guidance (short system-only prefixes still store blocks).
+        // provide for hybrid models. The resolved cache policy selects the
+        // disk tier when required. pagedBlockSize 16 follows upstream hybrid
+        // guidance (short system-only prefixes still store blocks).
         if config.cacheReuse {
             let diskEnabled = !config.kvCacheDir.isEmpty
             let diskCacheDir: URL? = diskEnabled
@@ -206,7 +193,12 @@ public actor Engine {
     /// independently; a cache-only cap must not require a memory-limit override.
     static func applyExplicitMemoryLimits(_ config: ServerConfig) {
         if config.memoryLimitBytes > 0 { Memory.memoryLimit = config.memoryLimitBytes }
-        if config.cacheLimitBytes > 0 { Memory.cacheLimit = config.cacheLimitBytes }
+        if config.cacheLimitExplicit { Memory.cacheLimit = config.cacheLimitBytes }
+    }
+
+    public nonisolated func runtimePolicyStatus() -> MeiRuntimePolicies {
+        let actual = container.mlxPressStatus()
+        return config.runtimePolicies(mlxPressEnabled: actual.enabled, coldFraction: actual.coldFraction)
     }
 
     public var servedModelID: String { config.servedModelID }

@@ -318,3 +318,5 @@ installer both assume an already-built (or prebuilt) binary.
   and scheduling: the bounded queue, `mei_priority` classes, overload refusals,
   cancellation semantics, the opt-in bounded-overlap mode, and the
   `/v1/mei/status` scheduler counters.
+Cache and memory controls, precedence, and requested/effective status fields are
+explained in [Runtime policies](docs/RUNTIME-POLICIES.md).
