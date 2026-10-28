@@ -248,3 +248,22 @@ before concluding anything about permissions.
 - [ ] `brew info tijs/tap/mei` shows the new version
 - [ ] `Package.swift` pins a **pushed** vmlx revision, never a local path
 - [ ] No experiment that measured negative was swept in by a branch merge
+
+
+## Preview distribution when stable qualification is incomplete
+
+An explicitly labeled release candidate may make reviewed fixes installable
+while contender qualification remains open. This does not waive any stable
+promotion gate above. Before publishing a preview, require the offline suite,
+focused regressions, clean remote dependency pin, checksummed binary/source
+packaging and a bounded native admission check on a fitting staged model.
+Record exact native evidence and every uncompleted stable gate in the release
+notes. Never present a resource interruption as a quality pass/failure.
+
+Use a prerelease tag (for example `v0.10.0-rc.1`), GitHub prerelease with
+`--latest=false`, and separate Homebrew `mei-preview` formula exposing only
+`mei-preview`. Keep stable `mei` and the latest stable GitHub release unchanged.
+Verify the installed preview from the published asset, merge reviewed source
+into main, and assert both remote parity and tag ancestry. Stable promotion
+still follows every step of this runbook, including every contender's throughput
+and deterministic correctness gates.

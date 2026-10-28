@@ -6,7 +6,7 @@ routers/norms/sinks and affine8/group64 ordinary linears. It is distinct from
 legacy JANGTQ and the existing standard-affine Flint path.
 
 The vmlx dependency is pinned to published cache-fix revision
-ccbd1d337f82185d190be9e69890554ecf5fe796. No editable dependency is required.
+f6510fc384bcddb5db9efc96e1dd5ab3afc49346. No editable dependency is required.
 The MIT projection/H32 kernel reference is osaurus-ai/vmlx-swift
 1a084b45d2496002673c11a8d849627a212db03d; see THIRD-PARTY-NOTICES.md.
 
@@ -137,7 +137,7 @@ full-trace equivalence between those profiles is not claimed. The old 64K run
 has not been repeated on this patch and corrected buffer-cache cap.
 
 The initial evidence used a local editable dependency. The reviewed runtime
-fix is now published at ccbd1d337f82185d190be9e69890554ecf5fe796 and both
+fix is now published at f6510fc384bcddb5db9efc96e1dd5ab3afc49346 and both
 Package.swift and Package.resolved pin it. A clean remote-pin resolution passed
 419 offline tests with one opt-in real-pack skip (420 total). The absolute
 Packages/vmlx-swift development symlink was removed before publication. The source patch and all raw evidence are in

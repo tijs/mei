@@ -61,6 +61,7 @@ assert test -d "$STAGE"
 assert grep -q "static let version = \"$VERSION\"" "$STAGE/Sources/MeiCore/ServerConfig.swift"
 assert grep -q "## \[$VERSION\]" "$STAGE/CHANGELOG.md"
 assert test -f "$STAGE/docs/RELEASE-$VERSION.md"
+assert test -f "$STAGE/THIRD-PARTY-NOTICES.md"
 assert grep -q "Mei $VERSION" "$STAGE/docs/RELEASE-$VERSION.md"
 
 # --- 3. release content present (0.9.0 concurrency slice) -------------------

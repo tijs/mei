@@ -20,6 +20,11 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
 [`NOTICE.md`](NOTICE.md). Current stable release: **0.9.0**.
+Preview: [**0.10.0-rc.1**](docs/RELEASE-0.10.0-rc.1.md), with bounded prefix
+storage, explicit runtime policies and gated Flint/JANGH2 support. Install the
+preview independently with `brew install tijs/tap/mei-preview`, then run
+`mei-preview --version`. Qwen memory and throughput qualification remains open;
+this preview does not replace stable `mei`.
 
 **0.7.0** introduced token-level constrained structured output (`json_object`
 and a strict recursive `json_schema` subset), plus exact-decimal numeric

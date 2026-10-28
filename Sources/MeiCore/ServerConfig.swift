@@ -5,7 +5,7 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.9.0"
+    public static let version = "0.10.0-rc.1"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
@@ -58,8 +58,13 @@ public struct ServerConfig: Sendable {
     public var enableThinking: Bool? = nil
     public var reasoningEffort: String? = nil
     public var maxCacheSlotTokens: Int = 131_072
-    public var cacheReuse: Bool = true { didSet { cacheReuseExplicit = true } }
-    var cacheReuseExplicit = false
+    /// Legacy caller override is distinct from the resolver's effective value.
+    public var cacheReuse: Bool {
+        get { cacheReuseValue }
+        set { cacheReuseRequested = newValue; cacheReuseValue = newValue }
+    }
+    var cacheReuseRequested: Bool?
+    var cacheReuseValue = true
     public var cacheMode: CacheMode = .auto
     public internal(set) var cacheDecision = "unresolved"
     public internal(set) var disposableKVCache = false
@@ -287,7 +292,6 @@ public extension ServerConfig {
                 config.maxCacheSlotTokens = try parseInt(flag, value())
             case "--cache-reuse":
                 config.cacheReuse = try parseBool(flag, value())
-                config.cacheReuseExplicit = true
             case "--cache-mode":
                 guard let mode = CacheMode(rawValue: try value()) else {
                     throw ConfigError.invalidValue("--cache-mode expects auto, off, memory, or disk")

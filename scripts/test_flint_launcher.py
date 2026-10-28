@@ -39,6 +39,22 @@ class FlintLauncherTests(unittest.TestCase):
         for flag, value in (("--temperature", "0"), ("--top-p", "0.8"), ("--top-k", "4")):
             self.assertEqual(args[args.index(flag) + 1], value)
 
+    def test_absent_limits_and_reuse_are_not_made_explicit(self):
+        args = self.argv()
+        for flag in ("--cache-limit-bytes", "--cache-reuse", "--cache-mode", "--mlxpress", "--max-tokens"):
+            self.assertNotIn(flag, args)
+        args = self.argv(MEI_CACHE_LIMIT_BYTES="0", MEI_MAX_TOKENS="8192")
+        self.assertEqual(args[args.index("--cache-limit-bytes") + 1], "0")
+        self.assertEqual(args[args.index("--max-tokens") + 1], "8192")
+
+    def test_policy_selectors_forward_without_implicit_reuse_conflict(self):
+        args = self.argv(MEI_CACHE_MODE="off", MEI_MLXPRESS="off")
+        self.assertNotIn("--cache-reuse", args)
+        for flag in ("--cache-mode", "--mlxpress"):
+            self.assertEqual(args[args.index(flag) + 1], "off")
+        args = self.argv(MEI_ENABLE_FLINT="true", MEI_ENABLE_FLINT_JANGH="true")
+        self.assertEqual(args[args.index("--enable-flint-jangh") + 1], "true")
+
     def test_dry_run_does_not_touch_runtime_build_or_model_paths(self):
         with tempfile.TemporaryDirectory(prefix="mei-flint-launcher-") as root:
             args = self.argv(MEI_RUNTIME_BASE=root + "/runtime", MEI_CACHE_ROOT=root + "/cache",

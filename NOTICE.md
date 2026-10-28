@@ -13,12 +13,15 @@ Mei depends on the public Mei-maintained fork
 current source tree pins fork revision:
 
 ```text
-633fe166630ef04310aea7d5a1795555ab32970d
+f6510fc384bcddb5db9efc96e1dd5ab3afc49346
 ```
 
 The released Mei 0.6.1 build used the preceding pinned revision
-`fef563a55b4f22d4530b3439c1edb233cfc44a8f`; Mei 0.7.0 uses the current pin,
-which adds the request logit-processor seam used by structured output.
+`fef563a55b4f22d4530b3439c1edb233cfc44a8f`; Mei 0.7.0 through 0.9.0 used
+`633fe166630ef04310aea7d5a1795555ab32970d`, which added the request-logit
+processor seam. The 0.10.0 preview adds the three bounded-cache/loader fixes
+curated on `mei/0.10.0-rc.1` from that released pin. See
+`THIRD-PARTY-NOTICES.md` for the experimental Flint/JANGH copied-code notices.
 
 The fork's `main` contains all Mei-maintained commits ported from the former
 local patch queue — including `318a4e68` (rotating/companion stripped-boundary

@@ -28,7 +28,7 @@ SERVED_MODEL_ID="${MEI_SERVED_MODEL_ID:-ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit}"
 MODEL_PROFILE="${MEI_MODEL_PROFILE:-}"
 PORT="${MEI_PORT:-8024}"
 CONTEXT_CAP="${MEI_CONTEXT_CAP:-65536}"
-MAX_TOKENS="${MEI_MAX_TOKENS:-32768}"
+MAX_TOKENS="${MEI_MAX_TOKENS:-}"
 PREFILL_STEP_SIZE="${MEI_PREFILL_STEP_SIZE:-}"
 KV_BITS="${MEI_KV_BITS:-}"
 # Omit unset samplers: the server can then honor Flint's generation_config.json.
@@ -37,11 +37,14 @@ TEMPERATURE="${MEI_TEMPERATURE:-}"
 TOP_P="${MEI_TOP_P:-}"
 TOP_K="${MEI_TOP_K:-}"
 ENABLE_FLINT="${MEI_ENABLE_FLINT:-false}"
+ENABLE_FLINT_JANGH="${MEI_ENABLE_FLINT_JANGH:-false}"
 DRY_RUN=false
 EMIT_REASONING="${MEI_EMIT_REASONING:-true}"
-CACHE_REUSE="${MEI_CACHE_REUSE:-true}"
+CACHE_REUSE="${MEI_CACHE_REUSE:-}"
+CACHE_MODE="${MEI_CACHE_MODE:-}"
+MLXPRESS_POLICY="${MEI_MLXPRESS:-}"
 MEMORY_LIMIT_BYTES="${MEI_MEMORY_LIMIT_BYTES:-0}"
-CACHE_LIMIT_BYTES="${MEI_CACHE_LIMIT_BYTES:-0}"
+CACHE_LIMIT_BYTES="${MEI_CACHE_LIMIT_BYTES:-}"
 KV_CACHE_DIR="${MEI_KV_CACHE_DIR:-}"
 LOG_REQUESTS="${MEI_LOG_REQUESTS:-false}"
 SSM_REDERIVE="${MEI_SSM_REDERIVE:-true}"
@@ -60,6 +63,11 @@ Usage: start_mei_server.sh [options]
 
 The full launch configuration is expressed through MEI_* environment
 variables (see the script); the bench config yaml sets them explicitly.
+
+Runtime policy:
+  MEI_CACHE_MODE=auto|off|memory|disk
+  MEI_MLXPRESS=off|auto|1..95
+  MEI_CACHE_LIMIT_BYTES=N      omit for backend default; explicit0 disables pool
 
 Model profile:
   MEI_MODEL_PROFILE=<name>     name the served model and get its measured
@@ -93,11 +101,16 @@ fi
 
 ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
   --host 127.0.0.1 --port "$PORT"
-  --context-cap "$CONTEXT_CAP" --max-tokens "$MAX_TOKENS"
-  --enable-flint "$ENABLE_FLINT"
-  --emit-reasoning "$EMIT_REASONING" --cache-reuse "$CACHE_REUSE"
-  --memory-limit-bytes "$MEMORY_LIMIT_BYTES" --cache-limit-bytes "$CACHE_LIMIT_BYTES"
+  --context-cap "$CONTEXT_CAP"
+  --enable-flint "$ENABLE_FLINT" --enable-flint-jangh "$ENABLE_FLINT_JANGH"
+  --emit-reasoning "$EMIT_REASONING"
+  --memory-limit-bytes "$MEMORY_LIMIT_BYTES"
   --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+[[ -n "$MAX_TOKENS" ]] && ARGS+=(--max-tokens "$MAX_TOKENS")
+[[ -n "$CACHE_LIMIT_BYTES" ]] && ARGS+=(--cache-limit-bytes "$CACHE_LIMIT_BYTES")
+[[ -n "$CACHE_MODE" ]] && ARGS+=(--cache-mode "$CACHE_MODE")
+[[ -n "$CACHE_REUSE" ]] && ARGS+=(--cache-reuse "$CACHE_REUSE")
+[[ -n "$MLXPRESS_POLICY" ]] && ARGS+=(--mlxpress "$MLXPRESS_POLICY")
 [[ -n "$TEMPERATURE" ]] && ARGS+=(--temperature "$TEMPERATURE")
 [[ -n "$TOP_P" ]] && ARGS+=(--top-p "$TOP_P")
 [[ -n "$TOP_K" ]] && ARGS+=(--top-k "$TOP_K")

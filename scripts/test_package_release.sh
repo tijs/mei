@@ -54,7 +54,11 @@ assert_fail bash "$PACKAGER" 9.9.9 --skip-build
 # --- 2. packaging (skip-build uses .build/release/mei) -----------------------
 echo "== packaging (skip-build) =="
 if [[ "$(uname -m)" == "arm64" ]]; then
-  bash "$PACKAGER" "$VERSION" --skip-build
+  if [[ -n "${MEI_TEST_BINARY:-}" ]]; then
+    bash "$PACKAGER" "$VERSION" --binary "$MEI_TEST_BINARY"
+  else
+    bash "$PACKAGER" "$VERSION" --skip-build
+  fi
 else
   ok "skip packaging on non-arm64 host (no .build/release/mei expected)"
 fi
@@ -96,6 +100,9 @@ assert test -d "$B"
 assert test -x "$B/bin/mei"
 assert test -f "$B/bin/mlx.metallib"
 assert test -f "$B/LICENSE"
+assert test -f "$B/THIRD-PARTY-NOTICES.md"
+assert grep -q "Flint architecture reference" "$B/THIRD-PARTY-NOTICES.md"
+assert test -f "$B/docs/RUNTIME-POLICIES.md"
 assert test -f "$B/CHANGELOG.md"
 assert test -f "$B/README.md"
 # feature-contract doc: the release notes link docs/INFERENCE-SCHEDULING.md,

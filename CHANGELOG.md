@@ -4,6 +4,29 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+## [0.10.0-rc.1] - 2026-10-29
+
+Preview release for bounded prefix storage, explicit runtime policies and gated
+Flint/JANGH2 support. Stable remains 0.9.0 pending contender qualification.
+
+- Bound retained prefix storage and isolate rotating-cache restores; restore
+  safe replay boundaries for hybrid models.
+- Separate requested cache/weight policies from resolved settings in status.
+  Re-resolving a configuration does not turn defaults into explicit requests.
+- Refuse unsupported VLM metadata before loading weights; avoid a duplicate
+  Qwen text-only materialization and preserve the measured load peak.
+- Add default-off Flint standard-affine and JANGH2 loading plus an opt-in
+  fixed-token runtime comparison tool. No model-quality or speed claim follows.
+- Preserve absent versus explicit-zero allocator limits in both launchers;
+  forward cache mode and Flint JANGH2 options without conflicting defaults.
+- Include third-party notices and current runtime policy/model documentation in
+  downloadable binary and source bundles.
+
+Qwen3.6-35B-A3B is still resource-blocked on the current 32 GiB host. Its latest
+low-buffer admission reached sustained warning pressure before scoring. This
+preview is not a stable throughput qualification or a completed Qwen benchmark.
+See [release notes](docs/RELEASE-0.10.0-rc.1.md).
+
 ## [0.9.0] - 2026-10-13
 
 Opt-in bounded-overlap concurrency — the stage 5+ slice of the

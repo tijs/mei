@@ -86,7 +86,12 @@ public extension ServerConfig {
             throw ConfigError.invalidValue("MLXPress percentage must be from 1 to 95")
         }
         let requiresDisk = ModelOptimizationProfile.needsDiskKVTier(modelDirectory: modelDirectory)
-        if cacheMode != .auto, cacheReuseExplicit, cacheReuse != (cacheMode != .off) {
+        let autoNeedsDisk = requiresDisk || ssmAnchorBoundaryCount > 0
+        if disposableKVCache,
+           cacheMode == .off || cacheMode == .memory || (cacheMode == .auto && !autoNeedsDisk) {
+            kvCacheDir = ""
+        }
+        if cacheMode != .auto, let requested = cacheReuseRequested, requested != (cacheMode != .off) {
             throw ConfigError.invalidValue("--cache-mode conflicts with --cache-reuse; use one selector")
         }
         switch cacheMode {
@@ -94,7 +99,7 @@ public extension ServerConfig {
             guard kvCacheDir.isEmpty, !kvCacheDirExplicit else {
                 throw ConfigError.invalidValue("--cache-mode off conflicts with --kv-cache-dir")
             }
-            cacheReuse = false
+            cacheReuseValue = false
             cacheDecision = "explicit off"
         case .memory:
             guard kvCacheDir.isEmpty, !kvCacheDirExplicit else {
@@ -103,22 +108,27 @@ public extension ServerConfig {
             guard !requiresDisk, ssmAnchorBoundaryCount == 0 else {
                 throw ConfigError.invalidValue("this model or SSM anchors require disk-backed reuse; choose --cache-mode disk or off")
             }
-            cacheReuse = true
+            cacheReuseValue = true
             cacheDecision = "explicit memory"
         case .disk:
             guard !kvCacheDirExplicit || !kvCacheDir.isEmpty else {
                 throw ConfigError.invalidValue("--cache-mode disk requires a nonempty --kv-cache-dir or an omitted directory")
             }
-            cacheReuse = true
+            cacheReuseValue = true
             cacheDecision = "explicit disk"
             resolveDisposableDirectoryIfNeeded()
         case .auto:
-            guard cacheReuse else {
+            cacheReuseValue = cacheReuseRequested ?? true
+            guard cacheReuseValue else {
                 cacheDecision = "disabled by cache-reuse"
                 return
             }
             if !kvCacheDir.isEmpty {
-                if !disposableKVCache { cacheDecision = "explicit directory" }
+                if disposableKVCache {
+                    cacheDecision = requiresDisk ? "model requires disk-backed reuse" : "SSM anchors require disk-backed reuse"
+                } else {
+                    cacheDecision = "explicit directory"
+                }
             } else if requiresDisk || ssmAnchorBoundaryCount > 0 {
                 guard !kvCacheDirExplicit else {
                     throw ConfigError.invalidValue("empty --kv-cache-dir cannot provide required disk reuse; choose --cache-mode off")

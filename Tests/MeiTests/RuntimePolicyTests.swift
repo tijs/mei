@@ -89,6 +89,42 @@ final class RuntimePolicyTests: XCTestCase {
         XCTAssertFalse(explicit.disposableKVCache)
     }
 
+    func testChangingOnlyModeDoesNotInventLegacyRequests() throws {
+        var config = try parse(["--cache-mode", "off"])
+        config.cacheMode = .disk
+        try config.resolveRuntimePolicies()
+        let firstDirectory = config.kvCacheDir
+        XCTAssertTrue(config.cacheReuse)
+        XCTAssertTrue(config.disposableKVCache)
+        config.cacheMode = .memory
+        try config.resolveRuntimePolicies()
+        XCTAssertEqual(config.effectiveCacheMode, .memory)
+        XCTAssertEqual(config.kvCacheDir, "")
+        config.cacheMode = .off
+        try config.resolveRuntimePolicies()
+        config.cacheMode = .auto
+        try config.resolveRuntimePolicies()
+        XCTAssertEqual(config.effectiveCacheMode, .memory)
+        config.cacheMode = .disk
+        try config.resolveRuntimePolicies()
+        XCTAssertNotEqual(config.kvCacheDir, firstDirectory)
+        config.cacheMode = .off
+        try config.resolveRuntimePolicies()
+        XCTAssertEqual(config.effectiveCacheMode, .off)
+    }
+
+    func testAutoDiscardsOnlyGeneratedDiskDirectoryWhenNoLongerNeeded() throws {
+        var config = try parse(["--cache-mode", "disk"])
+        config.cacheMode = .auto
+        try config.resolveRuntimePolicies()
+        XCTAssertEqual(config.effectiveCacheMode, .memory)
+        let explicit = try parse(["--kv-cache-dir", "/chosen"])
+        XCTAssertEqual(explicit.effectiveCacheMode, .disk)
+        var legacy = try parse(["--cache-reuse", "false"])
+        legacy.cacheMode = .disk
+        XCTAssertThrowsError(try legacy.resolveRuntimePolicies())
+    }
+
     func testRequiredDiskPolicyAlsoAppliesToLibraryCallers() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
