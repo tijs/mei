@@ -64,3 +64,6 @@ The unit regressions validate policy selection, loader handoff and allocator
 application without loading a model. They do not prove lower Qwen residency,
 model accuracy or a completed benchmark. A fresh pinned, supervised admission
 is required before any new production-memory or performance claim.
+
+Startup/loadMemory records the measured load peak before resetting the counter
+for inference. Live allocator status remains the current inference epoch.

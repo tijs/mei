@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "5b2ffe15d7b88fe1eaebfbe51afcd81716f6a11f"
+            revision: "f6510fc384bcddb5db9efc96e1dd5ab3afc49346"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
@@ -55,6 +55,7 @@ let package = Package(
                 // `#huggingFaceTokenizerLoader()` bridge the Engine uses.
                 .product(name: "MLXHuggingFace", package: "vmlx-swift"),
                 .product(name: "VMLXTokenizers", package: "vmlx-swift"),
+                .product(name: "MLXVLM", package: "vmlx-swift"),
             ],
             exclude: ["Fixtures/JANGH2"]
         ),

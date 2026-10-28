@@ -1,0 +1,123 @@
+Test Suite 'Selected tests' started at 2026-10-29 00:03:57.902.
+Test Suite 'MeiTests.xctest' started at 2026-10-29 00:03:57.903.
+Test Suite 'AdmissionContractTests' started at 2026-10-29 00:03:57.903.
+Test Suite 'AdmissionContractTests' passed at 2026-10-29 00:03:57.908.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'CacheRestoreTrackerTests' started at 2026-10-29 00:03:57.908.
+Test Suite 'CacheRestoreTrackerTests' passed at 2026-10-29 00:03:57.909.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'CancellableStreamTests' started at 2026-10-29 00:03:57.909.
+Test Suite 'CancellableStreamTests' passed at 2026-10-29 00:03:57.916.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+Test Suite 'CompiledRoutedMoEDecodeOptOutTests' started at 2026-10-29 00:03:57.916.
+Test Suite 'CompiledRoutedMoEDecodeOptOutTests' passed at 2026-10-29 00:03:57.934.
+	 Executed 18 tests, with 0 failures (0 unexpected) in 0.016 (0.017) seconds
+Test Suite 'FlintConfigurationTests' started at 2026-10-29 00:03:57.934.
+Test Suite 'FlintConfigurationTests' passed at 2026-10-29 00:03:58.002.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.068 (0.068) seconds
+Test Suite 'FlintFeatureGateTests' started at 2026-10-29 00:03:58.002.
+Test Suite 'FlintFeatureGateTests' passed at 2026-10-29 00:03:58.066.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.063 (0.064) seconds
+Test Suite 'FlintNumericsTests' started at 2026-10-29 00:03:58.066.
+Test Suite 'FlintNumericsTests' passed at 2026-10-29 00:03:58.106.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.040 (0.040) seconds
+Test Suite 'FlintRuntimePathTests' started at 2026-10-29 00:03:58.106.
+Test Suite 'FlintRuntimePathTests' passed at 2026-10-29 00:03:58.107.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'FlintSyntheticTests' started at 2026-10-29 00:03:58.107.
+Test Suite 'FlintSyntheticTests' passed at 2026-10-29 00:03:58.209.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.101 (0.102) seconds
+Test Suite 'JANGHAdmissionTests' started at 2026-10-29 00:03:58.209.
+Test Suite 'JANGHAdmissionTests' passed at 2026-10-29 00:03:58.216.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+Test Suite 'JANGHContractTests' started at 2026-10-29 00:03:58.216.
+Test Suite 'JANGHContractTests' passed at 2026-10-29 00:03:58.217.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'JANGHLoaderTests' started at 2026-10-29 00:03:58.217.
+Test Suite 'JANGHLoaderTests' passed at 2026-10-29 00:03:58.295.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.077 (0.077) seconds
+Test Suite 'JANGHMemoryPolicyTests' started at 2026-10-29 00:03:58.295.
+Test Suite 'JANGHMemoryPolicyTests' passed at 2026-10-29 00:03:58.295.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'JANGHNumericalTests' started at 2026-10-29 00:03:58.295.
+Test Suite 'JANGHNumericalTests' passed at 2026-10-29 00:03:58.301.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.006 (0.006) seconds
+Test Suite 'JANGHRealPackParityTests' started at 2026-10-29 00:03:58.301.
+Test Suite 'JANGHRealPackParityTests' passed at 2026-10-29 00:03:58.302.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'JSONGrammarLogitProcessorTests' started at 2026-10-29 00:03:58.302.
+Test Suite 'JSONGrammarLogitProcessorTests' passed at 2026-10-29 00:03:58.329.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.026 (0.027) seconds
+Test Suite 'JSONGrammarProcessorTests' started at 2026-10-29 00:03:58.329.
+Test Suite 'JSONGrammarProcessorTests' passed at 2026-10-29 00:03:58.342.
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'JSONGrammarStateTests' started at 2026-10-29 00:03:58.342.
+Test Suite 'JSONGrammarStateTests' passed at 2026-10-29 00:03:58.358.
+	 Executed 43 tests, with 0 failures (0 unexpected) in 0.013 (0.016) seconds
+Test Suite 'JSONSchemaCompilerTests' started at 2026-10-29 00:03:58.358.
+Test Suite 'JSONSchemaCompilerTests' passed at 2026-10-29 00:03:58.371.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'ModelArtifactCheckTests' started at 2026-10-29 00:03:58.371.
+Test Suite 'ModelArtifactCheckTests' passed at 2026-10-29 00:03:58.374.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'ModelPullTests' started at 2026-10-29 00:03:58.374.
+Test Suite 'ModelPullTests' passed at 2026-10-29 00:03:58.375.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'OpenAITypesTests' started at 2026-10-29 00:03:58.375.
+Test Suite 'OpenAITypesTests' passed at 2026-10-29 00:03:58.380.
+	 Executed 17 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'PrefixCacheMemoryBudgetTests' started at 2026-10-29 00:03:58.380.
+Test Suite 'PrefixCacheMemoryBudgetTests' passed at 2026-10-29 00:03:58.561.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.181 (0.181) seconds
+Test Suite 'QuantizedRotatingKVCacheTests' started at 2026-10-29 00:03:58.561.
+Test Suite 'QuantizedRotatingKVCacheTests' passed at 2026-10-29 00:03:58.575.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.014 (0.014) seconds
+Test Suite 'RequestSchedulerTests' started at 2026-10-29 00:03:58.575.
+Test Suite 'RequestSchedulerTests' passed at 2026-10-29 00:03:58.950.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.372 (0.374) seconds
+Test Suite 'ResponseFormatTests' started at 2026-10-29 00:03:58.950.
+Test Suite 'ResponseFormatTests' passed at 2026-10-29 00:03:58.965.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.012 (0.015) seconds
+Test Suite 'RotatingPrefixReplayTests' started at 2026-10-29 00:03:58.965.
+Test Suite 'RotatingPrefixReplayTests' passed at 2026-10-29 00:03:59.580.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.615 (0.615) seconds
+Test Suite 'RouterSSEToolCallIndexingTests' started at 2026-10-29 00:03:59.580.
+Test Suite 'RouterSSEToolCallIndexingTests' passed at 2026-10-29 00:03:59.581.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'RuntimePolicyTests' started at 2026-10-29 00:03:59.581.
+Test Suite 'RuntimePolicyTests' passed at 2026-10-29 00:03:59.584.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'SSMAnchorBoundariesTests' started at 2026-10-29 00:03:59.584.
+Test Suite 'SSMAnchorBoundariesTests' passed at 2026-10-29 00:03:59.586.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'SchemaMatrixTests' started at 2026-10-29 00:03:59.586.
+Test Suite 'SchemaMatrixTests' passed at 2026-10-29 00:03:59.745.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.158 (0.159) seconds
+Test Suite 'ServerConfigParsingTests' started at 2026-10-29 00:03:59.746.
+Test Suite 'ServerConfigParsingTests' passed at 2026-10-29 00:03:59.788.
+	 Executed 38 tests, with 0 failures (0 unexpected) in 0.040 (0.042) seconds
+Test Suite 'StructuredGenerationPipelineTests' started at 2026-10-29 00:03:59.788.
+Test Suite 'StructuredGenerationPipelineTests' passed at 2026-10-29 00:03:59.863.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.073 (0.075) seconds
+Test Suite 'StructuredGenerationTests' started at 2026-10-29 00:03:59.863.
+Test Suite 'StructuredGenerationTests' passed at 2026-10-29 00:03:59.871.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'StructuredOutputModelCompatTests' started at 2026-10-29 00:03:59.872.
+Test Suite 'StructuredOutputModelCompatTests' passed at 2026-10-29 00:03:59.876.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'StructuredOutputModelMatrixTests' started at 2026-10-29 00:03:59.876.
+Test Suite 'StructuredOutputModelMatrixTests' passed at 2026-10-29 00:04:17.665.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 17.789 (17.789) seconds
+Test Suite 'TokenizerFragmentTableTests' started at 2026-10-29 00:04:17.665.
+Test Suite 'TokenizerFragmentTableTests' passed at 2026-10-29 00:04:17.668.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'ToolArgumentNormalizerTests' started at 2026-10-29 00:04:17.668.
+Test Suite 'ToolArgumentNormalizerTests' passed at 2026-10-29 00:04:17.671.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'VLMFactoryPreflightTests' started at 2026-10-29 00:04:17.671.
+Test Suite 'VLMFactoryPreflightTests' passed at 2026-10-29 00:04:17.680.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'MeiTests.xctest' passed at 2026-10-29 00:04:17.680.
+	 Executed 443 tests, with 2 tests skipped and 0 failures (0 unexpected) in 19.748 (19.777) seconds
+Test Suite 'Selected tests' passed at 2026-10-29 00:04:17.680.
+	 Executed 443 tests, with 2 tests skipped and 0 failures (0 unexpected) in 19.748 (19.778) seconds

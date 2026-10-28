@@ -44,6 +44,20 @@ final class RuntimePolicyTests: XCTestCase {
         }
     }
 
+    func testLoadPeakIsCapturedBeforeInferencePeakReset() {
+        Memory.peakMemory = 0
+        let values = MLXArray.ones([1024, 1024], dtype: .float32)
+        eval(values)
+        withExtendedLifetime(values) {
+            let before = Memory.snapshot()
+            XCTAssertGreaterThan(before.peakMemory, 0)
+            let captured = Engine.captureLoadMemorySnapshot()
+            XCTAssertEqual(captured.peakMemory, before.peakMemory)
+            XCTAssertEqual(captured.activeMemory, before.activeMemory)
+            XCTAssertEqual(Memory.peakMemory, 0)
+        }
+    }
+
     func testModesAndLegacyConflictsAreOrderIndependent() throws {
         XCTAssertEqual(try parse().effectiveCacheMode, .memory)
         XCTAssertEqual(try parse(["--cache-mode", "off"]).effectiveCacheMode, .off)

@@ -1,0 +1,30 @@
+Test Suite 'Selected tests' started at 2026-10-28 23:53:42.376.
+Test Suite 'MeiTests.xctest' started at 2026-10-28 23:53:42.377.
+Test Suite 'VLMFactoryPreflightTests' started at 2026-10-28 23:53:42.377.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMalformedProcessorRefusesBeforeModelCreation]' started.
+/Users/tijs/projects/mei-flint-jangh2-20261025/Tests/MeiTests/VLMFactoryPreflightTests.swift:83: error: -[MeiTests.VLMFactoryPreflightTests testMalformedProcessorRefusesBeforeModelCreation] : failed - Expected processor decode error before allocation, got modelCreationReached
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMalformedProcessorRefusesBeforeModelCreation]' failed (1.368 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMissingProcessorRefusesBeforeModelCreation]' started.
+/Users/tijs/projects/mei-flint-jangh2-20261025/Tests/MeiTests/VLMFactoryPreflightTests.swift:74: error: -[MeiTests.VLMFactoryPreflightTests testMissingProcessorRefusesBeforeModelCreation] : failed - Expected processor error before allocation, got modelCreationReached
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMissingProcessorRefusesBeforeModelCreation]' failed (0.002 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testNullVisionDeclarationIsTextOnly]' started.
+/Users/tijs/projects/mei-flint-jangh2-20261025/Tests/MeiTests/VLMFactoryPreflightTests.swift:48: error: -[MeiTests.VLMFactoryPreflightTests testNullVisionDeclarationIsTextOnly] : failed - Null tower must refuse before allocation, got modelCreationReached
+Test Case '-[MeiTests.VLMFactoryPreflightTests testNullVisionDeclarationIsTextOnly]' failed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testTextOnlyQwenRefusesVisionFactoryBeforeModelCreation]' started.
+/Users/tijs/projects/mei-flint-jangh2-20261025/Tests/MeiTests/VLMFactoryPreflightTests.swift:40: error: -[MeiTests.VLMFactoryPreflightTests testTextOnlyQwenRefusesVisionFactoryBeforeModelCreation] : failed - Expected metadata refusal before allocation, got modelCreationReached
+Test Case '-[MeiTests.VLMFactoryPreflightTests testTextOnlyQwenRefusesVisionFactoryBeforeModelCreation]' failed (0.002 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownModelPreservesUnsupportedTypeError]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownModelPreservesUnsupportedTypeError]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownProcessorRefusesBeforeModelCreation]' started.
+/Users/tijs/projects/mei-flint-jangh2-20261025/Tests/MeiTests/VLMFactoryPreflightTests.swift:92: error: -[MeiTests.VLMFactoryPreflightTests testUnknownProcessorRefusesBeforeModelCreation] : failed - Expected processor registration refusal before allocation, got modelCreationReached
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownProcessorRefusesBeforeModelCreation]' failed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testValidProcessorMetadataReachesModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testValidProcessorMetadataReachesModelCreation]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testVisionQwenStillReachesModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testVisionQwenStillReachesModelCreation]' passed (0.001 seconds).
+Test Suite 'VLMFactoryPreflightTests' failed at 2026-10-28 23:53:43.756.
+	 Executed 8 tests, with 5 failures (0 unexpected) in 1.379 (1.380) seconds
+Test Suite 'MeiTests.xctest' failed at 2026-10-28 23:53:43.756.
+	 Executed 8 tests, with 5 failures (0 unexpected) in 1.379 (1.380) seconds
+Test Suite 'Selected tests' failed at 2026-10-28 23:53:43.756.
+	 Executed 8 tests, with 5 failures (0 unexpected) in 1.379 (1.381) seconds

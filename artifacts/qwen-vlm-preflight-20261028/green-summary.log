@@ -1,0 +1,31 @@
+Test Suite 'Selected tests' started at 2026-10-28 23:59:51.776.
+Test Suite 'MeiTests.xctest' started at 2026-10-28 23:59:51.776.
+Test Suite 'RuntimePolicyTests' started at 2026-10-28 23:59:51.777.
+Test Suite 'RuntimePolicyTests' passed at 2026-10-28 23:59:51.803.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.025 (0.026) seconds
+Test Suite 'ServerConfigParsingTests' started at 2026-10-28 23:59:51.803.
+Test Suite 'ServerConfigParsingTests' passed at 2026-10-28 23:59:51.848.
+	 Executed 38 tests, with 0 failures (0 unexpected) in 0.043 (0.045) seconds
+Test Suite 'VLMFactoryPreflightTests' started at 2026-10-28 23:59:51.848.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMalformedProcessorRefusesBeforeModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMalformedProcessorRefusesBeforeModelCreation]' passed (0.002 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMissingProcessorRefusesBeforeModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testMissingProcessorRefusesBeforeModelCreation]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testNullVisionDeclarationIsTextOnly]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testNullVisionDeclarationIsTextOnly]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testTextOnlyQwenRefusesVisionFactoryBeforeModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testTextOnlyQwenRefusesVisionFactoryBeforeModelCreation]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownModelPreservesUnsupportedTypeError]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownModelPreservesUnsupportedTypeError]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownProcessorRefusesBeforeModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testUnknownProcessorRefusesBeforeModelCreation]' passed (0.001 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testValidProcessorMetadataReachesModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testValidProcessorMetadataReachesModelCreation]' passed (0.002 seconds).
+Test Case '-[MeiTests.VLMFactoryPreflightTests testVisionQwenStillReachesModelCreation]' started.
+Test Case '-[MeiTests.VLMFactoryPreflightTests testVisionQwenStillReachesModelCreation]' passed (0.001 seconds).
+Test Suite 'VLMFactoryPreflightTests' passed at 2026-10-28 23:59:51.858.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.010 (0.010) seconds
+Test Suite 'MeiTests.xctest' passed at 2026-10-28 23:59:51.858.
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.078 (0.082) seconds
+Test Suite 'Selected tests' passed at 2026-10-28 23:59:51.859.
+	 Executed 52 tests, with 0 failures (0 unexpected) in 0.078 (0.083) seconds

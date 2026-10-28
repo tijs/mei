@@ -176,9 +176,6 @@ public actor Engine {
             print("mei: prefix cache disabled (--cache-reuse false)")
         }
         fflush(stdout)
-        // Peak memory is program-wide; reset it after weights are resident so
-        // per-run peak numbers describe inference, not tokenizer/model init.
-        Memory.peakMemory = 0
         // loadModelContainer's LoadConfiguration applies its own memoryLimit
         // (default .fraction(0.70) of physical RAM, ~22.4GB here) over any
         // limit set before load. Re-assert the operator's explicit limit so
@@ -186,7 +183,15 @@ public actor Engine {
         // inference (otherwise the 35B at 24GB active would hang alloca on
         // the 22.4GB default).
         applyExplicitMemoryLimits(config)
-        return Engine(container: container, config: config, loadMemory: Memory.snapshot())
+        return Engine(container: container, config: config, loadMemory: captureLoadMemorySnapshot())
+    }
+
+    /// Preserve the actual load peak before starting the inference peak epoch.
+    /// Resetting first made startup/loadMemory report an impossible zero peak.
+    static func captureLoadMemorySnapshot() -> Memory.Snapshot {
+        let snapshot = Memory.snapshot()
+        Memory.peakMemory = 0
+        return snapshot
     }
 
     /// Model loading can reset allocator policy. Reapply each operator limit
