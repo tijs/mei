@@ -74,7 +74,7 @@ public final class Router: @unchecked Sendable {
 
     private func status() async -> RouteResult {
         let report = Engine.liveMemoryReport()
-        let cache = await engine.cacheStats().map { stats in
+        let cache = engine.cacheStats().map { stats in
             MeiCacheStatus(
                 pagedEnabled: stats.pagedEnabled,
                 pagedHits: stats.pagedStats?.cacheHits ?? 0,

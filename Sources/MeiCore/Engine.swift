@@ -153,19 +153,16 @@ public actor Engine {
             let tier = diskEnabled ? "disk at \(config.kvCacheDir)" : "no disk"
             print("mei: prefix cache enabled (paged in-memory + \(tier), retained budget \(config.prefixCacheLimitBytes) bytes); topology \(topology.topologyTags.joined(separator: " "))")
 
-            // Report settings that this topology will ignore. A flag that is
-            // accepted, passed through and then silently dropped is the worst
-            // kind: it looks configured and is not. Two known cases, both
-            // measured: KV quantization is a no-op wherever recurrent
-            // (Mamba/GatedDelta) layers are present, and cross-conversation
-            // anchors need a durable tier the paged in-memory one cannot
-            // provide for those same topologies.
+            // Recurrent state is distinct from the attention KV cache. The
+            // pinned runtime can quantize supported attention layers in a
+            // hybrid topology, while recurrent state remains unquantized.
+            // Cross-conversation anchors still require a durable tier.
             let tags = topology.topologyTags.joined(separator: " ")
             let hasRecurrentLayers = tags.contains("mambaLayers")
                 && !tags.contains("mambaLayers=0")
             if hasRecurrentLayers, config.kvBits != nil {
-                print("mei: NOTE --kv-bits is ignored on this topology "
-                    + "(recurrent layers present); KV stays fp16")
+                print("mei: NOTE --kv-bits may quantize supported attention "
+                    + "caches; recurrent state is not KV-quantized")
             }
             if !diskEnabled, config.ssmAnchorBoundaryCount > 0, hasRecurrentLayers {
                 print("mei: NOTE --ssm-anchor-boundaries cannot take effect "
@@ -240,8 +237,11 @@ public actor Engine {
     }
 
     /// Live coordinator counters for /v1/mei/status (nil when cache reuse is
-    /// disabled): paged hit/miss/eviction and SSM companion stats.
-    public func cacheStats() -> CacheCoordinatorStatsSnapshot? {
+    /// disabled): paged hit/miss/eviction and SSM companion stats. The
+    /// container protects coordinator access, and the coordinator exposes a
+    /// thread-safe snapshot. Avoid waiting for the inference actor while it
+    /// is running a synchronous prefill.
+    public nonisolated func cacheStats() -> CacheCoordinatorStatsSnapshot? {
         container.cacheCoordinator?.snapshotStats()
     }
 

@@ -8,6 +8,16 @@ import XCTest
 /// decoding and mapping — no Engine or model.
 final class AdmissionContractTests: XCTestCase {
 
+    func testCacheStatsCanBeReadWithoutEnteringInferenceActor() {
+        // This synchronous, nonisolated closure cannot call an actor-isolated
+        // method. Compilation therefore guards the status route's isolation
+        // contract without loading a model or starting an inference server.
+        let read: @Sendable (Engine) -> Void = { engine in
+            _ = engine.cacheStats()
+        }
+        withExtendedLifetime(read) {}
+    }
+
     // MARK: - mei_priority request extension
 
     private func chatBody(_ extra: String = "") -> Data {
