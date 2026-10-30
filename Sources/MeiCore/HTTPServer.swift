@@ -51,16 +51,16 @@ final class ResponseWriter: @unchecked Sendable {
     /// Stream one chat completion as SSE.
     ///
     /// The response headers are deliberately NOT sent until the engine
-    /// produces its first event: any failure before the first event — an
+    /// produces its first nonempty wire frame: any failure before that — an
     /// admission refusal (429 `queue_full`, 503 `queue_timeout`), a
     /// pre-generation engine failure, or a structured-constraint failure that
     /// emitted nothing — is answerable with a real HTTP status, not a 200
-    /// whose SSE body turns out empty. Once the first event has been
+    /// whose SSE body turns out empty. Once the first frame has been
     /// produced the status is committed and later failures keep the existing
     /// contract — HTTP 200 with an in-band `stream_error` frame.
     ///
     /// Consequence for clients: the response head is not written until the
-    /// first event, so a client-side header/response timeout must cover the
+    /// first wire frame, so a client-side header/response timeout must cover the
     /// whole queue wait plus time-to-first-token; a shorter timeout gives up
     /// on requests the server is still processing normally.
     ///
@@ -70,19 +70,27 @@ final class ResponseWriter: @unchecked Sendable {
     /// no client left to answer, so the channel is simply closed.
     func streamSSE(request: ChatRequest, engine: Engine, config: ServerConfig) async {
         let stream = await engine.chatRunStreaming(request: request)
+        await streamSSE(stream: stream, request: request, config: config)
+    }
+
+    /// Kept separate so wire behavior can be exercised with deterministic
+    /// progress and failure events without a model or network listener.
+    func streamSSE(
+        stream: AsyncThrowingStream<StreamEvent, Error>, request: ChatRequest, config: ServerConfig
+    ) async {
         var started = false
         do {
             for try await event in stream {
-                if !started {
-                    begin(.ok, headers: router.sseHeaders())
-                    started = true
-                }
                 let frame = router.sseFrame(
                     id: chunkID, event: event,
                     model: config.servedModelID,
                     emitReasoning: config.emitReasoning,
                     includeUsage: request.includeUsage)
                 if !frame.isEmpty {
+                    if !started {
+                        begin(.ok, headers: router.sseHeaders())
+                        started = true
+                    }
                     body(frame)
                 }
             }

@@ -56,6 +56,8 @@ let package = Package(
                 .product(name: "MLXHuggingFace", package: "vmlx-swift"),
                 .product(name: "VMLXTokenizers", package: "vmlx-swift"),
                 .product(name: "MLXVLM", package: "vmlx-swift"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
             ],
             exclude: ["Fixtures/JANGH2"]
         ),
