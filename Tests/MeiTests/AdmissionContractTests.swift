@@ -1,4 +1,5 @@
 import XCTest
+import MLXLMCommon
 
 @testable import MeiCore
 
@@ -14,8 +15,31 @@ final class AdmissionContractTests: XCTestCase {
         // contract without loading a model or starting an inference server.
         let read: @Sendable (Engine) -> Void = { engine in
             _ = engine.cacheStats()
+            _ = engine.cacheStatus()
         }
         withExtendedLifetime(read) {}
+    }
+
+    func testLightweightCacheStatusMatchesFullSnapshot() throws {
+        XCTAssertNil(Engine.cacheStatus(nil))
+        let coordinator = CacheCoordinator(config: CacheCoordinatorConfig(
+            usePagedCache: true, enableDiskCache: false, pagedBlockSize: 4, maxCacheBlocks: 20))
+        for incompatible in [false, true] {
+            coordinator.setPagedIncompatible(incompatible)
+            let full = coordinator.snapshotStats()
+            let status = try XCTUnwrap(Engine.cacheStatus(coordinator))
+            XCTAssertEqual(status.pagedEnabled, !incompatible)
+            XCTAssertEqual(status.pagedEnabled, full.pagedEnabled)
+            XCTAssertEqual(status.pagedHits, full.pagedStats?.cacheHits ?? 0)
+            XCTAssertEqual(status.pagedMisses, full.pagedStats?.cacheMisses ?? 0)
+            XCTAssertEqual(status.pagedEvictions, full.pagedStats?.evictions ?? 0)
+            XCTAssertEqual(status.pagedResidentBytes, full.pagedStats?.residentBytes)
+            XCTAssertEqual(status.pagedCompanionBytes, full.pagedStats?.companionBytes)
+            XCTAssertEqual(status.pagedMaxResidentBytes, full.pagedStats?.maxResidentBytes)
+            XCTAssertEqual(status.ssmHits, full.ssmStats.hits)
+            XCTAssertEqual(status.ssmMisses, full.ssmStats.misses)
+            XCTAssertEqual(status.isHybrid, full.isHybrid)
+        }
     }
 
     // MARK: - mei_priority request extension

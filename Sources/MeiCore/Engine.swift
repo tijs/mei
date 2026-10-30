@@ -245,6 +245,31 @@ public actor Engine {
         container.cacheCoordinator?.snapshotStats()
     }
 
+    /// Status only exposes paged and recurrent counters. Avoid computing the
+    /// disk-quota snapshot, which can take the shared quota lock and query the
+    /// disk index even though the endpoint does not return those figures.
+    nonisolated func cacheStatus() -> MeiCacheStatus? {
+        Self.cacheStatus(container.cacheCoordinator)
+    }
+
+    static func cacheStatus(_ coordinator: CacheCoordinator?) -> MeiCacheStatus? {
+        guard let coordinator else { return nil }
+        let pagedEnabled = coordinator.pagedCache != nil && !coordinator.isPagedIncompatible
+        let paged = pagedEnabled ? coordinator.pagedCache?.snapshotStats() : nil
+        let ssm = coordinator.ssmStateCache.snapshotStats()
+        return MeiCacheStatus(
+            pagedEnabled: pagedEnabled,
+            pagedHits: paged?.cacheHits ?? 0,
+            pagedMisses: paged?.cacheMisses ?? 0,
+            pagedEvictions: paged?.evictions ?? 0,
+            pagedResidentBytes: paged?.residentBytes,
+            pagedCompanionBytes: paged?.companionBytes,
+            pagedMaxResidentBytes: paged?.maxResidentBytes,
+            ssmHits: ssm.hits,
+            ssmMisses: ssm.misses,
+            isHybrid: coordinator.isHybrid)
+    }
+
     // MARK: - Chat completion
 
     public func chatRun(request: ChatRequest) async throws -> GenerationRun {
