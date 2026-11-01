@@ -14,6 +14,11 @@ such as Groot are not labeled Ornith. Existing named model profiles, legacy
 Swift aliases and numeric defaults remain unchanged. No extra CLI setting is
 required. The vmlx pin remains f6510fc384bcddb5db9efc96e1dd5ab3afc49346.
 
+Native probe result merging now protects its verdict from HTTP/detail-field
+collisions. Exact-context tokenizer loading matches the benchmark, with bounded
+metadata-selected overrides. The existing raw tool-history replay gate remains.
+All 20 exporter/probe Python tests pass without model or network use.
+
 Full offline and live native evidence, exact binary/Metal hashes and remaining
 qualification limits will be recorded before publication. Benchmark scores on
 older pinned runtime builds are not acceptance evidence for this new binary.

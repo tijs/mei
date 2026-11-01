@@ -13,6 +13,10 @@ All notable changes to Mei are documented here.
   precision and record hashes. Output is deterministic across Python hash seeds;
   unsupported quantization modes and contradictory metadata are refused.
 
+- Keep native-probe pass/fail verdicts separate from HTTP status details, and
+  use the same metadata-selected tokenizer loading as the benchmark. Expected
+  errors cannot overwrite a probe verdict; tool-history replay coverage remains.
+
 ## [0.10.0-rc.1] - 2026-10-29
 
 Preview release for bounded prefix storage, explicit runtime policies and gated

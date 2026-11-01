@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Black-box acceptance and performance probes for one isolated Mei model.
 
-Mirrors local-model-bench's runner/probe_omlx.py contract so the same
+Uses the shared local-model-bench acceptance contract so the same
 validation logic gates Mei: exact /v1/models identity, plain completion,
 structured add-numbers tool calls (non-streaming AND streaming), cache reuse
 reporting, and the exact-token context-cap 65536 pass / 65537 reject gate.
@@ -21,6 +21,7 @@ import json
 import time
 import urllib.error
 import urllib.request
+from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 
@@ -125,36 +126,96 @@ def validate_add_call(response: dict[str, Any]) -> dict[str, Any]:
     return {"name": function["name"], "arguments": arguments, "finish_reason": finish_reason}
 
 
-def exact_prompt(tokenizer_path: Path, target: int) -> str:
+def _read_json_object(path: Path) -> dict[str, Any] | None:
+    """Read a JSON file as a dict; None on missing/corrupt/type mismatch."""
+    try:
+        with path.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+# The staged Bonsai tokenizer declares a custom model type (unknown to
+# transformers) but the real Qwen2 tokenizer contract. Detection is
+# metadata-based — never a model-name substring — and the override stays
+# default-off for every other directory.
+PRISM_QWEN35_MODEL_TYPE = "prism_hadamard_qwen35"
+PRISM_QWEN35_TOKENIZER_CLASS = "Qwen2Tokenizer"
+
+
+def tokenizer_override_kwargs(tokenizer_path: Path) -> dict[str, Any] | None:
+    """Explicit-load kwargs for one narrowly scoped custom tokenizer.
+
+    Only a directory whose own metadata carries both halves of the staged
+    Bonsai fingerprint — config.json `model_type` ``prism_hadamard_qwen35``
+    AND tokenizer_config.json `tokenizer_class` ``Qwen2Tokenizer`` — gets
+    the override. transformers' `fix_mistral_regex=True` is the supported
+    correction for the Mistral-derived pre-tokenizer regex these
+    Qwen2-lineage tokenizer.json files ship with; it silences the
+    incorrect-regex warning without touching the staged files. Any other
+    directory (or unreadable metadata) returns None so the generic
+    AutoTokenizer path stays exactly as before.
+    """
+    config = _read_json_object(Path(tokenizer_path) / "config.json")
+    tokenizer_config = _read_json_object(Path(tokenizer_path) / "tokenizer_config.json")
+    if (
+        config is not None
+        and tokenizer_config is not None
+        and config.get("model_type") == PRISM_QWEN35_MODEL_TYPE
+        and tokenizer_config.get("tokenizer_class") == PRISM_QWEN35_TOKENIZER_CLASS
+    ):
+        return {"fix_mistral_regex": True}
+    return None
+
+
+def load_exact_prompt_tokenizer(tokenizer_path: Path):
+    """Load the probe tokenizer, warning-free where the custom model type allows it.
+
+    AutoTokenizer resolves the custom `prism_hadamard_qwen35` model type as
+    unknown (model-type warning) and, because the staged config.json carries
+    no transformers_version, additionally flags a false Mistral-regex
+    warning. For that exact metadata fingerprint only, load the real Qwen2
+    tokenizer class directly with fix_mistral_regex=True. A failure of that
+    explicit load is surfaced as a RuntimeError chaining the original
+    exception, never silently routed to AutoTokenizer — the fallback would
+    reintroduce the model-type warning while the probe appears to work.
+    Every other directory loads AutoTokenizer with trust_remote_code=False
+    and fix_mistral_regex=True, mirroring the authoritative mei-openai-p0
+    probe so the incorrect-regex warning stays silenced for Qwen2-lineage
+    tokenizer.json directories without any metadata fingerprint.
+    """
+    override = tokenizer_override_kwargs(tokenizer_path)
+    if override is not None:
+        try:
+            from transformers import Qwen2Tokenizer  # type: ignore[import-not-found]
+
+            return Qwen2Tokenizer.from_pretrained(tokenizer_path, **override)
+        except Exception as exc:
+            raise RuntimeError(
+                f"matched Bonsai tokenizer {tokenizer_path} failed its explicit "
+                f"Qwen2Tokenizer load (model_type={PRISM_QWEN35_MODEL_TYPE!r}, "
+                f"tokenizer_class={PRISM_QWEN35_TOKENIZER_CLASS!r}, "
+                f"kwargs={override!r}); refusing to silently fall back to "
+                "AutoTokenizer because that would reintroduce the model-type "
+                "warning while the probe appears to work"
+            ) from exc
     from transformers import AutoTokenizer  # type: ignore[import-not-found]
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=False)
+    return AutoTokenizer.from_pretrained(
+        tokenizer_path, trust_remote_code=False, fix_mistral_regex=True
+    )
+
+
+def exact_prompt(tokenizer_path: Path, target: int) -> str:
+    tokenizer = load_exact_prompt_tokenizer(tokenizer_path)
     unit = " hello"
     if len(tokenizer.encode(unit, add_special_tokens=False)) != 1:
         raise RuntimeError("the exact-token prompt unit is not one token for this tokenizer")
-
-    # Count the way the SERVER counts, which is with special tokens. This used
-    # to build and verify with add_special_tokens=False, so for any tokenizer
-    # that prepends a BOS the server saw target+1 and the exact-cap probe failed
-    # on a prompt the harness believed was exactly at the cap.
-    #
-    # Measured 2026-09-09: Ornith 1.5 and Qwen 3.6 text-only add nothing
-    # (100 -> 100), Laguna XS 2.1 adds one (100 -> 101). So the probe passed
-    # 12/12 on the first two and reported a false failure on Laguna, where the
-    # server had correctly rejected 65537 tokens against a 65536 cap. The server
-    # was right every time; the harness was measuring a different quantity.
-    overhead = len(tokenizer.encode(unit, add_special_tokens=True)) - 1
-    units = target - overhead
-    if units < 1:
-        raise RuntimeError(
-            f"context cap {target} is too small for this tokenizer's "
-            f"{overhead}-token special-token overhead")
-    prompt = unit * units
-    measured = len(tokenizer.encode(prompt, add_special_tokens=True))
+    prompt = unit * target
+    measured = len(tokenizer.encode(prompt, add_special_tokens=False))
     if measured != target:
-        raise RuntimeError(
-            f"exact-token prompt measured {measured} with special tokens, "
-            f"expected {target} (special-token overhead {overhead})")
+        raise RuntimeError(f"exact-token prompt measured {measured}, expected {target}")
     return prompt
 
 
@@ -162,13 +223,32 @@ def probe(name: str, output: dict[str, Any], fn) -> None:
     started = time.monotonic()
     try:
         detail = fn()
-        output["probes"][name] = {"status": "passed", "elapsed_seconds": time.monotonic() - started, **detail}
-    except BaseException as exc:
+        # Collision-safe merge: `status` and `elapsed_seconds` are reserved
+        # per-probe schema keys owned by this wrapper, so probe detail can
+        # never clobber the pass/fail verdict or the timing. A numeric HTTP
+        # status code an expected-rejection probe carries in detail (e.g.
+        # {"status": 400}) is preserved as `http_status`, distinct from the
+        # per-probe `status` verdict.
+        entry = dict(detail) if isinstance(detail, dict) else {"detail": detail}
+        raw_status = entry.pop("status", None)
+        if isinstance(raw_status, int) and "http_status" not in entry:
+            entry["http_status"] = raw_status
+        entry["status"] = "passed"
+        entry["elapsed_seconds"] = time.monotonic() - started
+        output["probes"][name] = entry
+    except (AssertionError, OSError, ValueError, RuntimeError, TypeError, KeyError, HTTPException) as exc:
         output["probes"][name] = {
             "status": "failed",
             "elapsed_seconds": time.monotonic() - started,
             "error": f"{type(exc).__name__}: {exc}",
         }
+
+
+def aggregate_status(probes: dict[str, dict[str, Any]]) -> str:
+    """Aggregate verdict: 'passed' only when every recorded probe passed."""
+    if not probes:
+        return "failed"
+    return "passed" if all(p.get("status") == "passed" for p in probes.values()) else "failed"
 
 
 def main() -> int:
@@ -475,9 +555,7 @@ def main() -> int:
             probe("context_over_cap_rejected", result, context_over_cap)
 
     result["finished_epoch"] = time.time()
-    result["status"] = "passed" if all(
-        p["status"] == "passed" for p in result["probes"].values()
-    ) and result["probes"] else "failed"
+    result["status"] = aggregate_status(result["probes"])
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["status"] == "passed" else 1
