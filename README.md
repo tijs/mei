@@ -20,15 +20,13 @@ runtime, not a general MLX gateway — you run one `mei` server per model.
 
 **License:** MIT. Model weights are never bundled; see
 [`NOTICE.md`](NOTICE.md). Current stable release: **0.9.0**.
-Preview: [**0.10.0-rc.1**](docs/RELEASE-0.10.0-rc.1.md), with bounded prefix
-storage, explicit runtime policies and gated Flint/JANGH2 support. Install the
-preview independently with `brew install tijs/tap/mei-preview`, then run
-`mei-preview --version`. Qwen memory and throughput qualification remains open;
-this preview does not replace stable `mei`.
-
-Next preview: **0.10.0-rc.2**, pending native acceptance and publication, adds
-[verified text-only bundle preparation](tools/export_qwen_text.md) and accurate
-Qwen architecture policy names without changing execution defaults.
+Preview: [**0.10.0-rc.2**](docs/RELEASE-0.10.0-rc.2.md), with verified
+text-only bundle preparation, a pinned Groot pull/profile entry and clearer
+Qwen architecture names. Install separately with
+`brew install tijs/tap/mei-preview`, then run `mei-preview --version`.
+Stable `mei` remains 0.9.0 while contender correctness and throughput
+qualification is completed. Native release checks passed on the prepared Groot
+pack; see the release notes for scope and unresolved responsiveness evidence.
 
 **0.7.0** introduced token-level constrained structured output (`json_object`
 and a strict recursive `json_schema` subset), plus exact-decimal numeric
@@ -147,9 +145,9 @@ mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
 downloading anything.
 
 
-The upcoming 0.10.0-rc.2 preview adds `groot-19b-a3b-text`, pinned to the
+The 0.10.0-rc.2 preview adds `groot-19b-a3b-text`, pinned to the
 [prepared text-only artifact](https://huggingface.co/Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly).
-Native release qualification remains pending. Once that preview is published:
+Its full native tool/cache/context admission passed on the pinned artifact:
 
 ```sh
 mei-preview pull groot-19b-a3b-text

@@ -1,6 +1,7 @@
 # Mei 0.10.0-rc.2 preview
 
-Prepared release; native acceptance, packaging and publication are pending.
+Release candidate with native tool/cache/context admission on the prepared
+Groot pack. This is a preview, with separate `mei-preview` distribution.
 Stable remains 0.9.0 until the recorded stable-promotion gates are complete.
 
 This preview adds a payload-preserving text-bundle preparation tool for audited
@@ -29,6 +30,34 @@ The `groot-19b-a3b-text` pull/profile registry entry pins the published prepared
 artifact, with the measured 256-token prefill step, anchors off and an 8192-token
 default generation cap. Explicit user flags still win; sampling stays separate.
 
-Full offline and live native evidence, exact binary/Metal hashes and remaining
-qualification limits will be recorded before publication. Benchmark scores on
-older pinned runtime builds are not acceptance evidence for this new binary.
+Qualification evidence is [published in local-model-bench](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-rc2-native-groot-tools1024-20261101):
+
+- Offline Swift suite: 449 tests, two explicit skips, no failures. Python:
+  26 exporter/probe tests pass, with Ruff and ty checks.
+- Live source `e3e4bb04fbc038926ff890fb854aeb9b5c27f977`: all 13 native probes
+  passed, including streaming/nonstreaming tool calls, tool-result history,
+  cache reuse, exact 65,536-token prompt admission and over-cap rejection.
+  The release source adds documentation only after that tested revision.
+- Guarded attempt: 228.389 seconds, 45 normal-pressure samples, zero swap
+  growth; all 16 model-file hashes match afterward. Owned server stopped and
+  KV files removed after preserving logs.
+- The first attempt failed both direct-tool checks at its 256-token limit.
+  Both completed correctly in 285 tokens under the declared 1024-token probe
+  budget. The original failed evidence remains; no task grade was rewritten.
+- Packaged executable SHA256:
+  `11b08e245c5ee19be603d215f3c572b8a02284f059a41646f3b6f7e9d821bc27`.
+  Metal SHA256:
+  `e87ac8aa940ace7dd1f9945c4b6a3238c3d94604391e0f36a0ac51259bd76f32`.
+  Packaging must match these tested artifacts exactly.
+
+The vmlx pin and Metal artifact are unchanged from the preceding preview. This
+release does not change decode/cache arithmetic. Older benchmark scores remain
+attributed to their measured source and binary, rather than to this release.
+
+Stable promotion still requires the recorded cold determinism, one-variable
+correctness and per-contender short/loaded throughput gates. A separate
+five-second status GET timed out during the first run's long-context prefill;
+responsiveness under load remains under investigation. Idle status and all
+required native probes passed. No broad runtime, model-quality or speed claim
+follows from these checks. Peixinho is a design; no actual app acceptance is
+claimed. Flint remains retired from the benchmark roster.
