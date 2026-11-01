@@ -136,6 +136,18 @@ public enum ModelTuningRegistry {
                 """,
             repo: "mlx-community/Qwen3.6-35B-A3B-4bit",
             revision: "38740b847e4cb78f352aba30aa41c76e08e6eb46"),
+        ModelTuning(
+            name: "groot-19b-a3b-text",
+            model: "Groot 19B/A3B (RCO role 4.5 bpw, text-only)",
+            optimizationProfile: .qwen35MoE,
+            prefillStepSize: 256,
+            ssmAnchorBoundaries: 0,
+            maxTokens: 8192,
+            provenance: """
+                Prepared text-only artifact: retained language tensor payloads                 are unchanged, vision/MTP removed and supported mixed-precision                 metadata normalized. The pinned source files and public upload                 hashes were verified. local-model-bench v9 recorded 12/12                 household workflows and 3/3 isolated Python tasks on an M1 Max                 32 GiB at prefill 256, anchors OFF and server cap 8192; task                 requests used their own 4096-token budgets. This is a measured                 serving profile, not a claim of optimal speed, universal                 reliability, full-window usability or Peixinho app acceptance.
+                """,
+            repo: "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
+            revision: "53f52e0eb8d67d2941010688b2a6b8807d9a3bea"),
     ]
 
     public static func named(_ name: String) -> ModelTuning? {

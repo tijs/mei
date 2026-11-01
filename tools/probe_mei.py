@@ -251,6 +251,19 @@ def aggregate_status(probes: dict[str, dict[str, Any]]) -> str:
     return "passed" if all(p.get("status") == "passed" for p in probes.values()) else "failed"
 
 
+def write_probe_result(path: Path, result: dict[str, Any]) -> None:
+    """Keep the last completed check readable if a later check is interrupted."""
+    temporary = path.with_name(path.name + ".incomplete")
+    temporary.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    temporary.replace(path)
+
+
+def checkpointed_probe(name: str, output: dict[str, Any], fn, path: Path) -> None:
+    probe(name, output, fn)
+    output["status"] = "running"
+    write_probe_result(path, output)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:8024/v1")
@@ -272,6 +285,12 @@ def main() -> int:
         "probes": {},
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    if args.output.exists():
+        raise FileExistsError("choose a fresh native probe output path")
+
+    def record_probe(name: str, output: dict[str, Any], fn) -> None:
+        checkpointed_probe(name, output, fn, args.output)
+
     chat_url = f"{args.base_url.rstrip('/')}/chat/completions"
     models_url = f"{args.base_url.rstrip('/')}/models"
     completions_url = f"{args.base_url.rstrip('/')}/completions"
@@ -283,7 +302,7 @@ def main() -> int:
             raise AssertionError(f"exact model ID {args.model!r} absent from {ids!r}")
         return {"served_ids": ids, "request_seconds": elapsed}
 
-    probe("models_identity", result, identity)
+    record_probe("models_identity", result, identity)
 
     def status() -> dict[str, Any]:
         response, elapsed = request_json(f"{args.base_url.rstrip('/')}/mei/status", timeout=30)
@@ -297,7 +316,7 @@ def main() -> int:
             "request_seconds": elapsed,
         }
 
-    probe("mei_status", result, status)
+    record_probe("mei_status", result, status)
 
     def plain() -> dict[str, Any]:
         response, elapsed = request_json(chat_url, {
@@ -317,7 +336,7 @@ def main() -> int:
             raise AssertionError("plain completion returned empty content")
         return {"content": content, "usage": response.get("usage"), "request_seconds": elapsed}
 
-    probe("plain_completion", result, plain)
+    record_probe("plain_completion", result, plain)
 
     tools = [{
         "type": "function",
@@ -349,13 +368,13 @@ def main() -> int:
         response, elapsed = request_json(chat_url, tool_payload, timeout=args.timeout)
         return {"validated_call": validate_add_call(response), "raw_response": response, "request_seconds": elapsed}
 
-    probe("tool_nonstreaming", result, nonstream_tool)
+    record_probe("tool_nonstreaming", result, nonstream_tool)
 
     def stream_tool() -> dict[str, Any]:
         response, elapsed, ttft = request_stream(chat_url, tool_payload, timeout=args.timeout)
         return {"validated_call": validate_add_call(response), "assembled_response": response, "request_seconds": elapsed, "client_ttft_seconds": ttft}
 
-    probe("tool_streaming", result, stream_tool)
+    record_probe("tool_streaming", result, stream_tool)
 
     # A prior assistant tool_call REPLAYED IN HISTORY, which is what every
     # multi-turn agent turn actually sends. The two probes above only test the
@@ -402,7 +421,7 @@ def main() -> int:
             raise AssertionError(f"tool result was not used in the answer: {content[:200]!r}")
         return {"content": content[:300], "usage": response.get("usage"), "request_seconds": elapsed}
 
-    probe("tool_call_history_replay", result, tool_history_replay)
+    record_probe("tool_call_history_replay", result, tool_history_replay)
 
     # Streaming/non-streaming parity on plain text: same request both ways,
     # both must produce non-empty identical content and identical usage.
@@ -434,7 +453,7 @@ def main() -> int:
             "stream_usage": s_usage,
         }
 
-    probe("parity_stream_vs_nonstream", result, parity)
+    record_probe("parity_stream_vs_nonstream", result, parity)
 
     cache_prompt = "Summarize the final instruction only. " + ("stable prefix text " * 2048) + " Final instruction: reply cache-ready."
     if not args.skip_cache:
@@ -448,7 +467,7 @@ def main() -> int:
                     "stream": False,
                 }, timeout=args.timeout)
                 return {"usage": response.get("usage"), "request_seconds": elapsed}
-            probe(f"cache_repeat_{repetition}", result, cache_request)
+            record_probe(f"cache_repeat_{repetition}", result, cache_request)
 
         # The agentic pattern the slot is built for: identical system prompt,
         # growing transcript. Turn 2 must reuse the turn-1 prefix (strict
@@ -483,7 +502,7 @@ def main() -> int:
             turn1_replies["assistant_content"] = reply
             return detail
 
-        probe("cache_growing_turn1", result, cache_growing_turn1)
+        record_probe("cache_growing_turn1", result, cache_growing_turn1)
 
         def cache_growing_turn2() -> dict[str, Any]:
             # The agentic pattern: turn 2 = turn 1 + assistant reply + next
@@ -502,7 +521,7 @@ def main() -> int:
                     f"growing-transcript reuse failed: cached_tokens={detail['cached_tokens']} usage={detail['usage']!r}")
             return detail
 
-        probe("cache_growing_turn2_reuses_slot", result, cache_growing_turn2)
+        record_probe("cache_growing_turn2_reuses_slot", result, cache_growing_turn2)
 
     if not args.skip_context:
         if args.tokenizer is None:
@@ -534,7 +553,7 @@ def main() -> int:
                     raise AssertionError(f"no completion at exact context cap: {usage!r}")
                 return {"usage": usage, "request_seconds": elapsed}
 
-            probe("context_exact_cap", result, context_at_cap)
+            record_probe("context_exact_cap", result, context_at_cap)
 
             def context_over_cap() -> dict[str, Any]:
                 over = exact_prompt(args.tokenizer, args.context_cap + 1)
@@ -552,11 +571,11 @@ def main() -> int:
                     return {"rejected_as_expected": True, "error": str(exc)}
                 raise AssertionError(f"{args.context_cap + 1}-token prompt unexpectedly succeeded in {elapsed:.3f}s: {response!r}")
 
-            probe("context_over_cap_rejected", result, context_over_cap)
+            record_probe("context_over_cap_rejected", result, context_over_cap)
 
     result["finished_epoch"] = time.time()
     result["status"] = aggregate_status(result["probes"])
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    write_probe_result(args.output, result)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["status"] == "passed" else 1
 

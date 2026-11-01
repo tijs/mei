@@ -62,6 +62,18 @@ final class ServerConfigParsingTests: XCTestCase {
         }
     }
 
+    func testGrootProfileKeepsMeasuredSettingsAndExplicitOverrides() throws {
+        let configured = try parse(["--model-profile", "groot-19b-a3b-text"])
+        XCTAssertEqual(configured.optimizationProfile, .qwen35MoE)
+        XCTAssertEqual(configured.prefillStepSize, 256)
+        XCTAssertEqual(configured.ssmAnchorBoundaryCount, 0)
+        XCTAssertEqual(configured.maxTokensDefault, 8192)
+        let explicit = try parse(["--model-profile", "groot-19b-a3b-text",
+                                  "--prefill-step-size", "128", "--max-tokens", "4096"])
+        XCTAssertEqual(explicit.prefillStepSize, 128)
+        XCTAssertEqual(explicit.maxTokensDefault, 4096)
+    }
+
     func testModelProfileSelectsTheMeasuredSettingsForThatModel() throws {
         let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
         XCTAssertEqual(ornith.optimizationProfile, .qwen35MoE)
@@ -191,7 +203,7 @@ final class ServerConfigParsingTests: XCTestCase {
         // silently breaks every operator command line that uses it.
         XCTAssertEqual(ModelTuningRegistry.names,
                        ["ornith-1.5-35b-a3b", "qwen3.6-35b-a3b-text",
-                        "qwen3.6-35b-a3b"])
+                        "qwen3.6-35b-a3b", "groot-19b-a3b-text"])
     }
 
     func testUnknownModelProfileIsRejectedAndListsTheKnownOnes() {

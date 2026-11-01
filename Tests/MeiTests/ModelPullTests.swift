@@ -7,6 +7,16 @@ final class ModelPullTests: XCTestCase {
         try XCTUnwrap(ModelTuningRegistry.named(name))
     }
 
+    func testGrootPullPinsTheReadyTextArtifact() throws {
+        let profile = try tuning("groot-19b-a3b-text")
+        XCTAssertEqual(profile.repo, "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly")
+        XCTAssertEqual(profile.revision, "53f52e0eb8d67d2941010688b2a6b8807d9a3bea")
+        let command = ModelPull.downloadCommand(ModelPull.Plan(tuning: profile, destination: "/tmp/groot"))
+        XCTAssertTrue(command.contains(profile.repo))
+        XCTAssertTrue(command.contains(profile.revision))
+        XCTAssertFalse(command.contains("hermitdave/"))
+    }
+
     func testPullTargetsTheProfilesPinnedRepoAndRevision() throws {
         let t = try tuning("ornith-1.5-35b-a3b")
         let plan = ModelPull.Plan(tuning: t, destination: "/tmp/x")

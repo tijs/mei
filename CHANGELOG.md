@@ -17,6 +17,12 @@ All notable changes to Mei are documented here.
   use the same metadata-selected tokenizer loading as the benchmark. Expected
   errors cannot overwrite a probe verdict; tool-history replay coverage remains.
 
+- Add `groot-19b-a3b-text` to the existing pull/profile registry, pinned to
+  the public prepared artifact. It selects the tested prefill/anchor/token-cap
+  settings and preserves explicit overrides. Sampling remains independent.
+- Checkpoint native-probe results after each completed gate, keeping partial
+  runs marked running. Refuse existing output paths before making requests.
+
 ## [0.10.0-rc.1] - 2026-10-29
 
 Preview release for bounded prefix storage, explicit runtime policies and gated

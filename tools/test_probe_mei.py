@@ -16,6 +16,7 @@ mirroring the authoritative mei-openai-p0 probe. No tokenizer/model is ever
 loaded and no network is touched: the load-routing tests stub the
 `transformers` module in sys.modules with recording fakes.
 """
+
 import contextlib
 import json
 import sys
@@ -37,7 +38,11 @@ def _make_dir(root: Path, name: str, config, tokenizer_config) -> Path:
         raw = config if isinstance(config, str) else json.dumps(config)
         (directory / "config.json").write_text(raw)
     if tokenizer_config is not None:
-        raw = tokenizer_config if isinstance(tokenizer_config, str) else json.dumps(tokenizer_config)
+        raw = (
+            tokenizer_config
+            if isinstance(tokenizer_config, str)
+            else json.dumps(tokenizer_config)
+        )
         (directory / "tokenizer_config.json").write_text(raw)
     return directory
 
@@ -86,7 +91,8 @@ class MetadataSelectionTests(unittest.TestCase):
     def test_bonsai_metadata_gets_override(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "bonsai",
+                Path(tmp),
+                "bonsai",
                 config={"model_type": "prism_hadamard_qwen35"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -98,7 +104,8 @@ class MetadataSelectionTests(unittest.TestCase):
     def test_override_kwargs_are_exactly_fix_mistral_regex(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "bonsai",
+                Path(tmp),
+                "bonsai",
                 config={"model_type": "prism_hadamard_qwen35"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -114,7 +121,8 @@ class MetadataSelectionTests(unittest.TestCase):
     def test_ordinary_qwen2_directory_gets_no_override(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "ordinary",
+                Path(tmp),
+                "ordinary",
                 config={"model_type": "qwen2"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -124,7 +132,8 @@ class MetadataSelectionTests(unittest.TestCase):
         # Same custom model_type but a different tokenizer class: default-off.
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "other-class",
+                Path(tmp),
+                "other-class",
                 config={"model_type": "prism_hadamard_qwen35"},
                 tokenizer_config={"tokenizer_class": "Qwen3Tokenizer"},
             )
@@ -134,7 +143,8 @@ class MetadataSelectionTests(unittest.TestCase):
         # Same Qwen2 tokenizer class but an ordinary model_type: default-off.
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "generic-qwen2",
+                Path(tmp),
+                "generic-qwen2",
                 config={"model_type": "qwen2"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -143,8 +153,18 @@ class MetadataSelectionTests(unittest.TestCase):
     def test_missing_metadata_gets_no_override(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            no_config = _make_dir(root, "no-config", config=None, tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"})
-            no_tokenizer_config = _make_dir(root, "no-tok-config", config={"model_type": "prism_hadamard_qwen35"}, tokenizer_config=None)
+            no_config = _make_dir(
+                root,
+                "no-config",
+                config=None,
+                tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
+            )
+            no_tokenizer_config = _make_dir(
+                root,
+                "no-tok-config",
+                config={"model_type": "prism_hadamard_qwen35"},
+                tokenizer_config=None,
+            )
             empty = root / "empty"
             empty.mkdir()
             self.assertIsNone(probe_mei.tokenizer_override_kwargs(no_config))
@@ -155,12 +175,14 @@ class MetadataSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             bad_json = _make_dir(
-                root, "bad-json",
+                root,
+                "bad-json",
                 config="{not json",
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
             list_json = _make_dir(
-                root, "list-json",
+                root,
+                "list-json",
                 config=["prism_hadamard_qwen35"],
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -172,14 +194,15 @@ class LoadRoutingTests(unittest.TestCase):
     def test_special_path_uses_qwen2_contract_with_override_kwargs(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "bonsai",
+                Path(tmp),
+                "bonsai",
                 config={"model_type": "prism_hadamard_qwen35"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
             with _patched_transformers():
                 loaded = probe_mei.load_exact_prompt_tokenizer(directory)
                 self.assertEqual(loaded, "qwen2-loaded")
-                (args, kwargs), = _FakeQwen2Tokenizer.calls
+                ((args, kwargs),) = _FakeQwen2Tokenizer.calls
                 self.assertEqual(args, (directory,))
                 self.assertEqual(kwargs, {"fix_mistral_regex": True})
                 self.assertEqual(_FakeAutoTokenizer.calls, [])  # generic path not used
@@ -192,7 +215,8 @@ class LoadRoutingTests(unittest.TestCase):
         # staged Bonsai fingerprint.
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "ordinary",
+                Path(tmp),
+                "ordinary",
                 config={"model_type": "qwen2"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -200,7 +224,7 @@ class LoadRoutingTests(unittest.TestCase):
                 loaded = probe_mei.load_exact_prompt_tokenizer(directory)
                 self.assertEqual(loaded, "generic-loaded")
                 self.assertEqual(_FakeQwen2Tokenizer.calls, [])
-                (args, kwargs), = _FakeAutoTokenizer.calls
+                ((args, kwargs),) = _FakeAutoTokenizer.calls
                 self.assertEqual(args, (directory,))
                 self.assertEqual(
                     kwargs, {"trust_remote_code": False, "fix_mistral_regex": True}
@@ -226,7 +250,8 @@ class LoadRoutingTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "ordinary",
+                Path(tmp),
+                "ordinary",
                 config={"model_type": "qwen2"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -237,7 +262,7 @@ class LoadRoutingTests(unittest.TestCase):
                 vars(sys.modules["transformers"])["AutoTokenizer"] = local_fake
                 prompt = probe_mei.exact_prompt(directory, 3)
                 self.assertEqual(prompt, " hello hello hello")
-                (args, kwargs), = local_fake.calls
+                ((args, kwargs),) = local_fake.calls
                 self.assertEqual(args, (directory,))
                 self.assertEqual(
                     kwargs, {"trust_remote_code": False, "fix_mistral_regex": True}
@@ -251,7 +276,8 @@ class LoadRoutingTests(unittest.TestCase):
         # while the probe appears to work.
         with tempfile.TemporaryDirectory() as tmp:
             directory = _make_dir(
-                Path(tmp), "bonsai",
+                Path(tmp),
+                "bonsai",
                 config={"model_type": "prism_hadamard_qwen35"},
                 tokenizer_config={"tokenizer_class": "Qwen2Tokenizer"},
             )
@@ -314,7 +340,9 @@ class WrapperStatusTests(unittest.TestCase):
             result,
             lambda: {"status": 400, "rejected_as_expected": True},
         )
-        probe_mei.probe("plain_completion", result, lambda: {"content": "ready", "usage": {}})
+        probe_mei.probe(
+            "plain_completion", result, lambda: {"content": "ready", "usage": {}}
+        )
         self.assertEqual(probe_mei.aggregate_status(result["probes"]), "passed")
 
     def test_aggregate_failed_when_a_real_failure_occurs(self):
@@ -336,6 +364,55 @@ class WrapperStatusTests(unittest.TestCase):
 
     def test_aggregate_empty_probes_is_failed(self):
         self.assertEqual(probe_mei.aggregate_status({}), "failed")
+
+
+class ProbeCheckpointTests(unittest.TestCase):
+    def test_completed_checks_survive_later_interruption_without_full_pass(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "probe.json"
+            result = {"probes": {}}
+            probe_mei.checkpointed_probe("first", result, lambda: {"usage": 1}, path)
+
+            def interrupted():
+                raise KeyboardInterrupt()
+
+            with self.assertRaises(KeyboardInterrupt):
+                probe_mei.checkpointed_probe("later", result, interrupted, path)
+            saved = json.loads(path.read_text())
+            self.assertEqual(saved["status"], "running")
+            self.assertEqual(saved["probes"]["first"]["status"], "passed")
+            self.assertNotIn("later", saved["probes"])
+
+    def test_failed_check_is_durable_but_run_stays_in_progress(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "probe.json"
+
+            def failure():
+                raise AssertionError("synthetic rejection")
+
+            probe_mei.checkpointed_probe("failure", {"probes": {}}, failure, path)
+            saved = json.loads(path.read_text())
+            self.assertEqual(saved["status"], "running")
+            self.assertEqual(saved["probes"]["failure"]["status"], "failed")
+
+    def test_existing_probe_evidence_is_refused_before_network(self):
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "probe.json"
+            path.write_text("preserved evidence")
+            with (
+                patch.object(
+                    sys,
+                    "argv",
+                    ["probe_mei", "--model", "fixture", "--output", str(path)],
+                ),
+                patch.object(probe_mei, "request_json") as request,
+                self.assertRaises(FileExistsError),
+            ):
+                probe_mei.main()
+            request.assert_not_called()
+            self.assertEqual(path.read_text(), "preserved evidence")
 
 
 if __name__ == "__main__":

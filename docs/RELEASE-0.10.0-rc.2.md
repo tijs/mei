@@ -17,7 +17,13 @@ required. The vmlx pin remains f6510fc384bcddb5db9efc96e1dd5ab3afc49346.
 Native probe result merging now protects its verdict from HTTP/detail-field
 collisions. Exact-context tokenizer loading matches the benchmark, with bounded
 metadata-selected overrides. The existing raw tool-history replay gate remains.
-All 20 exporter/probe Python tests pass without model or network use.
+All 23 exporter/probe Python tests pass without model or network use.
+Completed native gates are checkpointed atomically; interrupted runs stay marked
+running and existing output is refused.
+
+The `groot-19b-a3b-text` pull/profile registry entry pins the published prepared
+artifact, with the measured 256-token prefill step, anchors off and an 8192-token
+default generation cap. Explicit user flags still win; sampling stays separate.
 
 Full offline and live native evidence, exact binary/Metal hashes and remaining
 qualification limits will be recorded before publication. Benchmark scores on

@@ -146,13 +146,29 @@ mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
 `mei pull <profile> --dry-run` shows you what it would fetch and where, without
 downloading anything.
 
+
+The upcoming 0.10.0-rc.2 preview adds `groot-19b-a3b-text`, pinned to the
+[prepared text-only artifact](https://huggingface.co/Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly).
+Native release qualification remains pending. Once that preview is published:
+
+```sh
+mei-preview pull groot-19b-a3b-text
+mei-preview --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \
+    --model-profile groot-19b-a3b-text --served-model-id groot
+```
+
+The profile keeps the measured 256-token prefill step, disables anchors and
+sets an 8192-token default generation cap. Sampling remains independently
+configurable. See the [current synthetic benchmark comparison](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_V9.md)
+for exact sampler/cache profiles and trial limits. Existing profiles are preserved.
+
 The profile sets the chunked-prefill step, cross-conversation anchor
 boundaries, the generation cap and the architecture handling together — these
 have different optima per model, so one flag selects the whole set. Any flag you
 pass explicitly still wins.
 
-Every number in a profile is the number it was **measured** at, so naming a
-model gives the same answers on any machine that can afford them. One setting
+Profiles record their measured settings; they do not guarantee identical
+answers across hardware or sampling trajectories. One setting
 can be walked back: a 1024-token prefill step needs about 26 GB of recommended
 working set, and on a smaller device Mei drops to 512 and says so at startup.
 It says so because the two are not simply a fast and a slow setting — chunked
