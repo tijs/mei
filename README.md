@@ -169,6 +169,11 @@ in one case that is a repack rather than the published checkpoint — same weigh
 different padding, worth 4.7 GB of memory and a 3.2× faster 80k prefill. `mei
 pull` handles this; details in [docs/MODELS.md](docs/MODELS.md).
 
+For explicit text-only preparation of compatible Qwen3.5-family bundles, see
+[the payload-preserving exporter](tools/export_qwen_text.md). Architecture defaults
+are reported as `qwen35-moe`; this identifies the family, not a named model or
+validated tuning for every derivative. Existing `--model-profile` names are unchanged.
+
 ## How it works (high level)
 
 - **One native process.** `mei` is a single Swift/MLX server binary

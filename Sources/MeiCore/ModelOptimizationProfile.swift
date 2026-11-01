@@ -7,17 +7,21 @@ import Darwin
 /// Selects safe runtime defaults for the active model bundle.
 ///
 /// `auto` is deliberately conservative: only the exact validated
-/// qwen3_5_moe family is recognized as Ornith-compatible. Everything else,
+/// qwen3_5_moe family is recognized. This is architecture policy, not model
+/// identification or a measured model tuning. Everything else,
 /// including missing or malformed metadata, resolves to `generic`.
 public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable {
     case auto
     case generic
+    case qwen35MoE = "qwen35-moe"
+    /// Compatibility spelling for callers of the earlier Swift API.
     case ornith
 
-    public var isOrnith: Bool { self == .ornith }
+    public var isQwen35MoE: Bool { self == .qwen35MoE || self == .ornith }
+    public var isOrnith: Bool { isQwen35MoE }
 
     public var defaultPrefillStepSize: Int {
-        isOrnith ? 512 : 64
+        isQwen35MoE ? 512 : 64
     }
 
 
@@ -68,7 +72,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         modelDirectory: String, profile: ModelOptimizationProfile,
         recommendedWorkingSetBytes: Int? = nil
     ) -> Int {
-        if profile.isOrnith,
+        if profile.isQwen35MoE,
            canAffordPrefill1024(recommendedWorkingSetBytes: recommendedWorkingSetBytes) {
             return 1024
         }
@@ -82,8 +86,10 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         switch requested {
         case .auto:
             return detect(modelDirectory: modelDirectory)
-        case .generic, .ornith:
+        case .generic, .qwen35MoE:
             return requested
+        case .ornith:
+            return .qwen35MoE
         }
     }
 
@@ -93,11 +99,11 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     public static let qwen35MoEModelTypes: Set<String> = ["qwen3_5_moe", "qwen3_5_moe_text"]
 
     /// Detect only from valid model metadata; model names and paths are not
-    /// enough to activate the memory-sensitive Ornith profile.
+    /// enough to activate the memory-sensitive architecture policy.
     public static func detect(modelDirectory: String) -> ModelOptimizationProfile {
         collectedModelTypes(in: modelDirectory).isDisjoint(with: qwen35MoEModelTypes)
             ? .generic
-            : .ornith
+            : .qwen35MoE
     }
 
     /// Model types whose in-process prefix reuse requires the disk-backed KV
@@ -353,7 +359,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
             }
         }
         #endif
-        guard isOrnith else { return }
+        guard isQwen35MoE else { return }
         #if canImport(Darwin)
         let hasExplicitOverride = getenv("VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES") != nil
             || getenv("BENCH_NO_FUSED_GATE_UP") != nil
@@ -435,7 +441,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// 8192 cannot truncate legitimate work here: per request p99 is 2,933
     /// tokens and the largest non-degenerate completion observed was 4,674. It
     /// only bounds callers that send no max_tokens of their own.
-    public var defaultMaxTokens: Int? { isOrnith ? 8192 : nil }
+    public var defaultMaxTokens: Int? { isQwen35MoE ? 8192 : nil }
 
     private static func collectModelTypes(
         in value: Any,

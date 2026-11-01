@@ -2,7 +2,10 @@
 
 import hashlib
 import json
+import os
 import struct
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +30,38 @@ def shard(path, entries):
 
 
 class ExportTests(unittest.TestCase):
+    def test_export_config_is_reproducible_across_python_hash_seeds(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = self.fixture(root)
+            entries = []
+            for suffix in ("first", "second"):
+                prefix = "language_model.model." + suffix
+                entries.extend(
+                    [
+                        (prefix + ".weight", "U32", [2, 12], bytes(range(96))),
+                        (prefix + ".scales", "F16", [2, 1], b"abcd"),
+                        (prefix + ".biases", "F16", [2, 1], b"efgh"),
+                    ]
+                )
+            shard(source / "extra.safetensors", entries)
+            outputs = []
+            for seed in ("1", "2"):
+                target = root / seed
+                subprocess.run(
+                    [
+                        sys.executable,
+                        str(Path(__file__).with_name("export_qwen_text.py")),
+                        str(source),
+                        str(target),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    env={**os.environ, "PYTHONHASHSEED": seed},
+                )
+                outputs.append((target / "config.json").read_bytes())
+            self.assertEqual(outputs[0], outputs[1])
+
     def fixture(self, root):
         source = root / "source"
         source.mkdir()
@@ -119,6 +154,10 @@ class ExportTests(unittest.TestCase):
         del root["quantization"][prefix]
         root["hidden_size"] = 128
         with self.assertRaisesRegex(ValueError, "ambiguous"):
+            config_for_text(root, tensors)
+        root["hidden_size"] = 64
+        root["quantization"][prefix] = {"bits": 6, "group_size": 64, "mode": "mxfp4"}
+        with self.assertRaisesRegex(ValueError, "unsupported quantization mode"):
             config_for_text(root, tensors)
 
     def test_conflicting_maps_and_unknown_tensor_names_fail_without_output(self):

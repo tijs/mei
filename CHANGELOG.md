@@ -4,6 +4,15 @@ All notable changes to Mei are documented here.
 
 ## [Unreleased]
 
+- Name the automatically detected Qwen3.5-MoE architecture policy `qwen35-moe`,
+  so Groot and other derivatives are not reported as Ornith. Existing named
+  model profiles and all numeric execution settings are preserved; the old
+  Swift `.ornith` spelling remains a compatibility alias. No new CLI option.
+- Add an explicit text-only preparation tool for audited Qwen3.5-family MLX
+  bundles: preserve language payloads, omit unused vision/MTP, validate mixed
+  precision and record hashes. Output is deterministic across Python hash seeds;
+  unsupported quantization modes and contradictory metadata are refused.
+
 ## [0.10.0-rc.1] - 2026-10-29
 
 Preview release for bounded prefix storage, explicit runtime policies and gated

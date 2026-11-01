@@ -8,6 +8,36 @@ import XCTest
 /// verified by `swift test` without touching the GPU (the full matrix's
 /// Metal-touching cells stay gated on an uncontended window).
 final class ServerConfigParsingTests: XCTestCase {
+    func testArchitecturePolicyNamesTheFamilyAndPreservesLegacySemantics() throws {
+        let canonical = ModelOptimizationProfile.qwen35MoE
+        let legacy = ModelOptimizationProfile.ornith
+        XCTAssertEqual(ModelOptimizationProfile.resolve(requested: legacy, modelDirectory: "/missing"), canonical)
+        XCTAssertEqual(canonical.rawValue, "qwen35-moe")
+        XCTAssertEqual(canonical.defaultPrefillStepSize, legacy.defaultPrefillStepSize)
+        XCTAssertEqual(canonical.defaultMaxTokens, legacy.defaultMaxTokens)
+        XCTAssertTrue(canonical.isQwen35MoE)
+        XCTAssertTrue(legacy.isQwen35MoE)
+        for tuning in ModelTuningRegistry.all {
+            XCTAssertEqual(tuning.optimizationProfile, canonical)
+        }
+        // Existing CLI names still select the same measured model settings.
+        XCTAssertEqual(try parse(["--model-profile", "ornith-1.5-35b-a3b"]).prefillStepSize, 1024)
+    }
+
+    func testGrootMetadataSelectsArchitecturePolicyWithoutPretendingToIdentifyOrnith() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("{\"model_type\":\"qwen3_5_moe\",\"text_config\":{\"num_experts\":128}}".utf8)
+            .write(to: directory.appendingPathComponent("config.json"))
+        let config = try ServerConfig.parse(arguments: ["--model-dir", directory.path,
+            "--served-model-id", "groot/test", "--prefill-step-size", "256"],
+            recommendedWorkingSetBytes: Self.measuredWorkingSetBytes)
+        XCTAssertEqual(config.optimizationProfile, .qwen35MoE)
+        XCTAssertNil(config.modelTuning)
+        XCTAssertEqual(config.prefillStepSize, 256)
+    }
+
     let base = ["--model-dir", "/tmp/model", "--served-model-id", "mei/model"]
 
     /// Machines this project has measured on report ~26.8 GB recommended
@@ -34,7 +64,7 @@ final class ServerConfigParsingTests: XCTestCase {
 
     func testModelProfileSelectsTheMeasuredSettingsForThatModel() throws {
         let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
-        XCTAssertEqual(ornith.optimizationProfile, .ornith)
+        XCTAssertEqual(ornith.optimizationProfile, .qwen35MoE)
         // Anchors OFF on Ornith: they cost hermes_ops-multi-step-chain 0/3.
         XCTAssertEqual(ornith.ssmAnchorBoundaryCount, 0)
         XCTAssertEqual(ornith.maxTokensDefault, 8192)
@@ -53,7 +83,7 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(vision.ssmAnchorBoundaryCount, 0)
 
         let text = try parse(["--model-profile", "qwen3.6-35b-a3b-text"])
-        XCTAssertEqual(text.optimizationProfile, .ornith)
+        XCTAssertEqual(text.optimizationProfile, .qwen35MoE)
         // The ONLY profile that keeps anchors: -42% prefill and zero
         // differences across all 25 tasks, on two cold pairs.
         XCTAssertEqual(text.ssmAnchorBoundaryCount, 2)
@@ -315,7 +345,7 @@ final class ServerConfigParsingTests: XCTestCase {
         let config = try ServerConfig.parse(
             arguments: ["--model-dir", directory.path, "--served-model-id", "ornith/test"],
             recommendedWorkingSetBytes: 16_000_000_000)
-        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.optimizationProfile, .qwen35MoE)
         // Pinned below the 1024 threshold so this asserts DETECTION, not which
         // machine ran the suite. The device-aware step has its own test.
         XCTAssertEqual(config.prefillStepSize, 512)
@@ -343,8 +373,8 @@ final class ServerConfigParsingTests: XCTestCase {
         // say .generic. Naming a model must win — that is the point of selecting
         // by name rather than inferring.
         let ornith = try parse(["--model-profile", "ornith-1.5-35b-a3b"])
-        XCTAssertEqual(ornith.requestedOptimizationProfile, .ornith)
-        XCTAssertEqual(ornith.optimizationProfile, .ornith)
+        XCTAssertEqual(ornith.requestedOptimizationProfile, .qwen35MoE)
+        XCTAssertEqual(ornith.optimizationProfile, .qwen35MoE)
         // The profile's own step, not the .ornith architecture default of 512.
         XCTAssertEqual(ornith.prefillStepSize, 1024)
 
@@ -366,7 +396,7 @@ final class ServerConfigParsingTests: XCTestCase {
             "--model-dir", directory.path, "--served-model-id", "ornith/test",
             "--prefill-step-size", "256"
         ])
-        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.optimizationProfile, .qwen35MoE)
         XCTAssertEqual(config.prefillStepSize, 256)
     }
 
@@ -522,7 +552,7 @@ final class ServerConfigParsingTests: XCTestCase {
             arguments: ["--model-dir", dir.path,
                         "--served-model-id", "ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit"],
             recommendedWorkingSetBytes: 16_000_000_000)
-        XCTAssertEqual(config.optimizationProfile, .ornith)
+        XCTAssertEqual(config.optimizationProfile, .qwen35MoE)
         XCTAssertEqual(config.prefillStepSize, 512)   // device-pinned; see above
         // 0.4.2 (f1ba4af) deliberately reversed the old "no implicit disk-KV
         // default" contract for this family: the qwen3_5_moe hybrid cannot

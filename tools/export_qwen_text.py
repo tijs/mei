@@ -87,8 +87,10 @@ def config_for_text(root: dict[str, Any], tensors: dict[str, Any]) -> dict[str, 
         widths.add(text["linear_num_value_heads"] * text["linear_value_head_dim"])
     if "num_attention_heads" in text and "head_dim" in text:
         widths.add(text["num_attention_heads"] * text["head_dim"])
-    for name in modules:
+    for name in sorted(modules):
         options = q.get(name, q)
+        if options.get("mode", q.get("mode", "affine")) != "affine":
+            raise ValueError(f"unsupported quantization mode: {name}")
         bits, group = options["bits"], options["group_size"]
         if bits not in (2, 3, 4, 6, 8) or type(group) is not int or group <= 0:
             raise ValueError(f"unsupported quantization: {name}")
@@ -249,7 +251,9 @@ def export(source: Path, destination: Path) -> dict[str, Any]:
         for name in SIDECARS:
             if (source / name).is_file():
                 shutil.copy2(source / name, stage / name)
-        (stage / "config.json").write_text(json.dumps(config, indent=2) + "\n")
+        (stage / "config.json").write_text(
+            json.dumps(config, indent=2, sort_keys=True) + "\n"
+        )
         manifest["source_config_sha256"] = hashlib.sha256(
             (source / "config.json").read_bytes()
         ).hexdigest()

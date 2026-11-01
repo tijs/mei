@@ -55,19 +55,19 @@ struct MeiMain {
         }
 
         config.optimizationProfile.applyRuntimeEnvironment(
-            force: config.requestedOptimizationProfile == .ornith,
+            force: config.requestedOptimizationProfile.isQwen35MoE,
             modelDirectory: config.modelDirectory)
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
         // If the operator sets no flags, the profile is choosing for them — so
         // say what it chose. Silent auto-tuning is only an improvement if it is
         // visible when something looks wrong.
-        if config.optimizationProfile.isOrnith {
+        if config.optimizationProfile.isQwen35MoE {
             let compile = ProcessInfo.processInfo.environment["VMLX_ENABLE_UNSAFE_COMPILE"] ?? "unset"
             let fused = ProcessInfo.processInfo.environment["VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES"] ?? "unset"
             print("mei: profile applied max-tokens \(config.maxTokensDefault)"
                 + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
         }
-        if config.modelTuning == nil, config.optimizationProfile.isOrnith {
+        if config.modelTuning == nil, config.optimizationProfile.isQwen35MoE {
             // Detection knows the ARCHITECTURE, never which model this is —
             // the supported models are indistinguishable from their metadata.
             // So point at the lookup rather than pretending to recognise it.

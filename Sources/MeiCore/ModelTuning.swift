@@ -65,7 +65,7 @@ public enum ModelTuningRegistry {
         ModelTuning(
             name: "ornith-1.5-35b-a3b",
             model: "ornith-ai/Ornith-1.5-35B-A3B (MLX 4-bit)",
-            optimizationProfile: .ornith,
+            optimizationProfile: .qwen35MoE,
             prefillStepSize: 1024,
             ssmAnchorBoundaries: 0,
             maxTokens: 8192,
@@ -95,7 +95,7 @@ public enum ModelTuningRegistry {
         ModelTuning(
             name: "qwen3.6-35b-a3b-text",
             model: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
-            optimizationProfile: .ornith,
+            optimizationProfile: .qwen35MoE,
             prefillStepSize: 1024,
             ssmAnchorBoundaries: 2,
             maxTokens: 8192,
@@ -113,7 +113,7 @@ public enum ModelTuningRegistry {
         ModelTuning(
             name: "qwen3.6-35b-a3b",
             model: "mlx-community/Qwen3.6-35B-A3B-4bit (with vision tower)",
-            optimizationProfile: .ornith,
+            optimizationProfile: .qwen35MoE,
             prefillStepSize: 1024,
             ssmAnchorBoundaries: 0,
             maxTokens: 8192,
