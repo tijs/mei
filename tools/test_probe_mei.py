@@ -415,5 +415,54 @@ class ProbeCheckpointTests(unittest.TestCase):
             self.assertEqual(path.read_text(), "preserved evidence")
 
 
+class ToolFailureEvidenceTests(unittest.TestCase):
+    def test_exhausted_reasoning_response_survives_failed_validation(self):
+        response = {
+            "choices": [{"message": {"reasoning_content": "still thinking"},
+                         "finish_reason": "length"}],
+            "usage": {"completion_tokens": 1024},
+        }
+        for streaming in (False, True):
+            with self.subTest(streaming=streaming):
+                result = {"probes": {}}
+                probe_mei.probe("tool", result, lambda streaming=streaming: probe_mei.tool_probe_detail(
+                    response, 2.0, streaming=streaming, ttft=0.5))
+                entry = result["probes"]["tool"]
+                self.assertEqual(entry["status"], "failed")
+                key = "assembled_response" if streaming else "raw_response"
+                self.assertEqual(entry[key], response)
+                self.assertEqual(entry["request_seconds"], 2.0)
+                self.assertNotIn("validated_call", entry)
+                self.assertEqual(probe_mei.aggregate_status(result["probes"]), "failed")
+
+    def test_malformed_tool_arguments_preserve_response_without_passing(self):
+        response = {"choices": [{"message": {"tool_calls": [{"function": {
+            "name": "add_numbers", "arguments": "{bad json",
+        }}]}, "finish_reason": "tool_calls"}]}
+        result = {"probes": {}}
+        probe_mei.probe("tool", result, lambda: probe_mei.tool_probe_detail(response, 1.0))
+        entry = result["probes"]["tool"]
+        self.assertEqual(entry["status"], "failed")
+        self.assertEqual(entry["raw_response"], response)
+        self.assertIn("JSONDecodeError", entry["error"])
+
+    def test_stream_preserves_reasoning_only_exhaustion_and_usage(self):
+        import io
+        from unittest.mock import patch
+
+        events = [
+            {"choices": [{"delta": {"reasoning_content": "thinking"}}]},
+            {"choices": [{"delta": {}, "finish_reason": "length"}]},
+            {"choices": [], "usage": {"completion_tokens": 1024}},
+        ]
+        wire = "".join("data: " + json.dumps(e) + "\n\n" for e in events)
+        with patch.object(probe_mei.urllib.request, "urlopen", return_value=io.BytesIO(wire.encode())):
+            response, _, ttft = probe_mei.request_stream("http://localhost/v1/chat/completions", {})
+        self.assertEqual(response["choices"][0]["message"]["reasoning_content"], "thinking")
+        self.assertEqual(response["choices"][0]["finish_reason"], "length")
+        self.assertEqual(response["usage"]["completion_tokens"], 1024)
+        self.assertIsNotNone(ttft)
+
+
 if __name__ == "__main__":
     unittest.main()

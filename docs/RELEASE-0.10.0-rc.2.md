@@ -17,9 +17,13 @@ required. The vmlx pin remains f6510fc384bcddb5db9efc96e1dd5ab3afc49346.
 Native probe result merging now protects its verdict from HTTP/detail-field
 collisions. Exact-context tokenizer loading matches the benchmark, with bounded
 metadata-selected overrides. The existing raw tool-history replay gate remains.
-All 23 exporter/probe Python tests pass without model or network use.
+All 26 exporter/probe Python tests pass without model or network use.
 Completed native gates are checkpointed atomically; interrupted runs stay marked
-running and existing output is refused.
+running and existing output is refused. Failed direct-tool checks now retain
+the response envelope (including streamed reasoning), usage and finish reason.
+Their budget is 1024 tokens including reasoning, matching the plain probe. The
+original 256-token attempt ended both direct-tool generations at the cap with
+no call and remains failed evidence; no validation requirement is relaxed.
 
 The `groot-19b-a3b-text` pull/profile registry entry pins the published prepared
 artifact, with the measured 256-token prefill step, anchors off and an 8192-token

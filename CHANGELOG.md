@@ -22,6 +22,9 @@ All notable changes to Mei are documented here.
   settings and preserves explicit overrides. Sampling remains independent.
 - Checkpoint native-probe results after each completed gate, keeping partial
   runs marked running. Refuse existing output paths before making requests.
+- Preserve failed tool-probe API envelopes, finish reason, usage and streamed
+  reasoning. Give direct-tool probes the same 1024-token reasoning-inclusive
+  budget as the plain probe; exhausted generations still fail the call contract.
 
 ## [0.10.0-rc.1] - 2026-10-29
 

@@ -59,6 +59,7 @@ def request_stream(url: str, payload: dict[str, Any], timeout: float = 900) -> t
     started = time.monotonic()
     first_delta = None
     content: list[str] = []
+    reasoning: list[str] = []
     tool_calls: dict[int, dict[str, Any]] = {}
     finish_reason = None
     usage: dict[str, Any] = {}
@@ -79,10 +80,12 @@ def request_stream(url: str, payload: dict[str, Any], timeout: float = 900) -> t
                     continue
                 choice = choices[0]
                 delta = choice.get("delta") or {}
-                if (delta.get("content") or delta.get("tool_calls")) and first_delta is None:
+                if (delta.get("content") or delta.get("reasoning_content") or delta.get("tool_calls")) and first_delta is None:
                     first_delta = time.monotonic() - started
                 if delta.get("content"):
                     content.append(delta["content"])
+                if delta.get("reasoning_content"):
+                    reasoning.append(delta["reasoning_content"])
                 for part in delta.get("tool_calls") or []:
                     index = int(part.get("index", 0))
                     call = tool_calls.setdefault(
@@ -100,6 +103,8 @@ def request_stream(url: str, payload: dict[str, Any], timeout: float = 900) -> t
         body = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"HTTP {exc.code}: {body}") from exc
     message: dict[str, Any] = {"role": "assistant", "content": "".join(content) or None}
+    if reasoning:
+        message["reasoning_content"] = "".join(reasoning)
     if tool_calls:
         message["tool_calls"] = [tool_calls[i] for i in sorted(tool_calls)]
     return {
@@ -124,6 +129,29 @@ def validate_add_call(response: dict[str, Any]) -> dict[str, Any]:
     if finish_reason != "tool_calls":
         raise AssertionError(f"unexpected finish_reason: {finish_reason!r}")
     return {"name": function["name"], "arguments": arguments, "finish_reason": finish_reason}
+
+
+class ProbeValidationError(AssertionError):
+    """A failed contract check with its original API evidence attached."""
+
+    def __init__(self, error: Exception, detail: dict[str, Any]):
+        super().__init__(f"{type(error).__name__}: {error}")
+        self.detail = detail
+
+
+def tool_probe_detail(response: dict[str, Any], elapsed: float, *, streaming: bool = False,
+                      ttft: float | None = None) -> dict[str, Any]:
+    detail = {
+        "assembled_response" if streaming else "raw_response": response,
+        "request_seconds": elapsed,
+    }
+    if streaming:
+        detail["client_ttft_seconds"] = ttft
+    try:
+        detail["validated_call"] = validate_add_call(response)
+    except (AssertionError, ValueError, TypeError, KeyError) as exc:
+        raise ProbeValidationError(exc, detail) from exc
+    return detail
 
 
 def _read_json_object(path: Path) -> dict[str, Any] | None:
@@ -238,6 +266,7 @@ def probe(name: str, output: dict[str, Any], fn) -> None:
         output["probes"][name] = entry
     except (AssertionError, OSError, ValueError, RuntimeError, TypeError, KeyError, HTTPException) as exc:
         output["probes"][name] = {
+            **(exc.detail if isinstance(exc, ProbeValidationError) else {}),
             "status": "failed",
             "elapsed_seconds": time.monotonic() - started,
             "error": f"{type(exc).__name__}: {exc}",
@@ -360,19 +389,21 @@ def main() -> int:
         "tools": tools,
         "tool_choice": {"type": "function", "function": {"name": "add_numbers"}},
         "temperature": 0,
-        "max_tokens": 256,
+        # Includes reasoning as well as the emitted call, like the plain probe.
+        # Keep the call contract strict; token exhaustion still fails admission.
+        "max_tokens": 1024,
         "stream": False,
     }
 
     def nonstream_tool() -> dict[str, Any]:
         response, elapsed = request_json(chat_url, tool_payload, timeout=args.timeout)
-        return {"validated_call": validate_add_call(response), "raw_response": response, "request_seconds": elapsed}
+        return tool_probe_detail(response, elapsed)
 
     record_probe("tool_nonstreaming", result, nonstream_tool)
 
     def stream_tool() -> dict[str, Any]:
         response, elapsed, ttft = request_stream(chat_url, tool_payload, timeout=args.timeout)
-        return {"validated_call": validate_add_call(response), "assembled_response": response, "request_seconds": elapsed, "client_ttft_seconds": ttft}
+        return tool_probe_detail(response, elapsed, streaming=True, ttft=ttft)
 
     record_probe("tool_streaming", result, stream_tool)
 
