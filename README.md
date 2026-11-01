@@ -26,6 +26,10 @@ preview independently with `brew install tijs/tap/mei-preview`, then run
 `mei-preview --version`. Qwen memory and throughput qualification remains open;
 this preview does not replace stable `mei`.
 
+Next preview: **0.10.0-rc.2**, pending native acceptance and publication, adds
+[verified text-only bundle preparation](tools/export_qwen_text.md) and accurate
+Qwen architecture policy names without changing execution defaults.
+
 **0.7.0** introduced token-level constrained structured output (`json_object`
 and a strict recursive `json_schema` subset), plus exact-decimal numeric
 constraints and fail-closed schema validation. **0.7.1** fixed escape-prefix

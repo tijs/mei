@@ -1,0 +1,19 @@
+# Mei 0.10.0-rc.2 preview
+
+Prepared release; native acceptance, packaging and publication are pending.
+Stable remains 0.9.0 until the recorded stable-promotion gates are complete.
+
+This preview adds a payload-preserving text-bundle preparation tool for audited
+Qwen3.5-family models. It removes unused vision/MTP tensors, makes supported
+mixed-precision metadata explicit and rejects conflicting declarations. The
+source stays unchanged; deterministic manifests record every retained tensor.
+See [the preparation guide](../tools/export_qwen_text.md).
+
+Automatic architecture policy names now report `qwen35-moe`, so derivatives
+such as Groot are not labeled Ornith. Existing named model profiles, legacy
+Swift aliases and numeric defaults remain unchanged. No extra CLI setting is
+required. The vmlx pin remains f6510fc384bcddb5db9efc96e1dd5ab3afc49346.
+
+Full offline and live native evidence, exact binary/Metal hashes and remaining
+qualification limits will be recorded before publication. Benchmark scores on
+older pinned runtime builds are not acceptance evidence for this new binary.

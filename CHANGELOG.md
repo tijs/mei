@@ -2,7 +2,7 @@
 
 All notable changes to Mei are documented here.
 
-## [Unreleased]
+## [0.10.0-rc.2] - 2026-11-01
 
 - Name the automatically detected Qwen3.5-MoE architecture policy `qwen35-moe`,
   so Groot and other derivatives are not reported as Ornith. Existing named
