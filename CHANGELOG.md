@@ -15,6 +15,10 @@ All notable changes to Mei are documented here.
 - Preserve literal raw generation text, including reasoning/tool markers,
   instead of discarding it through chat channel parsing. Forward explicit raw
   stop strings to the generation loop.
+- Read phase-diagnostic flags individually instead of copying the process
+  environment twice per decoder layer. Preserve live flag updates and the
+  current/legacy OR behavior. Model arithmetic and sampling are unchanged;
+  real-model speed and correctness qualification remain required.
 
 Stable remains 0.9.0 until the release gates and distribution checks pass.
 The development version string is prepared for 0.10.0; no stable release or
