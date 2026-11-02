@@ -817,7 +817,9 @@ public actor Engine {
             modelConfiguration: await container.configuration,
             tokenizer: await container.tokenizer,
             iterator: iterator,
-            toolSchemas: nil)
+            extraStopStrings: request.stop ?? [],
+            toolSchemas: nil,
+            parseChatMarkup: false)
 
         var run = GenerationRun()
         run.priority = grant.priority.rawValue

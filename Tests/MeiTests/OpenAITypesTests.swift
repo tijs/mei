@@ -264,9 +264,7 @@ final class OpenAITypesTests: XCTestCase {
     }
 
     func testNonStreamingResponsesAlwaysIncludeUsage() throws {
-        // /v1/chat/completions and /v1/completions both serialize through
-        // Router.completionResponse, so this single assertion pins the shared
-        // shape for both paths.
+        // Both endpoint envelopes retain the same usage counters.
         let response = Router.completionResponse(run: usageRun(), model: "m", emitReasoning: true)
         let data = try JSONEncoder().encode(response)
         let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -276,6 +274,11 @@ final class OpenAITypesTests: XCTestCase {
         XCTAssertEqual(usage["total_tokens"] as? NSNumber, 15)
         XCTAssertEqual(
             (usage["prompt_tokens_details"] as? [String: Any])?["cached_tokens"] as? NSNumber, 8)
+        let raw = Router.textCompletionResponse(run: usageRun(), model: "m")
+        let rawData = try JSONEncoder().encode(raw)
+        let rawDict = try XCTUnwrap(JSONSerialization.jsonObject(with: rawData) as? [String: Any])
+        let rawUsage = try XCTUnwrap(rawDict["usage"] as? NSDictionary)
+        XCTAssertEqual(rawUsage, usage as NSDictionary)
     }
 
     func testStreamingFinishUsageCountParityWithNonStreaming() throws {

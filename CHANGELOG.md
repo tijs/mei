@@ -12,6 +12,9 @@ All notable changes to Mei are documented here.
 - Return buffered `/v1/completions` results as `text_completion` objects with
   `choices[].text` and the existing usage counters. Reject `stream: true`
   explicitly instead of silently returning buffered JSON.
+- Preserve literal raw generation text, including reasoning/tool markers,
+  instead of discarding it through chat channel parsing. Forward explicit raw
+  stop strings to the generation loop.
 
 Stable remains 0.9.0 until the release gates and distribution checks pass.
 The development version string is prepared for 0.10.0; no stable release or
