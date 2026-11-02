@@ -366,6 +366,37 @@ class WrapperStatusTests(unittest.TestCase):
         self.assertEqual(probe_mei.aggregate_status({}), "failed")
 
 
+class NormalBudgetTests(unittest.TestCase):
+    def test_budget_is_advertised_by_the_serving_profile(self):
+        for value in (2048, 8192):
+            self.assertEqual(probe_mei.normal_output_budget({"maxTokens": value}), value)
+        for value in (None, True, 0, -1, "8192"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                probe_mei.normal_output_budget({"maxTokens": value})
+
+    def test_main_forwards_normal_budget_and_fails_closed_if_missing(self):
+        from unittest.mock import patch
+
+        for budget in (2048, 8192, None):
+            with tempfile.TemporaryDirectory() as folder:
+                output = Path(folder) / "probe.json"
+                status = {"status": "ok", "maxTokens": budget, "contextCap": 65536, "prefillStepSize": 256}
+                replies = [({"data": [{"id": "fixture"}]}, 0.01), (status, 0.01), KeyboardInterrupt()]
+                with patch.object(sys, "argv", ["probe", "--model", "fixture", "--output", str(output)]), \
+                     patch.object(probe_mei, "request_json", side_effect=replies) as request:
+                    if budget is None:
+                        self.assertEqual(probe_mei.main(), 1)
+                        self.assertEqual(request.call_count, 2)
+                        self.assertEqual(json.loads(output.read_text())["status"], "failed")
+                    else:
+                        with self.assertRaises(KeyboardInterrupt):
+                            probe_mei.main()
+                        self.assertEqual(request.call_args_list[2].args[1]["max_tokens"], budget)
+                        saved = json.loads(output.read_text())
+                        self.assertEqual(saved["generation_budget"], budget)
+                        self.assertEqual(saved["probes"]["mei_status"]["context_cap"], 65536)
+
+
 class ProbeCheckpointTests(unittest.TestCase):
     def test_completed_checks_survive_later_interruption_without_full_pass(self):
         with tempfile.TemporaryDirectory() as folder:

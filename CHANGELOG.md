@@ -21,6 +21,9 @@ All notable changes to Mei are documented here.
   real-model speed and correctness qualification remain required.
 
 Stable remains 0.9.0 until the release gates and distribution checks pass.
+Semantic native probes now inherit the serving profile's advertised output
+budget, including reasoning. Mechanical timing/cache/context checks retain
+their explicit short budgets and do not claim completed task quality.
 The development version string is prepared for 0.10.0; no stable release or
 decode-speed improvement is claimed here yet.
 

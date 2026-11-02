@@ -21,6 +21,26 @@ final class MeiAcceptanceTests: XCTestCase {
         TimeInterval(ProcessInfo.processInfo.environment["MEI_ACCEPTANCE_TIMEOUT"] ?? "1800") ?? 1800
     }
 
+    private struct StatusBudget: Decodable {
+        let maxTokens: Int
+    }
+
+    func normalOutputBudget() throws -> Int {
+        let budget: Int
+        if let raw = ProcessInfo.processInfo.environment["MEI_ACCEPTANCE_MAX_TOKENS"] {
+            budget = try XCTUnwrap(Int(raw), "invalid configured native output budget")
+        } else {
+            let (data, response) = try get("/mei/status", timeout: 30)
+            XCTAssertEqual(response.statusCode, 200)
+            budget = try decode(StatusBudget.self, from: data).maxTokens
+        }
+        guard budget > 0 else {
+            throw NSError(domain: "MeiAcceptanceBudget", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "native output budget must be positive"])
+        }
+        return budget
+    }
+
     // MARK: - Helpers
 
     /// Concatenate the base URL and a route, tolerating a leading slash on
@@ -96,10 +116,7 @@ final class MeiAcceptanceTests: XCTestCase {
             "model": modelID,
             "messages": [["role": "user", "content": "Reply with exactly: ready"]],
             "temperature": 0,
-            // Thinking models (Ornith is Qwen3.5-lineage) spend their first
-            // 100+ tokens on the thinking preamble; a small budget truncates
-            // before any visible content. 1024 covers a full think+answer.
-            "max_tokens": 1024,
+            "max_tokens": try normalOutputBudget(),
             "stream": false,
         ])
         XCTAssertEqual(response.statusCode, 200, String(data: data, encoding: .utf8) ?? "")
@@ -130,8 +147,7 @@ final class MeiAcceptanceTests: XCTestCase {
             ]],
             "tool_choice": ["type": "function", "function": ["name": "add_numbers"]],
             "temperature": 0,
-            // The shared native budget includes reasoning tokens.
-            "max_tokens": 1024,
+            "max_tokens": try normalOutputBudget(),
             "stream": false,
         ]
         let (data, response) = try post("/chat/completions", json: toolPayload)
@@ -162,7 +178,7 @@ final class MeiAcceptanceTests: XCTestCase {
             ]],
             "tool_choice": ["type": "function", "function": ["name": "add_numbers"]],
             "temperature": 0,
-            "max_tokens": 1024,
+            "max_tokens": try normalOutputBudget(),
             "stream": true,
         ]
         toolPayload["stream_options"] = ["include_usage": true]

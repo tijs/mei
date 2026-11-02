@@ -293,6 +293,13 @@ def checkpointed_probe(name: str, output: dict[str, Any], fn, path: Path) -> Non
     write_probe_result(path, output)
 
 
+def normal_output_budget(status: dict[str, Any]) -> int:
+    value = status.get("maxTokens")
+    if type(value) is not int or value <= 0:
+        raise ValueError("Mei status must advertise a positive integer maxTokens budget")
+    return value
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:8024/v1")
@@ -340,23 +347,29 @@ def main() -> int:
         return {
             "memory": response.get("memory"),
             "device": (response.get("memory") or {}).get("device"),
-            "context_cap": response.get("context_cap"),
-            "prefill_step_size": response.get("prefill_step_size"),
+            "context_cap": response.get("contextCap"),
+            "prefill_step_size": response.get("prefillStepSize"),
+            "generation_budget": normal_output_budget(response),
             "request_seconds": elapsed,
         }
 
     record_probe("mei_status", result, status)
+    generation_budget = result["probes"]["mei_status"].get("generation_budget")
+    if type(generation_budget) is not int:
+        result.update(status="failed", finished_epoch=time.time())
+        write_probe_result(args.output, result)
+        return 1
+    result["generation_budget"] = generation_budget
+    write_probe_result(args.output, result)
 
     def plain() -> dict[str, Any]:
         response, elapsed = request_json(chat_url, {
             "model": args.model,
             "messages": [{"role": "user", "content": "Reply with exactly: ready"}],
             "temperature": 0,
-            # Thinking models (Ornith is Qwen3.5-lineage) spend their first
-            # 100+ tokens on the thinking preamble; the omlx-era 8-token
-            # budget truncated before any visible content. 1024 covers a
-            # full think+answer cycle while keeping the probe cheap.
-            "max_tokens": 1024,
+            # Semantic admission uses the serving profile's normal budget,
+            # including reasoning; small timing caps cannot qualify an answer.
+            "max_tokens": generation_budget,
             "stream": False,
         }, timeout=args.timeout)
         choices = response.get("choices") or []
@@ -391,7 +404,7 @@ def main() -> int:
         "temperature": 0,
         # Includes reasoning as well as the emitted call, like the plain probe.
         # Keep the call contract strict; token exhaustion still fails admission.
-        "max_tokens": 1024,
+        "max_tokens": generation_budget,
         "stream": False,
     }
 
@@ -434,7 +447,7 @@ def main() -> int:
         ],
         "tools": tools,
         "temperature": 0,
-        "max_tokens": 128,
+        "max_tokens": generation_budget,
         "stream": False,
     }
 
@@ -460,9 +473,7 @@ def main() -> int:
         "model": args.model,
         "messages": [{"role": "user", "content": "Reply with exactly: parity-ok"}],
         "temperature": 0,
-        # Same thinking-preamble rationale as plain_completion: 1024 tokens
-        # so both legs produce visible content to compare.
-        "max_tokens": 1024,
+        "max_tokens": generation_budget,
     }
 
     def parity() -> dict[str, Any]:
