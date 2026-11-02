@@ -75,6 +75,11 @@ same real-model correctness/performance checks as other runtime changes.
 
 Do not tag on "it builds". At minimum:
 
+- Run the offline Swift suite separately from the live-server acceptance class:
+  `swift test -j 2 --skip MeiAcceptanceTests`. `MeiAcceptanceTests` deliberately
+  fails without a server; run it with `--skip-build --filter MeiAcceptanceTests`
+  against the owned, guarded server, setting `MEI_ACCEPTANCE_BASE_URL` and
+  `MEI_SERVED_MODEL_ID`. An offline pass does not substitute for that live gate.
 - `tools/probe_mei.py` against a live server on a real staged model — streaming
   and non-streaming tool calls, cache reuse, the exact context-cap boundary.
   Expect every probe to pass (13 as of 0.5.0; the count grows as probes are

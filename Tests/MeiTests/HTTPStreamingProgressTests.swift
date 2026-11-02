@@ -33,6 +33,41 @@ final class HTTPStreamingProgressTests: XCTestCase {
         func newCache(parameters: GenerateParameters?) -> [KVCache] { [] }
     }
 
+    func testStatusRespondsWhileInferenceActorIsBlocked() async throws {
+        let config = ServerConfig(modelDirectory: "/nonexistent", servedModelID: "test/fake")
+        let context = ModelContext(configuration: ModelConfiguration(id: "test/fake"), model: NoopModel(),
+                                   processor: NoopProcessor(), tokenizer: NoopTokenizer())
+        let engine = Engine(container: ModelContainer(context: context), config: config)
+        let entered = DispatchSemaphore(value: 0)
+        let release = DispatchSemaphore(value: 0)
+        let blocker = Task.detached { await engine.blockForStatusTest(entered: entered, release: release) }
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                entered.wait()
+                continuation.resume()
+            }
+        }
+        // The watchdog makes an accidental actor hop fail in bounded time.
+        // On the responsive path, release immediately after the real route.
+        let watchdog = DispatchWorkItem { release.signal() }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: watchdog)
+        let start = ContinuousClock.now
+        let result = await Router(engine: engine, config: config).route(
+            method: .GET, uri: "/v1/mei/status", body: Data())
+        let elapsed = start.duration(to: .now)
+        watchdog.cancel()
+        release.signal()
+        await blocker.value
+        XCTAssertLessThan(elapsed, .milliseconds(500), "status waited for the inference actor")
+        guard case .plain(let status, _, let body) = result else {
+            return XCTFail("expected status JSON")
+        }
+        XCTAssertEqual(status, .ok)
+        let response = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any])
+        XCTAssertEqual(response["model"] as? String, "test/fake")
+        XCTAssertNotNil(response["scheduler"])
+    }
+
     func testInvisibleProgressBeforeErrorDoesNotCommitSuccessStatus() async throws {
         let config = ServerConfig(modelDirectory: "/nonexistent", servedModelID: "test/fake")
         let context = ModelContext(configuration: ModelConfiguration(id: "test/fake"), model: NoopModel(),
@@ -51,5 +86,12 @@ final class HTTPStreamingProgressTests: XCTestCase {
             return XCTFail("expected an HTTP response head")
         }
         XCTAssertEqual(head.status, .internalServerError)
+    }
+}
+
+private extension Engine {
+    func blockForStatusTest(entered: DispatchSemaphore, release: DispatchSemaphore) {
+        entered.signal()
+        release.wait()
     }
 }

@@ -2,6 +2,18 @@
 
 All notable changes to Mei are documented here.
 
+## Unreleased — 0.10.0 qualification
+
+- Read status cache counters without waiting for the inference actor or
+  calculating an unused disk-quota snapshot. A blocked-actor regression covers
+  the route; real long-prefill responsiveness still requires qualification.
+- Send streaming success headers only when an event produces a visible SSE
+  frame, so invisible prefill progress cannot hide a later HTTP error.
+
+Stable remains 0.9.0 until the release gates and distribution checks pass.
+The development version string is prepared for 0.10.0; no stable release or
+decode-speed improvement is claimed here yet.
+
 ## [0.10.0-rc.2] - 2026-11-01
 
 - Name the automatically detected Qwen3.5-MoE architecture policy `qwen35-moe`,
