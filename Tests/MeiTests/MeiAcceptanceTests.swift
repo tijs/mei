@@ -50,6 +50,26 @@ final class MeiAcceptanceTests: XCTestCase {
         guard let http = response as? HTTPURLResponse else {
             throw XCTSkip("non-HTTP response")
         }
+        if let path = ProcessInfo.processInfo.environment["MEI_ACCEPTANCE_JOURNAL"] {
+            let entry: [String: Any] = [
+                "method": request.httpMethod ?? "GET",
+                "url": request.url?.absoluteString ?? "",
+                "request_body": String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "",
+                "http_status": http.statusCode,
+                "response_body": String(data: data, encoding: .utf8) ?? "",
+            ]
+            var line = try JSONSerialization.data(withJSONObject: entry, options: [.sortedKeys])
+            line.append(0x0a)
+            if !FileManager.default.fileExists(atPath: path) {
+                guard FileManager.default.createFile(atPath: path, contents: nil) else {
+                    throw CocoaError(.fileWriteUnknown)
+                }
+            }
+            let handle = try FileHandle(forWritingTo: URL(fileURLWithPath: path))
+            defer { try? handle.close() }
+            try handle.seekToEnd()
+            try handle.write(contentsOf: line)
+        }
         return (data, http)
     }
 
@@ -110,7 +130,8 @@ final class MeiAcceptanceTests: XCTestCase {
             ]],
             "tool_choice": ["type": "function", "function": ["name": "add_numbers"]],
             "temperature": 0,
-            "max_tokens": 256,
+            // The shared native budget includes reasoning tokens.
+            "max_tokens": 1024,
             "stream": false,
         ]
         let (data, response) = try post("/chat/completions", json: toolPayload)
@@ -141,7 +162,7 @@ final class MeiAcceptanceTests: XCTestCase {
             ]],
             "tool_choice": ["type": "function", "function": ["name": "add_numbers"]],
             "temperature": 0,
-            "max_tokens": 256,
+            "max_tokens": 1024,
             "stream": true,
         ]
         toolPayload["stream_options"] = ["include_usage": true]
