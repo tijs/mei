@@ -10,12 +10,29 @@ origin   https://github.com/tijs/vmlx-swift.git
 upstream https://github.com/osaurus-ai/vmlx-swift.git
 ```
 
-Mei's `Package.swift` and `Package.resolved` pin the fork's integrated `main`
+Mei's `Package.swift` and `Package.resolved` pin an exact published fork
 revision. A fresh Mei build retrieves the fork through SwiftPM. There is no
 normal build-time patch application and no dependency on a local SwiftPM
 repository cache being pre-populated.
 
-## Current pin
+## Runtime dependency pin: 0.10
+
+Mei 0.10 pins vmlx **`2256cc116ad626386a0b544af61e294882503c50`**,
+which retains the phase-flag lookup optimization and pins MLX core
+**`bbdcd4d1431e64a4ae44f353cea6ec0be72f4bee`** from
+[`tijs/mlx`](https://github.com/tijs/mlx), based on `osaurus-ai/mlx` at
+`c0a51a085b9252dc6469afe1aed772b1f538c9b0`.
+
+The core change admits recent buffer shapes within a bounded allocator pool
+and releases oversized returns. Four real-Metal regressions reproduce the old
+behavior and pass through the new published dependency chain. They do not
+establish a model speed improvement; native/context/numerical and unprofiled
+throughput qualification remain required before release. Exact application,
+dependency, binary and Metal identities belong in the release evidence.
+
+The earlier pins and fork history below are preserved as historical evidence.
+
+## Historical pins: 0.6.1 and 0.7.0
 
 The released Mei 0.6.1 build pinned **`fef563a5`**
 (`fef563a55b4f22d4530b3439c1edb233cfc44a8f`). Mei 0.7.0 pins

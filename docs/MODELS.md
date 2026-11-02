@@ -1,13 +1,19 @@
 # Models
 
-How Mei's model candidates are chosen, staged, quantized, and run. The
-machine-readable source of truth for pinned revisions, digests, quant
-settings, staged paths, and status is
-[`configs/model-lineup.json`](../configs/model-lineup.json) — keep this page
-in sync with it and never let it drift into claiming a model is in the lineup
-when it is not.
+The runtime's named presets and immutable download revisions live in
+[`ModelTuningRegistry`](../Sources/MeiCore/ModelTuning.swift); inspect one with
+`mei pull <profile> --dry-run`. The active Qwen3.6/Ornith/Groot text-profile
+comparison is linked from the [README](../README.md#supported-models), with
+exact evaluated packs, runtime pins and gate scope in
+[local-model-bench](https://github.com/tijs/local-model-bench/blob/main/docs/FOUR_MODEL_COMPARISON.md).
 
-## Candidate status at a glance
+The earlier research catalog [`configs/model-lineup.json`](../configs/model-lineup.json)
+retains its own candidate roles and provenance. It is not the CLI preset registry
+or the current household/Python ranking. The historical catalog and prior-release
+proof below remain useful for reproducing those experiments; a new runtime or
+checkpoint requires its own admission and performance evidence.
+
+## Earlier catalog status (historical)
 
 | Model | Repo (download) | Served id | Status |
 |---|---|---|---|

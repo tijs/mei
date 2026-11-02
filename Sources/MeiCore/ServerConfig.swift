@@ -478,7 +478,7 @@ public extension ServerConfig {
                              naturally aligned. Uses the `hf` CLI.
 
       --model-profile NAME   Serve a supported model with its MEASURED settings:
-                             ornith-1.5-35b-a3b | qwen3.6-35b-a3b-text | qwen3.6-35b-a3b
+                             \(ModelTuningRegistry.names.joined(separator: " | "))
                              Selects architecture handling, prefill step, anchor
                              boundaries and max-tokens together. Omit it and Mei
                              falls back to architecture defaults detected from

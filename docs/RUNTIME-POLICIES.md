@@ -45,7 +45,10 @@ There are three distinct memory controls:
   512 MiB. It is separate from disk storage and active generation allocations.
 - `--cache-limit-bytes`: freed MLX allocator buffers. Omitted uses the backend
   default; explicitly passing `0` disables the buffer pool. Nonnegative explicit
-  values are passed to model loading and reapplied for inference.
+  values are passed to model loading and reapplied for inference. Returned
+  buffers that fit displace older cached entries as needed; a single buffer
+  larger than the allowance is released. This lets decode-sized buffers replace
+  unused prefill shapes. The separate prefix cache stores model state.
 - `--memory-limit-bytes`: MLX allocation budget, with `0`/omitted selecting the
   backend default. A budget below the working set can stall allocations.
 

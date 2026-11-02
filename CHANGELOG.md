@@ -2,7 +2,7 @@
 
 All notable changes to Mei are documented here.
 
-## Unreleased — 0.10.0 qualification
+## [0.10.0] - 2026-11-03
 
 - Read status cache counters without waiting for the inference actor or
   calculating an unused disk-quota snapshot. A blocked-actor regression covers
@@ -19,13 +19,20 @@ All notable changes to Mei are documented here.
   environment twice per decoder layer. Preserve live flag updates and the
   current/legacy OR behavior. Model arithmetic and sampling are unchanged;
   real-model speed and correctness qualification remain required.
+- Keep bounded Metal buffer pools responsive to changing shapes: evict older
+  cached entries before retaining a recent buffer, and release returned
+  buffers that cannot fit the allowance. Real-Metal regressions cover shape
+  changes, partial eviction, oversized returns and an explicit zero pool.
+- List all registered named model presets in CLI help, including Groot, and
+  keep current model comparisons separate from older coding-centric figures.
 
-Stable remains 0.9.0 until the release gates and distribution checks pass.
 Semantic native probes now inherit the serving profile's advertised output
 budget, including reasoning. Mechanical timing/cache/context checks retain
 their explicit short budgets and do not claim completed task quality.
-The development version string is prepared for 0.10.0; no stable release or
-decode-speed improvement is claimed here yet.
+Release qualification and distribution identities are published with the
+release. CPU lookup cost and synthetic allocator regressions are distinct from
+real-model throughput and task quality; use the linked model/run evidence for
+those claims.
 
 ## [0.10.0-rc.2] - 2026-11-01
 
