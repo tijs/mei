@@ -444,6 +444,29 @@ extension CompletionRequest {
 
 // MARK: - Response DTOs
 
+/// Buffered legacy text completion. Raw prompts return raw text rather than
+/// the chat endpoint's assistant-message envelope.
+public struct TextCompletionResponse: Encodable, Sendable {
+    public var id: String
+    public var object = "text_completion"
+    public var created: Int
+    public var model: String
+    public var choices: [Choice]
+    public var usage: ChatCompletionResponse.Usage
+
+    public struct Choice: Encodable, Sendable {
+        public var index = 0
+        public var text: String
+        public var finishReason: String?
+        public var logprobs: Int? = nil
+
+        public enum CodingKeys: String, CodingKey {
+            case index, text, logprobs
+            case finishReason = "finish_reason"
+        }
+    }
+}
+
 public struct ChatCompletionResponse: Encodable, Sendable {
     public var id: String
     public var object = "chat.completion"

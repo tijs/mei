@@ -330,7 +330,11 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
 - `GET /v1/mei/status` → Mei extension status surface (memory, cache counters);
   not part of the OpenAI surface.
 - `POST /v1/completions` (legacy text completions) exists — **out of P0
-  scope** for this contract.
+  scope** for this contract. Stable 0.10 preparation corrects buffered responses
+  to `object: "text_completion"` with `choices[].text` and the shared usage
+  fields. Earlier versions returned a chat-shaped envelope. `stream: true`
+  is explicitly rejected with HTTP 400, `code: "unsupported_stream"`,
+  `param: "stream"`; use the chat endpoint for streaming.
 
 ## 5. Status codes and error envelope (shipped)
 

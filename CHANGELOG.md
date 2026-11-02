@@ -9,6 +9,9 @@ All notable changes to Mei are documented here.
   the route; real long-prefill responsiveness still requires qualification.
 - Send streaming success headers only when an event produces a visible SSE
   frame, so invisible prefill progress cannot hide a later HTTP error.
+- Return buffered `/v1/completions` results as `text_completion` objects with
+  `choices[].text` and the existing usage counters. Reject `stream: true`
+  explicitly instead of silently returning buffered JSON.
 
 Stable remains 0.9.0 until the release gates and distribution checks pass.
 The development version string is prepared for 0.10.0; no stable release or

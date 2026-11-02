@@ -143,10 +143,16 @@ public final class Router: @unchecked Sendable {
     private func completion(body: Data) async -> RouteResult {
         do {
             let request = try CompletionRequest(json: body)
+            guard !request.stream else {
+                return .plain(status: .badRequest, contentType: "application/json",
+                    body: serializer.errorPayload(
+                        "Streaming text completions are not supported; use /v1/chat/completions for streaming.",
+                        code: "unsupported_stream", param: "stream"))
+            }
             let run = try await engine.completionRun(request: request)
             return .plain(
                 status: .ok, contentType: "application/json",
-                body: serializer.json(Self.completionResponse(run: run, model: config.servedModelID, emitReasoning: config.emitReasoning)))
+                body: serializer.json(Self.textCompletionResponse(run: run, model: config.servedModelID)))
         } catch {
             return Self.errorResult(error, serializer: serializer)
         }
@@ -283,6 +289,14 @@ public final class Router: @unchecked Sendable {
             memoryActiveBytes: run.memoryActiveBytes > 0 ? run.memoryActiveBytes : nil,
             memoryCacheBytes: run.memoryCacheBytes > 0 ? run.memoryCacheBytes : nil,
             memoryPeakBytes: run.memoryPeakBytes > 0 ? run.memoryPeakBytes : nil)
+    }
+
+    public static func textCompletionResponse(run: GenerationRun, model: String) -> TextCompletionResponse {
+        TextCompletionResponse(
+            id: "cmpl-\(UUID().uuidString.lowercased().prefix(24))",
+            created: Int(Date().timeIntervalSince1970), model: model,
+            choices: [.init(text: run.text, finishReason: run.finishReason)],
+            usage: Self.usage(run: run))
     }
 
     public static func completionResponse(run: GenerationRun, model: String, emitReasoning: Bool) -> ChatCompletionResponse {

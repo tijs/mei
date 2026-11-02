@@ -68,6 +68,24 @@ final class HTTPStreamingProgressTests: XCTestCase {
         XCTAssertNotNil(response["scheduler"])
     }
 
+    func testRawCompletionStreamingIsRefusedBeforeGeneration() async throws {
+        let config = ServerConfig(modelDirectory: "/nonexistent", servedModelID: "test/fake")
+        let context = ModelContext(configuration: ModelConfiguration(id: "test/fake"), model: NoopModel(),
+                                   processor: NoopProcessor(), tokenizer: NoopTokenizer())
+        let engine = Engine(container: ModelContainer(context: context), config: config)
+        let result = await Router(engine: engine, config: config).route(
+            method: .POST, uri: "/v1/completions",
+            body: Data(#"{"model":"test/fake","prompt":"hello","stream":true}"#.utf8))
+        guard case .plain(let status, _, let body) = result else {
+            return XCTFail("expected an explicit HTTP error")
+        }
+        XCTAssertEqual(status, .badRequest)
+        let response = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any])
+        let error = try XCTUnwrap(response["error"] as? [String: String])
+        XCTAssertEqual(error["code"], "unsupported_stream")
+        XCTAssertEqual(error["param"], "stream")
+    }
+
     func testInvisibleProgressBeforeErrorDoesNotCommitSuccessStatus() async throws {
         let config = ServerConfig(modelDirectory: "/nonexistent", servedModelID: "test/fake")
         let context = ModelContext(configuration: ModelConfiguration(id: "test/fake"), model: NoopModel(),
