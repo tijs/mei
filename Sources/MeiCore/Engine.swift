@@ -180,6 +180,14 @@ public actor Engine {
         // inference (otherwise the 35B at 24GB active would hang alloca on
         // the 22.4GB default).
         applyExplicitMemoryLimits(config)
+        // Diagnostic branch only: compare the process-local Metal residency
+        // set against the candidate's normal load-time policy. This does not
+        // guarantee that macOS reclaims any pages.
+        if ProcessInfo.processInfo.environment["MEI_DIAGNOSTIC_CLEAR_MODEL_RESIDENCY"] == "1" {
+            let applied = setModelResidencyWiredLimit(0)
+            print("mei: diagnostic clear model residency applied=\(applied)")
+            fflush(stdout)
+        }
         return Engine(container: container, config: config, loadMemory: captureLoadMemorySnapshot())
     }
 
