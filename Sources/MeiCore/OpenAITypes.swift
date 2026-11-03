@@ -771,8 +771,16 @@ public struct MeiCacheStatus: Sendable, Codable {
     /// Conservative retained compact KV + companion storage charge.
     public var pagedResidentBytes: Int? = nil
     public var pagedCompanionBytes: Int? = nil
+    /// Shared tier ceiling; not an additional paged allocation.
     public var pagedMaxResidentBytes: Int? = nil
+    /// Shared retained charge across paged KV/rotating and separate SSM state.
+    /// Includes reservations for optional copies currently being materialized.
+    public var retainedBytes: Int? = nil
+    public var maxRetainedBytes: Int? = nil
     public var ssmHits: Int
     public var ssmMisses: Int
+    public var ssmResidentBytes: Int? = nil
+    /// Shared tier ceiling; not an additional SSM allocation.
+    public var ssmMaxResidentBytes: Int? = nil
     public var isHybrid: Bool
 }

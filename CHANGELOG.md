@@ -28,6 +28,12 @@ All notable changes to Mei are documented here.
   budgeting under normal or unavailable pressure readings. This can cost a
   later cache hit; it does not turn a completed request into an error or
   guarantee that every prefill working set fits the host.
+- Apply `--prefix-cache-limit-bytes` to one shared allowance for paged KV,
+  rotating companions and separate recurrent SSM snapshots. Previously, SSM
+  snapshots were only entry bounded and sat outside that byte limit. Reserve
+  retained bytes before optional copies, and keep disk persistence/restoration
+  usable when an entry cannot stay in RAM. Status exposes shared and SSM byte
+  charges. This bounds retained prefixes, not total model or active-request RAM.
 - List all registered named model presets in CLI help, including Groot, and
   keep current model comparisons separate from older coding-centric figures.
 

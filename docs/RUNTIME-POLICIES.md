@@ -41,7 +41,8 @@ the old absent-variable/big-model automatic activation.
 
 There are three distinct memory controls:
 
-- `--prefix-cache-limit-bytes`: live retained prefix/companion budget, default
+- `--prefix-cache-limit-bytes`: one shared retained budget for paged KV, rotating
+  companions and separate recurrent SSM snapshots, default
   512 MiB. It is separate from disk storage and active generation allocations.
 - `--cache-limit-bytes`: freed MLX allocator buffers. Omitted uses the backend
   default; explicitly passing `0` disables the buffer pool. Nonnegative explicit

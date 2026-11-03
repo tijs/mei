@@ -26,6 +26,17 @@ still completes normally, and a later request may need to prefill again. This
 point-in-time signal neither reserves RAM nor guarantees that every later
 prefill fits.
 
+The existing `--prefix-cache-limit-bytes` now bounds paged KV, rotating
+companions and separate SSM snapshots together. Previously, SSM state used only
+an entry-count limit. Both stores and disk hydration respect the shared byte
+allowance; an oversized checkpoint can remain on disk without staying in RAM.
+`/v1/mei/status` exposes `cache.retainedBytes`, `cache.maxRetainedBytes` and separate
+SSM charges. These are conservative cache-accounting bytes, including in-flight
+reservations, rather than total physical RAM. Per-tier maxima refer to the same
+shared ceiling and must not be added. Tiers evict their own cold entries; when
+another tier holds the allowance, a store can decline RAM retention instead of
+performing cross-tier eviction. This may cost a later cache hit.
+
 Native semantic probes inherit the serving profile's advertised output budget,
 including reasoning. Mechanical timing/cache/context probes retain explicit
 small limits and establish their declared runtime contracts. Admission,
