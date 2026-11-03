@@ -267,6 +267,7 @@ public actor Engine {
             pagedMaxResidentBytes: paged?.maxResidentBytes,
             retainedBytes: coordinator.retainedCacheBytes,
             maxRetainedBytes: ssm.maxResidentBytes,
+            promptSnapshotBytes: coordinator.promptSnapshotBytes,
             ssmHits: ssm.hits,
             ssmMisses: ssm.misses,
             ssmResidentBytes: ssm.residentBytes,

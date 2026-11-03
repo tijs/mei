@@ -38,6 +38,7 @@ final class AdmissionContractTests: XCTestCase {
             XCTAssertEqual(status.pagedMaxResidentBytes, full.pagedStats?.maxResidentBytes)
             XCTAssertEqual(status.retainedBytes, coordinator.retainedCacheBytes)
             XCTAssertEqual(status.maxRetainedBytes, full.ssmStats.maxResidentBytes)
+            XCTAssertEqual(status.promptSnapshotBytes, coordinator.promptSnapshotBytes)
             XCTAssertEqual(status.ssmHits, full.ssmStats.hits)
             XCTAssertEqual(status.ssmMisses, full.ssmStats.misses)
             XCTAssertEqual(status.ssmResidentBytes, full.ssmStats.residentBytes)

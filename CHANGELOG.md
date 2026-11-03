@@ -34,6 +34,13 @@ All notable changes to Mei are documented here.
   retained bytes before optional copies, and keep disk persistence/restoration
   usable when an entry cannot stay in RAM. Status exposes shared and SSM byte
   charges. This bounds retained prefixes, not total model or active-request RAM.
+- Avoid retaining an exact-prompt cache copy when solo generation has no
+  persistence consumer. Optional copies now reserve from the same prefix-byte
+  allowance and respect host pressure before materialization; declining a copy
+  does not trigger a replacement prefill. Independent captured boundaries remain
+  usable. Status exposes `cache.promptSnapshotBytes` within `retainedBytes`.
+  A real-Metal rotating-cache regression removes an unused 16 MiB copy; the
+  effect on a full model's memory pressure still requires live qualification.
 - List all registered named model presets in CLI help, including Groot, and
   keep current model comparisons separate from older coding-centric figures.
 

@@ -42,8 +42,10 @@ the old absent-variable/big-model automatic activation.
 There are three distinct memory controls:
 
 - `--prefix-cache-limit-bytes`: one shared retained budget for paged KV, rotating
-  companions and separate recurrent SSM snapshots, default
-  512 MiB. It is separate from disk storage and active generation allocations.
+  companions, separate recurrent SSM snapshots and optional solo exact-prompt
+  copies, default 512 MiB. It is separate from disk storage and the live
+  generation cache/workspace. Status's `promptSnapshotBytes` is a component of
+  the shared `retainedBytes`, not an additional allowance.
 - `--cache-limit-bytes`: freed MLX allocator buffers. Omitted uses the backend
   default; explicitly passing `0` disables the buffer pool. Nonnegative explicit
   values are passed to model loading and reapplied for inference. Returned
@@ -59,6 +61,10 @@ their materialization copy and logs the reason. The completed answer stays
 successful; a later request may need to prefill again. Normal or unavailable
 pressure readings retain the existing byte-budget policy. This snapshot does
 not reserve RAM or guarantee that a later prefill working set will fit.
+Solo generation skips exact-prompt copies without a usable persistence consumer.
+Optional copies reserve shared bytes before materialization and respect that same
+pressure check; a decline does not trigger a replacement prefill. Live iterator
+copies retain their charge until the final owner releases the snapshot.
 
 None is a total process/GPU/host memory ceiling. Disk usage, physical footprint,
 pressure and swap still need independent measurement. Model-specific backend

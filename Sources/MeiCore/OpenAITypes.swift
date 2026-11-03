@@ -773,10 +773,13 @@ public struct MeiCacheStatus: Sendable, Codable {
     public var pagedCompanionBytes: Int? = nil
     /// Shared tier ceiling; not an additional paged allocation.
     public var pagedMaxResidentBytes: Int? = nil
-    /// Shared retained charge across paged KV/rotating and separate SSM state.
+    /// Shared retained charge across paged KV/rotating, separate SSM state,
+    /// and optional exact-prompt snapshots.
     /// Includes reservations for optional copies currently being materialized.
     public var retainedBytes: Int? = nil
     public var maxRetainedBytes: Int? = nil
+    /// Component of retainedBytes under maxRetainedBytes, not a separate pool.
+    public var promptSnapshotBytes: Int? = nil
     public var ssmHits: Int
     public var ssmMisses: Int
     public var ssmResidentBytes: Int? = nil

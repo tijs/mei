@@ -37,6 +37,17 @@ shared ceiling and must not be added. Tiers evict their own cold entries; when
 another tier holds the allowance, a store can decline RAM retention instead of
 performing cross-tier eviction. This may cost a later cache hit.
 
+Solo generation no longer takes an unused exact-prompt cache copy when no
+persistence consumer can use it. An optional exact copy is admitted only after
+the existing host-pressure check and a reservation from that same shared prefix
+allowance. `cache.promptSnapshotBytes` reports its component of `retainedBytes`,
+including while an iterator still owns the arrays after a cache clear. A
+deliberate decline does not cause a replacement prefill; independently captured
+canonical and typed N-1 boundaries retain their persistence contracts. The
+real-Metal regression removes an unused 16 MiB rotating-cache copy without
+changing cache precision. This is a bounded synthetic result; full-model memory
+and throughput remain separate qualification evidence.
+
 Native semantic probes inherit the serving profile's advertised output budget,
 including reasoning. Mechanical timing/cache/context probes retain explicit
 small limits and establish their declared runtime contracts. Admission,
