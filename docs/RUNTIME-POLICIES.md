@@ -52,6 +52,13 @@ There are three distinct memory controls:
 - `--memory-limit-bytes`: MLX allocation budget, with `0`/omitted selecting the
   backend default. A budget below the working set can stall allocations.
 
+Cache checkpoints are optional. When the kernel reports warning or critical
+host memory pressure, Mei skips nonempty prefix-cache stores before making
+their materialization copy and logs the reason. The completed answer stays
+successful; a later request may need to prefill again. Normal or unavailable
+pressure readings retain the existing byte-budget policy. This snapshot does
+not reserve RAM or guarantee that a later prefill working set will fit.
+
 None is a total process/GPU/host memory ceiling. Disk usage, physical footprint,
 pressure and swap still need independent measurement. Model-specific backend
 policies may adjust limits; compare requests with live values rather than assume

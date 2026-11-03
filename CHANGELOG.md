@@ -23,6 +23,11 @@ All notable changes to Mei are documented here.
   cached entries before retaining a recent buffer, and release returned
   buffers that cannot fit the allowance. Real-Metal regressions cover shape
   changes, partial eviction, oversized returns and an explicit zero pool.
+- Skip optional prefix-cache stores while the kernel reports warning or
+  critical memory pressure. Log the skip reason and preserve existing byte
+  budgeting under normal or unavailable pressure readings. This can cost a
+  later cache hit; it does not turn a completed request into an error or
+  guarantee that every prefill working set fits the host.
 - List all registered named model presets in CLI help, including Groot, and
   keep current model comparisons separate from older coding-centric figures.
 

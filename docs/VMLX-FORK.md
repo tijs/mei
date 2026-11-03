@@ -17,7 +17,7 @@ repository cache being pre-populated.
 
 ## Runtime dependency pin: 0.10
 
-Mei 0.10 pins vmlx **`2256cc116ad626386a0b544af61e294882503c50`**,
+Mei 0.10 pins vmlx **`0288fa222b57e710cdf9dc59828c84c3634c65d1`**,
 which retains the phase-flag lookup optimization and pins MLX core
 **`bbdcd4d1431e64a4ae44f353cea6ec0be72f4bee`** from
 [`tijs/mlx`](https://github.com/tijs/mlx), based on `osaurus-ai/mlx` at
@@ -29,6 +29,13 @@ behavior and pass through the new published dependency chain. They do not
 establish a model speed improvement; native/context/numerical and unprofiled
 throughput qualification remain required before release. Exact application,
 dependency, binary and Metal identities belong in the release evidence.
+
+The shared optional cache-store guard also vetoes nonempty stores when the
+kernel reports warning or critical host pressure. It preserves normal-pressure
+byte budgeting and reclaimed-mmap footprint accounting, adds no operator
+setting, and logs why a checkpoint was skipped. A pressure sample is not a RAM
+reservation; this guard does not establish the cause of a prefill peak or
+replace real-model qualification.
 
 The earlier pins and fork history below are preserved as historical evidence.
 
