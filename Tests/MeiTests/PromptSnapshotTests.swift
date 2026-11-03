@@ -197,6 +197,84 @@ final class PromptSnapshotTests: XCTestCase {
         XCTAssertNil(direct.promptCacheSnapshot)
     }
 
+    func testNoStoreConsumerSkipsBoundaryCopiesAndPreservesLiveCache() throws {
+        let c = coordinator()
+        c.setHybrid(true, requiresSeparateRecurrentPayload: false)
+        let baselineModel = SnapshotBoundaryModel(.hybrid)
+        let baseline = try TokenIterator(input: input(12), model: baselineModel,
+            parameters: parameters, cacheCoordinator: nil)
+        eval(baseline.y.tokens)
+        eval(baseline.cache)
+        let expectedToken = baseline.y.tokens.asArray(Int.self)
+        let expectedOffsets = baseline.cache.map(\.offset)
+        let expectedStates = baseline.cache.map { $0.state.map { $0.asArray(Float.self) } }
+        XCTAssertEqual(baselineModel.prepares, [12])
+
+        let cases: [(CacheCoordinator?, LMInput.CachePromptIntent)] = [
+            (nil, .generation), (c, .auxiliary),
+        ]
+        for (coordinator, intent) in cases {
+            let model = SnapshotBoundaryModel(.hybrid)
+            let iterator = try TokenIterator(
+                input: input(12, prefixes: [4, 9], stable: [4], intent: intent),
+                model: model, parameters: parameters, cacheCoordinator: coordinator)
+            eval(iterator.y.tokens)
+            eval(iterator.cache)
+            XCTAssertEqual(model.prepares, [12], "No consumer needs segmented prefill")
+            XCTAssertTrue(iterator.stableBoundarySnapshots.isEmpty)
+            XCTAssertNil(iterator.hybridStripSnapshot)
+            XCTAssertNil(iterator.diskSeedSnapshot)
+            XCTAssertNil(iterator.promptCacheSnapshot)
+            XCTAssertEqual(iterator.y.tokens.asArray(Int.self), expectedToken)
+            XCTAssertEqual(iterator.cache.map(\.offset), expectedOffsets)
+            XCTAssertEqual(iterator.cache.map { $0.state.map { $0.asArray(Float.self) } }, expectedStates)
+        }
+    }
+
+    func testAuxiliaryRestoresWarmPagedPrefixWithoutCreatingSnapshotsOrStores() throws {
+        let c = coordinator(disk: false, paged: true)
+        let tokens = Array(2..<10)
+        let keys = MLXArray.ones([1, 1, 4, 4], dtype: .bfloat16)
+        let auxiliaryInput = input(12, prefixes: [4, 9], stable: [4], intent: .auxiliary)
+        let salt = computeCacheSalt(for: auxiliaryInput, parameters: parameters)
+        c.pagedCache!.storeTokenSequence(
+            tokens: tokens,
+            layerData: [[(keys: keys, values: keys + 1)], [(keys: keys, values: keys + 1)]],
+            mediaSalt: salt)
+        let before = c.pagedCache!.snapshotStats()
+        XCTAssertGreaterThan(before.residentBytes, 0)
+
+        let coldModel = SnapshotBoundaryModel()
+        let cold = try TokenIterator(input: input(12), model: coldModel,
+            parameters: parameters, cacheCoordinator: nil)
+        eval(cold.y.tokens)
+        eval(cold.cache)
+
+        let warmModel = SnapshotBoundaryModel()
+        var warm = try TokenIterator(
+            input: auxiliaryInput,
+            model: warmModel, parameters: parameters, cacheCoordinator: c)
+        eval(warm.y.tokens)
+        eval(warm.cache)
+        let afterRestore = c.pagedCache!.snapshotStats()
+        XCTAssertGreaterThan(afterRestore.cacheHits, before.cacheHits)
+        XCTAssertEqual(warmModel.prepares, [4], "Only the suffix should be prefilled")
+        XCTAssertEqual(warm.y.tokens.asArray(Int.self), cold.y.tokens.asArray(Int.self))
+        XCTAssertEqual(warm.cache.map(\.offset), cold.cache.map(\.offset))
+        XCTAssertEqual(warm.cache.map { $0.state.map { $0.asArray(Float.self) } },
+                       cold.cache.map { $0.state.map { $0.asArray(Float.self) } })
+        XCTAssertTrue(warm.stableBoundarySnapshots.isEmpty)
+        XCTAssertNil(warm.hybridStripSnapshot)
+        XCTAssertNil(warm.diskSeedSnapshot)
+        XCTAssertNil(warm.promptCacheSnapshot)
+
+        warm.storeCacheAfterGeneration(generatedTokenIds: [], includeGeneratedBoundary: false)
+        let afterFinalization = c.pagedCache!.snapshotStats()
+        XCTAssertEqual(afterFinalization.allocatedBlocks, afterRestore.allocatedBlocks)
+        XCTAssertEqual(afterFinalization.residentBytes, afterRestore.residentBytes)
+        XCTAssertEqual(c.promptSnapshotBytes, 0)
+    }
+
     func testEnabledSnapshotIsImmutableSharedOwnedAndVisibleUntilLastIteratorRelease() throws {
         let c = coordinator()
         c.setHybrid(true, requiresSeparateRecurrentPayload: false)

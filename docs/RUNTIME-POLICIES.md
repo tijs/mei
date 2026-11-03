@@ -46,6 +46,10 @@ There are three distinct memory controls:
   copies, default 512 MiB. It is separate from disk storage and the live
   generation cache/workspace. Status's `promptSnapshotBytes` is a component of
   the shared `retainedBytes`, not an additional allowance.
+  In-flight boundary snapshots for eligible cache stores are generation
+  workspace and are not counted in that retained budget. With no coordinator
+  or for auxiliary requests, Mei skips those snapshots; auxiliary requests
+  may still restore a previously cached prefix.
 - `--cache-limit-bytes`: freed MLX allocator buffers. Omitted uses the backend
   default; explicitly passing `0` disables the buffer pool. Nonnegative explicit
   values are passed to model loading and reapplied for inference. Returned

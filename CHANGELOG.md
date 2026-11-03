@@ -4,6 +4,9 @@ All notable changes to Mei are documented here.
 
 ## [0.10.0] - 2026-11-03
 
+- Skip prefill boundary snapshots when there is no cache coordinator or the
+  request is auxiliary, since neither path stores them. Auxiliary requests
+  can still restore a cached prefix. Real-model parity remains a release gate.
 - Read status cache counters without waiting for the inference actor or
   calculating an unused disk-quota snapshot. A blocked-actor regression covers
   the route; real long-prefill responsiveness still requires qualification.
