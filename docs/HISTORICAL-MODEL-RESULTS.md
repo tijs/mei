@@ -67,4 +67,3 @@ TTFT; Ornith also improved weighted completion-over-wall, while Qwen3.6 did
 not — Mei 0.6.1 is not uniformly faster than 0.5.0. Raw comparison artifacts:
 [Ornith](https://github.com/tijs/local-model-bench/blob/main/results/comparisons/ornith-mei061-vs-mei060-mei050.json),
 [Qwen3.6 text-only](https://github.com/tijs/local-model-bench/blob/main/results/comparisons/qwen36-textonly-mei061-vs-mei060-mei050.json).
-
