@@ -54,6 +54,23 @@ Auxiliary requests can still restore an existing prefix. Valid captures for
 cache persistence retain their existing behavior; real-model parity remains a
 separate release gate.
 
+Qualification on the 32 GiB M1 Max used pinned text-only Qwen, Ornith and
+Groot bundles and the recorded Mei executable and Metal library. All three
+passed native tool, cache and 65,536-token context admission. Ornith's two
+matched prefill-32 control processes and two compile-off candidate processes
+produced identical observable greedy outputs across 14 rows each; this does
+not establish hidden token-ID identity. Status remained responsive during the
+qualified long-prefill runs. Detailed model hashes, profiles, resource samples
+and raw outputs are preserved in [local-model-bench qualification evidence](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-stable-qualification-20261102).
+
+Throughput varies substantially between independent processes even when sampled
+memory pressure is normal and swap remains flat. For example, two clean Qwen
+processes measured 67.15 and 44.02 tokens/s on short prompts, and 48.89 and
+39.62 tokens/s at 30,000 prompt tokens. These are process medians from five
+measured 128-token completions each, not task scores or a controlled estimate
+of the optimization's speedup. The cause of the variation is not established;
+no uniform throughput gain is claimed.
+
 Native semantic probes inherit the serving profile's advertised output budget,
 including reasoning. Mechanical timing/cache/context probes retain explicit
 small limits and establish their declared runtime contracts. Admission,
