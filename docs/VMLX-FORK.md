@@ -17,7 +17,7 @@ repository cache being pre-populated.
 
 ## Runtime dependency pin: 0.10
 
-Mei 0.10 pins vmlx **`0288fa222b57e710cdf9dc59828c84c3634c65d1`**,
+Mei 0.10 pins vmlx **`9db62ce10416db4a33ff0108dca6fc00bdadfff7`**,
 which retains the phase-flag lookup optimization and pins MLX core
 **`bbdcd4d1431e64a4ae44f353cea6ec0be72f4bee`** from
 [`tijs/mlx`](https://github.com/tijs/mlx), based on `osaurus-ai/mlx` at

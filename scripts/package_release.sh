@@ -136,7 +136,7 @@ chmod 755 "$BUNDLE_DIR/bin/mei"
 for f in LICENSE NOTICE.md THIRD-PARTY-NOTICES.md CHANGELOG.md README.md; do
   [[ -f "$REPO/$f" ]] && cp -p "$REPO/$f" "$BUNDLE_DIR/$f"
 done
-for f in INSTALL.md RELEASE-${VERSION}.md INFERENCE-SCHEDULING.md VMLX-FORK.md RUNTIME-POLICIES.md FLINT.md FLINT-JANGH2.md; do
+for f in INSTALL.md RELEASE-${VERSION}.md INFERENCE-SCHEDULING.md VMLX-FORK.md RUNTIME-POLICIES.md MODELS.md FLINT.md FLINT-JANGH2.md; do
   [[ -f "$REPO/docs/$f" ]] && cp -p "$REPO/docs/$f" "$BUNDLE_DIR/docs/$f" || true
 done
 
@@ -156,12 +156,12 @@ check grep -q "version = \"$VERSION\"" "$REPO/Sources/MeiCore/ServerConfig.swift
 # sorted order — so rebuilding the same tree yields a byte-identical tar.gz
 # (stable SHA-256) that the Homebrew formula can safely pin.
 echo "== tar (reproducible) =="
-RELEASE_DATE="$(git -C "$REPO" log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
-MTIME="$(git -C "$REPO" log -1 --format=%cd --date=format:%Y%m%d%H%M.%S 2>/dev/null || date +%Y%m%d%H%M.%S)"
+RELEASE_DATE="$(TZ=UTC0 git -C "$REPO" log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ 2>/dev/null || TZ=UTC0 date +%Y-%m-%dT%H:%M:%SZ)"
+MTIME="$(TZ=UTC0 git -C "$REPO" log -1 --format=%cd --date=format-local:%Y%m%d%H%M.%S 2>/dev/null || TZ=UTC0 date +%Y%m%d%H%M.%S)"
 # prepare_metallib.sh stamps a fresh installed_at: line; pin it to the release date
 sed -i.bak "s/^installed_at: .*/installed_at: $RELEASE_DATE/" "$BUNDLE_DIR/bin/mlx.metallib.provenance" 2>/dev/null || true
 rm -f "$BUNDLE_DIR/bin/mlx.metallib.provenance.bak"
-find "$BUNDLE_DIR" -exec touch -t "$MTIME" {} +
+TZ=UTC0 find "$BUNDLE_DIR" -exec touch -t "$MTIME" {} +
 # COPYFILE_DISABLE=1 stops macOS bsdtar from storing extended attributes
 # (every bundled file carries com.apple.provenance) as synthetic AppleDouble
 # ._<name> sidecar members; without it the tarball carries one per file.
@@ -170,7 +170,7 @@ find "$BUNDLE_DIR" -exec touch -t "$MTIME" {} +
     | COPYFILE_DISABLE=1 tar -c -f - -T - | gzip -n > "$TARBALL"
 )
 echo "== sha256 =="
-shasum -a 256 "$TARBALL" > "$TARBALL.sha256"
+( cd "$DIST" && shasum -a 256 "$(basename "$TARBALL")" > "$(basename "$TARBALL").sha256" )
 cat "$TARBALL.sha256"
 # verify
 ( cd "$DIST" && shasum -a 256 -c "mei-${VERSION}-macos-arm64.tar.gz.sha256" )

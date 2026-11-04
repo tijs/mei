@@ -48,6 +48,12 @@ real-Metal regression removes an unused 16 MiB rotating-cache copy without
 changing cache precision. This is a bounded synthetic result; full-model memory
 and throughput remain separate qualification evidence.
 
+Solo generation also skips prefill boundary snapshots when there is no cache
+coordinator or the request is auxiliary, because neither path stores them.
+Auxiliary requests can still restore an existing prefix. Valid captures for
+cache persistence retain their existing behavior; real-model parity remains a
+separate release gate.
+
 Native semantic probes inherit the serving profile's advertised output budget,
 including reasoning. Mechanical timing/cache/context probes retain explicit
 small limits and establish their declared runtime contracts. Admission,

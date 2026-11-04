@@ -55,9 +55,9 @@ assert_fail bash "$PACKAGER" 9.9.9 --skip-build
 echo "== packaging (skip-build) =="
 if [[ "$(uname -m)" == "arm64" ]]; then
   if [[ -n "${MEI_TEST_BINARY:-}" ]]; then
-    bash "$PACKAGER" "$VERSION" --binary "$MEI_TEST_BINARY"
+    bash "$PACKAGER" "$VERSION" --binary "$MEI_TEST_BINARY" || die "packaging failed"
   else
-    bash "$PACKAGER" "$VERSION" --skip-build
+    bash "$PACKAGER" "$VERSION" --skip-build || die "packaging failed"
   fi
 else
   ok "skip packaging on non-arm64 host (no .build/release/mei expected)"
@@ -66,9 +66,28 @@ fi
 [[ -f "$TARBALL" ]] || die "package_release.sh did not produce $TARBALL"
 ok "tarball produced: $(basename "$TARBALL")"
 
-# --- 3. checksum round-trips ---------------------------------------------------
-( cd "$DIST" && shasum -a 256 -c "mei-${VERSION}-macos-arm64.tar.gz.sha256" ) >/dev/null 2>&1
-ok "sha256 round-trips"
+# --- 3. checksum works after downloading both files to another directory ------
+cp "$TARBALL" "$T/$(basename "$TARBALL")" || die "copy tarball failed"
+cp "$TARBALL.sha256" "$T/$(basename "$TARBALL").sha256" || die "copy checksum failed"
+if ( cd "$T" && shasum -a 256 -c "$(basename "$TARBALL").sha256" ) >/dev/null 2>&1; then
+  ok "downloaded checksum verifies in a different directory"
+else
+  bad "downloaded checksum verifies in a different directory"
+fi
+
+# The same source and binary must produce the same archive in another timezone.
+if [[ "$(uname -m)" == "arm64" ]]; then
+  if [[ -n "${MEI_TEST_BINARY:-}" ]]; then
+    TZ=Pacific/Honolulu bash "$PACKAGER" "$VERSION" --binary "$MEI_TEST_BINARY" > "$T/timezone-build.log" 2>&1
+  else
+    TZ=Pacific/Honolulu bash "$PACKAGER" "$VERSION" --skip-build > "$T/timezone-build.log" 2>&1
+  fi
+  if [[ $? -eq 0 ]] && cmp -s "$T/$(basename "$TARBALL")" "$TARBALL"; then
+    ok "package is byte-identical across timezones"
+  else
+    bad "package is byte-identical across timezones"
+  fi
+fi
 
 # --- 4. no synthetic AppleDouble (._*) sidecars in the tarball ----------------
 # macOS bsdtar synthesizes AppleDouble ._<name> members from extended
@@ -99,10 +118,13 @@ B="$tar_path/mei-${VERSION}-macos-arm64"
 assert test -d "$B"
 assert test -x "$B/bin/mei"
 assert test -f "$B/bin/mlx.metallib"
+expected_utc="$(date -u -r "$(git -C "$REPO" log -1 --format=%ct)" +%Y-%m-%dT%H:%M:%SZ)"
+assert grep -Fx "installed_at: $expected_utc" "$B/bin/mlx.metallib.provenance"
 assert test -f "$B/LICENSE"
 assert test -f "$B/THIRD-PARTY-NOTICES.md"
 assert grep -q "Flint architecture reference" "$B/THIRD-PARTY-NOTICES.md"
 assert test -f "$B/docs/RUNTIME-POLICIES.md"
+assert test -f "$B/docs/MODELS.md"
 assert test -f "$B/CHANGELOG.md"
 assert test -f "$B/README.md"
 # feature-contract doc: the release notes link docs/INFERENCE-SCHEDULING.md,
