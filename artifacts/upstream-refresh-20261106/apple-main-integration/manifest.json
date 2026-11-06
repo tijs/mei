@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-11-06T23:01:08.627374+00:00",
+  "upstream_vmlx_main": "1bcd74ad182103a3b83941f61e57ee0bac23b330",
+  "apple_latest_release": "0.33.0",
+  "apple_release_commit": "7ede4fd6d05f63305c1c0ebf4f8c1909a637c574",
+  "apple_main": "5f117a2e7ee1ce92f8dcc1520bc07535c43846f9",
+  "missing_commits": [
+    "78d3cc1d: JACCL package trait",
+    "075f4582: Swift Testing migration",
+    "5f117a2e: empty result recovery"
+  ],
+  "prepared_merge": "ffdee6f449b06108be48e044d4efee1345377119",
+  "branch": "codex/apple-head-integration-20261106",
+  "checkout": "/Users/tijs/projects/vmlx-apple-head-integration-20261106",
+  "status": "source_prepared_execution_and_Mei_consumption_pending",
+  "overlap": "Empty result padding overlaps fork splitPieces/invalid-array/compiler recovery. Use upstream helper for tuple split and quantize/linalg/transform paths; retain stricter general split and invalid-assignment semantics. No duplicate upstream PR is warranted for a fix already committed there.",
+  "adaptations": [
+    "Retain compile hard-disable/trusted policy, lock order and cached closure lifetime; pad policy bypass as well as compiled results.",
+    "Apply JACCL trait to existing six SDK-gated fork wrappers instead of duplicating amalgamated wrapper. Preserve Xcode default define and core0.32.4 version.",
+    "Retain sparse-module tests as discoverable Swift Testing cases and sibling-memory regressions as separate XCTestCase for dedicated serial process; keep two documented RNG exclusions."
+  ],
+  "new_tests": [
+    "empty vector invalid placeholders",
+    "quantization failure recovery",
+    "SVD failure recovery",
+    "disabled-compile result padding"
+  ],
+  "qualification_boundary": "Current live5884134/71074155 measurements retain exact original identity. No ffdee build/native/performance result is claimed. Execute after current campaign terminal, then pin/build/freeze/requalify before release.",
+  "prepared_head": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
+  "review": "review.json"
+}

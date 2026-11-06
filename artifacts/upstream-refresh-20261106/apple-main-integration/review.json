@@ -1,0 +1,31 @@
+{
+  "scope": "Read-only source review of ffdee merge and local fixes through243cb4f2. No execution/build/native/performance proof.",
+  "lenses": [
+    "correctness",
+    "tests",
+    "simplicity",
+    "FFI/security"
+  ],
+  "findings": [
+    {
+      "severity": "P2",
+      "finding": "Xcode needs MLX_USE_JACCL=1 after trait guard; retain core0.32.4 version.",
+      "fix_commit": "4766114e",
+      "status": "source_corrected_execution_pending"
+    },
+    {
+      "severity": "P2",
+      "finding": "Process-global allocator counters cannot be measured under concurrent Swift Testing suites.",
+      "fix_commit": "243cb4f2",
+      "status": "tests_retained_as_separate_XCTestCase_dedicated_serial_execution_pending"
+    }
+  ],
+  "other_findings": "No additional actionable introduced correctness, simplicity or FFI/lifetime defect found. Exact-count split padding intentionally differs from minimum-count vector padding.",
+  "required_execution": [
+    "Build/test merged package after live timing is terminal.",
+    "Discover retained sparse-module/sibling and new empty-result tests.",
+    "Run MLXArraySiblingLifetimeTests in dedicated serial filtered process, not concurrent suites.",
+    "Verify JACCL default/on and disabled trait Cmlx builds.",
+    "Pin merged source in Mei, full offline suite, freeze new artifact and qualify affected real-model behavior before release."
+  ]
+}

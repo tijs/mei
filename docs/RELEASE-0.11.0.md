@@ -12,6 +12,14 @@ The candidate pins vMLX `710741556966841b98d863220bda2d034671a58e`, integrating
 Osaurus `1bcd74ad`, Apple MLX Swift 0.33.0 and MLX core 0.32.4. Compatible
 dependencies include Swift Crypto 5.1.1 and SwiftSyntax 604.0.0.
 
+A further upstream-head audit found three Apple commits beyond release0.33.0.
+Their source merge is prepared separately, including empty-result recovery and
+the JACCL opt-out trait, with review fixes for Xcode defaults and test isolation.
+That source is not yet built, consumed by Mei or qualified. The frozen artifact
+and live observations below retain their original identity; they cannot qualify
+the additional merge. See the
+[integration review](https://github.com/tijs/mei/tree/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/apple-main-integration).
+
 ## Upgrading weight-storage settings
 
 Upstream now loads weights into owned storage. Remove `--load-mmap true` and
