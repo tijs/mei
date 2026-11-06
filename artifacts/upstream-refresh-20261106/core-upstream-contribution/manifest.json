@@ -1,0 +1,34 @@
+{
+  "upstream_base": "9f806b3606eaa9f7c807238f6bd465185cd94d6d",
+  "contribution_head": "a58d29baf",
+  "issue": "https://github.com/ml-explore/mlx/issues/4841",
+  "pr": "https://github.com/ml-explore/mlx/pull/4842",
+  "regression_before": {
+    "tests": 1,
+    "failed_assertions": 3
+  },
+  "regression_after": {
+    "tests": 1,
+    "assertions": 6,
+    "failures": 0
+  },
+  "neighbor_tests": {
+    "tests": 6,
+    "assertions": 22,
+    "failures": 0
+  },
+  "logs": [
+    {
+      "file": "mlx-upstream-cache-admission-baseline-test-20261106.log",
+      "sha256": "6fdde9bed9275a7cb798cfe19702243a46ba1a7a7983e21ae9bf83a2d422fce7"
+    },
+    {
+      "file": "mlx-upstream-cache-admission-fixed-test-20261106.log",
+      "sha256": "64b595102e1f81a40d0af7b797a22c77e4285a5ca3da87dd2f2c5fd80a1483ee"
+    },
+    {
+      "file": "mlx-upstream-cache-admission-neighbor-tests-20261106.log",
+      "sha256": "8511db53508f0b64ec994f3c7d48e3f52726a17d8269c4db2dfa6dbe09fccbf0"
+    }
+  ]
+}

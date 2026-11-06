@@ -1,0 +1,1655 @@
+{
+  "purpose": "Reclaim rebuildable intermediates for upcoming model disk gates; preserve Products, weights and benchmark evidence. No builds in selected roots were live.",
+  "before": 11562385408,
+  "removed": [
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 29912
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025/out/Intermediates.noindex",
+      "allocated_kib_before": 2038248
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 318412
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025/out/ModuleCache.noindex",
+      "allocated_kib_before": 998952
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-jangh2-20261025/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-060/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 14936
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-060/out/Intermediates.noindex",
+      "allocated_kib_before": 808976
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-060/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 98180
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-060/out/ModuleCache.noindex",
+      "allocated_kib_before": 330804
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-060/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-061/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 14936
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-061/out/Intermediates.noindex",
+      "allocated_kib_before": 850096
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-061/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 110044
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-061/out/ModuleCache.noindex",
+      "allocated_kib_before": 305736
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-061/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-prefix-0.6.1/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 14936
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-prefix-0.6.1/out/Intermediates.noindex",
+      "allocated_kib_before": 811944
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-prefix-0.6.1/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 98196
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-prefix-0.6.1/out/ModuleCache.noindex",
+      "allocated_kib_before": 330820
+    },
+    {
+      "path": "/Users/tijs/.local/share/local-model-bench/mei-build-prefix-0.6.1/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 14936
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/out/Intermediates.noindex",
+      "allocated_kib_before": 1040236
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 96180
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/out/ModuleCache.noindex",
+      "allocated_kib_before": 180096
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/SDKStatCaches.noindex",
+      "allocated_kib_before": 14976
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Intermediates.noindex",
+      "allocated_kib_before": 1836116
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/SDKExplicitPrecompiledModules",
+      "allocated_kib_before": 98244
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/ModuleCache.noindex",
+      "allocated_kib_before": 636236
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/CompilationCache.noindex",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOBoringSSL.build",
+      "allocated_kib_before": 50004
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MeiPackageTests.build",
+      "allocated_kib_before": 120
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ANEProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOFreeBSD.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/TPRankWorker.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NumericsShims.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Crypto.build",
+      "allocated_kib_before": 4528
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/RampartPII.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftOperators.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftParser-tool.build",
+      "allocated_kib_before": 8548
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftCompilerPluginMessageHandling-tool.build",
+      "allocated_kib_before": 3344
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Instrumentation.build",
+      "allocated_kib_before": 276
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOAtomics.build",
+      "allocated_kib_before": 196
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Atomics.build",
+      "allocated_kib_before": 1520
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/IntegrationTestHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/HTTPTypes.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/vMLXFluxProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTPTypesHTTP1.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXDistributedJACCL.build",
+      "allocated_kib_before": 184
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOExtrasZlib.build",
+      "allocated_kib_before": 524
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOConcurrencyHelpers.build",
+      "allocated_kib_before": 1148
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DistributedProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/StructuredFieldValues.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/RampartSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTP1.build",
+      "allocated_kib_before": 4068
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXRandom.build",
+      "allocated_kib_before": 224
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOCertificateHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXNN.build",
+      "allocated_kib_before": 3216
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXEmbedders.build",
+      "allocated_kib_before": 3208
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_SwiftSyntaxCShims-tool.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/OrderedCollections.build",
+      "allocated_kib_before": 4208
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CryptoBoringWrapper.build",
+      "allocated_kib_before": 1224
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftCompilerPlugin.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NIODataStructures.build",
+      "allocated_kib_before": 408
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CmlxGraphShim.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NIOFileSystem.build",
+      "allocated_kib_before": 40
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacroExpansion.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NIOConcurrency.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_SwiftSyntaxGenericTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax.build",
+      "allocated_kib_before": 56
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Collections.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOWebSocket.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/AsyncStreaming.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MeiCore.build",
+      "allocated_kib_before": 5916
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/X509.build",
+      "allocated_kib_before": 15504
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax509.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/BasicContainers.build",
+      "allocated_kib_before": 76
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CmlxDistributedShim.build",
+      "allocated_kib_before": 684
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax510.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOOpenBSD.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOLLHTTP.build",
+      "allocated_kib_before": 372
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/yyjson.build",
+      "allocated_kib_before": 1584
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Logging.build",
+      "allocated_kib_before": 1300
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIODarwin.build",
+      "allocated_kib_before": 108
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftIDEUtils.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXPressCLI.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ConfigurationTesting.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftBasicFormat.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHPACK.build",
+      "allocated_kib_before": 1692
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftBasicFormat-tool.build",
+      "allocated_kib_before": 920
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOLinux.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXLinalg.build",
+      "allocated_kib_before": 196
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_CWASI.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftLibraryPluginProvider.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DeepseekOCRSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NIOBase64.build",
+      "allocated_kib_before": 144
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXGeneration.build",
+      "allocated_kib_before": 2100
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXOptimizers.build",
+      "allocated_kib_before": 468
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacros.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SortedCollections.build",
+      "allocated_kib_before": 48
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXModels.build",
+      "allocated_kib_before": 1724
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTPCompression.build",
+      "allocated_kib_before": 1124
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_RopeModule.build",
+      "allocated_kib_before": 64
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTP2.build",
+      "allocated_kib_before": 11008
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXTokenizers.build",
+      "allocated_kib_before": 4176
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXPress.build",
+      "allocated_kib_before": 3360
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftParser.build",
+      "allocated_kib_before": 36
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/RealModule.build",
+      "allocated_kib_before": 552
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOExtras.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTPTypesHTTP2.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Qwen35TPProofRunner.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CSystem.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ConcurrencyHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftCompilerPluginMessageHandling.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOTestUtils.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/HTTPTypesFoundation.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacrosGenericTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXVLM.build",
+      "allocated_kib_before": 32080
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXFast.build",
+      "allocated_kib_before": 224
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXHuggingFace.build",
+      "allocated_kib_before": 416
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/vMLXFlux.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXEventSource.build",
+      "allocated_kib_before": 1528
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/InMemoryLogging.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOPosix.build",
+      "allocated_kib_before": 9248
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacros-tool.build",
+      "allocated_kib_before": 1372
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftParserDiagnostics-tool.build",
+      "allocated_kib_before": 3576
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOFileSystem.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CAsyncHTTPClient.build",
+      "allocated_kib_before": 32
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOWASI.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXDistributedTP.build",
+      "allocated_kib_before": 660
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOResumableUpload.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ServiceLifecycle.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DequeModule.build",
+      "allocated_kib_before": 2800
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXHuggingFaceMacros-tool.build",
+      "allocated_kib_before": 688
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOTransportServices.build",
+      "allocated_kib_before": 4100
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax600.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_AtomicsShims.build",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOSSL.build",
+      "allocated_kib_before": 6352
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Gemma4AudioSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ServiceLifecycleTestKit.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/UnixSignals.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MeiTests.build",
+      "allocated_kib_before": 3804
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ServiceContextModule.build",
+      "allocated_kib_before": 176
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTPResponsiveness.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXLMCommon.build",
+      "allocated_kib_before": 49688
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/vMLXFluxVideo.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftASN1.build",
+      "allocated_kib_before": 2788
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Configuration.build",
+      "allocated_kib_before": 6256
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOBoringSSLShims.build",
+      "allocated_kib_before": 116
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/InMemoryTracing.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacrosTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOFoundationEssentialsCompat.build",
+      "allocated_kib_before": 516
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax509-tool.build",
+      "allocated_kib_before": 60
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOSHA1.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftParserDiagnostics.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ComplexModule.build",
+      "allocated_kib_before": 540
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOWindows.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxBuilder.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax510-tool.build",
+      "allocated_kib_before": 60
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/HashTreeCollections.build",
+      "allocated_kib_before": 76
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOCore.build",
+      "allocated_kib_before": 11252
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIO.build",
+      "allocated_kib_before": 364
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Numerics.build",
+      "allocated_kib_before": 72
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftOperators-tool.build",
+      "allocated_kib_before": 1372
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Tracing.build",
+      "allocated_kib_before": 960
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax-tool.build",
+      "allocated_kib_before": 44524
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftDiagnostics-tool.build",
+      "allocated_kib_before": 1032
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXHuggingFace.build",
+      "allocated_kib_before": 14956
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CCryptoBoringSSLShims.build",
+      "allocated_kib_before": 60
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/InstrumentationBaggage.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/BitCollections.build",
+      "allocated_kib_before": 52
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_NIOFileSystemFoundationCompat.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CryptoExtras.build",
+      "allocated_kib_before": 8712
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_CryptoExtras.build",
+      "allocated_kib_before": 192
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/OmniAudioLatencyBench.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Cmlx.build",
+      "allocated_kib_before": 196364
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CNIOPosix.build",
+      "allocated_kib_before": 40
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DistributedPeerSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXHub.build",
+      "allocated_kib_before": 3284
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOSSLHTTP1Client.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxBuilder-tool.build",
+      "allocated_kib_before": 3764
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/HeapModule.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOHTTPTypes.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ContainersPreview.build",
+      "allocated_kib_before": 1140
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLXJinja.build",
+      "allocated_kib_before": 4760
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DistributedModelInventory.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXLLM.build",
+      "allocated_kib_before": 37176
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXFFT.build",
+      "allocated_kib_before": 192
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/OmniAudioChunkStabilityBench.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Mei.build",
+      "allocated_kib_before": 1560
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXPressSelfCheck.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntax600-tool.build",
+      "allocated_kib_before": 60
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/InternalCollectionsUtilities.build",
+      "allocated_kib_before": 904
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftCompilerPlugin-tool.build",
+      "allocated_kib_before": 600
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOTLSServer.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/vMLXFluxModels.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftRefactor.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOEmbedded.build",
+      "allocated_kib_before": 1348
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/ConfigurationTestingInternal.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftDiagnostics.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SystemPackage.build",
+      "allocated_kib_before": 3768
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/vMLXFluxKit.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/SwiftSyntaxMacroExpansion-tool.build",
+      "allocated_kib_before": 2288
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/TrailingElementsModule.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/AsyncHTTPClient.build",
+      "allocated_kib_before": 13496
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/BenchmarkHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/_CertificateInternals.build",
+      "allocated_kib_before": 232
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/DistributedReplicaSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXDistributedCore.build",
+      "allocated_kib_before": 3656
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLXDistributedTransport.build",
+      "allocated_kib_before": 2312
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOTLS.build",
+      "allocated_kib_before": 764
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/VMLX.build",
+      "allocated_kib_before": 1604
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOSOCKS.build",
+      "allocated_kib_before": 1320
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/RunBench.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/RawStructuredFieldValues.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOCertificateReloading.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/MLX.build",
+      "allocated_kib_before": 6244
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/CCryptoBoringSSL.build",
+      "allocated_kib_before": 37276
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/AsyncAlgorithms.build",
+      "allocated_kib_before": 52
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/Algorithms.build",
+      "allocated_kib_before": 4000
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/debug/NIOFoundationCompat.build",
+      "allocated_kib_before": 464
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOBoringSSL.build",
+      "allocated_kib_before": 53836
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MeiPackageTests.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ANEProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOFreeBSD.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/TPRankWorker.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NumericsShims.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Crypto.build",
+      "allocated_kib_before": 2556
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/RampartPII.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftOperators.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftParser-tool.build",
+      "allocated_kib_before": 8820
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftCompilerPluginMessageHandling-tool.build",
+      "allocated_kib_before": 2296
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Instrumentation.build",
+      "allocated_kib_before": 168
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOAtomics.build",
+      "allocated_kib_before": 196
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Atomics.build",
+      "allocated_kib_before": 720
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/IntegrationTestHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/HTTPTypes.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/vMLXFluxProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTPTypesHTTP1.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXDistributedJACCL.build",
+      "allocated_kib_before": 100
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOExtrasZlib.build",
+      "allocated_kib_before": 564
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOConcurrencyHelpers.build",
+      "allocated_kib_before": 744
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DistributedProbe.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/StructuredFieldValues.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/RampartSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTP1.build",
+      "allocated_kib_before": 3152
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXRandom.build",
+      "allocated_kib_before": 120
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOCertificateHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXNN.build",
+      "allocated_kib_before": 2540
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXEmbedders.build",
+      "allocated_kib_before": 1984
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_SwiftSyntaxCShims-tool.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/OrderedCollections.build",
+      "allocated_kib_before": 2748
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CryptoBoringWrapper.build",
+      "allocated_kib_before": 812
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftCompilerPlugin.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NIODataStructures.build",
+      "allocated_kib_before": 296
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CmlxGraphShim.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NIOFileSystem.build",
+      "allocated_kib_before": 36
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacroExpansion.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NIOConcurrency.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_SwiftSyntaxGenericTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax.build",
+      "allocated_kib_before": 48
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Collections.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOWebSocket.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/AsyncStreaming.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MeiCore.build",
+      "allocated_kib_before": 2764
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/X509.build",
+      "allocated_kib_before": 14044
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax509.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/BasicContainers.build",
+      "allocated_kib_before": 64
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CmlxDistributedShim.build",
+      "allocated_kib_before": 712
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax510.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOOpenBSD.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOLLHTTP.build",
+      "allocated_kib_before": 368
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/yyjson.build",
+      "allocated_kib_before": 1256
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Logging.build",
+      "allocated_kib_before": 1056
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIODarwin.build",
+      "allocated_kib_before": 112
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftIDEUtils.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXPressCLI.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ConfigurationTesting.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftBasicFormat.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHPACK.build",
+      "allocated_kib_before": 1280
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftBasicFormat-tool.build",
+      "allocated_kib_before": 544
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOLinux.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXLinalg.build",
+      "allocated_kib_before": 108
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_CWASI.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftLibraryPluginProvider.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DeepseekOCRSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NIOBase64.build",
+      "allocated_kib_before": 100
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXGeneration.build",
+      "allocated_kib_before": 804
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXOptimizers.build",
+      "allocated_kib_before": 336
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacros.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SortedCollections.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXModels.build",
+      "allocated_kib_before": 624
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTPCompression.build",
+      "allocated_kib_before": 640
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_RopeModule.build",
+      "allocated_kib_before": 56
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTP2.build",
+      "allocated_kib_before": 8060
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXTokenizers.build",
+      "allocated_kib_before": 2376
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXPress.build",
+      "allocated_kib_before": 1696
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftParser.build",
+      "allocated_kib_before": 32
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/RealModule.build",
+      "allocated_kib_before": 304
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOExtras.build",
+      "allocated_kib_before": 20
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTPTypesHTTP2.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Qwen35TPProofRunner.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CSystem.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ConcurrencyHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftCompilerPluginMessageHandling.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOTestUtils.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/HTTPTypesFoundation.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacrosGenericTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXVLM.build",
+      "allocated_kib_before": 25200
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXFast.build",
+      "allocated_kib_before": 120
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXHuggingFace.build",
+      "allocated_kib_before": 156
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/vMLXFlux.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXEventSource.build",
+      "allocated_kib_before": 512
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/InMemoryLogging.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOPosix.build",
+      "allocated_kib_before": 8456
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacros-tool.build",
+      "allocated_kib_before": 568
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftParserDiagnostics-tool.build",
+      "allocated_kib_before": 2988
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOFileSystem.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CAsyncHTTPClient.build",
+      "allocated_kib_before": 36
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOWASI.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXDistributedTP.build",
+      "allocated_kib_before": 376
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOResumableUpload.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ServiceLifecycle.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DequeModule.build",
+      "allocated_kib_before": 1476
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXHuggingFaceMacros-tool.build",
+      "allocated_kib_before": 212
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOTransportServices.build",
+      "allocated_kib_before": 3236
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax600.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_AtomicsShims.build",
+      "allocated_kib_before": 28
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOSSL.build",
+      "allocated_kib_before": 4236
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Gemma4AudioSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ServiceLifecycleTestKit.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/UnixSignals.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MeiTests.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ServiceContextModule.build",
+      "allocated_kib_before": 136
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTPResponsiveness.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXLMCommon.build",
+      "allocated_kib_before": 43384
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/vMLXFluxVideo.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftASN1.build",
+      "allocated_kib_before": 2592
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Configuration.build",
+      "allocated_kib_before": 4812
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOBoringSSLShims.build",
+      "allocated_kib_before": 116
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/InMemoryTracing.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacrosTestSupport.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOFoundationEssentialsCompat.build",
+      "allocated_kib_before": 244
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax509-tool.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOSHA1.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftParserDiagnostics.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ComplexModule.build",
+      "allocated_kib_before": 332
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOWindows.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxBuilder.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax510-tool.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/HashTreeCollections.build",
+      "allocated_kib_before": 64
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOCore.build",
+      "allocated_kib_before": 7812
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIO.build",
+      "allocated_kib_before": 88
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Numerics.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftOperators-tool.build",
+      "allocated_kib_before": 892
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Tracing.build",
+      "allocated_kib_before": 624
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax-tool.build",
+      "allocated_kib_before": 40012
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftDiagnostics-tool.build",
+      "allocated_kib_before": 744
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXHuggingFace.build",
+      "allocated_kib_before": 11852
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CCryptoBoringSSLShims.build",
+      "allocated_kib_before": 60
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/InstrumentationBaggage.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/BitCollections.build",
+      "allocated_kib_before": 48
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_NIOFileSystemFoundationCompat.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CryptoExtras.build",
+      "allocated_kib_before": 5676
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_CryptoExtras.build",
+      "allocated_kib_before": 84
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/OmniAudioLatencyBench.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Cmlx.build",
+      "allocated_kib_before": 271520
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CNIOPosix.build",
+      "allocated_kib_before": 40
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DistributedPeerSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXHub.build",
+      "allocated_kib_before": 1884
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOSSLHTTP1Client.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxBuilder-tool.build",
+      "allocated_kib_before": 2520
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/HeapModule.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOHTTPTypes.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ContainersPreview.build",
+      "allocated_kib_before": 520
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLXJinja.build",
+      "allocated_kib_before": 4672
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DistributedModelInventory.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXLLM.build",
+      "allocated_kib_before": 26244
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXFFT.build",
+      "allocated_kib_before": 104
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/OmniAudioChunkStabilityBench.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Mei.build",
+      "allocated_kib_before": 216
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXPressSelfCheck.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntax600-tool.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/InternalCollectionsUtilities.build",
+      "allocated_kib_before": 500
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftCompilerPlugin-tool.build",
+      "allocated_kib_before": 120
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOTLSServer.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/vMLXFluxModels.build",
+      "allocated_kib_before": 16
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftRefactor.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOEmbedded.build",
+      "allocated_kib_before": 1264
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/ConfigurationTestingInternal.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftDiagnostics.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SystemPackage.build",
+      "allocated_kib_before": 2104
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/vMLXFluxKit.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/SwiftSyntaxMacroExpansion-tool.build",
+      "allocated_kib_before": 1448
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/TrailingElementsModule.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/AsyncHTTPClient.build",
+      "allocated_kib_before": 9856
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/BenchmarkHelpers.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/_CertificateInternals.build",
+      "allocated_kib_before": 180
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/DistributedReplicaSmoke.build",
+      "allocated_kib_before": 4
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXDistributedCore.build",
+      "allocated_kib_before": 3436
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLXDistributedTransport.build",
+      "allocated_kib_before": 1540
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOTLS.build",
+      "allocated_kib_before": 444
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/VMLX.build",
+      "allocated_kib_before": 212
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOSOCKS.build",
+      "allocated_kib_before": 796
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/RunBench.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/RawStructuredFieldValues.build",
+      "allocated_kib_before": 12
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOCertificateReloading.build",
+      "allocated_kib_before": 8
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/MLX.build",
+      "allocated_kib_before": 5220
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/CCryptoBoringSSL.build",
+      "allocated_kib_before": 40748
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/AsyncAlgorithms.build",
+      "allocated_kib_before": 44
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/Algorithms.build",
+      "allocated_kib_before": 2812
+    },
+    {
+      "path": "/Users/tijs/projects/mei/.build/arm64-apple-macosx/release/NIOFoundationCompat.build",
+      "allocated_kib_before": 140
+    }
+  ],
+  "after": 24330174464
+}

@@ -1,0 +1,19 @@
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+/Users/tijs/projects/mlx-upstream-cache-admission-20261106/tests/gpu_tests.cpp:788:
+TEST CASE:  test Metal cache admission respects limit and retains recent shapes
+
+/Users/tijs/projects/mlx-upstream-cache-admission-20261106/tests/gpu_tests.cpp:804: ERROR: CHECK_EQ( get_cache_memory(), 0 ) is NOT correct!
+  values: CHECK_EQ( 2097152, 0 )
+
+/Users/tijs/projects/mlx-upstream-cache-admission-20261106/tests/gpu_tests.cpp:818: ERROR: CHECK_LE( get_cache_memory(), limit ) is NOT correct!
+  values: CHECK_LE( 1310720, 1048576 )
+
+/Users/tijs/projects/mlx-upstream-cache-admission-20261106/tests/gpu_tests.cpp:819: ERROR: CHECK_EQ( get_cache_memory(), limit / 2 ) is NOT correct!
+  values: CHECK_EQ( 1310720, 524288 )
+
+===============================================================================
+[doctest] test cases: 1 | 0 passed | 1 failed | 319 skipped
+[doctest] assertions: 6 | 3 passed | 3 failed |
+[doctest] Status: FAILURE!

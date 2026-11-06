@@ -50,3 +50,16 @@ reports the requested residency policy, never an unobserved grant. Canonical
 hybrid stripped checkpoints may already be durable after prefill; tests verify
 that entry and stable stores instead of retaining an unused in-flight copy.
 Real-model loading, memory, cache/context and speed gates remain outstanding.
+
+## Upstream allocator contribution
+
+[Issue #4841](https://github.com/ml-explore/mlx/issues/4841) was opened before
+[PR #4842](https://github.com/ml-explore/mlx/pull/4842). The clean upstream-base
+regression failed three assertions before the fix, then passed all six; six
+neighboring tests passed 22 assertions. The [proof manifest](core-upstream-contribution/manifest.json)
+records exact source and logs. This small contribution contains only allocator
+admission and its regression; the full Osaurus integration is not proposed to Apple.
+
+The build-cache cleanup manifest records removal of reproducible intermediates
+from idle owned builds. Compiled Products, weights and benchmark evidence were
+preserved.

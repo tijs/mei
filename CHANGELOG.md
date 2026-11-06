@@ -2,6 +2,29 @@
 
 All notable changes to Mei are documented here.
 
+## [0.11.0] - Unreleased candidate
+
+- Refresh the pinned runtime to Apple MLX Swift 0.33.0 / MLX core 0.32.4,
+  with current compatible dependencies including Swift Crypto 5.1.1 and
+  SwiftSyntax 604.0.0. Preserve Mei's cache budgeting, raw completions and
+  diagnostics fixes through the upstream integration.
+- Use owned weight storage and expose `--keep-model-in-memory true|false`
+  for the runtime's bounded residency request (default true). Status reports
+  the request separately from live allocator counters. Reject obsolete
+  mmap=true and non-off MLXPress cold-tier settings with migration guidance.
+- Keep native schema masks authoritative after request-local processors and
+  propagate constraint failures/completion through processor composites.
+- Avoid post-answer history replay when an exact prompt copy is deliberately
+  omitted. Keep captured stable checkpoints and prefill-published stripped
+  checkpoints usable without retaining an unused exact prompt copy.
+- Adapt host-read/compiler ownership to upstream materialization and eval-lock
+  APIs, retaining regression coverage for isolation, failures and lock order.
+
+Offline checks pass: 491 XCTest cases (two skipped) and three Swift Testing
+cases; live acceptance is separate. Native model memory/cache/context and
+short/loaded throughput qualification is still outstanding. This candidate has
+not been released; stable remains 0.10.0 until the release gates pass.
+
 ## [0.10.0] - 2026-11-03
 
 - Skip prefill boundary snapshots when there is no cache coordinator or the
