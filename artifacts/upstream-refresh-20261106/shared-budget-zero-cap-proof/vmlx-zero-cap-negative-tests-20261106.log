@@ -1,0 +1,42 @@
+Test Suite 'Selected tests' started at 2026-11-06 17:06:58.756.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 17:06:58.758.
+Test Suite 'SharedPrefixCacheBudgetTests' started at 2026-11-06 17:06:58.758.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDiskHydrationChargesOnlyWhenSharedAllowanceFits]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDiskHydrationChargesOnlyWhenSharedAllowanceFits]' passed (0.067 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDistinctSSMPrefixesRespectCoordinatorRetainedBudget]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDistinctSSMPrefixesRespectCoordinatorRetainedBudget]' passed (0.009 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testInFlightSSMReservationSurvivesClearAndBlocksPagedOverAdmission]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testInFlightSSMReservationSurvivesClearAndBlocksPagedOverAdmission]' passed (0.003 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testMixedKVRotatingAndSSMShareOneAllowance]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testMixedKVRotatingAndSSMShareOneAllowance]' passed (0.034 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testNilBudgetRetainsLegacySSMEntryLimitAndZeroRetainsNothing]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testNilBudgetRetainsLegacySSMEntryLimitAndZeroRetainsNothing]' passed (0.004 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testOversizedAndZeroRAMStoresPersistAndFetchWithoutRetention]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testOversizedAndZeroRAMStoresPersistAndFetchWithoutRetention]' passed (0.019 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedCompanionMaterializationWaitsForGlobalCacheIO]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedCompanionMaterializationWaitsForGlobalCacheIO]' passed (0.105 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedKVMaterializationWaitsForGlobalCacheIO]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedKVMaterializationWaitsForGlobalCacheIO]' passed (0.106 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testReplacingShrinkingAndRemovingRotatingCompanionReturnsSharedBytes]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testReplacingShrinkingAndRemovingRotatingCompanionReturnsSharedBytes]' passed (0.005 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSharedAccountArithmeticRefusesOverflowAndReturnsDeinitReservations]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSharedAccountArithmeticRefusesOverflowAndReturnsDeinitReservations]' passed (0.000 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSSMLRUReplacementCompletenessAndClearReleaseCharge]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSSMLRUReplacementCompletenessAndClearReleaseCharge]' passed (0.012 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testStoredAndFetchedSnapshotsHaveIndependentBackingBytes]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testStoredAndFetchedSnapshotsHaveIndependentBackingBytes]' passed (0.002 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testTierDeinitializationAndFailedPagedAdmissionReleaseReservations]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testTierDeinitializationAndFailedPagedAdmissionReleaseReservations]' passed (0.001 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRAMCoordinatorStillRestoresLinkedKVDiskAndSSMPair]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRAMCoordinatorStillRestoresLinkedKVDiskAndSSMPair]' passed (0.019 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRetainedBudgetWithDiskStillAdvertisesBoundaryPersistence]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRetainedBudgetWithDiskStillAdvertisesBoundaryPersistence]' passed (0.005 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRetainedBudgetWithoutDiskDoesNotAdvertiseBoundaryPersistence]' started.
+/private/tmp/vmlx-budget-consumer-v2-20261106/Tests/NativeTests/SharedPrefixCacheBudgetTests.swift:424: error: -[NativeTests.SharedPrefixCacheBudgetTests testZeroRetainedBudgetWithoutDiskDoesNotAdvertiseBoundaryPersistence] : XCTAssertFalse failed
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRetainedBudgetWithoutDiskDoesNotAdvertiseBoundaryPersistence]' failed (1.576 seconds).
+Test Suite 'SharedPrefixCacheBudgetTests' failed at 2026-11-06 17:07:00.726.
+	 Executed 16 tests, with 1 failure (0 unexpected) in 1.968 (1.969) seconds
+Test Suite 'NativeTests.xctest' failed at 2026-11-06 17:07:00.727.
+	 Executed 16 tests, with 1 failure (0 unexpected) in 1.968 (1.969) seconds
+Test Suite 'Selected tests' failed at 2026-11-06 17:07:00.727.
+	 Executed 16 tests, with 1 failure (0 unexpected) in 1.968 (1.971) seconds

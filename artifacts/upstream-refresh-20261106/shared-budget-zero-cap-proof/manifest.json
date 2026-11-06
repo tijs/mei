@@ -1,0 +1,7 @@
+{
+  "revision": "ba6c1fcfa7e4df2eb33d4f770d30586306e1ae48",
+  "negative_revision": "baa1841f",
+  "negative": "16 cases,1 assertion failure: zero-byte RAM-only tier advertised boundary persistence",
+  "positive": "16 cases,zero failures; nil legacy and zero-RAM disk fallback preserved",
+  "scope": "Follow-up to PR754. Integrated Mei already has the equivalent zero-byte check; frozen57b620b/9dd023d3 artifact is unchanged."
+}
