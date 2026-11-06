@@ -34,6 +34,14 @@ tool parsing and activation-dtype updates are inherited for future qualification
 of the queued text-only Gemma pack. Source support does not establish admission
 of a new checkpoint or image-conditioned behavior.
 
+On macOS, backend `RuntimeDiagnostics` uses the private unified log by default.
+For terminal or owned benchmark capture, set `VMLX_DIAGNOSTICS_STDERR=1` alongside
+the selected trace flag, for example `MLXPRESS_GENERATION_PROFILE=1`. The first
+flag selects the output destination; the second enables phase counters. Earlier
+versions wrote those counters directly to stderr. The default preserves
+best-effort logging for hosts with disconnected stderr; explicit capture uses
+the existing supported opt-in. Profiled timings remain diagnostic observations.
+
 Several upstream features need a separate integration gate:
 
 - Mei retains its own tested strict schema compiler and token mask. Upstream's

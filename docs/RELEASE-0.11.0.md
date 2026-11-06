@@ -1,9 +1,10 @@
 # Mei 0.11.0 — release preparation
 
-**Unreleased candidate. Stable remains 0.10.0.** The balanced speed,
-greedy-output and live HTTP qualification must finish before promotion. Fresh
-four-model task results will follow the published release; earlier scores do
-not describe this candidate.
+**Unreleased candidate. Stable remains 0.10.0.** The balanced observable/API
+gates pass, but Groot has lower candidate throughput in both process pairs.
+Stable promotion is held while that difference is investigated. Fresh four-model
+task results will follow the published release; earlier scores do not describe
+this candidate.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
@@ -69,8 +70,17 @@ source-built Metal SHA-256
 The balanced comparison uses two fresh processes per release and five measured
 repeats per context per process, in ABBA order for each model. Cold observations
 and warmups are separate; nine prebuilt live HTTP tests run against each process.
-No previous timings or selected best repeats are substituted. **This gate is
-still running; no throughput gain or stable-readiness verdict is claimed yet.**
+No previous timings or selected best repeats are substituted. All twelve cells
+pass observable parity and 108 live API cases, with 120 measured requests.
+Qwen/Ornith have no mean-throughput decline in these pairs; Groot does. The
+component cause is unresolved, so no stable-readiness verdict is claimed.
+
+The follow-up phase screen retains the frozen runtimes and numeric profiles.
+The refreshed backend sends diagnostics to private unified logging by default;
+capturing enabled phase counters in `server.log` also requires the existing
+`VMLX_DIAGNOSTICS_STDERR=1` opt-in. An initial capture mismatch was preserved,
+and fresh matched arms explicitly select that destination. Profiled observations
+will not replace the untraced measurements.
 
 Raw profiles, outputs, status/resource samples, post-run hashes and owned-cache
 cleanup receipts are in the

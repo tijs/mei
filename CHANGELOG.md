@@ -29,9 +29,11 @@ All notable changes to Mei are documented here.
 Offline checks pass: 495 XCTest cases (two skipped) and four Swift Testing
 cases; live acceptance is separate. The current frozen candidate passes all
 13 native tool/history/cache/context checks on each of Qwen, Ornith and Groot,
-including the 65,536-token boundary. Balanced short/loaded throughput,
-greedy-output and live HTTP qualification is still running. This candidate has
-not been released; stable remains 0.10.0 until the release gates pass. See the
+including the 65,536-token boundary. All twelve balanced observable/API cells
+pass, including 120 measured requests and 108 live API cases. Groot has lower
+candidate throughput in both process pairs; stable promotion is held for a
+controlled performance investigation. This candidate has not been released;
+stable remains 0.10.0 until the release gates pass. See the
 [qualification evidence](artifacts/upstream-refresh-20261106/README.md) for exact
 artifact identities, resource limits and issue-first upstream proposals.
 
