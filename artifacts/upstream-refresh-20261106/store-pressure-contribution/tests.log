@@ -1,0 +1,23 @@
+Test Suite 'All tests' started at 2026-11-06 16:03:41.240.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 16:03:41.240.
+Test Suite 'CacheStorePressureTests' started at 2026-11-06 16:03:41.240.
+Test Case '-[NativeTests.CacheStorePressureTests testEmptyCacheNeedsNoMaterializationEvenUnderPressure]' started.
+Test Case '-[NativeTests.CacheStorePressureTests testEmptyCacheNeedsNoMaterializationEvenUnderPressure]' passed (0.000 seconds).
+Test Case '-[NativeTests.CacheStorePressureTests testNormalOrUnavailablePressurePreservesByteBudget]' started.
+Test Case '-[NativeTests.CacheStorePressureTests testNormalOrUnavailablePressurePreservesByteBudget]' passed (0.000 seconds).
+Test Case '-[NativeTests.CacheStorePressureTests testReclaimedMappedWeightsKeepExistingFootprintAccounting]' started.
+Test Case '-[NativeTests.CacheStorePressureTests testReclaimedMappedWeightsKeepExistingFootprintAccounting]' passed (0.000 seconds).
+Test Case '-[NativeTests.CacheStorePressureTests testWarningAndCriticalVetoDespiteApparentProcessHeadroom]' started.
+Test Case '-[NativeTests.CacheStorePressureTests testWarningAndCriticalVetoDespiteApparentProcessHeadroom]' passed (0.000 seconds).
+Test Case '-[NativeTests.CacheStorePressureTests testWarningStillVetoesWhenPhysicalBudgetIsUnavailable]' started.
+Test Case '-[NativeTests.CacheStorePressureTests testWarningStillVetoesWhenPhysicalBudgetIsUnavailable]' passed (0.000 seconds).
+Test Suite 'CacheStorePressureTests' passed at 2026-11-06 16:03:41.242.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'NativeTests.xctest' passed at 2026-11-06 16:03:41.242.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'All tests' passed at 2026-11-06 16:03:41.242.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

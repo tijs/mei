@@ -1,0 +1,21 @@
+{
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "revision": "6db7e9510cb5ddec67d785dc604b38bcd272003e",
+  "source": "/Users/tijs/projects/vmlx-upstream-retained-budget-20261106",
+  "core_revision": "3b39b5e7925fa8860ab8ccd79b054349872e24a5",
+  "c_abi_revision": "3797e11706a57121009d2e42a8babf4bf7fc1546",
+  "xctests_passed": 14,
+  "swift_testing_passed": 0,
+  "artifact_sha256": {
+    "mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib": "478a037bfa570159648769ceed5b5f8241ef85296d206131994226a517188dd5",
+    "NativeTests.xctest/Contents/MacOS/NativeTests": "ca47f710366eb1b9b2f921de6dfa75d68933ae47d1ecf258fe03f9712657647b"
+  },
+  "scope": "Focused model-free consumer tests of unchanged clean-base library source; exact source-built Metal bundle. Not a full vMLX package suite, model score or throughput claim.",
+  "fixture_adaptations": "Upstream Cmlx explicit-path test helper omitted; exact build Metal bundle provisioned after code signing. Owned MacOS sidecars removed before incremental rebuild after a reproduced codesign-only failure.",
+  "regression": {
+    "negative_revision": "db607646",
+    "negative": "14 cases,2 assertions failed: KV/companion stores completed while global I/O gate was held. No crash induced.",
+    "positive": "14 cases,0 failures after gate fix",
+    "prior_fixture_failure": "Initial copied test called an API from the separate replay proposal; isolated to current upstream fetch, no runtime behavior removed."
+  }
+}

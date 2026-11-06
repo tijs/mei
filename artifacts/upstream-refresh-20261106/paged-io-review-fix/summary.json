@@ -1,0 +1,8 @@
+{
+  "vmlx_revision": "9dd023d3299b16e7695470911c0a7ed36b7656c4",
+  "xctests": 495,
+  "skipped": 2,
+  "failures": 0,
+  "swift_testing": 4,
+  "scope": "Full offline Mei suite; live acceptance excluded. Release build and real-model gates must run on a new frozen artifact. Earlier47f/3fa model results are not relabeled."
+}

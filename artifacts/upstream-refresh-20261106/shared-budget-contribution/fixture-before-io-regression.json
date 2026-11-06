@@ -1,0 +1,30 @@
+{
+  "kind": "budget",
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "source": "/Users/tijs/projects/vmlx-upstream-retained-budget-20261106",
+  "revision": "0b4a6b78b298a1a2fcdf4776f5c6d28a9d52eb54",
+  "inputs": [
+    {
+      "source": "Tests/MLXLMTests/MLXMetalTestLock.swift",
+      "source_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "fixture": "Tests/NativeTests/MLXMetalTestLock.swift",
+      "fixture_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "adapted": false
+    },
+    {
+      "source": "Tests/MLXLMTests/MLXTestSerialization.swift",
+      "source_sha256": "8e3fa304969761b2c73eaf9f3af1036490657ff201b3308d56781c0bbd683acb",
+      "fixture": "Tests/NativeTests/MLXTestSerialization.swift",
+      "fixture_sha256": "91cd5b23c935dee0be1ae79880558cbac8ecfb6b88f011dfb1c2a56f9dc52759",
+      "adapted": true
+    },
+    {
+      "source": "Tests/MLXLMTests/SharedPrefixCacheBudgetTests.swift",
+      "source_sha256": "8cadef54510339da64b38e5b65e751c4d3d227586c75903961c62280280140cf",
+      "fixture": "Tests/NativeTests/SharedPrefixCacheBudgetTests.swift",
+      "fixture_sha256": "8cadef54510339da64b38e5b65e751c4d3d227586c75903961c62280280140cf",
+      "adapted": false
+    }
+  ],
+  "scope": "Clean-base library source through a test-only local SwiftPM consumer; no release dependency substitution"
+}

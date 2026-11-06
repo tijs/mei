@@ -1,0 +1,37 @@
+Test Suite 'Selected tests' started at 2026-11-06 16:01:55.198.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 16:01:55.199.
+Test Suite 'SharedPrefixCacheBudgetTests' started at 2026-11-06 16:01:55.199.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDiskHydrationChargesOnlyWhenSharedAllowanceFits]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDiskHydrationChargesOnlyWhenSharedAllowanceFits]' passed (0.079 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDistinctSSMPrefixesRespectCoordinatorRetainedBudget]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testDistinctSSMPrefixesRespectCoordinatorRetainedBudget]' passed (0.010 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testInFlightSSMReservationSurvivesClearAndBlocksPagedOverAdmission]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testInFlightSSMReservationSurvivesClearAndBlocksPagedOverAdmission]' passed (0.003 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testMixedKVRotatingAndSSMShareOneAllowance]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testMixedKVRotatingAndSSMShareOneAllowance]' passed (0.033 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testNilBudgetRetainsLegacySSMEntryLimitAndZeroRetainsNothing]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testNilBudgetRetainsLegacySSMEntryLimitAndZeroRetainsNothing]' passed (0.004 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testOversizedAndZeroRAMStoresPersistAndFetchWithoutRetention]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testOversizedAndZeroRAMStoresPersistAndFetchWithoutRetention]' passed (0.021 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedCompanionMaterializationWaitsForGlobalCacheIO]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedCompanionMaterializationWaitsForGlobalCacheIO]' passed (0.105 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedKVMaterializationWaitsForGlobalCacheIO]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testPagedKVMaterializationWaitsForGlobalCacheIO]' passed (0.106 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testReplacingShrinkingAndRemovingRotatingCompanionReturnsSharedBytes]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testReplacingShrinkingAndRemovingRotatingCompanionReturnsSharedBytes]' passed (0.005 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSharedAccountArithmeticRefusesOverflowAndReturnsDeinitReservations]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSharedAccountArithmeticRefusesOverflowAndReturnsDeinitReservations]' passed (0.000 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSSMLRUReplacementCompletenessAndClearReleaseCharge]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testSSMLRUReplacementCompletenessAndClearReleaseCharge]' passed (0.013 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testStoredAndFetchedSnapshotsHaveIndependentBackingBytes]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testStoredAndFetchedSnapshotsHaveIndependentBackingBytes]' passed (0.003 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testTierDeinitializationAndFailedPagedAdmissionReleaseReservations]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testTierDeinitializationAndFailedPagedAdmissionReleaseReservations]' passed (0.002 seconds).
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRAMCoordinatorStillRestoresLinkedKVDiskAndSSMPair]' started.
+Test Case '-[NativeTests.SharedPrefixCacheBudgetTests testZeroRAMCoordinatorStillRestoresLinkedKVDiskAndSSMPair]' passed (0.019 seconds).
+Test Suite 'SharedPrefixCacheBudgetTests' passed at 2026-11-06 16:01:55.604.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.404 (0.405) seconds
+Test Suite 'NativeTests.xctest' passed at 2026-11-06 16:01:55.604.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.404 (0.405) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 16:01:55.604.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.404 (0.406) seconds

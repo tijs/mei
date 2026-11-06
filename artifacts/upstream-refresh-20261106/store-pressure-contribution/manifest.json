@@ -1,0 +1,15 @@
+{
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "revision": "13700ad8bbdc2ebc4fb995682d469ee6da2c781d",
+  "source": "/Users/tijs/projects/vmlx-upstream-store-pressure-20261106",
+  "core_revision": "3b39b5e7925fa8860ab8ccd79b054349872e24a5",
+  "c_abi_revision": "3797e11706a57121009d2e42a8babf4bf7fc1546",
+  "xctests_passed": 5,
+  "swift_testing_passed": 0,
+  "artifact_sha256": {
+    "mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib": "478a037bfa570159648769ceed5b5f8241ef85296d206131994226a517188dd5",
+    "NativeTests.xctest/Contents/MacOS/NativeTests": "b6122dbef8408f60b26dacd9f62a8b445a8cb8091e8f9e1b92919e60ae20df58"
+  },
+  "scope": "Focused model-free consumer tests of unchanged clean-base library source; exact source-built Metal bundle. Not a full vMLX package suite, model score or throughput claim.",
+  "fixture_adaptations": "Upstream Cmlx explicit-path test helper omitted; exact build Metal bundle provisioned after code signing. Owned MacOS sidecars removed before incremental rebuild after a reproduced codesign-only failure."
+}

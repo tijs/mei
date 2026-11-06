@@ -1,0 +1,25 @@
+Test Suite 'All tests' started at 2026-11-06 16:03:31.604.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 16:03:31.605.
+Test Suite 'RotatingPrefixReplayTests' started at 2026-11-06 16:03:31.605.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testDenseCacheStillUsesExactPagedHit]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testDenseCacheStillUsesExactPagedHit]' passed (0.024 seconds).
+Test Case '-[NativeTests.RotatingPrefixReplayTests testGrowingAndDivergingPromptsKeepTheirCompleteSuffix]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testGrowingAndDivergingPromptsKeepTheirCompleteSuffix]' passed (0.097 seconds).
+Test Case '-[NativeTests.RotatingPrefixReplayTests testMissingSafeSeedMissesRatherThanRewindingOnlySomeLayers]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testMissingSafeSeedMissesRatherThanRewindingOnlySomeLayers]' passed (0.005 seconds).
+Test Case '-[NativeTests.RotatingPrefixReplayTests testPartialCompanionRemainsReachableBehindLongerFullBlocks]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testPartialCompanionRemainsReachableBehindLongerFullBlocks]' passed (0.474 seconds).
+Test Case '-[NativeTests.RotatingPrefixReplayTests testRepeatedPromptUsesCapturedSeedAcrossBlockAndWindowBoundaries]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testRepeatedPromptUsesCapturedSeedAcrossBlockAndWindowBoundaries]' passed (0.162 seconds).
+Test Case '-[NativeTests.RotatingPrefixReplayTests testShorterMediaIndependentPrefixDoesNotLoseItsSafeCompleteBoundary]' started.
+Test Case '-[NativeTests.RotatingPrefixReplayTests testShorterMediaIndependentPrefixDoesNotLoseItsSafeCompleteBoundary]' passed (0.007 seconds).
+Test Suite 'RotatingPrefixReplayTests' passed at 2026-11-06 16:03:32.374.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.769 (0.769) seconds
+Test Suite 'NativeTests.xctest' passed at 2026-11-06 16:03:32.374.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.769 (0.769) seconds
+Test Suite 'All tests' passed at 2026-11-06 16:03:32.374.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.769 (0.770) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

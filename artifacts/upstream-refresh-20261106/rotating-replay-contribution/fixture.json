@@ -1,0 +1,30 @@
+{
+  "kind": "replay",
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "source": "/Users/tijs/projects/vmlx-upstream-rotating-replay-20261106",
+  "revision": "3f97a93077d43e3214f11107fdc8f4f1c22980f3",
+  "inputs": [
+    {
+      "source": "Tests/MLXLMTests/MLXMetalTestLock.swift",
+      "source_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "fixture": "Tests/NativeTests/MLXMetalTestLock.swift",
+      "fixture_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "adapted": false
+    },
+    {
+      "source": "Tests/MLXLMTests/MLXTestSerialization.swift",
+      "source_sha256": "8e3fa304969761b2c73eaf9f3af1036490657ff201b3308d56781c0bbd683acb",
+      "fixture": "Tests/NativeTests/MLXTestSerialization.swift",
+      "fixture_sha256": "91cd5b23c935dee0be1ae79880558cbac8ecfb6b88f011dfb1c2a56f9dc52759",
+      "adapted": true
+    },
+    {
+      "source": "Tests/MLXLMTests/RotatingPrefixReplayTests.swift",
+      "source_sha256": "56ebd7077e18b9d159b3e7b4e143f51c5a9fda6cdb29a749d17bb6e14b9b2833",
+      "fixture": "Tests/NativeTests/RotatingPrefixReplayTests.swift",
+      "fixture_sha256": "56ebd7077e18b9d159b3e7b4e143f51c5a9fda6cdb29a749d17bb6e14b9b2833",
+      "adapted": false
+    }
+  ],
+  "scope": "Clean-base library source through a test-only local SwiftPM consumer; no release dependency substitution"
+}

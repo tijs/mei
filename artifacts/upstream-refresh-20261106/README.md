@@ -110,3 +110,27 @@ Qwen/Groot rebuilt-artifact native and balanced throughput gates remain open.
 Additional atomic proposals are being qualified through test-only local SwiftPM
 consumers on clean upstream bases. The fixture preparation script records exact
 source revisions and test-source hashes. It does not change Mei release pins.
+
+## Clean-base contribution qualification and review fix
+
+Four additional proposals build against clean upstream effcd981. The focused
+consumer proofs are separate from the integrated Mei suite:
+
+| Proposal | Passing cases | Proof |
+|---|---:|---|
+| Shared retained-byte allowance |14 XCTest | [manifest](shared-budget-contribution/manifest.json) |
+| Complete rotating replay boundary |6 XCTest | [manifest](rotating-replay-contribution/manifest.json) |
+| Request-local processor, native schema outermost |14 XCTest +6 Swift Testing | [manifest](request-processor-contribution/manifest.json) |
+| Kernel-pressure optional-store veto |5 XCTest | [manifest](store-pressure-contribution/manifest.json) |
+
+The correctness review found that the new paged materialization needed the
+existing global cache-I/O gate. Two real-Metal regressions reproduced stores
+completing while that gate was held, without inducing a crash. Both fail before
+the fix and all14 budget cases pass afterward. The integrated vMLX pin is now
+9dd023d3299b16e7695470911c0a7ed36b7656c4. Mei passes495 offline XCTest cases
+(two skipped) plus4 Swift Testing cases; [logs and scope](paged-io-review-fix/summary.json).
+
+A new frozen release artifact and real-model gates are required for this pin.
+The earlier47f/3fa native passes keep their original identity. The contribution
+proofs use source-built Metal for the exact clean base; no full upstream package
+suite, scored-task improvement or all-family memory guarantee is claimed.

@@ -1,0 +1,16 @@
+{
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "revision": "59f70ee096eb0ad8a4d957db600e7fba65526250",
+  "source": "/Users/tijs/projects/vmlx-upstream-request-processor-20261106",
+  "core_revision": "3b39b5e7925fa8860ab8ccd79b054349872e24a5",
+  "c_abi_revision": "3797e11706a57121009d2e42a8babf4bf7fc1546",
+  "xctests_passed": 14,
+  "swift_testing_passed": 6,
+  "artifact_sha256": {
+    "mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib": "478a037bfa570159648769ceed5b5f8241ef85296d206131994226a517188dd5",
+    "ProcessorTests.xctest/Contents/MacOS/ProcessorTests": "3389e481dc2d1a64d514b17ae603f1bca4152a6f4e6df874a9cd61cf23f1d71f",
+    "NativeTests.xctest/Contents/MacOS/NativeTests": "09a1f131709c643237c210a407fd6a975ab406d794ed852e0f737dcf3a559b91"
+  },
+  "scope": "Focused model-free consumer tests of unchanged clean-base library source; exact source-built Metal bundle. Not a full vMLX package suite, model score or throughput claim.",
+  "fixture_adaptations": "Upstream Cmlx explicit-path test helper omitted; exact build Metal bundle provisioned after code signing. Owned MacOS sidecars removed before incremental rebuild after a reproduced codesign-only failure."
+}
