@@ -15,6 +15,10 @@ from pathlib import Path
 
 PROJECTS = Path("/Users/tijs/projects")
 BRANCHES = {
+    "capability": (
+        "vmlx-upstream-boundary-capability-20261106",
+        ["BoundaryPersistenceAvailabilityTests.swift"],
+    ),
     "pressure": (
         "vmlx-upstream-store-pressure-20261106",
         ["CacheStorePressureTests.swift"],

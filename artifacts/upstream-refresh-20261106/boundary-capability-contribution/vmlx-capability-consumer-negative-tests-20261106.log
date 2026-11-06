@@ -1,0 +1,26 @@
+Test Suite 'All tests' started at 2026-11-06 16:26:59.093.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 16:26:59.094.
+Test Suite 'BoundaryPersistenceAvailabilityTests' started at 2026-11-06 16:26:59.094.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDisabledPagedTierHasNoPersistenceWithoutDisk]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDisabledPagedTierHasNoPersistenceWithoutDisk]' passed (0.001 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDiskTierRemainsAvailableForSentinelOnlyOrIncompatiblePool]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDiskTierRemainsAvailableForSentinelOnlyOrIncompatiblePool]' passed (0.008 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testIncompatiblePagedTopologyHasNoPersistenceWithoutDisk]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testIncompatiblePagedTopologyHasNoPersistenceWithoutDisk]' passed (0.000 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testOneDataBlockMakesPagedPersistenceAvailable]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testOneDataBlockMakesPagedPersistenceAvailable]' passed (0.000 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testSentinelOnlyPoolCannotPersistBoundaryPayloads]' started.
+/private/tmp/vmlx-capability-consumer-20261106/Tests/NativeTests/BoundaryPersistenceAvailabilityTests.swift:16: error: -[NativeTests.BoundaryPersistenceAvailabilityTests testSentinelOnlyPoolCannotPersistBoundaryPayloads] : XCTAssertFalse failed
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testSentinelOnlyPoolCannotPersistBoundaryPayloads]' failed (1.119 seconds).
+Test Suite 'BoundaryPersistenceAvailabilityTests' failed at 2026-11-06 16:27:00.223.
+	 Executed 5 tests, with 1 failure (0 unexpected) in 1.128 (1.129) seconds
+Test Suite 'NativeTests.xctest' failed at 2026-11-06 16:27:00.223.
+	 Executed 5 tests, with 1 failure (0 unexpected) in 1.128 (1.129) seconds
+Test Suite 'All tests' failed at 2026-11-06 16:27:00.223.
+	 Executed 5 tests, with 1 failure (0 unexpected) in 1.128 (1.129) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+Note: Some test targets reported failures:
+  - NativeTests (XCTest)

@@ -1,0 +1,30 @@
+{
+  "kind": "capability",
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "source": "/Users/tijs/projects/vmlx-upstream-boundary-capability-20261106",
+  "revision": "2a1e967e9678407fb28d5cc44f88873b2e989c41",
+  "inputs": [
+    {
+      "source": "Tests/MLXLMTests/MLXMetalTestLock.swift",
+      "source_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "fixture": "Tests/NativeTests/MLXMetalTestLock.swift",
+      "fixture_sha256": "e19843c162614c43bfe4bb076739830e613a5322e23d5c02b869aeba899f7fca",
+      "adapted": false
+    },
+    {
+      "source": "Tests/MLXLMTests/MLXTestSerialization.swift",
+      "source_sha256": "8e3fa304969761b2c73eaf9f3af1036490657ff201b3308d56781c0bbd683acb",
+      "fixture": "Tests/NativeTests/MLXTestSerialization.swift",
+      "fixture_sha256": "91cd5b23c935dee0be1ae79880558cbac8ecfb6b88f011dfb1c2a56f9dc52759",
+      "adapted": true
+    },
+    {
+      "source": "Tests/MLXLMTests/BoundaryPersistenceAvailabilityTests.swift",
+      "source_sha256": "b96242c54c9acdd8681da868f7b3c7996be5d4df15308291926963a510e86ca1",
+      "fixture": "Tests/NativeTests/BoundaryPersistenceAvailabilityTests.swift",
+      "fixture_sha256": "b96242c54c9acdd8681da868f7b3c7996be5d4df15308291926963a510e86ca1",
+      "adapted": false
+    }
+  ],
+  "scope": "Clean-base library source through a test-only local SwiftPM consumer; no release dependency substitution"
+}

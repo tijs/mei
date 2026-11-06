@@ -1,0 +1,23 @@
+Test Suite 'All tests' started at 2026-11-06 16:31:33.024.
+Test Suite 'NativeTests.xctest' started at 2026-11-06 16:31:33.025.
+Test Suite 'BoundaryPersistenceAvailabilityTests' started at 2026-11-06 16:31:33.025.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDisabledPagedTierHasNoPersistenceWithoutDisk]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDisabledPagedTierHasNoPersistenceWithoutDisk]' passed (0.001 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDiskTierRemainsAvailableForSentinelOnlyOrIncompatiblePool]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testDiskTierRemainsAvailableForSentinelOnlyOrIncompatiblePool]' passed (0.010 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testIncompatiblePagedTopologyHasNoPersistenceWithoutDisk]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testIncompatiblePagedTopologyHasNoPersistenceWithoutDisk]' passed (0.000 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testOneDataBlockMakesPagedPersistenceAvailable]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testOneDataBlockMakesPagedPersistenceAvailable]' passed (0.000 seconds).
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testSentinelOnlyPoolCannotPersistBoundaryPayloads]' started.
+Test Case '-[NativeTests.BoundaryPersistenceAvailabilityTests testSentinelOnlyPoolCannotPersistBoundaryPayloads]' passed (0.000 seconds).
+Test Suite 'BoundaryPersistenceAvailabilityTests' passed at 2026-11-06 16:31:33.036.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.011 (0.011) seconds
+Test Suite 'NativeTests.xctest' passed at 2026-11-06 16:31:33.036.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.011 (0.011) seconds
+Test Suite 'All tests' passed at 2026-11-06 16:31:33.036.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.011 (0.012) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

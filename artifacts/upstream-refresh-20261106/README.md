@@ -134,3 +134,26 @@ A new frozen release artifact and real-model gates are required for this pin.
 The earlier47f/3fa native passes keep their original identity. The contribution
 proofs use source-built Metal for the exact clean base; no full upstream package
 suite, scored-task improvement or all-family memory guarantee is claimed.
+
+## Published atomic proposals
+
+The additional issue-first proposals are [shared optional byte budget#754](https://github.com/osaurus-ai/vmlx-swift/pull/754)
+(issue753), [safe replay#756](https://github.com/osaurus-ai/vmlx-swift/pull/756)
+(issue755), [request processors#758](https://github.com/osaurus-ai/vmlx-swift/pull/758)
+(issue757), and [optional-store pressure veto#760](https://github.com/osaurus-ai/vmlx-swift/pull/760)
+(issue759). Each is independent against effcd981. The byte-budget API is newly
+proposed upstream; it was already present in the Mei fork, so it must not be
+described as repairing an existing upstream maxCacheBytes setting.
+
+The historical no-coordinator/auxiliary snapshot guards already exist upstream
+and are not proposed again. A remaining independent sentinel-only capability
+bug has [negative and positive proof](boundary-capability-contribution/manifest.json):
+five cases, one failure before the data-block check and zero failures afterward.
+The integrated fork already contains this check, so it does not change the
+new57b620b/9dd023d3 release artifact.
+
+Upstream CI explicitly marks repository-wide formatting advisory. The observed
+lint job recursively rewrites unrelated baseline Swift/CMake files; no wholesale
+formatting was applied. Linux SwiftPM/container builds observed successful;
+queued Mac/CUDA jobs are not claimed green. Focused local proof remains bounded
+as described in each manifest.

@@ -1,0 +1,8 @@
+{
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "revision": "2a1e967e9678407fb28d5cc44f88873b2e989c41",
+  "negative_revision": "4a95b86d",
+  "negative": "5 cases,1 failed assertion: sentinel-only pool incorrectly advertises boundary persistence",
+  "positive": "5 cases,0 failures after requiring a data block",
+  "scope": "Model-free capability checks; no model/throughput or large snapshot allocation claim. The same data-block check is already present in the integrated Mei fork."
+}
