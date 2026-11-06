@@ -1,0 +1,9 @@
+{
+  "scope": "Release source-staging metadata only; no runtime input change",
+  "before": "0.10.0-rc.1",
+  "after": "0.11.0",
+  "version_constant_changelog_release_notes_agree": true,
+  "existing_regression_script": "bash scripts/test_stage_release_candidate.sh",
+  "full_file_staging_check": "Deferred until current model timing campaign is terminal to preserve quiet measurements",
+  "runtime_inputs_unchanged": true
+}
