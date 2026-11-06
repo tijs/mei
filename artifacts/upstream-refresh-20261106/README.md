@@ -2,7 +2,28 @@
 
 ## Current candidate and remaining gates
 
-The current frozen candidate is Mei `57b620b352a7f479b4403cc1ea0c4b3fae06994b`
+The current frozen runtime is Mei `588413434e9c5cc417e3a6da1bf9cef90598ba32`
+with vMLX `710741556966841b98d863220bda2d034671a58e` and core
+`e790cca9df907c30ff4f18b0c772b4d9f454132e`. Executable SHA-256:
+`195e0d43b09c25fa485c0955d9beda5a4ac40a04961791a97cc45ef399e9622e`;
+source-built Metal:
+`5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
+The final release build passes (382.63 seconds), with495 offline XCTest cases
+(two skips, zero failures) and four Swift Testing cases. Selected synthetic
+upstream regressions pass62 XCTest cases (one skip) plus132 Swift Testing cases.
+[Final build proof](ripple-integration/mei-final-build-summary.json) and
+[offline proof](ripple-integration/mei-final-pin-offline-summary.json) retain scope.
+
+Fresh three-model native and twelve-cell untraced ABBA qualification is running
+from committed benchmark profiles e97b89b8. The batching retune is still a
+candidate: no stable readiness, new speedup or task-score claim is made.
+The exact [artifact and campaign declarations](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
+retain all previous attempts. Stable remains **0.10.0**. New API/speed/native
+qualification, stable release/Homebrew and eight fresh scored runs remain open.
+
+### Previous candidate and the reproduced performance hold
+
+The previous frozen candidate is Mei `57b620b352a7f479b4403cc1ea0c4b3fae06994b`
 with vMLX `9dd023d3299b16e7695470911c0a7ed36b7656c4`. Its executable SHA-256 is
 `20657dac37d08beb7b5f449c484472f601c30c018d25cc435e4368b3fcc03396`;
 the source-built Metal SHA-256 is

@@ -26,16 +26,18 @@ All notable changes to Mei are documented here.
 - Serialize paged KV and companion materialization with background cache I/O.
   Real-Metal regressions verify both paths wait for the shared I/O gate.
 
-Offline checks pass: 495 XCTest cases (two skipped) and four Swift Testing
-cases; live acceptance is separate. The current frozen candidate passes all
-13 native tool/history/cache/context checks on each of Qwen, Ornith and Groot,
-including the 65,536-token boundary. All twelve balanced observable/API cells
-pass, including 120 measured requests and 108 live API cases. Groot has lower
-candidate throughput in both process pairs; stable promotion is held for a
-controlled performance investigation. This candidate has not been released;
-stable remains 0.10.0 until the release gates pass. See the
-[qualification evidence](artifacts/upstream-refresh-20261106/README.md) for exact
-artifact identities, resource limits and issue-first upstream proposals.
+- Retune byte-based command batching on roomy g13s GPUs while preserving correct
+  storage accounting, operation limits and explicit environment overrides.
+- Reject malformed DFlash2 NoPE layer declarations instead of silently coercing
+  or dropping them. Cover valid cached-key rotation and inherited tool/cache,
+  prompt-retention and width-policy behavior with synthetic execution tests.
+
+Offline checks pass:495 XCTest cases (two skips) plus four Swift Testing cases.
+The previous candidate passed native/API checks but showed lower Groot throughput.
+The final-pin artifact now has fresh native and untraced qualification in progress;
+no new speedup or scored-task result is claimed. Stable remains0.10.0 until the
+release gates pass. See the [qualification evidence](artifacts/upstream-refresh-20261106/README.md)
+for exact artifact identities, resource limits and issue-first proposals.
 
 ## [0.10.0] - 2026-11-03
 

@@ -1,15 +1,15 @@
 # Mei 0.11.0 — release preparation
 
-**Unreleased candidate. Stable remains 0.10.0.** The balanced observable/API
-gates pass, but Groot has lower candidate throughput in both process pairs.
-Stable promotion is held while that difference is investigated. Fresh four-model
-task results will follow the published release; earlier scores do not describe
-this candidate.
+**Unreleased candidate. Stable remains 0.10.0.** A previous candidate passed
+observable/API checks but showed a repeatable Groot slowdown. A scoped batching
+retune and a reproduced NoPE configuration fix are now built; fresh native and
+untraced qualification is running. Promotion remains held until those results
+are reviewed. Fresh four-model task results follow the published release.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
-The candidate pins vMLX `9dd023d3299b16e7695470911c0a7ed36b7656c4`, integrating
-Osaurus `effcd981`, Apple MLX Swift 0.33.0 and MLX core 0.32.4. Compatible
+The candidate pins vMLX `710741556966841b98d863220bda2d034671a58e`, integrating
+Osaurus `1bcd74ad`, Apple MLX Swift 0.33.0 and MLX core 0.32.4. Compatible
 dependencies include Swift Crypto 5.1.1 and SwiftSyntax 604.0.0.
 
 ## Upgrading weight-storage settings
@@ -47,56 +47,47 @@ and model-specific requirements; this refresh does not enable them implicitly.
 Inherited Qwen/Gemma improvements and these integration boundaries are explained
 in [the fork guide](VMLX-FORK.md).
 
-## Qualification completed so far
+## Qualification status
 
-The exact frozen candidate is Mei source
-`57b620b352a7f479b4403cc1ea0c4b3fae06994b`, executable SHA-256
-`20657dac37d08beb7b5f449c484472f601c30c018d25cc435e4368b3fcc03396`, and
-source-built Metal SHA-256
+The new frozen runtime is source `588413434e9c5cc417e3a6da1bf9cef90598ba32`,
+executable SHA-256
+`195e0d43b09c25fa485c0955d9beda5a4ac40a04961791a97cc45ef399e9622e`,
+with source-built Metal SHA-256
 `5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
+The final release build and full offline495-case suite (two skips, no failures)
+plus four Swift Testing cases pass. Selected synthetic parser/cache/width/NoPE
+tests pass62 XCTest cases (one skip) plus132 Swift Testing cases. A five-input
+negative control reproduces malformed NoPE declarations before validation.
 
-- Full offline suite: 495 XCTest cases, two skipped, zero failures; four Swift
-  Testing cases pass. Live-server acceptance is a separate gate.
-- Native admission: Qwen, Ornith and Groot each pass 13 checks, including
-  streaming/buffered tools, history/cache reuse and the 65,536-token context
-  boundary. All 42 model files rehash unchanged.
-- Qwen and Ornith each have one warning-pressure sample below the unchanged
-  sustained stop threshold. Groot remains normal. Separate older residency-off
-  attempts stopped under sustained pressure and remain preserved.
-- Passive status observation during Groot's existing 65,536-token prefill:
-  64 successful requests, maximum observed latency 21.13 ms. This is bounded
-  responsiveness evidence, not a universal worst-case guarantee.
+Fresh native checks on Groot/Qwen/Ornith and an untraced twelve-cell ABBA speed,
+observable-parity and live-API comparison are in progress. Each version has two
+fresh processes and five measured requests per short/30,000-token context per
+process; cold/warmups are separate. Old timings are not substituted. Profiles
+retain weights, precision, budgets, cache and resource guards. Storage migration
+is part of this aggregate runtime comparison, which does not isolate every patch.
 
-The balanced comparison uses two fresh processes per release and five measured
-repeats per context per process, in ABBA order for each model. Cold observations
-and warmups are separate; nine prebuilt live HTTP tests run against each process.
-No previous timings or selected best repeats are substituted. All twelve cells
-pass observable parity and 108 live API cases, with 120 measured requests.
-Qwen/Ornith have no mean-throughput decline in these pairs; Groot does. The
-component cause is unresolved, so no stable-readiness verdict is claimed.
+The previous57b/9dd artifact passed13 native checks per model and all120 timing /
+108 live-API observations, but both Groot candidate processes were slower than
+both controls. Those attempts remain historical. A same-binary profiled50/200 MiB
+command-budget diagnostic supports commit frequency as a contributor; it does
+not replace fresh untraced release qualification. The retune preserves correct
+storage-byte accounting and explicit overrides, changing only roomy g13s GPUs.
+Optional speculative paths and Ripple65B retain separate live-model qualification
+gates; this release does not implicitly enable them or change the benchmark roster.
 
-The follow-up phase screen retains the frozen runtimes and numeric profiles.
-The refreshed backend sends diagnostics to private unified logging by default;
-capturing enabled phase counters in `server.log` also requires the existing
-`VMLX_DIAGNOSTICS_STDERR=1` opt-in. An initial capture mismatch was preserved,
-and fresh matched arms explicitly select that destination. Profiled observations
-will not replace the untraced measurements.
-
-Raw profiles, outputs, status/resource samples, post-run hashes and owned-cache
-cleanup receipts are in the
-[benchmark qualification campaign](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
-Native admission, deterministic observable text, short synthetic decode timing,
-held-out task quality and real Peixinho app acceptance remain separate claims.
+[Current and historical runtime evidence](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
 
 ## Upstream contributions
 
-The overlap audit excluded fixes already present upstream. Ten small proposals
+The overlap audit excluded fixes already present upstream. The first ten small proposals
 were published, each after a problem issue, covering allocator admission,
 diagnostic lookups, raw text, a missing target dependency, rotating isolation and
 replay, shared cache-byte accounting, processor composition, optional-store
 pressure and sentinel-only cache capability. See the
 [contribution index and proof scopes](../artifacts/upstream-refresh-20261106/README.md).
-These are proposed contributions, not claims of upstream acceptance.
+Additional issue-first proposals cover the scoped batching retune (draft corePR54,
+vMLX issue763 because core issues are disabled) and malformed NoPE declarations
+(vMLX issue764/PR765). These are proposed contributions, not upstream acceptance.
 
 ## Remaining release work
 
