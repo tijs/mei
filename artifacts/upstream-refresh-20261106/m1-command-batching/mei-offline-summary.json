@@ -1,0 +1,12 @@
+{
+  "mei_revision": "d0ea629e123769565ab20108696717a60e4fe3ad",
+  "vmlx_revision": "ffdc20f99dc96d5c95d645173a15abec3a0451a6",
+  "xctest_cases": 495,
+  "skipped": 2,
+  "failures": 0,
+  "swift_testing_cases": 4,
+  "scope": "Full offline Mei suite; no live acceptance or runtime throughput qualification",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --jobs 2 --skip MeiAcceptanceTests",
+  "contribution_issue": "https://github.com/osaurus-ai/vmlx-swift/issues/763",
+  "contribution_draft_pr": "https://github.com/osaurus-ai/mlx/pull/54"
+}
