@@ -14,11 +14,12 @@ upstream regressions pass62 XCTest cases (one skip) plus132 Swift Testing cases.
 [Final build proof](ripple-integration/mei-final-build-summary.json) and
 [offline proof](ripple-integration/mei-final-pin-offline-summary.json) retain scope.
 
-Fresh three-model native and twelve-cell untraced ABBA qualification is running
+Fresh native gates pass13/13 on each of Groot, Qwen and Ornith; all42 model
+files rehash unchanged. The twelve-cell untraced ABBA qualification is running
 from committed benchmark profiles e97b89b8. The batching retune is still a
 candidate: no stable readiness, new speedup or task-score claim is made.
 The exact [artifact and campaign declarations](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
-retain all previous attempts. Stable remains **0.10.0**. New API/speed/native
+retain all previous attempts. Stable remains **0.10.0**. Untraced API/speed
 qualification, stable release/Homebrew and eight fresh scored runs remain open.
 
 ### Previous candidate and the reproduced performance hold

@@ -2,8 +2,8 @@
 
 **Unreleased candidate. Stable remains 0.10.0.** A previous candidate passed
 observable/API checks but showed a repeatable Groot slowdown. A scoped batching
-retune and a reproduced NoPE configuration fix are now built; fresh native and
-untraced qualification is running. Promotion remains held until those results
+retune and a reproduced NoPE configuration fix are now built. All three native
+gates pass; untraced qualification is running. Promotion remains held until those results
 are reviewed. Fresh four-model task results follow the published release.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
@@ -59,8 +59,10 @@ plus four Swift Testing cases pass. Selected synthetic parser/cache/width/NoPE
 tests pass62 XCTest cases (one skip) plus132 Swift Testing cases. A five-input
 negative control reproduces malformed NoPE declarations before validation.
 
-Fresh native checks on Groot/Qwen/Ornith and an untraced twelve-cell ABBA speed,
-observable-parity and live-API comparison are in progress. Each version has two
+Fresh native checks on Groot/Qwen/Ornith pass13/13 each, including65536-token
+context; all42 files rehash unchanged. Groot64/64 passive status GETs succeed
+during active prefill (maximum observed24.72ms). An untraced twelve-cell ABBA
+speed, observable-parity and live-API comparison is in progress. Each version has two
 fresh processes and five measured requests per short/30,000-token context per
 process; cold/warmups are separate. Old timings are not substituted. Profiles
 retain weights, precision, budgets, cache and resource guards. Storage migration
