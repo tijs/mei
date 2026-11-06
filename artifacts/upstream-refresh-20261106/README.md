@@ -80,3 +80,17 @@ The [rotating proof](rotating-restore-contribution/manifest.json) separates a
 negative exact-upstream-function probe (12 failed isolation assertions) from
 the positive public restore path across standalone and composite layouts.
 These are open contributions, not claims of upstream acceptance.
+
+## Media-independent prefix replay regression
+
+A new negative consumer probe reproduced a missing safe hit: a shorter
+media-independent prefix was shortened again by the replay-seed rule. The
+[regression summary](media-prefix-regression/summary.json) preserves one failed
+case before the fix and the full passing rerun after it:493 XCTest cases (two
+skipped), zero failures, plus four Swift Testing cases. The updated published
+pin is `3fa3d7edbc98b31cad4e5589a35e58783c7561fe`. Only full-request probes
+now drop a final token; shorter probes already leave an unprocessed suffix.
+
+The earlier Qwen native passes belong to the05cca590 frozen binary. They remain
+under their original identity; the corrected candidate requires a fresh build
+and qualification. No stable release or benchmark score is claimed here.

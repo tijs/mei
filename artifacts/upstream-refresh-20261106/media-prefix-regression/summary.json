@@ -1,0 +1,18 @@
+{
+  "old_vmlx": "05cca5906d7a8ebe626f88b1dc31b4dd3afded60",
+  "fixed_vmlx": "3fa3d7edbc98b31cad4e5589a35e58783c7561fe",
+  "negative_test": "RotatingPrefixReplayTests.testShorterMediaIndependentPrefixDoesNotLoseItsSafeCompleteBoundary",
+  "before": {
+    "cases": 1,
+    "failures": 1
+  },
+  "after_full_offline": {
+    "xctest_cases": 493,
+    "skipped": 2,
+    "failures": 0,
+    "swift_testing_cases": 4
+  },
+  "problem": "Replay truncation incorrectly shortened every salted probe, losing a complete rotating companion on a prefix already shorter than the original request.",
+  "fix": "Only shorten a salted probe when its token count equals the full original request token count.",
+  "limits": "Native passes on05cca590 remain evidence for that older frozen binary; release must be rebuilt and new identity qualified."
+}
