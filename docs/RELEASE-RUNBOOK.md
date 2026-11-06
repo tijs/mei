@@ -154,13 +154,31 @@ The tap is a separate repository: `https://github.com/tijs/homebrew-tap`.
 The working clone is `~/projects/homebrew-tap`; older clones also exist at
 `~/projects/mei/tap` and `~/projects/mei-rc/tap`, which are NOT present in a
 fresh release worktree — do not assume a `tap/` directory next to the release
-branch. The formula is `Formula/mei.rb`.
+branch. The formula is `Formula/mei.rb`. The primary clone can be checked out on
+another product's release branch, and its local `main` can trail the remote.
+Inspect its status and worktrees, fetch the remote, then use a fresh Mei worktree
+from `origin/main`; preserve other products' branches and local changes.
 
 ```bash
-cd tap && git pull --ff-only
+git -C ~/projects/homebrew-tap status --short
+git -C ~/projects/homebrew-tap worktree list
+git -C ~/projects/homebrew-tap fetch origin main
+# Substitute the version; use a new branch and an unused worktree path.
+git -C ~/projects/homebrew-tap worktree add -b release/mei-<version> \
+  ~/projects/homebrew-tap-mei-<version> origin/main
+cd ~/projects/homebrew-tap-mei-<version>
 # edit Formula/mei.rb: url -> the new release asset, sha256 -> from the .sha256
-git commit -am "chore: update mei to v<version>" && git push
+git add Formula/mei.rb
+git commit -m "chore: update mei to v<version>"
+git push origin HEAD:main
+# Assert that remote main contains this commit; a branch-only push is not delivery.
+test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
 ```
+
+If the main-branch push is rejected because the remote advanced, fetch and
+reconcile that update without overwriting it, then verify the published formula
+again. Do not force-push the tap or treat a successful feature-branch push as a
+Homebrew release.
 
 The `url` and `sha256` must both change. Take the checksum from the published
 `.sha256` asset, not from a local rebuild — the published artifact is what users
