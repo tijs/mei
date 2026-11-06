@@ -1,0 +1,20 @@
+{
+  "mei_source": "588413434e9c5cc417e3a6da1bf9cef90598ba32",
+  "vmlx_source": "710741556966841b98d863220bda2d034671a58e",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --jobs 2 --skip MeiAcceptanceTests",
+  "xctest_cases": 495,
+  "skipped": 2,
+  "failures": 0,
+  "swift_testing_cases": 4,
+  "scope": "Full offline suite, separate from live-server/model qualification",
+  "logs": [
+    {
+      "log": "mei-ripple-validation-resolve-20261106.log.gz",
+      "uncompressed_sha256": "7bc7b828eae7457a6d3ea19021676bf2a5ee40944f817556437fd06b2aed5937"
+    },
+    {
+      "log": "mei-ripple-validation-offline-tests-20261106.log.gz",
+      "uncompressed_sha256": "82b2408b5757244a77d52bb248e74999cddb8d2deb78fce20c64c38c14ef1941"
+    }
+  ]
+}

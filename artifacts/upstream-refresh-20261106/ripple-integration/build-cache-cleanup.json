@@ -1,0 +1,29 @@
+{
+  "scope": "Finished vMLX build intermediates only; Products, source, logs, model data and active Mei build preserved",
+  "checked_no_live_build_in_selected_root": true,
+  "removed": [
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Intermediates.noindex",
+      "allocated_kib": 1651396
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/ModuleCache.noindex",
+      "allocated_kib": 525052
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/SDKExplicitPrecompiledModules",
+      "allocated_kib": 98244
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/CompilationCache.noindex",
+      "allocated_kib": 28
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/SDKStatCaches.noindex",
+      "allocated_kib": 14976
+    }
+  ],
+  "before_free_bytes": 12095959040,
+  "after_free_bytes": 14453075968,
+  "epoch": 1793999167.2011142
+}
