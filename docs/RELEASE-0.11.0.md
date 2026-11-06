@@ -68,6 +68,12 @@ process; cold/warmups are separate. Old timings are not substituted. Profiles
 retain weights, precision, budgets, cache and resource guards. Storage migration
 is part of this aggregate runtime comparison, which does not isolate every patch.
 
+The completed Qwen group improves decode speed, but its measured long requests
+take slightly longer overall, with slower prefill. This remains a release hold
+while the other model groups finish and the cause is investigated. Decode speed
+alone does not prove that requests became faster; all repeats remain in the
+linked evidence.
+
 The previous57b/9dd artifact passed13 native checks per model and all120 timing /
 108 live-API observations, but both Groot candidate processes were slower than
 both controls. Those attempts remain historical. A same-binary profiled50/200 MiB
@@ -86,7 +92,7 @@ were published, each after a problem issue, covering allocator admission,
 diagnostic lookups, raw text, a missing target dependency, rotating isolation and
 replay, shared cache-byte accounting, processor composition, optional-store
 pressure and sentinel-only cache capability. See the
-[contribution index and proof scopes](../artifacts/upstream-refresh-20261106/README.md).
+[contribution index and proof scopes](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md).
 Additional issue-first proposals cover the scoped batching retune (draft corePR54,
 vMLX issue763 because core issues are disabled) and malformed NoPE declarations
 (vMLX issue764/PR765). Two test-only proposals cover width policies (issue766/PR767)

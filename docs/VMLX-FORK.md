@@ -54,8 +54,8 @@ Several upstream features need a separate integration gate:
   provenance, greedy correctness and measured short/long-context benefit before
   enabling a serving profile.
 
-The [qualification and contribution index](../artifacts/upstream-refresh-20261106/README.md)
-records exact artifacts, negative/positive regressions and ten small issue-first
+The [qualification and contribution index](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
+records exact artifacts, negative/positive regressions and fourteen small issue-first
 upstream PRs. The overlap audit excluded snapshot guards and quantization aliases
 already upstream. Fork-specific ownership policy remains separate where an
 independent upstream benefit has not been established. PR publication does not

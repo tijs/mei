@@ -36,7 +36,7 @@ Offline checks pass:495 XCTest cases (two skips) plus four Swift Testing cases.
 The previous candidate passed native/API checks but showed lower Groot throughput.
 The final-pin artifact passes native checks on all three models; untraced
 qualification is in progress. No new speedup or scored-task result is claimed. Stable remains0.10.0 until the
-release gates pass. See the [qualification evidence](artifacts/upstream-refresh-20261106/README.md)
+release gates pass. See the [qualification evidence](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
 for exact artifact identities, resource limits and issue-first proposals.
 
 ## [0.10.0] - 2026-11-03
