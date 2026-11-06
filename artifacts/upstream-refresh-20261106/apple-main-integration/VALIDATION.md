@@ -22,11 +22,15 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   xcrun swift test --jobs 2 --no-parallel \
   --filter 'UpstreamEmptyResultIntegrationTests|CompiledFunctionLifetimeTests|MLXArrayTests|ModuleTests|QuantizationTests|TransformTests'
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-  xcrun swift test --skip-build --no-parallel --filter MLXArraySiblingLifetimeTests
+  xcrun swift test --skip-build --no-parallel --disable-swift-testing \
+  --filter MLXArraySiblingLifetimeTests
 ```
 
 Run the allocator-lifetime class in that dedicated filtered process, with no
-other tests/model processes concurrently. The new compiler-bypass test requires
+other tests/model processes concurrently. Require exactly its two XCTest cases
+and no Swift Testing cases in that isolated process; otherwise correct the
+invocation before treating its allocation measurements as evidence.
+The new compiler-bypass test requires
 the unsafe-compile opt-ins unset or zero (record only those non-secret settings).
 Retain complete command/status/test-discovery logs, not a grep-based verdict.
 Use the previous integration's focused cache/processor/width/NoPE/ownership
