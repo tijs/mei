@@ -1,5 +1,58 @@
 # Upstream refresh qualification evidence
 
+## Current candidate and remaining gates
+
+The current frozen candidate is Mei `57b620b352a7f479b4403cc1ea0c4b3fae06994b`
+with vMLX `9dd023d3299b16e7695470911c0a7ed36b7656c4`. Its executable SHA-256 is
+`20657dac37d08beb7b5f449c484472f601c30c018d25cc435e4368b3fcc03396`;
+the source-built Metal SHA-256 is
+`5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
+Later documentation and contribution-proof commits do not change that artifact.
+
+The full offline gate passes 495 XCTest cases (two skipped) and four Swift
+Testing cases. The same candidate passes all 13 native checks on each of Qwen,
+Ornith and Groot, including streaming/buffered tools, history/cache reuse and
+the 65,536-token context boundary. All 42 model files were rehashed unchanged.
+Qwen and Ornith each had one warning-pressure sample, below the unchanged
+sustained stop threshold; Groot remained normal. During Groot's existing long
+prefill, all 64 passive status requests succeeded (maximum observed 21.13 ms).
+
+Exact profiles, logs, resource samples and preservation receipts live in the
+[benchmark qualification campaign](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
+Balanced 0.10.0/0.11.0 speed, greedy-output and live HTTP qualification is still
+running. Stable remains **0.10.0**. Publishing 0.11.0, verifying Homebrew delivery
+and obtaining fresh four-model scored results remain open. Native admission is
+not a scored-task result or a throughput improvement claim.
+
+## Contribution index
+
+Each proposal has its own preceding problem issue. The PRs are proposals, not
+claims of upstream acceptance.
+
+| Problem | Issue → PR | Focused evidence |
+|---|---|---|
+| Repeated process-environment copies in decode diagnostics | [745](https://github.com/osaurus-ai/vmlx-swift/issues/745) → [746](https://github.com/osaurus-ai/vmlx-swift/pull/746) | Preserve current/legacy flag behavior |
+| Bounded allocator rejects useful replacement shapes | [4841](https://github.com/ml-explore/mlx/issues/4841) → [4842](https://github.com/ml-explore/mlx/pull/4842) | Three baseline assertion failures; six fixed cases and six neighboring cases |
+| Raw completions lose literal generation text | [747](https://github.com/osaurus-ai/vmlx-swift/issues/747) → [750](https://github.com/osaurus-ai/vmlx-swift/pull/750) | Raw-text path and stop propagation |
+| Tensor-parallel target omits its direct MLXRandom dependency | [748](https://github.com/osaurus-ai/vmlx-swift/issues/748) → [749](https://github.com/osaurus-ai/vmlx-swift/pull/749) | Explicit target dependency |
+| Restored rotating wrappers can share mutable state | [751](https://github.com/osaurus-ai/vmlx-swift/issues/751) → [752](https://github.com/osaurus-ai/vmlx-swift/pull/752) | Negative isolation assertions and positive public-path proof |
+| Retained prefix components lack a shared byte allowance | [753](https://github.com/osaurus-ai/vmlx-swift/issues/753) → [754](https://github.com/osaurus-ai/vmlx-swift/pull/754) | 16 cases, including I/O serialization and zero-byte capability |
+| Replay can select an incomplete or shortened safe boundary | [755](https://github.com/osaurus-ai/vmlx-swift/issues/755) → [756](https://github.com/osaurus-ai/vmlx-swift/pull/756) | Six real-Metal cases |
+| Request processors need to compose with native schema constraints | [757](https://github.com/osaurus-ai/vmlx-swift/issues/757) → [758](https://github.com/osaurus-ai/vmlx-swift/pull/758) | 14 XCTest and six Swift Testing cases |
+| Optional cache copies continue under host pressure | [759](https://github.com/osaurus-ai/vmlx-swift/issues/759) → [760](https://github.com/osaurus-ai/vmlx-swift/pull/760) | Five policy cases; no induced-pressure claim |
+| Sentinel-only paged cache advertises unavailable persistence | [761](https://github.com/osaurus-ai/vmlx-swift/issues/761) → [762](https://github.com/osaurus-ai/vmlx-swift/pull/762) | One negative failure, then five passing cases |
+
+The no-coordinator/auxiliary snapshot guards and quantization alias handling
+already exist upstream and were excluded as duplicates. Fork-specific prompt
+snapshot ownership/budget policy was not proposed as a broad independent patch
+without evidence that it benefits upstream's different ownership model.
+
+The sections below retain the chronology and original identities of earlier
+attempts. Statements that a gate was pending describe that artifact at that time;
+they do not replace the current status above.
+
+## Initial integration gate
+
 Candidate vMLX: `e408c6ebdabb9d2dca382605fb6cb510c09e9996`.
 It integrates Osaurus `effcd981`, Apple MLX Swift 0.33.0, MLX core 0.32.4
 (`ecc27d0b4b5d221cfe3dd5da50ab0e55d1a869d6`) and the merged C ABI

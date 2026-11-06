@@ -27,9 +27,13 @@ All notable changes to Mei are documented here.
   Real-Metal regressions verify both paths wait for the shared I/O gate.
 
 Offline checks pass: 495 XCTest cases (two skipped) and four Swift Testing
-cases; live acceptance is separate. Native model memory/cache/context and
-short/loaded throughput qualification is still outstanding. This candidate has
-not been released; stable remains 0.10.0 until the release gates pass.
+cases; live acceptance is separate. The current frozen candidate passes all
+13 native tool/history/cache/context checks on each of Qwen, Ornith and Groot,
+including the 65,536-token boundary. Balanced short/loaded throughput,
+greedy-output and live HTTP qualification is still running. This candidate has
+not been released; stable remains 0.10.0 until the release gates pass. See the
+[qualification evidence](artifacts/upstream-refresh-20261106/README.md) for exact
+artifact identities, resource limits and issue-first upstream proposals.
 
 ## [0.10.0] - 2026-11-03
 
