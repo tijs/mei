@@ -20,7 +20,10 @@ All notable changes to Mei are documented here.
 - Adapt host-read/compiler ownership to upstream materialization and eval-lock
   APIs, retaining regression coverage for isolation, failures and lock order.
 
-Offline checks pass: 491 XCTest cases (two skipped) and three Swift Testing
+- Preserve the complete safe boundary of a shorter media-independent prefix.
+  The replay-seed rule now drops a token only for a full-request probe.
+
+Offline checks pass: 493 XCTest cases (two skipped) and four Swift Testing
 cases; live acceptance is separate. Native model memory/cache/context and
 short/loaded throughput qualification is still outstanding. This candidate has
 not been released; stable remains 0.10.0 until the release gates pass.

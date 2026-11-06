@@ -94,3 +94,19 @@ now drop a final token; shorter probes already leave an unprocessed suffix.
 The earlier Qwen native passes belong to the05cca590 frozen binary. They remain
 under their original identity; the corrected candidate requires a fresh build
 and qualification. No stable release or benchmark score is claimed here.
+
+## Rebuilt artifact and live model admission
+
+The47fdf020 candidate release build passed; exact binary/Metal identities and
+native results are published in [local-model-bench](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
+The new Ornith artifact passed13 native probes including65536-token context
+with default residency=true. There was one warning-pressure sample, below the
+unchanged sustained stop threshold; all11 model hashes remain unchanged. Two
+residency-off attempts stopped on sustained pressure after successful load.
+A read-only cache-isolation retry did not resolve that condition. These are
+admission diagnostics; neither speed improvement nor stable readiness is claimed.
+Qwen/Groot rebuilt-artifact native and balanced throughput gates remain open.
+
+Additional atomic proposals are being qualified through test-only local SwiftPM
+consumers on clean upstream bases. The fixture preparation script records exact
+source revisions and test-source hashes. It does not change Mei release pins.
