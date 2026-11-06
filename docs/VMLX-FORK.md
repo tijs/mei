@@ -15,7 +15,45 @@ revision. A fresh Mei build retrieves the fork through SwiftPM. There is no
 normal build-time patch application and no dependency on a local SwiftPM
 repository cache being pre-populated.
 
-## Runtime dependency pin: 0.10
+## Current integration candidate: 0.11
+
+The 0.11 candidate pins vMLX
+`9dd023d3299b16e7695470911c0a7ed36b7656c4`, integrating Osaurus `effcd981`,
+Apple MLX Swift 0.33.0 and MLX core 0.32.4. It preserves Mei's bounded prefix
+storage, raw-text generation and request-local constrained decoding while
+adapting to upstream materialization, host-read and eval-lock ownership.
+Stable remains 0.10.0 until the remaining release gates pass.
+
+Upstream's owned weight storage replaces the earlier mmap path. Mei exposes a
+bounded residency request with explicit CLI/library/status behavior; see
+[runtime policies](RUNTIME-POLICIES.md) for migration and limits. Existing
+performance claims for mmap/aligned loading describe earlier releases.
+
+Qwen tool-prefix fixes apply to Qwen/Ornith/Groot. Gemma template, quoted-XML
+tool parsing and activation-dtype updates are inherited for future qualification
+of the queued text-only Gemma pack. Source support does not establish admission
+of a new checkpoint or image-conditioned behavior.
+
+Several upstream features need a separate integration gate:
+
+- Mei retains its own tested strict schema compiler and token mask. Upstream's
+  native schema path has different tokenizer, reasoning/tool and completion
+  contracts; switching implementations requires contract and real-model parity.
+- Concurrent checkpoint loading and byte-level load progress do not yet preserve
+  Mei's complete key-filtering, owned-storage and residency accounting contracts.
+  They are not advertised as active Mei features.
+- MTP/DFlash and newly registered model families require exact checkpoint/head
+  provenance, greedy correctness and measured short/long-context benefit before
+  enabling a serving profile.
+
+The [qualification and contribution index](../artifacts/upstream-refresh-20261106/README.md)
+records exact artifacts, negative/positive regressions and ten small issue-first
+upstream PRs. The overlap audit excluded snapshot guards and quantization aliases
+already upstream. Fork-specific ownership policy remains separate where an
+independent upstream benefit has not been established. PR publication does not
+mean upstream acceptance.
+
+## Published dependency pin: 0.10
 
 Mei 0.10 pins vmlx **`9db62ce10416db4a33ff0108dca6fc00bdadfff7`**,
 which retains the phase-flag lookup optimization and pins MLX core
