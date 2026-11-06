@@ -18,11 +18,12 @@ struct RawTextGenerationTests {
                                additionalContext: [String: any Sendable]?) throws -> [Int] { [] }
     }
 
-    private func run(_ pieces: [String], raw: Bool, stops: [String] = []) -> (text: String, reasoning: String, stopped: Bool) {
+    private func run(_ pieces: [String], raw: Bool, stops: [String] = [], structured: Bool = false) -> (text: String, reasoning: String, stopped: Bool) {
         var handler = TextToolTokenLoopHandler(
             tokenizer: Pieces(pieces: pieces), format: .json,
             reasoningParser: ReasoningParser.forPrompt(stampName: "qwen3", promptTail: nil),
-            stopStringMatcher: StopStringMatcher(stopStrings: stops), parseChatMarkup: !raw)
+            stopStringMatcher: StopStringMatcher(stopStrings: stops), parseChatMarkup: !raw,
+            structuredOutput: structured)
         var text = ""
         var reasoning = ""
         let emit: (sending Generation) -> AsyncStream<Generation>.Continuation.YieldResult = { event in
@@ -65,4 +66,14 @@ struct RawTextGenerationTests {
         #expect(output.text == "one, two, ")
         #expect(output.stopped)
     }
+    @Test func schemaModeStillPreservesMarkupAndUsesGrammarTermination() {
+        let pieces = ["{\"literal\":\"<think>", "STOP", "</think><tool_call>\"}"]
+        for raw in [false, true] {
+            let output = run(pieces, raw: raw, stops: ["STOP"], structured: true)
+            #expect(output.text == pieces.joined())
+            #expect(output.reasoning.isEmpty)
+            #expect(!output.stopped)
+        }
+    }
+
 }

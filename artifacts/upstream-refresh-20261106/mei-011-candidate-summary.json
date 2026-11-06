@@ -1,0 +1,43 @@
+{
+  "vmlx_revision": "05cca5906d7a8ebe626f88b1dc31b4dd3afded60",
+  "xctest_cases": 492,
+  "skipped": 2,
+  "failures": 0,
+  "swift_testing_cases": 4,
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --jobs 2 --skip MeiAcceptanceTests",
+  "missing_direct_dependency_warning": false,
+  "release_build_before_manifest_fix": {
+    "passed": true,
+    "source": "1cbdc5825e807e40b0af9be2aff4b94d9a1d7789",
+    "vmlx": "d0e3d45404f9f19ea8dae2a3fca44edfff939870",
+    "known_warning": "MLXDistributedTP missing MLXRandom direct dependency; fixed in next pin"
+  },
+  "contributions": [
+    {
+      "issue": 745,
+      "pr": 746,
+      "repo": "osaurus-ai/vmlx-swift"
+    },
+    {
+      "issue": 4841,
+      "pr": 4842,
+      "repo": "ml-explore/mlx"
+    },
+    {
+      "issue": 747,
+      "pr": 750,
+      "repo": "osaurus-ai/vmlx-swift"
+    },
+    {
+      "issue": 748,
+      "pr": 749,
+      "repo": "osaurus-ai/vmlx-swift"
+    },
+    {
+      "issue": 751,
+      "pr": 752,
+      "repo": "osaurus-ai/vmlx-swift"
+    }
+  ],
+  "remaining": "Corrected release build, native/model/memory/performance qualification, remaining atomic contribution assessment, release/tap and four-model benchmark."
+}

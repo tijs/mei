@@ -1,0 +1,8 @@
+{
+  "upstream_base": "effcd981851786b2ef993b780fabec13f6207e50",
+  "scope": "Negative test compiles the exact upstream private restore function with the current integrated MLX/KV types; not a full clean upstream package build. Positive regression uses public restoreFromDiskArrays on the integrated pin, standalone and CacheList, keep0/1, wrap and independent updates.",
+  "original_function_sha256": "ebe36bfce896c27a3cd2fb563ba737c0ba82963ba691e4c7c2b907c216557fa9",
+  "positive_test_sha256": "1c023cd0ab635b5830068d2ae0057cf49037821068d512ae723dd837c0a7101b",
+  "baseline_returncode": 1,
+  "positive_returncode": 0
+}

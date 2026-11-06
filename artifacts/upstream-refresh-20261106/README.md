@@ -63,3 +63,20 @@ admission and its regression; the full Osaurus integration is not proposed to Ap
 The build-cache cleanup manifest records removal of reproducible intermediates
 from idle owned builds. Compiled Products, weights and benchmark evidence were
 preserved.
+
+## Corrected 0.11.0 candidate
+
+The next published pin `05cca5906d7a8ebe626f88b1dc31b4dd3afded60` adds the
+missing direct MLXRandom dependency to MLXDistributedTP. The fresh offline run
+passes 492 XCTest cases (two skipped) and four Swift Testing cases, with no
+missing-direct-dependency warning. [Candidate summary](mei-011-candidate-summary.json).
+The first release build passed but reported that warning; its log is retained.
+The corrected release build and real-model gates remain pending.
+
+Small issue-first upstream proposals now also cover [raw completions #750](https://github.com/osaurus-ai/vmlx-swift/pull/750),
+[direct dependency #749](https://github.com/osaurus-ai/vmlx-swift/pull/749), and
+[rotating restore isolation #752](https://github.com/osaurus-ai/vmlx-swift/pull/752).
+The [rotating proof](rotating-restore-contribution/manifest.json) separates a
+negative exact-upstream-function probe (12 failed isolation assertions) from
+the positive public restore path across standalone and composite layouts.
+These are open contributions, not claims of upstream acceptance.

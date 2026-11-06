@@ -1,0 +1,41 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 3]
+[1 / 3] CNIOBoringSSL
+[1 / 2] VMLXGeneration
+[5 / 10] MeiTests-product
+[10 / 24]
+[14 / 24]
+[17 / 24]
+[19 / 24] MeiTests-product
+[25 / 29] MeiTests-product
+[26 / 29] MeiTests-product
+[27 / 29] MeiTests-product
+warning: missing creator for mutated node: ('/Users/tijs/projects/mei-dependency-refresh-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (5,10 secs)
+Test Suite 'Selected tests' started at 2026-11-06 13:15:08.898.
+Test Suite 'MeiTests.xctest' started at 2026-11-06 13:15:08.899.
+Test Suite 'RotatingRestoreIsolationTests' started at 2026-11-06 13:15:08.899.
+Test Case '-[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther]' started.
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:33: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[21.0, 22.0, 23.0, 24.0, 20.0], [121.0, 122.0, 123.0, 124.0, 120.0]]") is not equal to ("[[11.0, 12.0, 8.0, 9.0, 10.0], [111.0, 112.0, 108.0, 109.0, 110.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:35: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[21.0, 22.0, 23.0, 24.0, 20.0], [121.0, 122.0, 123.0, 124.0, 120.0]]") is not equal to ("[[11.0, 12.0, 8.0, 9.0, 10.0], [111.0, 112.0, 108.0, 109.0, 110.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:37: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[21.0, 22.0, 23.0, 24.0, 20.0]") is not equal to ("[11.0, 12.0, 8.0, 9.0, 10.0]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:38: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[121.0, 122.0, 123.0, 124.0, 120.0]") is not equal to ("[111.0, 112.0, 108.0, 109.0, 110.0]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:42: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[21.0, 22.0, 101.0, 24.0, 20.0], [121.0, 122.0, 201.0, 124.0, 120.0]]") is not equal to ("[[21.0, 22.0, 23.0, 24.0, 20.0], [121.0, 122.0, 123.0, 124.0, 120.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:43: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[21.0, 22.0, 101.0, 24.0, 20.0]") is not equal to ("[11.0, 12.0, 8.0, 9.0, 10.0]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:33: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[1.0, 22.0, 23.0, 24.0, 21.0], [101.0, 122.0, 123.0, 124.0, 121.0]]") is not equal to ("[[1.0, 10.0, 11.0, 12.0, 9.0], [101.0, 110.0, 111.0, 112.0, 109.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:35: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[1.0, 22.0, 23.0, 24.0, 21.0], [101.0, 122.0, 123.0, 124.0, 121.0]]") is not equal to ("[[1.0, 10.0, 11.0, 12.0, 9.0], [101.0, 110.0, 111.0, 112.0, 109.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:37: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[1.0, 22.0, 23.0, 24.0, 21.0]") is not equal to ("[1.0, 10.0, 11.0, 12.0, 9.0]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:38: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[101.0, 122.0, 123.0, 124.0, 121.0]") is not equal to ("[101.0, 110.0, 111.0, 112.0, 109.0]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:42: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[[1.0, 22.0, 23.0, 24.0, 101.0], [101.0, 122.0, 123.0, 124.0, 201.0]]") is not equal to ("[[1.0, 22.0, 23.0, 24.0, 21.0], [101.0, 122.0, 123.0, 124.0, 121.0]]")
+/Users/tijs/projects/mei-dependency-refresh-20261106/Tests/MeiTests/RotatingRestoreIsolationTests.swift:43: error: -[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther] : XCTAssertEqual failed: ("[1.0, 22.0, 23.0, 24.0, 101.0]") is not equal to ("[1.0, 10.0, 11.0, 12.0, 9.0]")
+Test Case '-[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther]' failed (5.136 seconds).
+Test Suite 'RotatingRestoreIsolationTests' failed at 2026-11-06 13:15:14.035.
+	 Executed 1 test, with 12 failures (0 unexpected) in 5.136 (5.136) seconds
+Test Suite 'MeiTests.xctest' failed at 2026-11-06 13:15:14.035.
+	 Executed 1 test, with 12 failures (0 unexpected) in 5.136 (5.136) seconds
+Test Suite 'Selected tests' failed at 2026-11-06 13:15:14.036.
+	 Executed 1 test, with 12 failures (0 unexpected) in 5.136 (5.137) seconds
+Note: Some test targets reported failures:
+  - MeiTests (XCTest)

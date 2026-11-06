@@ -1,0 +1,26 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 146] Cmlx
+[2 / 7] MeiTests-product
+[7 / 21]
+[11 / 21]
+[14 / 21]
+[16 / 21] MeiTests-product
+[22 / 26] MeiTests-product
+[23 / 26] MeiTests-product
+[24 / 26] MeiTests-product
+warning: missing creator for mutated node: ('/Users/tijs/projects/mei-dependency-refresh-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (4,81 secs)
+Test Suite 'Selected tests' started at 2026-11-06 13:15:23.698.
+Test Suite 'MeiTests.xctest' started at 2026-11-06 13:15:23.699.
+Test Suite 'RotatingRestoreIsolationTests' started at 2026-11-06 13:15:23.699.
+Test Case '-[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther]' started.
+Test Case '-[MeiTests.RotatingRestoreIsolationTests testRestoredRequestsCannotMutateRetainedRingOrEachOther]' passed (0.082 seconds).
+Test Suite 'RotatingRestoreIsolationTests' passed at 2026-11-06 13:15:23.781.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.082 (0.082) seconds
+Test Suite 'MeiTests.xctest' passed at 2026-11-06 13:15:23.781.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.082 (0.082) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 13:15:23.781.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.082 (0.083) seconds
