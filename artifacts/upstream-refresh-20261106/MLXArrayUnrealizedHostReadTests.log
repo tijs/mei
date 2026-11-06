@@ -1,0 +1,29 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MLXArray unrealized host reads" started.
+◇ Test "asArray on an array downstream of a failed eval returns zeros, not a crash" started.
+✔ Test "asArray on an array downstream of a failed eval returns zeros, not a crash" passed after 0.120 seconds.
+◇ Test "asArray with a dtype conversion on an unrealized array returns zeros" started.
+✔ Test "asArray with a dtype conversion on an unrealized array returns zeros" passed after 0.044 seconds.
+◇ Test "asData in every access mode returns nbytes of zeros for an unrealized array" started.
+✔ Test "asData in every access mode returns nbytes of zeros for an unrealized array" passed after 0.120 seconds.
+◇ Test "asArrayChecked throws the MLX error for an unrealized array" started.
+✔ Test "asArrayChecked throws the MLX error for an unrealized array" passed after 0.042 seconds.
+◇ Test "checked conversion rejects an invalid array without recursive conversion" started.
+✔ Test "checked conversion rejects an invalid array without recursive conversion" passed after 0.001 seconds.
+◇ Test "asArrayChecked returns the values of a healthy array" started.
+✔ Test "asArrayChecked returns the values of a healthy array" passed after 0.001 seconds.
+◇ Test "item on an unrealized array returns zero" started.
+✔ Test "item on an unrealized array returns zero" passed after 0.080 seconds.
+◇ Test "asMTLBuffer on an unrealized array returns nil" started.
+✔ Test "asMTLBuffer on an unrealized array returns nil" passed after 0.057 seconds.
+◇ Test "MLXErrorMonitor records every dispatched error regardless of handler" started.
+✔ Test "MLXErrorMonitor records every dispatched error regardless of handler" passed after 0.039 seconds.
+◇ Test "a healthy host read after a failed one still returns real values (control)" started.
+✔ Test "a healthy host read after a failed one still returns real values (control)" passed after 0.041 seconds.
+◇ Test "the failing primitive's own output keeps its allocated buffer (documents the two shapes)" started.
+✔ Test "the failing primitive's own output keeps its allocated buffer (documents the two shapes)" passed after 0.040 seconds.
+✔ Suite "MLXArray unrealized host reads" passed after 0.588 seconds.
+✔ Test run with 11 tests in 1 suite passed after 0.588 seconds.

@@ -1,0 +1,106 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "BatchKVCache rotating-slot focused contracts" started.
+◇ Suite "Gemma4 cache topology focused contracts" started.
+◇ Suite "Bailing/Ling hybrid cache topology focused contracts" started.
+◇ Suite "BatchArraysCache focused contracts" started.
+◇ Test "Gemma4 compile policy follows actual cache topology" started.
+◇ Test "makeMask last axis matches update key count after ring wrap" started.
+◇ Test "Full-attention rotating cache uses the attention-sink shape" started.
+◇ Suite "CacheCoordinator topology contracts" started.
+◇ Test "actual BailingHybridModel uses ArraysCache for linear layers and KV for global layers" started.
+◇ Test "All-Rotating Gemma4 cache classifies as rotating" started.
+◇ Test "TokenIterator compiled decode promotes all-rotating SWA caches" started.
+◇ Test "splitBack propagates model-mutated recurrent offset" started.
+◇ Test "actual Gemma4TextModel newCache matches mixed and maxKVSize topologies" started.
+◇ Test "trailing partial Bailing/Ling layer group is global attention" started.
+◇ Test "Mixed Rotating+Simple Gemma4 cache classifies as heterogeneous" started.
+◇ Test "dense paged cache restores the longest prefix and leaves suffix tokens" started.
+✔ Test "Full-attention rotating cache uses the attention-sink shape" passed after 0.001 seconds.
+✔ Test "All-Rotating Gemma4 cache classifies as rotating" passed after 0.001 seconds.
+✔ Test "Mixed Rotating+Simple Gemma4 cache classifies as heterogeneous" passed after 0.001 seconds.
+✔ Test "trailing partial Bailing/Ling layer group is global attention" passed after 0.001 seconds.
+[vmlx-tests] The MLX Metal test lock /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock is taken; waiting for it, with no time limit. `lsof /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock` names the process that holds it.
+✔ Test "TokenIterator compiled decode promotes all-rotating SWA caches" passed after 0.004 seconds.
+✔ Test "splitBack propagates model-mutated recurrent offset" passed after 0.013 seconds.
+✔ Suite "BatchArraysCache focused contracts" passed after 0.014 seconds.
+✔ Test "actual Gemma4TextModel newCache matches mixed and maxKVSize topologies" passed after 0.017 seconds.
+✔ Test "Gemma4 compile policy follows actual cache topology" passed after 0.017 seconds.
+✔ Suite "Gemma4 cache topology focused contracts" passed after 0.017 seconds.
+✔ Test "actual BailingHybridModel uses ArraysCache for linear layers and KV for global layers" passed after 0.018 seconds.
+✔ Suite "Bailing/Ling hybrid cache topology focused contracts" passed after 0.018 seconds.
+✔ Test "dense paged cache restores the longest prefix and leaves suffix tokens" passed after 0.021 seconds.
+◇ Test "media salt isolates otherwise identical paged prefixes" started.
+✔ Test "makeMask last axis matches update key count after ring wrap" passed after 0.182 seconds.
+◇ Test "pre-wrap rotating slot still gets standard causal mask" started.
+✔ Test "media salt isolates otherwise identical paged prefixes" passed after 0.161 seconds.
+◇ Test "post-prepare media aliases resolve effective cache keys" started.
+✔ Test "pre-wrap rotating slot still gets standard causal mask" passed after 0.223 seconds.
+◇ Test "mixed wrapped rotating and unbounded slot produces compatible mask" started.
+✔ Test "post-prepare media aliases resolve effective cache keys" passed after 0.224 seconds.
+◇ Test "prompt tool-surface edits never return a full cached prompt hit" started.
+✔ Test "mixed wrapped rotating and unbounded slot produces compatible mask" passed after 0.007 seconds.
+◇ Test "explicit effectiveKeyLens caps batch causal mask maxTotal" started.
+✔ Test "prompt tool-surface edits never return a full cached prompt hit" passed after 0.023 seconds.
+◇ Test "hybrid paged hit requires matching companion state" started.
+✔ Test "explicit effectiveKeyLens caps batch causal mask maxTotal" passed after 0.019 seconds.
+✔ Suite "BatchKVCache rotating-slot focused contracts" passed after 0.434 seconds.
+✔ Test "hybrid paged hit requires matching companion state" passed after 0.005 seconds.
+◇ Test "hybrid paged hit rejects partial companion state" started.
+✔ Test "hybrid paged hit rejects partial companion state" passed after 0.001 seconds.
+◇ Test "disk tier restores the longest stored prefix after paged cache is unavailable" started.
+✔ Test "disk tier restores the longest stored prefix after paged cache is unavailable" passed after 0.010 seconds.
+◇ Test "Gemma mixed TQ and rotating cache hits paged RAM then falls back to L2 after eviction" started.
+✔ Test "Gemma mixed TQ and rotating cache hits paged RAM then falls back to L2 after eviction" passed after 8.350 seconds.
+◇ Test "Gemma paged lookup without its exact rotating companion falls through to typed L2" started.
+✔ Test "Gemma paged lookup without its exact rotating companion falls through to typed L2" passed after 0.012 seconds.
+◇ Test "hybrid disk hit rejects partial companion state" started.
+✔ Test "hybrid disk hit rejects partial companion state" passed after 0.010 seconds.
+◇ Test "hybrid disk hit rejects legacy KV-only payload without companion state" started.
+✔ Test "hybrid disk hit rejects legacy KV-only payload without companion state" passed after 0.009 seconds.
+◇ Test "DSV4 paged-incompatible cache skips paged blocks and restores CSA HSA pools from disk" started.
+✔ Test "DSV4 paged-incompatible cache skips paged blocks and restores CSA HSA pools from disk" passed after 0.011 seconds.
+◇ Test "ZAYA CCA format-v2 disk payload restores growing prompt boundary" started.
+✔ Test "ZAYA CCA format-v2 disk payload restores growing prompt boundary" passed after 0.011 seconds.
+◇ Test "ZAYA CCA state is not duplicated into SSM companion cache" started.
+✔ Test "ZAYA CCA state is not duplicated into SSM companion cache" passed after 0.005 seconds.
+◇ Test "ZAYA CCA topology advertises CCA companion, not recurrent SSM" started.
+✔ Test "ZAYA CCA topology advertises CCA companion, not recurrent SSM" passed after 0.001 seconds.
+◇ Test "hybrid disk media-salt prompt boundary returns exact hit" started.
+✔ Test "hybrid disk media-salt prompt boundary returns exact hit" passed after 0.010 seconds.
+◇ Test "typed disk need and paged incompatibility are distinct cache contracts" started.
+✔ Test "typed disk need and paged incompatibility are distinct cache contracts" passed after 0.001 seconds.
+◇ Test "prompt snapshot detaches Ornith GDN state from later in-place updates" started.
+✔ Test "prompt snapshot detaches Ornith GDN state from later in-place updates" passed after 0.001 seconds.
+◇ Test "Nemotron Omni Mamba plus TurboQuant topology restores a paged partial prefix atomically" started.
+✔ Test "Nemotron Omni Mamba plus TurboQuant topology restores a paged partial prefix atomically" passed after 7.035 seconds.
+◇ Test "paged eviction falls through to the persisted disk boundary" started.
+✔ Test "paged eviction falls through to the persisted disk boundary" passed after 0.017 seconds.
+◇ Test "paged-off fresh coordinator restores a partial hybrid prefix from disk and companion L2" started.
+✔ Test "paged-off fresh coordinator restores a partial hybrid prefix from disk and companion L2" passed after 0.015 seconds.
+◇ Test "state-only hybrid cache never publishes a token-only paged hit" started.
+✔ Test "state-only hybrid cache never publishes a token-only paged hit" passed after 0.012 seconds.
+◇ Test "mamba round-trip topology stores no separate recurrent payload" started.
+✔ Test "mamba round-trip topology stores no separate recurrent payload" passed after 0.044 seconds.
+◇ Test "native-recurrent hybrid writes behind and restores its in-file state" started.
+✔ Test "native-recurrent hybrid writes behind and restores its in-file state" passed after 0.377 seconds.
+◇ Test "separate-payload topology still persists and requires the companion" started.
+✔ Test "separate-payload topology still persists and requires the companion" passed after 0.072 seconds.
+◇ Test "dynamic reasoning scope isolates every coordinator hash tier" started.
+✔ Test "dynamic reasoning scope isolates every coordinator hash tier" passed after 0.001 seconds.
+◇ Test "SSM companion disk key stays identical to memory key with model and media salt" started.
+✔ Test "SSM companion disk key stays identical to memory key with model and media salt" passed after 0.001 seconds.
+◇ Test "cache scope salt includes semantic reasoning but not tool-choice keys" started.
+✔ Test "cache scope salt includes semantic reasoning but not tool-choice keys" passed after 0.001 seconds.
+◇ Test "cache policy salt always scopes text-only requests" started.
+✔ Test "cache policy salt always scopes text-only requests" passed after 0.001 seconds.
+◇ Test "caller policy bypasses only disk-backed forced-tool restore" started.
+✔ Test "caller policy bypasses only disk-backed forced-tool restore" passed after 0.040 seconds.
+◇ Test "KV policy changes dynamic cache salt" started.
+✔ Test "KV policy changes dynamic cache salt" passed after 0.001 seconds.
+◇ Test "Gemma4 processor normalizes tools and wires text-only stable boundaries" started.
+✔ Test "Gemma4 processor normalizes tools and wires text-only stable boundaries" passed after 0.002 seconds.
+✔ Suite "CacheCoordinator topology contracts" passed after 16.493 seconds.
+✔ Test run with 45 tests in 5 suites passed after 16.493 seconds.

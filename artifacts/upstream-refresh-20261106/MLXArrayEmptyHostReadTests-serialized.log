@@ -1,0 +1,234 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': found 59 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/Flint/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/aligned-prefix/python-counts.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/attention/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark-parity.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-attn.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-moe.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/jangt-fast.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/generation_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model-00001-of-00001.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model.safetensors.index.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-block-sparse.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-select.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.shipped.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/renders.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/decode_61x45.png
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-tiny-weights.safetensors
+warning: 'vmlx-mei-upstream-sync-20261106': found 2 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/BatchEngine/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/SpecDec/DFLASH2.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 3 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-FINDINGS-AND-CROSSFAMILY-BACKLOG-2026-08-09.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-CAMPAIGN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-HANDOFF-2026-08-08.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 4 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_PORT_PLAN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_PROOF_MATRIX.md
+Building for debugging...
+[Computing dependencies]
+[Provisioning 4 / 197]
+[Using on-disk description]
+[1 / 83] CmlxTests-product
+[1 / 331] Cmlx
+[2 / 57] VMLXHuggingFace
+[2 / 8] MLXTests-product
+[5 / 19] MLXTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/CompileLockOrderingTests.swift:217:25: warning: capture of 'cCompiled' with non-Sendable type '([MLXArray]) -> [MLXArray]' in a '@Sendable' closure [#SendableClosureCaptures]
+215 | 
+216 |             let c = Thread {
+217 |                 let r = cCompiled([MLXArray(Float(6))])
+    |                         |- warning: capture of 'cCompiled' with non-Sendable type '([MLXArray]) -> [MLXArray]' in a '@Sendable' closure [#SendableClosureCaptures]
+    |                         `- note: a function type must be marked '@Sendable' to conform to 'Sendable'
+218 |                 eval(r)
+219 |                 shared.result = r[0].item(Float.self)
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[6 / 19] MLXTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/StreamTests.swift:257:39: warning: 'device' is deprecated: prefer stream(Stream) [#DeprecatedDeclaration]
+255 |         XCTAssertEqual(MLX.Stream.defaultStream(.gpu), MLX.Stream.gpu)
+256 | 
+257 |         XCTAssertEqual(StreamOrDevice.device(.cpu).stream, MLX.Stream.cpu)
+    |                                       `- warning: 'device' is deprecated: prefer stream(Stream) [#DeprecatedDeclaration]
+258 |         XCTAssertEqual(StreamOrDevice.device(.gpu).stream, MLX.Stream.gpu)
+259 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/StreamTests.swift:258:39: warning: 'device' is deprecated: prefer stream(Stream) [#DeprecatedDeclaration]
+256 | 
+257 |         XCTAssertEqual(StreamOrDevice.device(.cpu).stream, MLX.Stream.cpu)
+258 |         XCTAssertEqual(StreamOrDevice.device(.gpu).stream, MLX.Stream.gpu)
+    |                                       `- warning: 'device' is deprecated: prefer stream(Stream) [#DeprecatedDeclaration]
+259 | 
+260 |         XCTAssertEqual(StreamOrDevice.cpu.stream, MLX.Stream.cpu)
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[10 / 21] MLXTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/Utils.swift:59:16: warning: 'setDefault(device:)' is deprecated: use withDefaultDevice() -- this only works before any mlx resources are created [#DeprecatedDeclaration]
+ 57 | func setDefaultDevice() {
+ 58 |     prepareMLXMetallibForTests()
+ 59 |     MLX.Device.setDefault(device: .gpu)
+    |                `- warning: 'setDefault(device:)' is deprecated: use withDefaultDevice() -- this only works before any mlx resources are created [#DeprecatedDeclaration]
+ 60 | }
+ 61 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[15 / 21] MLXTests-product
+[16 / 21] MLXTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedHarness.swift:228:21: warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+226 |                 // from a collective, so give it a moment first
+227 |                 DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
+228 |                     self?.fire("rank \(index + 1) exited with status \(status)")
+    |                     `- warning: reference to captured var 'self' in concurrently-executing code [#SendableClosureCaptures]
+229 |                 }
+230 |             }
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[19 / 23] MLXTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:36:23: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 34 |     let y = linear(x)
+ 35 |     let y1 = sharded1(x)
+ 36 |     let y2 = sharded2(x[lower ..< upper, axis: 1])
+    |                       `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 37 |     try checkedEval(y, y1, y2)
+ 38 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:43:9: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 41 |         "sharded-to-all must reproduce the unsharded output")
+ 42 |     XCTAssertTrue(
+ 43 |         y[lower ..< upper, axis: 1].allClose(y1, rtol: 1e-4, atol: 1e-6).item(Bool.self),
+    |         `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 44 |         "all-to-sharded must reproduce this rank's slice of the output")
+ 45 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:60:25: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 58 |     let qy = quantized(x)
+ 59 |     let qy1 = qSharded1(x)
+ 60 |     let qy2 = qSharded2(x[lower ..< upper, axis: 1])
+    |                         `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 61 |     try checkedEval(qy, qy1, qy2)
+ 62 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:67:9: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 65 |         "quantized sharded-to-all must reproduce the unsharded output")
+ 66 |     XCTAssertTrue(
+ 67 |         qy[lower ..< upper, axis: 1].allClose(qy1, rtol: 1e-5, atol: 1e-8).item(Bool.self),
+    |         `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 68 |         "quantized all-to-sharded must reproduce this rank's slice")
+ 69 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:89:26: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 87 |     let my = mxfp8(x)
+ 88 |     let my1 = mxSharded1(x)
+ 89 |     let my2 = mxSharded2(x[lower ..< upper, axis: 1])
+    |                          `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 90 |     try checkedEval(my, my1, my2)
+ 91 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:96:9: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 94 |         "mxfp8 sharded-to-all must reproduce the unsharded output")
+ 95 |     XCTAssertTrue(
+ 96 |         my[lower ..< upper, axis: 1].allClose(my1, rtol: 1e-5, atol: 1e-8).item(Bool.self),
+    |         `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+ 97 |         "mxfp8 all-to-sharded must reproduce this rank's slice")
+ 98 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:402:44: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+400 |     let x = MLXRandom.normal([2, inputs])
+401 |     let y = wide(x)
+402 |     let ySharded = segmented(concatenated([x[first, axis: 1], x[second, axis: 1]], axis: 1))
+    |                                            `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+403 |     try checkedEval(y, ySharded)
+404 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:402:63: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+400 |     let x = MLXRandom.normal([2, inputs])
+401 |     let y = wide(x)
+402 |     let ySharded = segmented(concatenated([x[first, axis: 1], x[second, axis: 1]], axis: 1))
+    |                                                               `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+403 |     try checkedEval(y, ySharded)
+404 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXTests/DistributedNNTests.swift:580:9: warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+578 |     }
+579 |     XCTAssertTrue(
+580 |         expected[range, axis: axis].allClose(actual, rtol: 1e-4, atol: 1e-6).item(Bool.self),
+    |         `- warning: 'subscript(_:axis:stream:)' is deprecated: please use subscript(.ellipsis, 0 ..< 3) or equivalent [#DeprecatedDeclaration]
+581 |         "\(key) gradient shard mismatch", file: file, line: line)
+582 | }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[21 / 23] MLXTests-product
+[23 / 25] MLXTests-product
+warning: missing creator for mutated node: ('/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (7,21 secs)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MLXArray empty host reads" started.
+◇ Test "asArray returns an empty Swift array for a zero-element tensor" started.
+✔ Test "asArray returns an empty Swift array for a zero-element tensor" passed after 0.018 seconds.
+◇ Test "asArray returns empty for a zero-length lazy slice" started.
+✔ Test "asArray returns empty for a zero-length lazy slice" passed after 0.001 seconds.
+◇ Test "asArray and asArrayChecked read [1, 0, 3, 448] as []" started.
+✔ Test "asArray and asArrayChecked read [1, 0, 3, 448] as []" passed after 0.001 seconds.
+◇ Test "asArray and asArrayChecked read [0] as []" started.
+✔ Test "asArray and asArrayChecked read [0] as []" passed after 0.001 seconds.
+◇ Test "asArray and asArrayChecked read a transposed [2, 0] as []" started.
+✔ Test "asArray and asArrayChecked read a transposed [2, 0] as []" passed after 0.001 seconds.
+◇ Test "asMTLBuffer returns nil for [0], with and without a copy" started.
+✔ Test "asMTLBuffer returns nil for [0], with and without a copy" passed after 0.015 seconds.
+◇ Test "asMTLBuffer returns nil for [1, 0, 3, 448], with and without a copy" started.
+✔ Test "asMTLBuffer returns nil for [1, 0, 3, 448], with and without a copy" passed after 0.001 seconds.
+◇ Test "evaluated host access holds the stream lock through the read" started.
+✔ Test "evaluated host access holds the stream lock through the read" passed after 0.060 seconds.
+◇ Test "host reads stay valid during concurrent stream maintenance" started.
+✔ Test "host reads stay valid during concurrent stream maintenance" passed after 4.004 seconds.
+✔ Suite "MLXArray empty host reads" passed after 4.100 seconds.
+✔ Test run with 9 tests in 1 suite passed after 4.100 seconds.

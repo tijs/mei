@@ -1,0 +1,1057 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MiniMax-M3 prompt snapshot views, post-answer skip, scheduling floor" started.
+◇ Test "prefixView: the first rows of every lane, bit for bit, in the source's own buffers (no copy)" started.
+✔ Test "prefixView: the first rows of every lane, bit for bit, in the source's own buffers (no copy)" passed after 0.035 seconds.
+◇ Test "Store budget: a view snapshot is admitted at zero headroom; the same rows as a copy are refused (control)" started.
+✔ Test "Store budget: a view snapshot is admitted at zero headroom; the same rows as a copy are refused (control)" passed after 0.002 seconds.
+◇ Test "Decode holds no prompt copy with views (deferred to the end of the turn); the retained copy when off (control)" started.
+✘ Test "Decode holds no prompt copy with views (deferred to the end of the turn); the retained copy when off (control)" recorded an issue at MiniMaxM3PromptSnapshotViewTests.swift:130:44: Expectation failed: iterator.promptCacheSnapshot
+↳ iterator.promptCacheSnapshot → nil
+↳   iterator → TokenIterator(model: MiniMaxM3Model(configuration=MiniMaxM3Configuration(modelType: "minimax_m3_vl", hiddenSize: 512, hiddenLayers: 4, intermediateSize: 256, denseIntermediateSize: 512, sharedIntermediateSize: 256, attentionHeads: 16, kvHeads: 2, headDim: 64, rotaryDim: 32, ropeTheta: 10000.0, rmsNormEps: 1e-06, vocabularySize: 1024, numLocalExperts: 8, numExpertsPerTok: 4, routedScalingFactor: 2.0, normTopKProb: true, swigluAlpha: 1.702, swigluLimit: 7.0, moeLayerFrequency: Optional([0, 0, 1, 1]), tieWordEmbeddings: false, sparseAttention: MLXLLM.MiniMaxM3Configuration.SparseAttention(indexHeads: 2, indexHeadDim: 64, blockSize: 128, topKBlocks: 16, localBlocks: 1, layerFrequency: Optional([0, 1, 1, 1]))), customTensorNames=[], dsparkAttachLock=<NSLock: 0x772be30ae0>{name = nil}, turnMarkersLock=<NSLock: 0x772be30b40>{name = nil}, vocabularySize=1024) {
+      lm_head: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+      model: MiniMaxM3ModelInner(dsparkTailCapacity=0) {
+          embed_tokens: QuantizedEmbedding(embeddingCount=1024, dimensions=512),
+          layers: [
+            MiniMaxM3DecoderLayer(index=0) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30cc0>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d20>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c60>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c00>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=1) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f00>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f60>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30ea0>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30e40>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30de0>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d80>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=2) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31140>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                    gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                    shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                        gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                      },
+                    switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                        gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                      },
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be311a0>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be310e0>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31080>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31020>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30fc0>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=3) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31380>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                    gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                    shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                        gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                      },
+                    switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                        gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                      },
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be313e0>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31320>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be312c0>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31260>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31200>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              }
+          ],
+          norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31440>{name = nil}, eps=1e-06),
+        },
+    }, state: nil, y: MLXLMCommon.LMInput.Text(tokens: array([629], dtype=uint32), mask: nil, tokenIds: nil), lastForwardedTokenId: Optional(344), receiptRequestID: 0, deferredPromptSnapshotRows: nil, cache: [KVCacheSimple 0x000000772c030820, offset: 1090, step: 256, keys: [1, 2, 1152, 64], values: [1, 2, 1152, 64], MLXLLM.MiniMaxM3SparseCache, MLXLLM.MiniMaxM3SparseCache, MLXLLM.MiniMaxM3SparseCache], generationFailure: nil, processor: nil, sampler: MLXLMCommon.ArgMaxSampler(), tokenCount: 7, maxTokens: Optional(7), turboQuantCompressionCount: 0, lastTurboQuantCacheTransition: nil, kvBits: nil, kvGroupSize: 64, quantizedKVStart: 0, kvMode: MLXLMCommon.KVQuantizationMode.none, compiledForward: nil, compiledExternalInputModel: nil, compiledMambaOffsets: [], uno: nil, unoQueue: [], unoStartOffset: 0, unoARSteps: 0, unoARStretch: nil, unoARStretchLength: 8, dspark: nil, dsparkQueue: [], dsparkStartOffset: 0, dsparkFinished: false, compiledStepCount: 0, nanTrace: nil, cacheCoordinator: Optional(MLXLMCommon.CacheCoordinator), disableDiskBackedRequiredToolRestore: false, skipDiskBackedToolPromptSeedBoundary: false, promptTokenIds: [1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10], cachePrefixTokenCounts: [1080], originalInput: MLXLMCommon.LMInput(text: MLXLMCommon.LMInput.Text(tokens: array([[1000, 1003, 10, ..., 1000, 1002, 10]], dtype=int32), mask: nil, tokenIds: Optional([1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10])), image: nil, video: nil, audio: nil, mediaTokenIds: nil, cacheScopeSalt: nil, toolSchemas: nil, canonicalRequiredToolContext: nil, cachePrefixTokenCounts: [1080], cacheStablePrefixTokenCounts: [], cachePromptIntent: MLXLMCommon.LMInput.CachePromptIntent.generation, cacheRestorePolicy: MLXLMCommon.LMInput.CacheRestorePolicy.standard), cacheInitParameters: Optional(MLXLMCommon.GenerateParameters(jsonSchema: nil, prefillStepSize: 320, maxTokens: Optional(7), maxKVSize: nil, diffusionMaxDenoisingSteps: nil, kvBits: nil, kvGroupSize: 64, quantizedKVStart: 0, kvMode: MLXLMCommon.KVQuantizationMode.none, enableCompiledDecode: false, compiledMaxCacheLength: nil, compiledDecodeMaxPromptOffset: nil, maxKVWindowSize: nil, ssmAnchorBoundaries: [], accelerationMode: metal, enableCompiledBatchDecode: false, compiledBatchBuckets: [1, 2, 4], temperature: 0.0, topP: 1.0, topK: 0, minP: 0.0, randomSeed: nil, repetitionPenalty: nil, repetitionContextSize: 20, presencePenalty: nil, presenceContextSize: nil, frequencyPenalty: nil, frequencyContextSize: nil, suppressTokens: [], initialSuppressTokens: [], initialSuppressCount: 0, reasoningBudgetTokens: nil, requestedReasoningBudgetTokens: nil, reasoningBudgetCloseTokenID: nil, reasoningBudgetStartTokenIDs: [], reasoningBudgetOpenTokenIDs: [], draftStrategy: nil, nativeMTPDepthPolicy: MLXLMCommon.NativeMTPDepthPolicy.adaptive(maximumDepth: 9223372036854775807), extraStopStrings: [], cacheChainId: nil)), retainedPromptSnapshot: nil, exactPromptSnapshotWasDeclined: false, alignedPrefillPlan: Optional(step=320 boundary=1079 prompt=1083 turns=3), hybridStripBoundary: nil, hybridStripSnapshot: nil, hybridStripBoundarySpilled: false, stableBoundarySnapshots: [:], poolStableBoundariesLeftUncut: Set([]), canonicalStablePrefillCapture: nil, diskSeedBoundary: nil, diskSeedSnapshot: nil, mediaSalt: Optional("498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"), cacheSaltPlan: MLXLMCommon.CacheBoundarySaltPlan(requestSalt: Optional("498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"), mediaIndependentSalt: nil, mediaIndependentTokenCount: 0, segments: [], itemSpans: []), promptPrefillTime: 3.743036985397339)
+↳     model → MiniMaxM3Model(configuration=MiniMaxM3Configuration(modelType: "minimax_m3_vl", hiddenSize: 512, hiddenLayers: 4, intermediateSize: 256, denseIntermediateSize: 512, sharedIntermediateSize: 256, attentionHeads: 16, kvHeads: 2, headDim: 64, rotaryDim: 32, ropeTheta: 10000.0, rmsNormEps: 1e-06, vocabularySize: 1024, numLocalExperts: 8, numExpertsPerTok: 4, routedScalingFactor: 2.0, normTopKProb: true, swigluAlpha: 1.702, swigluLimit: 7.0, moeLayerFrequency: Optional([0, 0, 1, 1]), tieWordEmbeddings: false, sparseAttention: MLXLLM.MiniMaxM3Configuration.SparseAttention(indexHeads: 2, indexHeadDim: 64, blockSize: 128, topKBlocks: 16, localBlocks: 1, layerFrequency: Optional([0, 1, 1, 1]))), customTensorNames=[], dsparkAttachLock=<NSLock: 0x772be30ae0>{name = nil}, turnMarkersLock=<NSLock: 0x772be30b40>{name = nil}, vocabularySize=1024) {
+        lm_head: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+        model: MiniMaxM3ModelInner(dsparkTailCapacity=0) {
+            embed_tokens: QuantizedEmbedding(embeddingCount=1024, dimensions=512),
+            layers: [
+              MiniMaxM3DecoderLayer(index=0) {
+                  input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30cc0>{name = nil}, eps=1e-06),
+                  mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                      down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                      gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                      up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    },
+                  post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d20>{name = nil}, eps=1e-06),
+                  self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                      k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c60>{name = nil}, eps=1e-06),
+                      k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                      o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                      q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c00>{name = nil}, eps=1e-06),
+                      q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                      rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    },
+                },
+              MiniMaxM3DecoderLayer(index=1) {
+                  input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f00>{name = nil}, eps=1e-06),
+                  mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                      down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                      gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                      up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    },
+                  post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f60>{name = nil}, eps=1e-06),
+                  self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                      indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                          index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30ea0>{name = nil}, eps=1e-06),
+                          index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                          index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30e40>{name = nil}, eps=1e-06),
+                          index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                          rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                        },
+                      k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30de0>{name = nil}, eps=1e-06),
+                      k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                      o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                      q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d80>{name = nil}, eps=1e-06),
+                      q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                      rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    },
+                },
+              MiniMaxM3DecoderLayer(index=2) {
+                  input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31140>{name = nil}, eps=1e-06),
+                  mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                      gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                      shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                          down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                          gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                          up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        },
+                      switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                          down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                          gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                          up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        },
+                    },
+                  post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be311a0>{name = nil}, eps=1e-06),
+                  self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                      indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                          index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be310e0>{name = nil}, eps=1e-06),
+                          index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                          index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31080>{name = nil}, eps=1e-06),
+                          index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                          rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                        },
+                      k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31020>{name = nil}, eps=1e-06),
+                      k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                      o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                      q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30fc0>{name = nil}, eps=1e-06),
+                      q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                      rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    },
+                },
+              MiniMaxM3DecoderLayer(index=3) {
+                  input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31380>{name = nil}, eps=1e-06),
+                  mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                      gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                      shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                          down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                          gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                          up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        },
+                      switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                          down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                          gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                          up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        },
+                    },
+                  post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be313e0>{name = nil}, eps=1e-06),
+                  self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                      indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                          index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31320>{name = nil}, eps=1e-06),
+                          index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                          index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be312c0>{name = nil}, eps=1e-06),
+                          index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                          rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                        },
+                      k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31260>{name = nil}, eps=1e-06),
+                      k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                      o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                      q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31200>{name = nil}, eps=1e-06),
+                      q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                      rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    },
+                }
+            ],
+            norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31440>{name = nil}, eps=1e-06),
+          },
+      }
+↳       vocabularySize → 1024
+↳       kvHeads → [2, 2, 2, 2]
+↳       model → MiniMaxM3ModelInner(dsparkTailCapacity=0) {
+          embed_tokens: QuantizedEmbedding(embeddingCount=1024, dimensions=512),
+          layers: [
+            MiniMaxM3DecoderLayer(index=0) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30cc0>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d20>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c60>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c00>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=1) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f00>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f60>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30ea0>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30e40>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30de0>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d80>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=2) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31140>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                    gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                    shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                        gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                      },
+                    switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                        gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                      },
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be311a0>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be310e0>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31080>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31020>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30fc0>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              },
+            MiniMaxM3DecoderLayer(index=3) {
+                input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31380>{name = nil}, eps=1e-06),
+                mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                    gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                    shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                        gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                        up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                      },
+                    switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                        down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                        gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                        up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                      },
+                  },
+                post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be313e0>{name = nil}, eps=1e-06),
+                self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                    indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                        index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31320>{name = nil}, eps=1e-06),
+                        index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                        index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be312c0>{name = nil}, eps=1e-06),
+                        index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                        rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                      },
+                    k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31260>{name = nil}, eps=1e-06),
+                    k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                    q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31200>{name = nil}, eps=1e-06),
+                    q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                    v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                  },
+              }
+          ],
+          norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31440>{name = nil}, eps=1e-06),
+        }
+↳         _embedTokens → MLXNN.ModuleInfo<MLXNN.Embedding>
+↳           module → QuantizedEmbedding(embeddingCount=1024, dimensions=512)
+↳             some → QuantizedEmbedding(embeddingCount=1024, dimensions=512)
+↳               groupSize → 64
+↳               bits → 8
+↳               mode → .affine
+↳               _scales → MLXNN.ParameterInfo<MLX.MLXArray>
+↳                 value → array([[-0.0152588, 0.0147095, -0.0144043, ..., -0.0186768, 0.0155029, -0.0197754],
+                         [-0.0181885, 0.0169678, -0.0127563, ..., 0.0177002, 0.0181885, 0.019165],
+                         [0.0179443, 0.0157471, -0.0172119, ..., 0.0206299, 0.0181885, 0.0170898],
+                         ...,
+                         [0.017334, -0.0187988, -0.020874, ..., 0.0184326, 0.017334, 0.0198975],
+                         [0.0183105, 0.0250244, 0.020752, ..., -0.0137939, -0.0198975, -0.0181885],
+                         [0.0163574, 0.0167236, -0.0196533, ..., 0.0202637, 0.0252686, -0.0217285]], dtype=bfloat16)
+↳                   some → array([[-0.0152588, 0.0147095, -0.0144043, ..., -0.0186768, 0.0155029, -0.0197754],
+                           [-0.0181885, 0.0169678, -0.0127563, ..., 0.0177002, 0.0181885, 0.019165],
+                           [0.0179443, 0.0157471, -0.0172119, ..., 0.0206299, 0.0181885, 0.0170898],
+                           ...,
+                           [0.017334, -0.0187988, -0.020874, ..., 0.0184326, 0.017334, 0.0198975],
+                           [0.0183105, 0.0250244, 0.020752, ..., -0.0137939, -0.0198975, -0.0181885],
+                           [0.0163574, 0.0167236, -0.0196533, ..., 0.0202637, 0.0252686, -0.0217285]], dtype=bfloat16)
+↳                     ctx → mlx_array_(ctx: Optional(0x000000772d09cb40))
+↳                     isSealed → false
+↳                 key → "scales"
+↳                   some → "scales"
+↳               _biases → MLXNN.ParameterInfo<Swift.Optional<MLX.MLXArray>>
+↳                 value → array([[2, -2.0625, 2, ..., 3.09375, -2.10938, 2.625],
+                         [2.65625, -2.3125, 1.67188, ..., -2.54688, -2.39062, -2.54688],
+                         [-2.29688, -2.10938, 2.35938, ..., -2.76562, -2.40625, -2.32812],
+                         ...,
+                         [-2.46875, 2.65625, 3.15625, ..., -2.78125, -2.65625, -3.01562],
+                         [-2.375, -3.92188, -2.85938, ..., 1.94531, 2.82812, 2.5],
+                         [-2.3125, -2.23438, 2.89062, ..., -2.95312, -3.4375, 3.01562]], dtype=bfloat16)
+↳                   some → array([[2, -2.0625, 2, ..., 3.09375, -2.10938, 2.625],
+                           [2.65625, -2.3125, 1.67188, ..., -2.54688, -2.39062, -2.54688],
+                           [-2.29688, -2.10938, 2.35938, ..., -2.76562, -2.40625, -2.32812],
+                           ...,
+                           [-2.46875, 2.65625, 3.15625, ..., -2.78125, -2.65625, -3.01562],
+                           [-2.375, -3.92188, -2.85938, ..., 1.94531, 2.82812, 2.5],
+                           [-2.3125, -2.23438, 2.89062, ..., -2.95312, -3.4375, 3.01562]], dtype=bfloat16)
+↳                     some → array([[2, -2.0625, 2, ..., 3.09375, -2.10938, 2.625],
+                             [2.65625, -2.3125, 1.67188, ..., -2.54688, -2.39062, -2.54688],
+                             [-2.29688, -2.10938, 2.35938, ..., -2.76562, -2.40625, -2.32812],
+                             ...,
+                             [-2.46875, 2.65625, 3.15625, ..., -2.78125, -2.65625, -3.01562],
+                             [-2.375, -3.92188, -2.85938, ..., 1.94531, 2.82812, 2.5],
+                             [-2.3125, -2.23438, 2.89062, ..., -2.95312, -3.4375, 3.01562]], dtype=bfloat16)
+↳                 key → "biases"
+↳                   some → "biases"
+↳               _globalScale → MLXNN.ParameterInfo<Swift.Optional<MLX.MLXArray>>
+↳                 value → nil
+↳                   some → nil
+↳                 key → "global_scale"
+↳                   some → "global_scale"
+↳               outputDType → nil
+↳           key → "embed_tokens"
+↳             some → "embed_tokens"
+↳         layers → [MiniMaxM3DecoderLayer(index=0) {
+            input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30cc0>{name = nil}, eps=1e-06),
+            mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+              },
+            post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d20>{name = nil}, eps=1e-06),
+            self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c60>{name = nil}, eps=1e-06),
+                k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30c00>{name = nil}, eps=1e-06),
+                q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+              },
+          }, MiniMaxM3DecoderLayer(index=1) {
+            input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f00>{name = nil}, eps=1e-06),
+            mlp: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                down_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+                up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=512, bias=false),
+              },
+            post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30f60>{name = nil}, eps=1e-06),
+            self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                    index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30ea0>{name = nil}, eps=1e-06),
+                    index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                    index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30e40>{name = nil}, eps=1e-06),
+                    index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                  },
+                k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30de0>{name = nil}, eps=1e-06),
+                k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30d80>{name = nil}, eps=1e-06),
+                q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+              },
+          }, MiniMaxM3DecoderLayer(index=2) {
+            input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31140>{name = nil}, eps=1e-06),
+            mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                  },
+                switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                    gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                    up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                  },
+              },
+            post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be311a0>{name = nil}, eps=1e-06),
+            self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                    index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be310e0>{name = nil}, eps=1e-06),
+                    index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                    index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31080>{name = nil}, eps=1e-06),
+                    index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                  },
+                k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31020>{name = nil}, eps=1e-06),
+                k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be30fc0>{name = nil}, eps=1e-06),
+                q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+              },
+          }, MiniMaxM3DecoderLayer(index=3) {
+            input_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31380>{name = nil}, eps=1e-06),
+            mlp: MiniMaxM3SparseMoeBlock(normTopKProb=true, routedScalingFactor=2.0, topK=4) {
+                gate: Linear(inputDimensions=512, outputDimensions=8, bias=false),
+                shared_experts: MiniMaxM3MLP(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedLinear(inputDimensions=256, outputDimensions=512, bias=false),
+                    gate_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                    up_proj: QuantizedLinear(inputDimensions=512, outputDimensions=256, bias=false),
+                  },
+                switch_mlp: MiniMaxM3SwitchGLU(alpha=1.702, limit=7.0) {
+                    down_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=256, mode=affine, numExperts=8, outputDims=512),
+                    gate_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                    up_proj: QuantizedSwitchLinear(bits=4, groupSize=64, inputDims=512, mode=affine, numExperts=8, outputDims=256),
+                  },
+              },
+            post_attention_layernorm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be313e0>{name = nil}, eps=1e-06),
+            self_attn: MiniMaxM3Attention(headDim=64, heads=16, kvHeads=2, ropeTheta=10000.0, rotaryDim=32, scale=0.125) {
+                indexer: MiniMaxM3Indexer(blockSize=128, headDim=64, heads=2, localBlocks=1, topKBlocks=16) {
+                    index_k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31320>{name = nil}, eps=1e-06),
+                    index_k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=64, bias=false),
+                    index_q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be312c0>{name = nil}, eps=1e-06),
+                    index_q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                    rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                  },
+                k_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31260>{name = nil}, eps=1e-06),
+                k_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+                o_proj: QuantizedLinear(inputDimensions=1024, outputDimensions=512, bias=false),
+                q_norm: MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31200>{name = nil}, eps=1e-06),
+                q_proj: QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false),
+                rope: RoPE(base=10000.0, dimensions=32, scale=1.0, traditional=false),
+                v_proj: QuantizedLinear(inputDimensions=512, outputDimensions=128, bias=false),
+              },
+          }]
+↳         _norm → MLXNN.ModuleInfo<MLXLLM.MiniMaxM3RMSNorm>
+↳           module → MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31440>{name = nil}, eps=1e-06)
+↳             some → MiniMaxM3RMSNorm(cacheLock=<NSLock: 0x772be31440>{name = nil}, eps=1e-06)
+↳               weight → array([0.0466309, -0.0717773, -0.0712891, ..., -0.0478516, -0.0368652, 0.0202637], dtype=bfloat16)
+↳                 ctx → mlx_array_(ctx: Optional(0x000000772d09c620))
+↳                   ctx → 0x000000772d09c620
+↳                     some → 0x000000772d09c620
+↳                 isSealed → false
+↳               eps → 1e-06
+↳               cachedScale → array([1.04688, 0.929688, 0.929688, ..., 0.953125, 0.964844, 1.02344], dtype=bfloat16)
+↳                 some → array([1.04688, 0.929688, 0.929688, ..., 0.953125, 0.964844, 1.02344], dtype=bfloat16)
+↳                   ctx → mlx_array_(ctx: Optional(0x000000772d09da90))
+↳                     ctx → 0x000000772d09da90
+↳                   isSealed → false
+↳               cacheLock → <NSLock: 0x772be31440>{name = nil}
+↳           key → "norm"
+↳             some → "norm"
+↳         dsparkTapLayers → []
+↳         dsparkTailCapacity → 0
+↳       configuration → MiniMaxM3Configuration(modelType: "minimax_m3_vl", hiddenSize: 512, hiddenLayers: 4, intermediateSize: 256, denseIntermediateSize: 512, sharedIntermediateSize: 256, attentionHeads: 16, kvHeads: 2, headDim: 64, rotaryDim: 32, ropeTheta: 10000.0, rmsNormEps: 1e-06, vocabularySize: 1024, numLocalExperts: 8, numExpertsPerTok: 4, routedScalingFactor: 2.0, normTopKProb: true, swigluAlpha: 1.702, swigluLimit: 7.0, moeLayerFrequency: Optional([0, 0, 1, 1]), tieWordEmbeddings: false, sparseAttention: MLXLLM.MiniMaxM3Configuration.SparseAttention(indexHeads: 2, indexHeadDim: 64, blockSize: 128, topKBlocks: 16, localBlocks: 1, layerFrequency: Optional([0, 1, 1, 1])))
+↳         modelType → "minimax_m3_vl"
+↳         hiddenSize → 512
+↳         hiddenLayers → 4
+↳         intermediateSize → 256
+↳         denseIntermediateSize → 512
+↳         sharedIntermediateSize → 256
+↳         attentionHeads → 16
+↳         kvHeads → 2
+↳         headDim → 64
+↳         rotaryDim → 32
+↳         ropeTheta → 10000.0
+↳         rmsNormEps → 1e-06
+↳         vocabularySize → 1024
+↳         numLocalExperts → 8
+↳         numExpertsPerTok → 4
+↳         routedScalingFactor → 2.0
+↳         normTopKProb → true
+↳         swigluAlpha → 1.702
+↳         swigluLimit → 7.0
+↳         moeLayerFrequency → [0, 0, 1, 1]
+↳           some → [0, 0, 1, 1]
+↳         tieWordEmbeddings → false
+↳         sparseAttention → SparseAttention(indexHeads: 2, indexHeadDim: 64, blockSize: 128, topKBlocks: 16, localBlocks: 1, layerFrequency: Optional([0, 1, 1, 1]))
+↳           indexHeads → 2
+↳           indexHeadDim → 64
+↳           blockSize → 128
+↳           topKBlocks → 16
+↳           localBlocks → 1
+↳           layerFrequency → [0, 1, 1, 1]
+↳             some → [0, 1, 1, 1]
+↳       customTensorNames → []
+↳       _lmHead → MLXNN.ModuleInfo<Swift.Optional<MLXNN.Linear>>
+↳         module → QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false)
+↳           some → QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false)
+↳             some → QuantizedLinear(inputDimensions=512, outputDimensions=1024, bias=false)
+↳               groupSize → 64
+↳               bits → 6
+↳               mode → .affine
+↳               _scales → MLXNN.ParameterInfo<MLX.MLXArray>
+↳                 value → array([[-0.00448608, 0.00415039, -0.0045166, ..., 0.00415039, -0.00506592, -0.00488281],
+                         [-0.0039978, -0.00543213, -0.00436401, ..., -0.00595093, -0.00494385, 0.00457764],
+                         [0.00482178, 0.00558472, 0.00497437, ..., 0.00415039, -0.0043335, 0.00457764],
+                         ...,
+                         [-0.00564575, 0.0037384, 0.00370789, ..., -0.00500488, 0.00537109, -0.00546265],
+                         [-0.00549316, -0.00643921, 0.00527954, ..., -0.00473022, -0.00531006, 0.00524902],
+                         [-0.00436401, -0.0055542, 0.00445557, ..., 0.00346375, -0.00500488, -0.00561523]], dtype=bfloat16)
+↳                   some → array([[-0.00448608, 0.00415039, -0.0045166, ..., 0.00415039, -0.00506592, -0.00488281],
+                           [-0.0039978, -0.00543213, -0.00436401, ..., -0.00595093, -0.00494385, 0.00457764],
+                           [0.00482178, 0.00558472, 0.00497437, ..., 0.00415039, -0.0043335, 0.00457764],
+                           ...,
+                           [-0.00564575, 0.0037384, 0.00370789, ..., -0.00500488, 0.00537109, -0.00546265],
+                           [-0.00549316, -0.00643921, 0.00527954, ..., -0.00473022, -0.00531006, 0.00524902],
+                           [-0.00436401, -0.0055542, 0.00445557, ..., 0.00346375, -0.00500488, -0.00561523]], dtype=bfloat16)
+↳                     ctx → mlx_array_(ctx: Optional(0x000000772d09c6b0))
+↳                     isSealed → false
+↳                 key → "scales"
+↳                   some → "scales"
+↳               _biases → MLXNN.ParameterInfo<Swift.Optional<MLX.MLXArray>>
+↳                 value → array([[0.166016, -0.149414, 0.144531, ..., -0.132812, 0.197266, 0.195312],
+                         [0.139648, 0.18457, 0.152344, ..., 0.202148, 0.163086, -0.155273],
+                         [-0.173828, -0.201172, -0.164062, ..., -0.136719, 0.138672, -0.169922],
+                         ...,
+                         [0.180664, -0.126953, -0.118652, ..., 0.174805, -0.176758, 0.202148],
+                         [0.175781, 0.21875, -0.168945, ..., 0.169922, 0.212891, -0.172852],
+                         [0.143555, 0.194336, -0.160156, ..., -0.11084, 0.160156, 0.179688]], dtype=bfloat16)
+↳                   some → array([[0.166016, -0.149414, 0.144531, ..., -0.132812, 0.197266, 0.195312],
+                           [0.139648, 0.18457, 0.152344, ..., 0.202148, 0.163086, -0.155273],
+                           [-0.173828, -0.201172, -0.164062, ..., -0.136719, 0.138672, -0.169922],
+                           ...,
+                           [0.180664, -0.126953, -0.118652, ..., 0.174805, -0.176758, 0.202148],
+                           [0.175781, 0.21875, -0.168945, ..., 0.169922, 0.212891, -0.172852],
+                           [0.143555, 0.194336, -0.160156, ..., -0.11084, 0.160156, 0.179688]], dtype=bfloat16)
+↳                     some → array([[0.166016, -0.149414, 0.144531, ..., -0.132812, 0.197266, 0.195312],
+                             [0.139648, 0.18457, 0.152344, ..., 0.202148, 0.163086, -0.155273],
+                             [-0.173828, -0.201172, -0.164062, ..., -0.136719, 0.138672, -0.169922],
+                             ...,
+                             [0.180664, -0.126953, -0.118652, ..., 0.174805, -0.176758, 0.202148],
+                             [0.175781, 0.21875, -0.168945, ..., 0.169922, 0.212891, -0.172852],
+                             [0.143555, 0.194336, -0.160156, ..., -0.11084, 0.160156, 0.179688]], dtype=bfloat16)
+↳                 key → "biases"
+↳                   some → "biases"
+↳               _globalScale → MLXNN.ParameterInfo<Swift.Optional<MLX.MLXArray>>
+↳                 value → nil
+↳                   some → nil
+↳                 key → "global_scale"
+↳                   some → "global_scale"
+↳         key → "lm_head"
+↳           some → "lm_head"
+↳       _vision → MLXNN.ModuleInfo<Swift.Optional<MLXLLM.MiniMaxM3VisionStack>>
+↳         module → nil
+↳         key → "vision"
+↳           some → "vision"
+↳       dsparkHead → nil
+↳       dsparkAttachLock → <NSLock: 0x772be30ae0>{name = nil}
+↳       resolvedTurnMarkers → 1000-1001-1002.10
+↳         some → 1000-1001-1002.10
+↳           bos → 1000
+↳           eos → 1001
+↳           assistant → [1002, 10]
+↳       turnMarkersLock → <NSLock: 0x772be30b40>{name = nil}
+↳     state → nil
+↳     y → Text(tokens: array([629], dtype=uint32), mask: nil, tokenIds: nil)
+↳       tokens → array([629], dtype=uint32)
+↳         ctx → mlx_array_(ctx: Optional(0x000000772d09d6e0))
+↳           ctx → 0x000000772d09d6e0
+↳             some → 0x000000772d09d6e0
+↳               pointerValue → 511856727776
+↳         isSealed → false
+↳       mask → nil
+↳       tokenIds → nil
+↳     lastForwardedTokenId → 344
+↳       some → 344
+↳     receiptRequestID → 0
+↳     deferredPromptSnapshotRows → nil
+↳     cache → [KVCacheSimple 0x000000772c030820, offset: 1090, step: 256, keys: [1, 2, 1152, 64], values: [1, 2, 1152, 64], MLXLLM.MiniMaxM3SparseCache, MLXLLM.MiniMaxM3SparseCache, MLXLLM.MiniMaxM3SparseCache]
+↳     generationFailure → nil
+↳     processor → nil
+↳     sampler → ArgMaxSampler()
+↳     tokenCount → 7
+↳     maxTokens → 7
+↳       some → 7
+↳     turboQuantCompressionCount → 0
+↳     lastTurboQuantCacheTransition → nil
+↳     kvBits → nil
+↳     kvGroupSize → 64
+↳     quantizedKVStart → 0
+↳     kvMode → .none
+↳     compiledForward → nil
+↳     compiledExternalInputModel → nil
+↳     compiledMambaOffsets → []
+↳     uno → nil
+↳     unoQueue → []
+↳     unoStartOffset → 0
+↳     unoARSteps → 0
+↳     unoARStretch → nil
+↳     unoARStretchLength → 8
+↳     dspark → nil
+↳     dsparkQueue → []
+↳     dsparkStartOffset → 0
+↳     dsparkFinished → false
+↳     compiledStepCount → 0
+↳     nanTrace → nil
+↳     cacheCoordinator → MLXLMCommon.CacheCoordinator
+↳       some → MLXLMCommon.CacheCoordinator
+↳         retainedBudget → MLXLMCommon.RetainedCacheBudget
+↳           limit → nil
+↳           lock → <NSLock: 0x772be31680>{name = nil}
+↳           usedBytes → 0
+↳         promptSnapshotAccount → MLXLMCommon.RetainedCacheBudget.Account
+↳           budget → MLXLMCommon.RetainedCacheBudget
+↳             limit → nil
+↳             lock → <NSLock: 0x772be31680>{name = nil}
+↳             usedBytes → 0
+↳           bytes → 0
+↳         initialConfig → CacheCoordinatorConfig(usePagedCache: false, enableDiskCache: true, diskWriteBehind: true, residentEntryBytes: 0, pagedBlockSize: 64, maxCacheBlocks: 1000, maxCacheBytes: nil, diskCacheMaxGB: 3.3223367, diskCacheDir: Optional(file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true), ssmMaxEntries: 50, enableSSMReDerive: true, modelKey: Optional("minimax-m3-structural-test-320"), preserveStandardKVStorageDType: false, defaultKVMode: MLXLMCommon.KVQuantizationMode.none, defaultMaxKVSize: nil, longPromptMultiplier: 2.0)
+↳           usePagedCache → false
+↳           enableDiskCache → true
+↳           diskWriteBehind → true
+↳           residentEntryBytes → 0
+↳           pagedBlockSize → 64
+↳           maxCacheBlocks → 1000
+↳           maxCacheBytes → nil
+↳           diskCacheMaxGB → 3.3223367
+↳           diskCacheDir → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳             some → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳               _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳                 _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳           ssmMaxEntries → 50
+↳           enableSSMReDerive → true
+↳           modelKey → "minimax-m3-structural-test-320"
+↳             some → "minimax-m3-structural-test-320"
+↳           preserveStandardKVStorageDType → false
+↳           defaultKVMode → .none
+↳           defaultMaxKVSize → nil
+↳           longPromptMultiplier → 2.0
+↳         pagedCache → nil
+↳         diskCache → MLXLMCommon.DiskCache
+↳           some → MLXLMCommon.DiskCache
+↳             cacheDir → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳               _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳                 _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳             sharedLimit → MLXLMCommon.SharedDiskCacheLimit
+↳               storage → OSAllocatedUnfairLock<Int>(__lock: Swift.ManagedBuffer<Swift.Int, __C.os_unfair_lock_s>)
+↳                 __lock → Swift.ManagedBuffer<Swift.Int, __C.os_unfair_lock_s>
+↳                   header → 3567331840
+↳             modelKey → "minimax-m3-structural-test-320"
+↳               some → "minimax-m3-structural-test-320"
+↳             db → 0x000000772be58700
+↳               some → 0x000000772be58700
+↳                 _rawValue → (Opaque Value)
+↳             indexSchemaVersion → 2
+↳             indexHasV2Columns → true
+↳             indexHasReplayChunkColumn → true
+↳             retireRetryInterval → 60.0
+↳             lock → OSAllocatedUnfairLock<()>(__lock: Swift.ManagedBuffer<(), __C.os_unfair_lock_s>)
+↳               __lock → Swift.ManagedBuffer<(), __C.os_unfair_lock_s>
+↳                 header → ()
+↳             hits → 0
+↳             misses → 1
+↳             stores → 1
+↳             storeSkips → 0
+↳             failedIndexWrites → 0
+↳             refusedNonFiniteStores → 0
+↳             refusedNonFiniteFetches → 0
+↳             refusedOccupiedStores → 0
+↳             unreadablePayloadFetches → 0
+↳             lastFetchPayloadBytes → 0
+↳             lastFetchMs → 0.0
+↳             rejectedDiskRestores → 0
+↳             rejectedRewritesSuppressed → 0
+↳             postAnswerRowsResume → false
+↳             pressureRoot → "/var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true"
+↳             temporaryURLForTesting → nil
+↳             publishFaultForTesting → nil
+↳             loadFaultForTesting → nil
+↳             retireAttemptsForTesting → 0
+↳             evictions → 0
+↳             quotaEvictedBytes → 0
+↳             quotaPasses → 0
+↳             lastQuotaPassMs → 0.0
+↳             lastQuotaPassTick → 0
+↳             lastPressureEventTick → 0
+↳             pressureEventSeq → 0
+↳             lastPressureEvent → nil
+↳             lastOpaqueBytes → 0
+↳             retireNotBefore → nil
+↳             indexNeedsClampedUsage → false
+↳             validatedFiles → ["aa19de957c54e0e6432f06d6b8a142dc": MLXLMCommon.DiskCache.(unknown context at $11b36fe70).ValidatedRecord(file: MLXLMCommon.DiskCache.(unknown context at $11b36fe3c).ValidatedFileFingerprint(size: 2626243, modificationDate: 2026-11-06 11:08:34 +0000), layout: ["__jang_cache_format_version__|int32|[1]|[2]", "__layer_kind_0__|int32|[1]|[2]", "__layer_kind_1__|int32|[1]|[12]", "__layer_kind_2__|int32|[1]|[12]", "__layer_kind_3__|int32|[1]|[12]", "__tq_native_marker__|int32|[1]|[1]", "kv_0_keys|bfloat16|[1, 2, 1079, 64]|", "kv_0_values|bfloat16|[1, 2, 1079, 64]|", "model_1_header|uint8|[137]|", "model_1_state_0|bfloat16|[1, 2, 1079, 64]|", "model_1_state_1|bfloat16|[1, 2, 1079, 64]|", "model_1_state_2|bfloat16|[1, 1, 1079, 64]|", "model_2_header|uint8|[137]|", "model_2_state_0|bfloat16|[1, 2, 1079, 64]|", "model_2_state_1|bfloat16|[1, 2, 1079, 64]|", "model_2_state_2|bfloat16|[1, 1, 1079, 64]|", "model_3_header|uint8|[137]|", "model_3_state_0|bfloat16|[1, 2, 1079, 64]|", "model_3_state_1|bfloat16|[1, 2, 1079, 64]|", "model_3_state_2|bfloat16|[1, 1, 1079, 64]|"], recurrentGeometry: MLXLMCommon.DiskCache.(unknown context at $11b36fea4).RecurrentGeometry.absent)]
+↳             writeBehind → true
+↳             writeDelayForTesting → nil
+↳             inflight → [:]
+↳             inflightBytes → 0
+↳             inflightStoreCount → 0
+↳             writerQueue → <OS_dispatch_queue_serial: vmlx.disk-cache.writer>
+↳             pendingWrites → <OS_dispatch_group: 0x772be8d400>
+↳             inflightChanged → <NSCondition: 0x772be4b680>{name = nil}
+↳             writeBehindStores → 1
+↳             inflightFetches → 0
+↳             lastWriteBehindMs → 6.132006645202637
+↳             resident → [:]
+↳             residentBytes → 0
+↳             residentClock → 0
+↳             residentHits → 0
+↳             _residentByteBudget → 0
+↳             writeBehindBudgetFallbacks → 0
+↳             rejectedRestores → [:]
+↳             rewrittenAfterRejection → []
+↳             servedCandidates → []
+↳             traceLastStoredTokens → nil
+↳             traceLastStoredHash → nil
+↳             lastFetchSource → .file
+↳         ssmStateCache → MLXLMCommon.SSMStateCache
+↳           lock → OSAllocatedUnfairLock<()>(__lock: Swift.ManagedBuffer<(), __C.os_unfair_lock_s>)
+↳             __lock → Swift.ManagedBuffer<(), __C.os_unfair_lock_s>
+↳               header → ()
+↳           maxEntries → 50
+↳           retainedAccount → MLXLMCommon.RetainedCacheBudget.Account
+↳             budget → MLXLMCommon.RetainedCacheBudget
+↳               limit → nil
+↳               lock → <NSLock: 0x772be31680>{name = nil}
+↳               usedBytes → 0
+↳             bytes → 0
+↳           residentBytes → 0
+↳           entries → []
+↳           hits → 0
+↳           misses → 0
+↳           reDerives → 0
+↳           modelKey → "minimax-m3-structural-test-320"
+↳             some → "minimax-m3-structural-test-320"
+↳           diskStore → MLXLMCommon.SSMCompanionDiskStore
+↳             some → MLXLMCommon.SSMCompanionDiskStore
+↳               lock → OSAllocatedUnfairLock<()>(__lock: Swift.ManagedBuffer<(), __C.os_unfair_lock_s>)
+↳                 __lock → Swift.ManagedBuffer<(), __C.os_unfair_lock_s>
+↳                   header → ()
+↳               cacheDir → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true/ssm_companion
+↳                 _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true/ssm_companion
+↳                   _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true/ssm_companion
+↳               modelKey → "minimax-m3-structural-test-320"
+↳                 some → "minimax-m3-structural-test-320"
+↳               initialMaxBytes → 3567331840
+↳               sharedLimit → MLXLMCommon.SharedDiskCacheLimit
+↳                 some → MLXLMCommon.SharedDiskCacheLimit
+↳                   storage → OSAllocatedUnfairLock<Int>(__lock: Swift.ManagedBuffer<Swift.Int, __C.os_unfair_lock_s>)
+↳                     __lock → Swift.ManagedBuffer<Swift.Int, __C.os_unfair_lock_s>
+↳               validatedEntries → [:]
+↳               storeSkips → 0
+↳               ledger → MLXLMCommon.DiskCache
+↳                 some → MLXLMCommon.DiskCache
+↳                   cacheDir → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳                     _url → file:///var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true
+↳                   sharedLimit → MLXLMCommon.SharedDiskCacheLimit
+↳                     storage → OSAllocatedUnfairLock<Int>(__lock: Swift.ManagedBuffer<Swift.Int, __C.os_unfair_lock_s>)
+↳                   modelKey → "minimax-m3-structural-test-320"
+↳                     some → "minimax-m3-structural-test-320"
+↳                   db → 0x000000772be58700
+↳                     some → 0x000000772be58700
+↳                   indexSchemaVersion → 2
+↳                   indexHasV2Columns → true
+↳                   indexHasReplayChunkColumn → true
+↳                   retireRetryInterval → 60.0
+↳                   lock → OSAllocatedUnfairLock<()>(__lock: Swift.ManagedBuffer<(), __C.os_unfair_lock_s>)
+↳                     __lock → Swift.ManagedBuffer<(), __C.os_unfair_lock_s>
+↳                   hits → 0
+↳                   misses → 1
+↳                   stores → 1
+↳                   storeSkips → 0
+↳                   failedIndexWrites → 0
+↳                   refusedNonFiniteStores → 0
+↳                   refusedNonFiniteFetches → 0
+↳                   refusedOccupiedStores → 0
+↳                   unreadablePayloadFetches → 0
+↳                   lastFetchPayloadBytes → 0
+↳                   lastFetchMs → 0.0
+↳                   rejectedDiskRestores → 0
+↳                   rejectedRewritesSuppressed → 0
+↳                   postAnswerRowsResume → false
+↳                   pressureRoot → "/var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true"
+↳                   temporaryURLForTesting → nil
+↳                   publishFaultForTesting → nil
+↳                   loadFaultForTesting → nil
+↳                   retireAttemptsForTesting → 0
+↳                   evictions → 0
+↳                   quotaEvictedBytes → 0
+↳                   quotaPasses → 0
+↳                   lastQuotaPassMs → 0.0
+↳                   lastQuotaPassTick → 0
+↳                   lastPressureEventTick → 0
+↳                   pressureEventSeq → 0
+↳                   lastPressureEvent → nil
+↳                   lastOpaqueBytes → 0
+↳                   retireNotBefore → nil
+↳                   indexNeedsClampedUsage → false
+↳                   validatedFiles → ["aa19de957c54e0e6432f06d6b8a142dc": MLXLMCommon.DiskCache.(unknown context at $11b36fe70).ValidatedRecord(file: MLXLMCommon.DiskCache.(unknown context at $11b36fe3c).ValidatedFileFingerprint(size: 2626243, modificationDate: 2026-11-06 11:08:34 +0000), layout: ["__jang_cache_format_version__|int32|[1]|[2]", "__layer_kind_0__|int32|[1]|[2]", "__layer_kind_1__|int32|[1]|[12]", "__layer_kind_2__|int32|[1]|[12]", "__layer_kind_3__|int32|[1]|[12]", "__tq_native_marker__|int32|[1]|[1]", "kv_0_keys|bfloat16|[1, 2, 1079, 64]|", "kv_0_values|bfloat16|[1, 2, 1079, 64]|", "model_1_header|uint8|[137]|", "model_1_state_0|bfloat16|[1, 2, 1079, 64]|", "model_1_state_1|bfloat16|[1, 2, 1079, 64]|", "model_1_state_2|bfloat16|[1, 1, 1079, 64]|", "model_2_header|uint8|[137]|", "model_2_state_0|bfloat16|[1, 2, 1079, 64]|", "model_2_state_1|bfloat16|[1, 2, 1079, 64]|", "model_2_state_2|bfloat16|[1, 1, 1079, 64]|", "model_3_header|uint8|[137]|", "model_3_state_0|bfloat16|[1, 2, 1079, 64]|", "model_3_state_1|bfloat16|[1, 2, 1079, 64]|", "model_3_state_2|bfloat16|[1, 1, 1079, 64]|"], recurrentGeometry: MLXLMCommon.DiskCache.(unknown context at $11b36fea4).RecurrentGeometry.absent)]
+↳                   writeBehind → true
+↳                   writeDelayForTesting → nil
+↳                   inflight → [:]
+↳                   inflightBytes → 0
+↳                   inflightStoreCount → 0
+↳                   writerQueue → <OS_dispatch_queue_serial: vmlx.disk-cache.writer>
+↳                   pendingWrites → <OS_dispatch_group: 0x772be8d400>
+↳                   inflightChanged → <NSCondition: 0x772be4b680>{name = nil}
+↳                   writeBehindStores → 1
+↳                   inflightFetches → 0
+↳                   lastWriteBehindMs → 6.132006645202637
+↳                   resident → [:]
+↳                   residentBytes → 0
+↳                   residentClock → 0
+↳                   residentHits → 0
+↳                   _residentByteBudget → 0
+↳                   writeBehindBudgetFallbacks → 0
+↳                   rejectedRestores → [:]
+↳                   rewrittenAfterRejection → []
+↳                   servedCandidates → []
+↳                   traceLastStoredTokens → nil
+↳                   traceLastStoredHash → nil
+↳                   lastFetchSource → .file
+↳               writeFaultForTesting → nil
+↳               temporaryURLForTesting → nil
+↳               rootIndexIsFromANewerBuild → false
+↳         _isHybrid → false
+↳         _requiresRecurrentSSMCompanion → false
+↳         _requiresSeparateRecurrentPayload → false
+↳         _isPagedIncompatible → true
+↳         _requiresPagedBoundaryCompanion → false
+↳         _genPromptSuffixTokens → [1000, 1002, 10]
+↳         lock → OSAllocatedUnfairLock<()>(__lock: Swift.ManagedBuffer<(), __C.os_unfair_lock_s>)
+↳           __lock → Swift.ManagedBuffer<(), __C.os_unfair_lock_s>
+↳             header → ()
+↳         postPrepareAliases → [:]
+↳         postPrepareAliasCountsBySalt → [:]
+↳         importRetryInterval → 60.0
+↳         diskRootKey → "/var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true"
+↳           some → "/var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/minimax-m3-aligned-snapshot-views-3C5F30EE-23EA-48EF-AD45-0186A2770B31/true"
+↳         _lastQuotaPassTiming → QuotaPassTiming(rowsMs: 0.0, selectMs: 0.0, deleteMs: 0.0, totalMs: 0.0, evictedGroups: 0)
+↳           rowsMs → 0.0
+↳           selectMs → 0.0
+↳           deleteMs → 0.0
+↳           totalMs → 0.0
+↳           evictedGroups → 0
+↳     disableDiskBackedRequiredToolRestore → false
+↳     skipDiskBackedToolPromptSeedBoundary → false
+↳     promptTokenIds → [1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10]
+↳     cachePrefixTokenCounts → [1080]
+↳     originalInput → LMInput(text: MLXLMCommon.LMInput.Text(tokens: array([[1000, 1003, 10, ..., 1000, 1002, 10]], dtype=int32), mask: nil, tokenIds: Optional([1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10])), image: nil, video: nil, audio: nil, mediaTokenIds: nil, cacheScopeSalt: nil, toolSchemas: nil, canonicalRequiredToolContext: nil, cachePrefixTokenCounts: [1080], cacheStablePrefixTokenCounts: [], cachePromptIntent: MLXLMCommon.LMInput.CachePromptIntent.generation, cacheRestorePolicy: MLXLMCommon.LMInput.CacheRestorePolicy.standard)
+↳       text → Text(tokens: array([[1000, 1003, 10, ..., 1000, 1002, 10]], dtype=int32), mask: nil, tokenIds: Optional([1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10]))
+↳         tokens → array([[1000, 1003, 10, ..., 1000, 1002, 10]], dtype=int32)
+↳           ctx → mlx_array_(ctx: Optional(0x000000772d09ca90))
+↳             ctx → 0x000000772d09ca90
+↳               some → 0x000000772d09ca90
+↳                 pointerValue → 511856724624
+↳           isSealed → false
+↳         mask → nil
+↳         tokenIds → [1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10]
+↳           some → [1000, 1003, 10, 491, 748, 914, 675, 126, 912, 265, 492, 22, 6, 908, 970, 87, 619, 521, 959, 454, 448, 558, 762, 478, 31, 1, 700, 331, 218, 74, 875, 761, 10, 39, 924, 232, 320, 742, 786, 72, 975, 785, 789, 299, 817, 336, 825, 17, 558, 5, 181, 519, 455, 438, 604, 380, 671, 360, 130, 904, 393, 466, 948, 968, 360, 36, 68, 405, 386, 951, 269, 50, 134, 541, 191, 783, 845, 706, 513, 40, 336, 287, 944, 489, 887, 123, 564, 892, 309, 284, 504, 378, 527, 592, 13, 497, 578, 87, 6, 754, 161, 159, 423, 709, 282, 353, 333, 903, 458, 594, 193, 864, 523, 245, 201, 926, 386, 682, 911, 490, 126, 339, 442, 867, 277, 884, 183, 866, 928, 400, 682, 491, 769, 517, 3, 637, 596, 925, 818, 713, 924, 314, 366, 389, 870, 772, 353, 136, 509, 79, 56, 379, 137, 326, 546, 430, 902, 529, 513, 830, 549, 791, 395, 230, 862, 32, 552, 973, 132, 959, 2, 233, 274, 81, 915, 759, 735, 779, 187, 152, 705, 605, 112, 68, 100, 875, 924, 182, 677, 553, 252, 585, 165, 943, 565, 626, 739, 547, 130, 377, 647, 558, 337, 938, 451, 825, 548, 858, 396, 820, 12, 282, 526, 412, 478, 493, 76, 730, 829, 927, 402, 105, 681, 942, 882, 606, 161, 684, 604, 401, 134, 690, 404, 417, 970, 37, 327, 115, 226, 22, 640, 548, 4, 347, 721, 50, 415, 842, 872, 101, 221, 284, 491, 549, 658, 901, 447, 64, 664, 270, 119, 628, 760, 458, 99, 64, 34, 879, 807, 499, 200, 343, 199, 877, 642, 296, 231, 9, 257, 401, 218, 905, 231, 534, 20, 668, 318, 565, 90, 464, 772, 834, 680, 626, 160, 781, 881, 923, 783, 754, 500, 294, 664, 195, 1001, 10, 1000, 1004, 10, 252, 736, 457, 13, 551, 46, 542, 589, 838, 388, 667, 553, 963, 585, 26, 256, 139, 597, 980, 150, 872, 909, 900, 49, 370, 417, 607, 237, 898, 560, 340, 306, 620, 576, 822, 708, 477, 230, 285, 637, 636, 90, 119, 176, 396, 522, 11, 471, 310, 571, 200, 791, 958, 171, 15, 718, 610, 599, 434, 234, 321, 153, 852, 688, 715, 882, 786, 46, 722, 867, 181, 815, 227, 814, 757, 519, 20, 739, 636, 965, 988, 656, 365, 938, 171, 667, 808, 64, 230, 762, 386, 324, 144, 837, 957, 972, 789, 674, 623, 427, 117, 187, 662, 518, 397, 81, 543, 865, 222, 721, 969, 314, 77, 106, 63, 214, 587, 125, 206, 343, 246, 988, 167, 47, 835, 512, 574, 737, 631, 425, 298, 391, 677, 186, 834, 202, 884, 134, 800, 327, 402, 962, 936, 429, 712, 470, 777, 376, 173, 9, 960, 376, 608, 428, 893, 107, 842, 19, 252, 967, 606, 450, 465, 984, 684, 351, 341, 560, 844, 117, 304, 454, 287, 134, 444, 868, 978, 491, 334, 348, 311, 624, 854, 143, 707, 273, 571, 611, 909, 573, 486, 54, 127, 301, 537, 734, 532, 188, 343, 650, 912, 439, 603, 927, 976, 415, 22, 347, 233, 474, 602, 330, 554, 656, 796, 908, 211, 818, 11, 215, 157, 893, 657, 619, 116, 11, 379, 896, 110, 275, 527, 129, 917, 314, 399, 782, 952, 164, 495, 19, 66, 402, 552, 781, 718, 182, 749, 478, 782, 980, 960, 134, 40, 896, 363, 623, 815, 977, 47, 366, 977, 658, 632, 533, 373, 132, 371, 740, 191, 589, 396, 633, 794, 205, 519, 261, 638, 307, 852, 870, 403, 612, 762, 242, 266, 701, 339, 256, 858, 516, 450, 550, 198, 581, 458, 494, 735, 495, 51, 373, 117, 520, 103, 0, 448, 17, 301, 459, 451, 323, 12, 240, 840, 552, 525, 426, 433, 159, 193, 761, 744, 900, 661, 620, 606, 61, 522, 862, 580, 959, 640, 891, 597, 873, 450, 660, 302, 225, 300, 162, 682, 814, 808, 271, 259, 674, 720, 62, 496, 53, 536, 412, 252, 349, 937, 791, 989, 394, 256, 847, 861, 914, 879, 62, 619, 958, 979, 950, 104, 947, 246, 336, 720, 693, 789, 61, 541, 169, 192, 280, 670, 561, 434, 64, 651, 53, 203, 319, 68, 968, 239, 198, 65, 484, 447, 783, 775, 863, 428, 189, 863, 39, 258, 456, 759, 80, 233, 920, 574, 767, 603, 558, 113, 484, 208, 55, 878, 530, 747, 504, 821, 629, 741, 396, 771, 878, 984, 539, 665, 894, 584, 278, 410, 870, 171, 154, 124, 832, 520, 881, 558, 538, 478, 164, 721, 157, 963, 705, 788, 620, 732, 476, 20, 895, 979, 208, 685, 336, 457, 919, 729, 116, 466, 335, 727, 956, 254, 752, 829, 277, 496, 36, 171, 831, 44, 70, 177, 102, 582, 382, 344, 902, 255, 681, 724, 888, 738, 450, 623, 952, 525, 706, 458, 252, 24, 706, 507, 877, 101, 793, 861, 959, 202, 967, 332, 562, 887, 830, 328, 464, 987, 24, 197, 577, 686, 93, 24, 569, 323, 347, 725, 680, 711, 9, 600, 777, 925, 366, 242, 928, 107, 748, 190, 325, 976, 498, 153, 128, 22, 716, 191, 721, 29, 396, 397, 1, 737, 105, 846, 66, 889, 415, 179, 387, 343, 282, 274, 914, 695, 586, 259, 955, 441, 676, 193, 798, 460, 702, 299, 280, 616, 334, 119, 483, 135, 896, 783, 464, 896, 76, 92, 206, 523, 714, 854, 426, 72, 415, 97, 386, 779, 61, 830, 334, 372, 801, 746, 471, 119, 412, 718, 228, 199, 600, 241, 349, 808, 318, 121, 352, 744, 684, 82, 5, 40, 519, 391, 347, 841, 38, 507, 299, 713, 36, 534, 550, 957, 235, 655, 751, 186, 58, 512, 406, 536, 232, 647, 564, 936, 10, 128, 93, 400, 203, 133, 307, 390, 194, 294, 606, 111, 300, 372, 268, 457, 312, 495, 45, 1, 447, 967, 358, 132, 967, 164, 532, 958, 171, 514, 162, 533, 545, 241, 545, 602, 545, 134, 511, 293, 838, 835, 101, 534, 955, 890, 718, 575, 307, 560, 402, 290, 101, 55, 301, 659, 445, 74, 292, 583, 101, 914, 773, 427, 136, 621, 149, 738, 1001, 10, 1000, 1005, 10, 359, 470, 593, 0, 386, 881, 259, 298, 626, 47, 187, 425, 42, 975, 728, 826, 739, 281, 271, 2, 238, 888, 176, 489, 277, 262, 915, 750, 319, 123, 401, 450, 840, 11, 105, 268, 355, 706, 468, 424, 968, 516, 737, 357, 155, 18, 77, 716, 969, 204, 290, 731, 204, 50, 837, 366, 710, 1001, 10, 1000, 1002, 10]
+↳       image → nil
+↳       video → nil
+↳       audio → nil
+↳       mediaTokenIds → nil
+↳       cacheScopeSalt → nil
+↳       toolSchemas → nil
+↳       canonicalRequiredToolContext → nil
+↳       cachePrefixTokenCounts → [1080]
+↳       cacheStablePrefixTokenCounts → []
+↳       cachePromptIntent → .generation
+↳       cacheRestorePolicy → .standard
+↳     cacheInitParameters → GenerateParameters(jsonSchema: nil, prefillStepSize: 320, maxTokens: Optional(7), maxKVSize: nil, diffusionMaxDenoisingSteps: nil, kvBits: nil, kvGroupSize: 64, quantizedKVStart: 0, kvMode: MLXLMCommon.KVQuantizationMode.none, enableCompiledDecode: false, compiledMaxCacheLength: nil, compiledDecodeMaxPromptOffset: nil, maxKVWindowSize: nil, ssmAnchorBoundaries: [], accelerationMode: metal, enableCompiledBatchDecode: false, compiledBatchBuckets: [1, 2, 4], temperature: 0.0, topP: 1.0, topK: 0, minP: 0.0, randomSeed: nil, repetitionPenalty: nil, repetitionContextSize: 20, presencePenalty: nil, presenceContextSize: nil, frequencyPenalty: nil, frequencyContextSize: nil, suppressTokens: [], initialSuppressTokens: [], initialSuppressCount: 0, reasoningBudgetTokens: nil, requestedReasoningBudgetTokens: nil, reasoningBudgetCloseTokenID: nil, reasoningBudgetStartTokenIDs: [], reasoningBudgetOpenTokenIDs: [], draftStrategy: nil, nativeMTPDepthPolicy: MLXLMCommon.NativeMTPDepthPolicy.adaptive(maximumDepth: 9223372036854775807), extraStopStrings: [], cacheChainId: nil)
+↳       some → GenerateParameters(jsonSchema: nil, prefillStepSize: 320, maxTokens: Optional(7), maxKVSize: nil, diffusionMaxDenoisingSteps: nil, kvBits: nil, kvGroupSize: 64, quantizedKVStart: 0, kvMode: MLXLMCommon.KVQuantizationMode.none, enableCompiledDecode: false, compiledMaxCacheLength: nil, compiledDecodeMaxPromptOffset: nil, maxKVWindowSize: nil, ssmAnchorBoundaries: [], accelerationMode: metal, enableCompiledBatchDecode: false, compiledBatchBuckets: [1, 2, 4], temperature: 0.0, topP: 1.0, topK: 0, minP: 0.0, randomSeed: nil, repetitionPenalty: nil, repetitionContextSize: 20, presencePenalty: nil, presenceContextSize: nil, frequencyPenalty: nil, frequencyContextSize: nil, suppressTokens: [], initialSuppressTokens: [], initialSuppressCount: 0, reasoningBudgetTokens: nil, requestedReasoningBudgetTokens: nil, reasoningBudgetCloseTokenID: nil, reasoningBudgetStartTokenIDs: [], reasoningBudgetOpenTokenIDs: [], draftStrategy: nil, nativeMTPDepthPolicy: MLXLMCommon.NativeMTPDepthPolicy.adaptive(maximumDepth: 9223372036854775807), extraStopStrings: [], cacheChainId: nil)
+↳         jsonSchema → nil
+↳         prefillStepSize → 320
+↳         maxTokens → 7
+↳           some → 7
+↳         maxKVSize → nil
+↳         diffusionMaxDenoisingSteps → nil
+↳         kvBits → nil
+↳         kvGroupSize → 64
+↳         quantizedKVStart → 0
+↳         kvMode → .none
+↳         enableCompiledDecode → false
+↳         compiledMaxCacheLength → nil
+↳         compiledDecodeMaxPromptOffset → nil
+↳         maxKVWindowSize → nil
+↳         ssmAnchorBoundaries → []
+↳         accelerationMode → metal
+↳         enableCompiledBatchDecode → false
+↳         compiledBatchBuckets → [1, 2, 4]
+↳         temperature → 0.0
+↳         topP → 1.0
+↳         topK → 0
+↳         minP → 0.0
+↳         randomSeed → nil
+↳         repetitionPenalty → nil
+↳         repetitionContextSize → 20
+↳         presencePenalty → nil
+↳         presenceContextSize → nil
+↳         frequencyPenalty → nil
+↳         frequencyContextSize → nil
+↳         suppressTokens → []
+↳         initialSuppressTokens → []
+↳         initialSuppressCount → 0
+↳         reasoningBudgetTokens → nil
+↳         requestedReasoningBudgetTokens → nil
+↳         reasoningBudgetCloseTokenID → nil
+↳         reasoningBudgetStartTokenIDs → []
+↳         reasoningBudgetOpenTokenIDs → []
+↳         draftStrategy → nil
+↳         nativeMTPDepthPolicy → .adaptive(maximumDepth: 9223372036854775807)
+↳           adaptive → (maximumDepth: 9223372036854775807)
+↳             maximumDepth → 9223372036854775807
+↳         extraStopStrings → []
+↳         cacheChainId → nil
+↳     retainedPromptSnapshot → nil
+↳     exactPromptSnapshotWasDeclined → false
+↳     alignedPrefillPlan → step=320 boundary=1079 prompt=1083 turns=3
+↳       some → step=320 boundary=1079 prompt=1083 turns=3
+↳         step → 320
+↳         boundary → 1079
+↳           some → 1079
+↳         promptTokenCount → 1083
+↳         turnCuts → [305, 1017, 1079]
+↳           some → [305, 1017, 1079]
+↳     hybridStripBoundary → nil
+↳     hybridStripSnapshot → nil
+↳     hybridStripBoundarySpilled → false
+↳     stableBoundarySnapshots → [:]
+↳     poolStableBoundariesLeftUncut → []
+↳     canonicalStablePrefillCapture → nil
+↳     diskSeedBoundary → nil
+↳     diskSeedSnapshot → nil
+↳     mediaSalt → "498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"
+↳       some → "498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"
+↳     cacheSaltPlan → CacheBoundarySaltPlan(requestSalt: Optional("498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"), mediaIndependentSalt: nil, mediaIndependentTokenCount: 0, segments: [], itemSpans: [])
+↳       requestSalt → "498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"
+↳         some → "498931c5d804dd409d87d6f142b946072b583d0595264e13e0bba9bba57cb4e0"
+↳       mediaIndependentSalt → nil
+↳       mediaIndependentTokenCount → 0
+↳       segments → []
+↳       itemSpans → []
+↳     promptPrefillTime → 3.743036985397339
+↳   promptCacheSnapshot → nil
+✘ Test "Decode holds no prompt copy with views (deferred to the end of the turn); the retained copy when off (control)" failed after 4.747 seconds with 1 issue.
+◇ Test "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+◇ Test case passing 1 argument step → 320 to "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+◇ Test case passing 1 argument step → 2048 to "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+✔ Test "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" with 2 test cases passed after 8.855 seconds.
+◇ Test "Aligned prefill: no post-answer entry (it can never serve more rows than the prompt boundary); written when the lever restores it (control); the next turn reuses K_prev either way" started.
+✔ Test "Aligned prefill: no post-answer entry (it can never serve more rows than the prompt boundary); written when the lever restores it (control); the next turn reuses K_prev either way" passed after 1.062 seconds.
+◇ Test "Floor arithmetic: raise to active + headroom when below, never lower, capped at MLX's ceiling" started.
+✔ Test "Floor arithmetic: raise to active + headroom when below, never lower, capped at MLX's ceiling" passed after 0.001 seconds.
+◇ Test "observe(): a limit below the live set is raised above it; a higher limit is untouched; off = untouched (control)" started.
+✔ Test "observe(): a limit below the live set is raised above it; a higher limit is untouched; off = untouched (control)" passed after 0.116 seconds.
+◇ Test "A prefill chunk boundary (PrefillProgressReporter) raises a limit below the live set, with or without a handler" started.
+✔ Test "A prefill chunk boundary (PrefillProgressReporter) raises a limit below the live set, with or without a handler" passed after 0.006 seconds.
+◇ Test "BatchEngine solo generation under a limit below the live set ends with the limit above it (the loop's floor)" started.
+✔ Test "BatchEngine solo generation under a limit below the live set ends with the limit above it (the loop's floor)" passed after 0.134 seconds.
+✘ Suite "MiniMax-M3 prompt snapshot views, post-answer skip, scheduling floor" failed after 14.962 seconds with 1 issue.
+↳ /// Long-context serving fixes from the MiniMax-M3.1 Osaurus GUI proof (2026-10-29): what made a 35k-token agent turn
+↳ /// lose its prefix cache entry and decode at a quarter speed.
+↳ ///
+↳ /// - Prompt snapshot: the solo path kept a full copy of the prompt's KV through the whole decode (4.5 GiB at 35k tokens)
+↳ ///   and copied it again for each boundary store; the store budget then refused both stores ("the copies it requires do
+↳ ///   not fit in memory"), so the next turn re-prefilled the document. M3's lanes only append, so the end-of-turn stores
+↳ ///   now take views of the finished cache: nothing held through decode, nothing copied, the budget admits them.
+↳ /// - Post-answer entry: under aligned prefill a restore never reuses rows past the producing request's store boundary,
+↳ ///   so the post-answer entry was a redundant 4.6 GiB copy + write per turn; skipped.
+↳ /// - Scheduling floor: MLX's scheduling limit below the live working set made every eval wait (9.7 vs 36.9 tok/s at
+↳ ///   35.7k on the Studio); the generation loops keep it at the live set + 4 GiB.
+✘ Test run with 9 tests in 1 suite failed after 14.962 seconds with 1 issue.
+Note: Some test targets reported failures:
+  - MLXLMTests (Swift Testing)

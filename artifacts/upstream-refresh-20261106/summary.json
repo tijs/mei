@@ -1,0 +1,44 @@
+[
+  {
+    "suite": "CompiledFunctionLifetimeTests",
+    "exit": 0,
+    "seconds": 10.276,
+    "log": "/tmp/mei-upstream-regression-20261106/CompiledFunctionLifetimeTests.log"
+  },
+  {
+    "suite": "CompileLockOrderingTests",
+    "exit": 0,
+    "seconds": 49.886,
+    "log": "/tmp/mei-upstream-regression-20261106/CompileLockOrderingTests.log"
+  },
+  {
+    "suite": "MaterializedTests",
+    "exit": 0,
+    "seconds": 8.958,
+    "log": "/tmp/mei-upstream-regression-20261106/MaterializedTests.log"
+  },
+  {
+    "suite": "EvalTests",
+    "exit": 0,
+    "seconds": 17.198,
+    "log": "/tmp/mei-upstream-regression-20261106/EvalTests.log"
+  },
+  {
+    "suite": "EvalInTransformsTests",
+    "exit": 0,
+    "seconds": 5.749,
+    "log": "/tmp/mei-upstream-regression-20261106/EvalInTransformsTests.log"
+  },
+  {
+    "suite": "MLXArrayHostReadRaceTests",
+    "exit": 0,
+    "seconds": 12.712,
+    "log": "/tmp/mei-upstream-regression-20261106/MLXArrayHostReadRaceTests.log"
+  },
+  {
+    "suite": "MLXArrayEmptyHostReadTests",
+    "exit": 1,
+    "seconds": 8.641,
+    "log": "/tmp/mei-upstream-regression-20261106/MLXArrayEmptyHostReadTests.log"
+  }
+]

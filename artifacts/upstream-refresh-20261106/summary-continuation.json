@@ -1,0 +1,38 @@
+[
+  {
+    "suite": "SaveTests",
+    "exit": 0,
+    "seconds": 10.909,
+    "log": "/tmp/mei-upstream-regression-20261106/SaveTests.log"
+  },
+  {
+    "suite": "QuantizationTests",
+    "exit": 0,
+    "seconds": 36.65,
+    "log": "/tmp/mei-upstream-regression-20261106/QuantizationTests.log"
+  },
+  {
+    "suite": "JSONSchemaLogitProcessorTests",
+    "exit": 0,
+    "seconds": 6.543,
+    "log": "/tmp/mei-upstream-regression-20261106/JSONSchemaLogitProcessorTests.log"
+  },
+  {
+    "suite": "JSONSchemaGrammarTests",
+    "exit": 0,
+    "seconds": 6.558,
+    "log": "/tmp/mei-upstream-regression-20261106/JSONSchemaGrammarTests.log"
+  },
+  {
+    "suite": "UnusedPromptSnapshotTests",
+    "exit": 0,
+    "seconds": 6.541,
+    "log": "/tmp/mei-upstream-regression-20261106/UnusedPromptSnapshotTests.log"
+  },
+  {
+    "suite": "MiniMaxM3PromptSnapshotViewTests",
+    "exit": 1,
+    "seconds": 19.6,
+    "log": "/tmp/mei-upstream-regression-20261106/MiniMaxM3PromptSnapshotViewTests.log"
+  }
+]

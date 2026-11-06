@@ -1,4 +1,4 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.3
 // Mei — a narrow, native Swift/MLX OpenAI-compatible inference server.
 //
 // vmlx-swift is pinned to a published revision of the Mei-maintained fork
@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "9db62ce10416db4a33ff0108dca6fc00bdadfff7"
+            revision: "e408c6ebdabb9d2dca382605fb6cb510c09e9996"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],

@@ -1,0 +1,86 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.063.
+Test Suite 'vMLXFluxTests.xctest' started at 2026-11-06 12:08:10.063.
+Test Suite 'vMLXFluxTests.xctest' passed at 2026-11-06 12:08:10.063.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.063.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.237.
+Test Suite 'VMLXLinuxTests.xctest' started at 2026-11-06 12:08:10.238.
+Test Suite 'VMLXLinuxTests.xctest' passed at 2026-11-06 12:08:10.238.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.238.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.412.
+Test Suite 'ToolSchemaReferenceTests.xctest' started at 2026-11-06 12:08:10.413.
+Test Suite 'ToolSchemaReferenceTests.xctest' passed at 2026-11-06 12:08:10.413.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.413.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.576.
+Test Suite 'MLXTests.xctest' started at 2026-11-06 12:08:10.577.
+Test Suite 'MLXTests.xctest' passed at 2026-11-06 12:08:10.577.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.577.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.665.
+Test Suite 'MLXPressPolicyTests.xctest' started at 2026-11-06 12:08:10.666.
+Test Suite 'MLXPressPolicyTests.xctest' passed at 2026-11-06 12:08:10.666.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.666.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:10.882.
+Test Suite 'MLXLMTests.xctest' started at 2026-11-06 12:08:10.883.
+Test Suite 'JSONSchemaLogitProcessorTests' started at 2026-11-06 12:08:10.883.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testAllowedDistributionRetainsRequestedTemperature]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testAllowedDistributionRetainsRequestedTemperature]' passed (0.019 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testEOSIsAdmittedOnlyAfterJSONAndLookaheadStaysTerminal]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testEOSIsAdmittedOnlyAfterJSONAndLookaheadStaysTerminal]' passed (0.004 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testExhaustedIntersectionAndInvalidTokenReportStickyFailure]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testExhaustedIntersectionAndInvalidTokenReportStickyFailure]' passed (0.005 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testExplicitSpecialIDsAreExcludedEvenWhenTheirTextMatchesGrammar]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testExplicitSpecialIDsAreExcludedEvenWhenTheirTextMatchesGrammar]' passed (0.002 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testIndependentCopySeparatesMatcherAndBaseMutableHistory]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testIndependentCopySeparatesMatcherAndBaseMutableHistory]' passed (0.002 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testMaskPreservesAllowedScoresAndRejectsPaddingAndControlIDs]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testMaskPreservesAllowedScoresAndRejectsPaddingAndControlIDs]' passed (0.002 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testMissingVocabularyFailsBeforeGeneration]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testMissingVocabularyFailsBeforeGeneration]' passed (0.000 seconds).
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testPromptDoesNotEnterGrammarAndRequestsStayIndependent]' started.
+Test Case '-[MLXLMTests.JSONSchemaLogitProcessorTests testPromptDoesNotEnterGrammarAndRequestsStayIndependent]' passed (0.004 seconds).
+Test Suite 'JSONSchemaLogitProcessorTests' passed at 2026-11-06 12:08:10.922.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.038 (0.039) seconds
+Test Suite 'MLXLMTests.xctest' passed at 2026-11-06 12:08:10.922.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.038 (0.039) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:10.922.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.038 (0.040) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:11.092.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' started at 2026-11-06 12:08:11.093.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' passed at 2026-11-06 12:08:11.093.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:11.093.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:11.349.
+Test Suite 'MLXLMCommonFocusedTests.xctest' started at 2026-11-06 12:08:11.349.
+Test Suite 'MLXLMCommonFocusedTests.xctest' passed at 2026-11-06 12:08:11.349.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:11.350.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:11.448.
+Test Suite 'MLXDistributedCoreTests.xctest' started at 2026-11-06 12:08:11.449.
+Test Suite 'MLXDistributedCoreTests.xctest' passed at 2026-11-06 12:08:11.449.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:11.449.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:11.548.
+Test Suite 'JinjaReferenceTests.xctest' started at 2026-11-06 12:08:11.549.
+Test Suite 'JinjaReferenceTests.xctest' passed at 2026-11-06 12:08:11.550.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:11.550.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:08:11.717.
+Test Suite 'CmlxTests.xctest' started at 2026-11-06 12:08:11.718.
+Test Suite 'CmlxTests.xctest' passed at 2026-11-06 12:08:11.718.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:08:11.718.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

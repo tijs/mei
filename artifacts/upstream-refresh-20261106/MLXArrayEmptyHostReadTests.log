@@ -1,0 +1,30 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MLXArray empty host reads" started.
+◇ Test "asArray and asArrayChecked read [1, 0, 3, 448] as []" started.
+◇ Test "evaluated host access holds the stream lock through the read" started.
+◇ Test "asArray returns an empty Swift array for a zero-element tensor" started.
+◇ Test "asMTLBuffer returns nil for [0], with and without a copy" started.
+◇ Test "host reads stay valid during concurrent stream maintenance" started.
+◇ Test "asArray and asArrayChecked read [0] as []" started.
+◇ Test "asMTLBuffer returns nil for [1, 0, 3, 448], with and without a copy" started.
+◇ Test "asArray and asArrayChecked read a transposed [2, 0] as []" started.
+◇ Test "asArray returns empty for a zero-length lazy slice" started.
+✘ Test "evaluated host access holds the stream lock through the read" recorded an issue at MLXArrayEmptyHostReadTests.swift:105:9: Expectation failed: enteredRead.wait(timeout: .now() + 2) == .success
+↳ enteredRead.wait(timeout: .now() + 2) == .success → false
+↳   enteredRead.wait(timeout: .now() + 2) → .timedOut
+✔ Test "asArray returns an empty Swift array for a zero-element tensor" passed after 2.937 seconds.
+✔ Test "asArray and asArrayChecked read a transposed [2, 0] as []" passed after 2.937 seconds.
+✔ Test "asArray and asArrayChecked read [0] as []" passed after 2.937 seconds.
+✔ Test "asArray and asArrayChecked read [1, 0, 3, 448] as []" passed after 2.937 seconds.
+✔ Test "asArray returns empty for a zero-length lazy slice" passed after 2.937 seconds.
+✔ Test "asMTLBuffer returns nil for [1, 0, 3, 448], with and without a copy" passed after 2.937 seconds.
+✔ Test "asMTLBuffer returns nil for [0], with and without a copy" passed after 2.937 seconds.
+✘ Test "evaluated host access holds the stream lock through the read" failed after 2.944 seconds with 1 issue.
+✔ Test "host reads stay valid during concurrent stream maintenance" passed after 3.962 seconds.
+✘ Suite "MLXArray empty host reads" failed after 3.963 seconds with 1 issue.
+✘ Test run with 9 tests in 1 suite failed after 3.963 seconds with 1 issue.
+Note: Some test targets reported failures:
+  - MLXTests (Swift Testing)

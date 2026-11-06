@@ -1,0 +1,20 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "TokenIterator additional processor seam" started.
+◇ Test "without an additional processor the built-in effective processor is unchanged" started.
+◇ Test "a request-supplied processor is accepted and composed with the built-in one" started.
+◇ Test "a request with no configured penalties and no additional processor keeps a nil processor" started.
+◇ Test "independentCopy isolates both halves of the composite" started.
+◇ Test "prompt, process and didSample are forwarded through the seam in order" started.
+◇ Test "the additional constraint sees already-penalised logits (penalties run first)" started.
+[vmlx-tests] The MLX Metal test lock /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock is taken; waiting for it, with no time limit. `lsof /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock` names the process that holds it.
+✔ Test "a request with no configured penalties and no additional processor keeps a nil processor" passed after 0.017 seconds.
+✔ Test "the additional constraint sees already-penalised logits (penalties run first)" passed after 0.455 seconds.
+✔ Test "a request-supplied processor is accepted and composed with the built-in one" passed after 0.458 seconds.
+✔ Test "prompt, process and didSample are forwarded through the seam in order" passed after 0.462 seconds.
+✔ Test "without an additional processor the built-in effective processor is unchanged" passed after 0.463 seconds.
+✔ Test "independentCopy isolates both halves of the composite" passed after 0.565 seconds.
+✔ Suite "TokenIterator additional processor seam" passed after 0.565 seconds.
+✔ Test run with 6 tests in 1 suite passed after 0.565 seconds.

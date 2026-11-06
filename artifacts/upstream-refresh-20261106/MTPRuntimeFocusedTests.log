@@ -1,0 +1,215 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MTP runtime metadata" started.
+◇ Test "phase diagnostic flags retain live exact-one and legacy OR semantics" started.
+✔ Test "phase diagnostic flags retain live exact-one and legacy OR semantics" passed after 0.001 seconds.
+◇ Test "native MTP greedy verifier rejects short logits before materialization" started.
+✔ Test "native MTP greedy verifier rejects short logits before materialization" passed after 0.011 seconds.
+◇ Test "preserved MTP filtering is index gated before shard header scan" started.
+✔ Test "preserved MTP filtering is index gated before shard header scan" passed after 0.004 seconds.
+◇ Test "cached multi-token verifier mask carries cache offset" started.
+✔ Test "cached multi-token verifier mask carries cache offset" passed after 0.005 seconds.
+◇ Test "Qwen-style preserved MTP bundle is tensor-detected and auto-enabled" started.
+✔ Test "Qwen-style preserved MTP bundle is tensor-detected and auto-enabled" passed after 0.004 seconds.
+◇ Test "Qwen MTP auto decode uses vmlx_mtp_tuning json" started.
+✔ Test "Qwen MTP auto decode uses vmlx_mtp_tuning json" passed after 0.002 seconds.
+◇ Test "MTP tuning fingerprint distinguishes group size at the same bit width" started.
+✔ Test "MTP tuning fingerprint distinguishes group size at the same bit width" passed after 0.002 seconds.
+◇ Test "MXFP8 MTP tuning must explicitly match bundle quantization" started.
+✔ Test "MXFP8 MTP tuning must explicitly match bundle quantization" passed after 0.003 seconds.
+◇ Test "complete MTP tensors without tuning stay non auto launch" started.
+✔ Test "complete MTP tensors without tuning stay non auto launch" passed after 0.001 seconds.
+◇ Test "Qwen3.8 Flash-Next complete head starts Auto at measured D3 without a sidecar" started.
+✔ Test "Qwen3.8 Flash-Next complete head starts Auto at measured D3 without a sidecar" passed after 0.001 seconds.
+◇ Test "Qwen3.8 family cold start never overrides an explicit block" started.
+✔ Test "Qwen3.8 family cold start never overrides an explicit block" passed after 0.002 seconds.
+◇ Test "Qwen3.8 4M legacy pre-parity block is superseded without weakening other blocks" started.
+✔ Test "Qwen3.8 4M legacy pre-parity block is superseded without weakening other blocks" passed after 0.025 seconds.
+◇ Test "measured Flash-Next cold start is not inherited by other Qwen families" started.
+✔ Test "measured Flash-Next cold start is not inherited by other Qwen families" passed after 0.001 seconds.
+◇ Test "MTP status snapshot exposes tuning gate fields for Osaurus" started.
+✔ Test "MTP status snapshot exposes tuning gate fields for Osaurus" passed after 0.001 seconds.
+◇ Test "MTP status snapshot reports missing tuning before auto launch" started.
+✔ Test "MTP status snapshot reports missing tuning before auto launch" passed after 0.001 seconds.
+◇ Test "MTP status snapshot reports blocked tuning as non auto launch" started.
+✔ Test "MTP status snapshot reports blocked tuning as non auto launch" passed after 0.001 seconds.
+◇ Test "MTP tuning without speedup is not production usable" started.
+✔ Test "MTP tuning without speedup is not production usable" passed after 0.001 seconds.
+◇ Test "prompt-scoped MTP tuning cannot authorize global auto launch" started.
+✔ Test "prompt-scoped MTP tuning cannot authorize global auto launch" passed after 0.001 seconds.
+◇ Test "MTP config without tensors is reported as metadata-only" started.
+✔ Test "MTP config without tensors is reported as metadata-only" passed after 0.001 seconds.
+◇ Test "valid tuning sidecar without MTP tensors stays non auto launch" started.
+✔ Test "valid tuning sidecar without MTP tensors stays non auto launch" passed after 0.001 seconds.
+◇ Test "inactive native MTP scrub does not touch generic nextn metadata" started.
+✔ Test "inactive native MTP scrub does not touch generic nextn metadata" passed after 0.001 seconds.
+◇ Test "native MTP activation supports Qwen3.5 MoE only with explicit tensor evidence and tuning" started.
+✔ Test "native MTP activation supports Qwen3.5 MoE only with explicit tensor evidence and tuning" passed after 0.001 seconds.
+◇ Test "native MTP activation supports Qwen3.6 aliases with tensor evidence and tuning" started.
+✔ Test "native MTP activation supports Qwen3.6 aliases with tensor evidence and tuning" passed after 0.001 seconds.
+◇ Test "native MTP activation requires usable tuning even when tensors exist" started.
+✔ Test "native MTP activation requires usable tuning even when tensors exist" passed after 0.001 seconds.
+◇ Test "tuning-measurement mode loads the head without tuning; auto stays gated" started.
+✔ Test "tuning-measurement mode loads the head without tuning; auto stays gated" passed after 0.001 seconds.
+◇ Test "stamp-style unmeasured tuning stub refuses auto-launch by design" started.
+✔ Test "stamp-style unmeasured tuning stub refuses auto-launch by design" passed after 0.001 seconds.
+◇ Test "native MTP activation can be requested task-locally without process env" started.
+✔ Test "native MTP activation can be requested task-locally without process env" passed after 0.001 seconds.
+◇ Test "native MTP task-local false overrides poisoned process env" started.
+✔ Test "native MTP task-local false overrides poisoned process env" passed after 0.001 seconds.
+◇ Test "native MTP env aliases keep canonical VMLX spelling live" started.
+✔ Test "native MTP env aliases keep canonical VMLX spelling live" passed after 0.001 seconds.
+◇ Test "JANG MTP metadata without tensor evidence is not treated as an MTP bundle" started.
+✔ Test "JANG MTP metadata without tensor evidence is not treated as an MTP bundle" passed after 0.001 seconds.
+◇ Test "JANG runtime parses MTP activation metadata" started.
+✔ Test "JANG runtime parses MTP activation metadata" passed after 0.001 seconds.
+◇ Test "JANG config parses role-level MXTQ metadata" started.
+✔ Test "JANG config parses role-level MXTQ metadata" passed after 0.001 seconds.
+◇ Test "ModelConfiguration carries MTP status into resolved configuration" started.
+✔ Test "ModelConfiguration carries MTP status into resolved configuration" passed after 0.001 seconds.
+◇ Test "native MTP auto decode policy is real tensor evidence gated" started.
+✔ Test "native MTP auto decode policy is real tensor evidence gated" passed after 0.001 seconds.
+◇ Test "recursive MTP contract models D3 hidden-state draft verify" started.
+✔ Test "recursive MTP contract models D3 hidden-state draft verify" passed after 0.001 seconds.
+◇ Test "Qwen3.5 text SSM cache records accepted-prefix offsets" started.
+✔ Test "Qwen3.5 text SSM cache records accepted-prefix offsets" passed after 0.003 seconds.
+◇ Test "Qwen3.5 SSM accepted-prefix capture advances token by token" started.
+✔ Test "Qwen3.5 SSM accepted-prefix capture advances token by token" passed after 0.025 seconds.
+◇ Test "Qwen3.5 GDN verifier state has strict and fast modes" started.
+✔ Test "Qwen3.5 GDN verifier state has strict and fast modes" passed after 0.030 seconds.
+◇ Test "native MTP prefix recurrent snapshots materialize before cache commit" started.
+✔ Test "native MTP prefix recurrent snapshots materialize before cache commit" passed after 0.005 seconds.
+◇ Test "native MTP lazy repair skips capture until partial rejection" started.
+✔ Test "native MTP lazy repair skips capture until partial rejection" passed after 0.016 seconds.
+◇ Test "native MTP partial reject refreshes private draft cache" started.
+✔ Test "native MTP partial reject refreshes private draft cache" passed after 0.008 seconds.
+◇ Test "native MTP greedy verifier batches target argmax rows" started.
+✔ Test "native MTP greedy verifier batches target argmax rows" passed after 0.012 seconds.
+◇ Test "native MTP chunk verifier env alias is applied in iterator" started.
+✔ Test "native MTP chunk verifier env alias is applied in iterator" passed after 0.017 seconds.
+◇ Test "RunBench perf can use bundle generation defaults" started.
+✔ Test "RunBench perf can use bundle generation defaults" passed after 0.050 seconds.
+◇ Test "Qwen native MTP phase diagnostics include draft sidecar phases" started.
+✔ Test "Qwen native MTP phase diagnostics include draft sidecar phases" passed after 0.010 seconds.
+◇ Test "native MTP verifier mode telemetry is explicit" started.
+✔ Test "native MTP verifier mode telemetry is explicit" passed after 0.015 seconds.
+◇ Test "native MTP defaults greedy Mamba cache to chunk verifier" started.
+✔ Test "native MTP defaults greedy Mamba cache to chunk verifier" passed after 0.024 seconds.
+◇ Test "native MTP chunk-lazy env overrides stochastic Mamba fallback" started.
+✔ Test "native MTP chunk-lazy env overrides stochastic Mamba fallback" passed after 0.008 seconds.
+◇ Test "native MTP request eligibility is penalty-free text-only" started.
+✔ Test "native MTP request eligibility is penalty-free text-only" passed after 0.001 seconds.
+◇ Test "BatchEngine.generate rejects native MTP without an active MTP head" started.
+✔ Test "BatchEngine.generate rejects native MTP without an active MTP head" passed after 0.008 seconds.
+◇ Test "BatchEngine.generate routes active native MTP through the exclusive lane" started.
+✔ Test "BatchEngine.generate routes active native MTP through the exclusive lane" passed after 0.008 seconds.
+◇ Test "BatchEngine publishes a cancellable stream before native MTP prefill" started.
+✔ Test "BatchEngine publishes a cancellable stream before native MTP prefill" passed after 0.001 seconds.
+◇ Test "BatchEngine publishes a cancellable stream before DFlash setup" started.
+✔ Test "BatchEngine publishes a cancellable stream before DFlash setup" passed after 0.001 seconds.
+◇ Test "DFlash prefill checks cancellation around GPU materialization" started.
+✔ Test "DFlash prefill checks cancellation around GPU materialization" passed after 0.002 seconds.
+◇ Test "native MTP completeness needs physically present tensors and a real head topology" started.
+✔ Test "native MTP completeness needs physically present tensors and a real head topology" passed after 0.010 seconds.
+◇ Test "MTP topology accepts every installed family layout" started.
+✔ Test "MTP topology accepts every installed family layout" passed after 0.001 seconds.
+◇ Test "native MTP prefill has cancellation checkpoints around GPU materialization" started.
+✔ Test "native MTP prefill has cancellation checkpoints around GPU materialization" passed after 0.010 seconds.
+◇ Test "already-cancelled native MTP initialization performs no model work" started.
+✔ Test "already-cancelled native MTP initialization performs no model work" passed after 0.001 seconds.
+◇ Test "BatchEngine.submit rejects native MTP instead of silently batching AR" started.
+✔ Test "BatchEngine.submit rejects native MTP instead of silently batching AR" passed after 0.001 seconds.
+◇ Test "token iterators report nil native MTP stats by default" started.
+✔ Test "token iterators report nil native MTP stats by default" passed after 0.001 seconds.
+◇ Test "native MTP generation stats round-trip their fields" started.
+✔ Test "native MTP generation stats round-trip their fields" passed after 0.001 seconds.
+◇ Test "completion info defaults native MTP stats to nil" started.
+✔ Test "completion info defaults native MTP stats to nil" passed after 0.001 seconds.
+◇ Test "active native MTP generation carries structured stats on completion info" started.
+✔ Test "active native MTP generation carries structured stats on completion info" passed after 0.121 seconds.
+◇ Test "shape-walk quantization preserves MXFP4 mode" started.
+✔ Test "shape-walk quantization preserves MXFP4 mode" passed after 0.001 seconds.
+◇ Test "shape-walk quantization treats bias-bearing MXFP metadata as affine" started.
+✔ Test "shape-walk quantization treats bias-bearing MXFP metadata as affine" passed after 0.001 seconds.
+◇ Test "JANG shape-walk treats bias-bearing MXFP metadata as affine" started.
+✔ Test "JANG shape-walk treats bias-bearing MXFP metadata as affine" passed after 0.001 seconds.
+◇ Test "shape-walk quantization supports JANG_2K 3-bit group-128 projections" started.
+✔ Test "shape-walk quantization supports JANG_2K 3-bit group-128 projections" passed after 0.001 seconds.
+◇ Test "shape-walk quantization honors known group size for stock MLX affine embeddings" started.
+✔ Test "shape-walk quantization honors known group size for stock MLX affine embeddings" passed after 0.001 seconds.
+◇ Test "JANG hidden anchor overrides stale quantization metadata" started.
+✔ Test "JANG hidden anchor overrides stale quantization metadata" passed after 0.001 seconds.
+◇ Test "JANG hidden-input projections override width-colliding metadata" started.
+✔ Test "JANG hidden-input projections override width-colliding metadata" passed after 0.001 seconds.
+◇ Test "JANG semantic metadata loads a nonzero three-bit projection" started.
+✔ Test "JANG semantic metadata loads a nonzero three-bit projection" passed after 0.244 seconds.
+◇ Test "JANG vision position embedding does not inherit language hidden width" started.
+✔ Test "JANG vision position embedding does not inherit language hidden width" passed after 0.001 seconds.
+◇ Test jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "visual", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "visual", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "vision_tower", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "vision_tower", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "model.vision_model", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "model.vision_model", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "audio_tower", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "audio_tower", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "model.audio_encoder", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "model.audio_encoder", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "speech_encoder", skipAlias → false to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+◇ Test case passing 2 arguments prefix → "speech_encoder", skipAlias → true to jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) started.
+✔ Test jangNonLanguageTowerKeepsConsistentDeclaration(prefix:skipAlias:) with 12 test cases passed after 0.004 seconds.
+◇ Test "JANG declared skip blocks generic metadata before specialized geometry" started.
+✔ Test "JANG declared skip blocks generic metadata before specialized geometry" passed after 0.001 seconds.
+◇ Test "JANG declared skip wins across contradictory path aliases" started.
+✔ Test "JANG declared skip wins across contradictory path aliases" passed after 0.001 seconds.
+◇ Test "JANG hidden anchor preserves declaration when hidden width is unrealizable" started.
+✔ Test "JANG hidden anchor preserves declaration when hidden width is unrealizable" passed after 0.001 seconds.
+◇ Test "JANG exact manifest precedes hidden-anchor semantics" started.
+✔ Test "JANG exact manifest precedes hidden-anchor semantics" passed after 0.001 seconds.
+◇ Test "JANG missing hidden-size hint disables semantic override" started.
+✔ Test "JANG missing hidden-size hint disables semantic override" passed after 0.001 seconds.
+◇ Test "JANG lm_head uses uniquely realizable hidden width" started.
+✔ Test "JANG lm_head uses uniquely realizable hidden width" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses Gemma4 PLE input width" started.
+✔ Test "shape-walk quantization uses Gemma4 PLE input width" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses hidden size for JANG_2K routed expert inputs" started.
+✔ Test "shape-walk quantization uses hidden size for JANG_2K routed expert inputs" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses expert intermediate for routed down projection" started.
+✔ Test "shape-walk quantization uses expert intermediate for routed down projection" passed after 0.001 seconds.
+◇ Test "shape-walk honors role-level MXTQ metadata for dense JANGTQ roles" started.
+✔ Test "shape-walk honors role-level MXTQ metadata for dense JANGTQ roles" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses value dim for Qwen3.6 linear attention output" started.
+✔ Test "shape-walk quantization uses value dim for Qwen3.6 linear attention output" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses ZAYA CCA output width for o_proj" started.
+✔ Test "shape-walk quantization uses ZAYA CCA output width for o_proj" passed after 0.001 seconds.
+◇ Test "shape-walk quantization uses MiMo V-head output for attention o_proj" started.
+✔ Test "shape-walk quantization uses MiMo V-head output for attention o_proj" passed after 0.001 seconds.
+◇ Test "JANG config parses MiMo top-level routed affine bit plan" started.
+✔ Test "JANG config parses MiMo top-level routed affine bit plan" passed after 0.001 seconds.
+◇ Test "shape-walk honors MiMo routed affine bit plan down projection override" started.
+✔ Test "shape-walk honors MiMo routed affine bit plan down projection override" passed after 0.001 seconds.
+◇ Test "shape-walk quantization resolves Nex N2 JANG_1L hybrid SSM tensors" started.
+✔ Test "shape-walk quantization resolves Nex N2 JANG_1L hybrid SSM tensors" passed after 0.001 seconds.
+◇ Test "JANG gate dequantization uses hidden size for 6-bit shared expert gate" started.
+✔ Test "JANG gate dequantization uses hidden size for 6-bit shared expert gate" passed after 0.001 seconds.
+◇ Test "MoE router gate dequantization strips stale MXFP affine companions" started.
+✔ Test "MoE router gate dequantization strips stale MXFP affine companions" passed after 0.001 seconds.
+◇ Test "Qwen3.5 sanitize does not shift base norms just because MTP tensors exist" started.
+✔ Test "Qwen3.5 sanitize does not shift base norms just because MTP tensors exist" passed after 0.001 seconds.
+◇ Test "Qwen3.5 sanitize honors explicit norm convention metadata" started.
+✔ Test "Qwen3.5 sanitize honors explicit norm convention metadata" passed after 0.004 seconds.
+◇ Test "Qwen3.5 sanitize can shift raw MTP norms without shifting MLX-ready backbone" started.
+✔ Test "Qwen3.5 sanitize can shift raw MTP norms without shifting MLX-ready backbone" passed after 0.002 seconds.
+◇ Test "Qwen3.5 JANGTQ sanitize also ignores MTP sidecar conv when deciding norm shifts" started.
+✔ Test "Qwen3.5 JANGTQ sanitize also ignores MTP sidecar conv when deciding norm shifts" passed after 0.001 seconds.
+◇ Test "optional real local MTP bundle inspection" started.
+✔ Test "optional real local MTP bundle inspection" passed after 0.001 seconds.
+◇ Test "Qwen3.6 loaders propagate norm convention metadata" started.
+✔ Test "Qwen3.6 loaders propagate norm convention metadata" passed after 0.010 seconds.
+◇ Test "LLM and VLM factories carry MTP tuning status like generation config" started.
+✔ Test "LLM and VLM factories carry MTP tuning status like generation config" passed after 0.017 seconds.
+✔ Suite "MTP runtime metadata" passed after 0.764 seconds.
+✔ Test run with 98 tests in 1 suite passed after 0.764 seconds.

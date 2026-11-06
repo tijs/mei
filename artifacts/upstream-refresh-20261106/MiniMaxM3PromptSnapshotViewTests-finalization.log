@@ -1,0 +1,453 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': found 59 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/Flint/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/aligned-prefix/python-counts.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/attention/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark-parity.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-attn.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-moe.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/jangt-fast.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/generation_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model-00001-of-00001.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model.safetensors.index.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-block-sparse.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-select.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.shipped.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/renders.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/decode_61x45.png
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-tiny-weights.safetensors
+warning: 'vmlx-mei-upstream-sync-20261106': found 2 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/BatchEngine/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/SpecDec/DFLASH2.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 3 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-FINDINGS-AND-CROSSFAMILY-BACKLOG-2026-08-09.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-CAMPAIGN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-HANDOFF-2026-08-08.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 4 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_PORT_PLAN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_PROOF_MATRIX.md
+Building for debugging...
+[Computing dependencies]
+[Provisioning 4 / 197]
+[Using on-disk description]
+[1 / 1]
+[1 / 259] Gemma4AudioSmoke-product
+[1 / 129] CNIOBoringSSL
+[2 / 8] MLXLMTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:18:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 16 | // MARK: - Ordered KV read APIs (Task 1)
+ 17 | 
+ 18 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 19 | func testRotatingKVCacheTemporallyOrderedKV() async throws {
+ 20 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:46:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 44 | }
+ 45 | 
+ 46 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 47 | func testRotatingKVCacheTemporallyOrderedKVBeforeWrap() async throws {
+ 48 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:64:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 62 | }
+ 63 | 
+ 64 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 65 | func testKVCacheSimpleReadKV() async throws {
+ 66 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:101:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 99 | }
+100 | 
+101 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+102 | func testCanvasTokenEntropy() async throws {
+103 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:120:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+118 | }
+119 | 
+120 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+121 | func testEntropyBoundAcceptMask() async throws {
+122 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:208:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+206 | }
+207 | 
+208 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+209 | func testDiffusionGemmaCacheTopologyAndDefaults() async throws {
+210 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:229:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+227 | }
+228 | 
+229 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+230 | func testDiffusionGemmaPrepareThrowsARGuard() async throws {
+231 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:243:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+241 | }
+242 | 
+243 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+244 | func testDiffusionGemmaSanitize() async throws {
+245 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:286:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+284 | }
+285 | 
+286 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+287 | func testDiffusionGemmaEncoderDecoderForward() async throws {
+288 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:327:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+325 | // MARK: - BlockDiffusionTokenIterator (Task 5)
+326 | 
+327 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+328 | func testBlockDiffusionTokenIteratorEndToEnd() async throws {
+329 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:375:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+373 | }
+374 | 
+375 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+376 | func testARTokenIteratorRejectsDiffusionModel() async throws {
+377 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:395:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+393 | // MARK: - Factory registration (Task 6)
+394 | 
+395 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+396 | func testFactoryRegistersDiffusionGemma() async throws {
+397 |     let configData = """
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:269:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+267 | }
+268 | 
+269 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+270 | func testQuantizedAttentionCausalMaskMatchesReference() {
+271 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:333:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+331 | }
+332 | 
+333 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+334 | func testQuantizedAttentionFullyMaskedRowIsFinite() {
+335 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:352:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+350 | }
+351 | 
+352 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+353 | func testQuantizedAttentionAdditiveMaskMatchesReference() {
+354 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/MiniMaxM3PromptSnapshotViewTests.swift:270:13: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+268 |             let live = MLXArray.zeros([32 << 20]).asType(.uint8) + 1
+269 |             MLX.eval(live)
+270 |             try SchedulingMemoryFloor.$enabledOverride.withValue(true) {
+    |             `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+271 |                 MLX.Memory.memoryLimit = 1 << 20
+272 |                 PrefillProgressReporter.reportCompletedUnits(2048)
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[4 / 10] MLXLMTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:18:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 16 | // MARK: - Ordered KV read APIs (Task 1)
+ 17 | 
+ 18 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 19 | func testRotatingKVCacheTemporallyOrderedKV() async throws {
+ 20 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:46:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 44 | }
+ 45 | 
+ 46 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 47 | func testRotatingKVCacheTemporallyOrderedKVBeforeWrap() async throws {
+ 48 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:64:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 62 | }
+ 63 | 
+ 64 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 65 | func testKVCacheSimpleReadKV() async throws {
+ 66 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:101:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+ 99 | }
+100 | 
+101 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+102 | func testCanvasTokenEntropy() async throws {
+103 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:120:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+118 | }
+119 | 
+120 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+121 | func testEntropyBoundAcceptMask() async throws {
+122 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:208:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+206 | }
+207 | 
+208 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+209 | func testDiffusionGemmaCacheTopologyAndDefaults() async throws {
+210 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:229:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+227 | }
+228 | 
+229 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+230 | func testDiffusionGemmaPrepareThrowsARGuard() async throws {
+231 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:243:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+241 | }
+242 | 
+243 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+244 | func testDiffusionGemmaSanitize() async throws {
+245 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:286:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+284 | }
+285 | 
+286 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+287 | func testDiffusionGemmaEncoderDecoderForward() async throws {
+288 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:327:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+325 | // MARK: - BlockDiffusionTokenIterator (Task 5)
+326 | 
+327 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+328 | func testBlockDiffusionTokenIteratorEndToEnd() async throws {
+329 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:375:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+373 | }
+374 | 
+375 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+376 | func testARTokenIteratorRejectsDiffusionModel() async throws {
+377 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiffusionGemmaTests.swift:395:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+393 | // MARK: - Factory registration (Task 6)
+394 | 
+395 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+396 | func testFactoryRegistersDiffusionGemma() async throws {
+397 |     let configData = """
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:269:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+267 | }
+268 | 
+269 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+270 | func testQuantizedAttentionCausalMaskMatchesReference() {
+271 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:333:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+331 | }
+332 | 
+333 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+334 | func testQuantizedAttentionFullyMaskedRowIsFinite() {
+335 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/KVCacheTests.swift:352:7: warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+350 | }
+351 | 
+352 | @Test(.serialized)
+    |       `- warning: Trait '.serialized' has no effect when used with a non-parameterized test function (from macro 'Test')
+353 | func testQuantizedAttentionAdditiveMaskMatchesReference() {
+354 |     let mlxTestLock = lockSerializedMLXTest()
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DFlash2SpeedSweepTests.swift:68:9: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+ 66 |             from: URL(fileURLWithPath: targetPath),
+ 67 |             using: #huggingFaceTokenizerLoader())
+ 68 |         nonisolated(unsafe) let ctx = context
+    |         `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+ 69 |         let maxTokens = 192
+ 70 | 
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DFlash2StrategyMatrixTests.swift:74:9: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+ 72 |             using: #huggingFaceTokenizerLoader(),
+ 73 |             loadConfiguration: loadConfig)
+ 74 |         nonisolated(unsafe) let ctx = context
+    |         `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+ 75 |         if let mtpModel = ctx.model as? any NativeMTPModel {
+ 76 |             print("[matrix] nativeMTPAvailable=\(mtpModel.nativeMTPAvailable)")
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskCacheCompanionAccountingTests.swift:730:21: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 728 |                 do {
+ 729 |                     let disk = DiskCache(cacheDir: root, maxSizeBytes: 1 << 30, modelKey: modelKey)
+ 730 |                     try #require(disk.indexHasV2Columns == v2)
+     |                     `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 731 |                     let companion = try SSMCompanionDiskStore(
+ 732 |                         cacheDir: Self.companionDir(root), modelKey: modelKey, maxBytes: 0)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskCacheCompanionAccountingTests.swift:749:35: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 747 |                         enforceQuota: false)
+ 748 |                     let sidecarURL = Self.companionURLs(root, Self.ssmKey(legacy, modelKey))[1]
+ 749 |                     var sidecar = try #require(
+     |                                   `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 750 |                         JSONSerialization.jsonObject(with: Data(contentsOf: sidecarURL))
+ 751 |                             as? [String: Any])
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskQuotaPlannerWiringTests.swift:440:28: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+438 |                 let coordinator = try Self.coordinator(
+439 |                     root: root, capBytes: cap, modelKey: modelKey)
+440 |                 let disk = try #require(coordinator.diskCache)
+    |                            `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+441 |                 try #require(
+442 |                     try Self.populate(coordinator, root: root, modelKey: modelKey, fixture) == size,
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskQuotaPlannerWiringTests.swift:441:17: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+439 |                     root: root, capBytes: cap, modelKey: modelKey)
+440 |                 let disk = try #require(coordinator.diskCache)
+441 |                 try #require(
+    |                 `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+442 |                     try Self.populate(coordinator, root: root, modelKey: modelKey, fixture) == size,
+443 |                     "INVALID: the fixture is not the one the cap was computed for")
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskQuotaPlannerWiringTests.swift:444:17: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+442 |                     try Self.populate(coordinator, root: root, modelKey: modelKey, fixture) == size,
+443 |                     "INVALID: the fixture is not the one the cap was computed for")
+444 |                 try #require(disk.usageBytes() == all && all > cap)
+    |                 `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+445 | 
+446 |                 coordinator.enforceCombinedDiskQuota(activeChain: activeChain)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskQuotaPlannerWiringTests.swift:665:21: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+663 |                 do {
+664 |                     let disk = DiskCache(cacheDir: root, maxSizeBytes: 1 << 30, modelKey: modelKey)
+665 |                     try #require(disk.indexHasV2Columns == v2)
+    |                     `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+666 |                     let companion = try SSMCompanionDiskStore(
+667 |                         cacheDir: Support.companionDir(root), modelKey: modelKey, maxBytes: 0)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/DiskQuotaPlannerWiringTests.swift:679:39: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+677 |                         let sidecarURL = Support.companionURLs(root, Self.ssmKey(tokens, modelKey))[
+678 |                             1]
+679 |                         var sidecar = try #require(
+    |                                       `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+680 |                             JSONSerialization.jsonObject(with: Data(contentsOf: sidecarURL))
+681 |                                 as? [String: Any])
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/MiniMaxM3PromptSnapshotViewTests.swift:270:13: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+268 |             let live = MLXArray.zeros([32 << 20]).asType(.uint8) + 1
+269 |             MLX.eval(live)
+270 |             try SchedulingMemoryFloor.$enabledOverride.withValue(true) {
+    |             `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+271 |                 MLX.Memory.memoryLimit = 1 << 20
+272 |                 PrefillProgressReporter.reportCompletedUnits(2048)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/ZayaSmokeJANGTQ2Tests.swift:314:9: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+312 |             from: modelURL,
+313 |             using: TracingTokenizerLoader(base: #huggingFaceTokenizerLoader()))
+314 |         nonisolated(unsafe) let ctx = context
+    |         `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+315 | 
+316 |         var params = GenerateParameters(
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[8 / 11] MLXLMTests-product
+[9 / 11] MLXLMTests-product
+[10 / 11] MLXLMTests-product
+[11 / 11] MLXLMTests-product
+warning: missing creator for mutated node: ('/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (23,49 secs)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MiniMax-M3 prompt snapshot views, post-answer skip, scheduling floor" started.
+◇ Test "prefixView: the first rows of every lane, bit for bit, in the source's own buffers (no copy)" started.
+✔ Test "prefixView: the first rows of every lane, bit for bit, in the source's own buffers (no copy)" passed after 0.038 seconds.
+◇ Test "Store budget: a view snapshot is admitted at zero headroom; the same rows as a copy are refused (control)" started.
+✔ Test "Store budget: a view snapshot is admitted at zero headroom; the same rows as a copy are refused (control)" passed after 0.002 seconds.
+◇ Test "Decode holds no prompt copy with views (deferred to the end of the turn); the retained copy when off (control)" started.
+✔ Test "Decode holds no prompt copy with views (deferred to the end of the turn); the retained copy when off (control)" passed after 0.983 seconds.
+◇ Test "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+◇ Test case passing 1 argument step → 320 to "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+◇ Test case passing 1 argument step → 2048 to "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" started.
+✔ Test "Tool loop with view snapshots == with copies: same tokens and logits, same reuse (K_prev), cached == cold" with 2 test cases passed after 6.334 seconds.
+◇ Test "Aligned prefill: no post-answer entry (it can never serve more rows than the prompt boundary); written when the lever restores it (control); the next turn reuses K_prev either way" started.
+✔ Test "Aligned prefill: no post-answer entry (it can never serve more rows than the prompt boundary); written when the lever restores it (control); the next turn reuses K_prev either way" passed after 0.990 seconds.
+◇ Test "Floor arithmetic: raise to active + headroom when below, never lower, capped at MLX's ceiling" started.
+✔ Test "Floor arithmetic: raise to active + headroom when below, never lower, capped at MLX's ceiling" passed after 0.001 seconds.
+◇ Test "observe(): a limit below the live set is raised above it; a higher limit is untouched; off = untouched (control)" started.
+✔ Test "observe(): a limit below the live set is raised above it; a higher limit is untouched; off = untouched (control)" passed after 0.013 seconds.
+◇ Test "A prefill chunk boundary (PrefillProgressReporter) raises a limit below the live set, with or without a handler" started.
+✔ Test "A prefill chunk boundary (PrefillProgressReporter) raises a limit below the live set, with or without a handler" passed after 0.006 seconds.
+◇ Test "BatchEngine solo generation under a limit below the live set ends with the limit above it (the loop's floor)" started.
+✔ Test "BatchEngine solo generation under a limit below the live set ends with the limit above it (the loop's floor)" passed after 0.137 seconds.
+✔ Suite "MiniMax-M3 prompt snapshot views, post-answer skip, scheduling floor" passed after 8.507 seconds.
+✔ Test run with 9 tests in 1 suite passed after 8.508 seconds.

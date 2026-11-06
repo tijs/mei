@@ -1,0 +1,41 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "eval inside function transformations" started.
+◇ Test checkedEvalInsideVmapThrows() started.
+◇ Test asArrayInsideGrad() started.
+◇ Test checkedEvalInsideModelValueAndGrad() started.
+◇ Test evalInsideGrad() started.
+◇ Test asArrayInsideGradWithError() started.
+◇ Test checkedEvalInsideCompileThrows() started.
+◇ Test arrayEvalMethodInsideGrad() started.
+◇ Test checkedEvalInsideGrad() started.
+◇ Test evalInsideCustomVJP() started.
+◇ Test asyncEvalInsideGradAborts() started.
+◇ Test controlFlowOnAValueInsideGrad() started.
+◇ Test evalInsideCompileAborts() started.
+◇ Test evalInsideVJP() started.
+◇ Test evalInsideVmapAborts() started.
+◇ Test evalInsideJVP() started.
+◇ Test checkedAsyncEvalInsideGradThrows() started.
+◇ Test evalInsideModelValueAndGrad() started.
+✔ Test checkedEvalInsideGrad() passed after 0.320 seconds.
+✔ Test checkedAsyncEvalInsideGradThrows() passed after 0.320 seconds.
+✔ Test checkedEvalInsideVmapThrows() passed after 0.320 seconds.
+✔ Test checkedEvalInsideCompileThrows() passed after 0.320 seconds.
+✔ Test checkedEvalInsideModelValueAndGrad() passed after 0.320 seconds.
+✔ Test asyncEvalInsideGradAborts() passed after 0.320 seconds.
+✔ Test evalInsideVmapAborts() passed after 0.320 seconds.
+✔ Test evalInsideCompileAborts() passed after 0.320 seconds.
+✔ Test evalInsideCustomVJP() passed after 0.489 seconds.
+✔ Test arrayEvalMethodInsideGrad() passed after 0.589 seconds.
+✔ Test evalInsideJVP() passed after 0.589 seconds.
+✔ Test evalInsideGrad() passed after 0.589 seconds.
+✔ Test asArrayInsideGradWithError() passed after 0.600 seconds.
+✔ Test asArrayInsideGrad() passed after 0.633 seconds.
+✔ Test controlFlowOnAValueInsideGrad() passed after 0.714 seconds.
+✔ Test evalInsideVJP() passed after 1.086 seconds.
+✔ Test evalInsideModelValueAndGrad() passed after 1.086 seconds.
+✔ Suite "eval inside function transformations" passed after 1.087 seconds.
+✔ Test run with 17 tests in 1 suite passed after 1.087 seconds.

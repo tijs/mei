@@ -1,5 +1,5 @@
 {
-  "originHash" : "64a5c4129f0cd5da291346a7c55564611b361ffb81bf902d25240de4f6477a99",
+  "originHash" : "8e3f6b62eaa1fc98d971855ce1f9adb737dea7dcacf333b9961eaa9fe602a343",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "da9d28d69ebe3894b18376c8f2395c2f37b8448f",
-        "version" : "4.5.2"
+        "revision" : "f8fad2f95ad67b45f6340c0960e2396094d67e07",
+        "version" : "5.1.1"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax.git",
       "state" : {
-        "revision" : "0687f71944021d616d34d922343dcef086855920",
-        "version" : "600.0.1"
+        "revision" : "050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf",
+        "version" : "604.0.0"
       }
     },
     {
@@ -213,7 +213,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tijs/vmlx-swift.git",
       "state" : {
-        "revision" : "9db62ce10416db4a33ff0108dca6fc00bdadfff7"
+        "revision" : "e408c6ebdabb9d2dca382605fb6cb510c09e9996"
       }
     },
     {

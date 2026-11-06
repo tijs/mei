@@ -1,0 +1,118 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+Test Suite 'Selected tests' started at 2026-11-06 12:07:26.094.
+Test Suite 'vMLXFluxTests.xctest' started at 2026-11-06 12:07:26.095.
+Test Suite 'vMLXFluxTests.xctest' passed at 2026-11-06 12:07:26.095.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:26.095.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:26.272.
+Test Suite 'VMLXLinuxTests.xctest' started at 2026-11-06 12:07:26.272.
+Test Suite 'VMLXLinuxTests.xctest' passed at 2026-11-06 12:07:26.273.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:26.273.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:26.443.
+Test Suite 'ToolSchemaReferenceTests.xctest' started at 2026-11-06 12:07:26.443.
+Test Suite 'ToolSchemaReferenceTests.xctest' passed at 2026-11-06 12:07:26.444.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:26.444.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:26.589.
+Test Suite 'MLXTests.xctest' started at 2026-11-06 12:07:26.589.
+Test Suite 'SaveTests' started at 2026-11-06 12:07:26.589.
+Test Case '-[MLXTests.SaveTests testAsyncProgressScopeInheritsHandler]' started.
+Test Case '-[MLXTests.SaveTests testAsyncProgressScopeInheritsHandler]' passed (0.009 seconds).
+Test Case '-[MLXTests.SaveTests testExactTensorBuffersWithNoExcludedKeysMapsNothing]' started.
+Test Case '-[MLXTests.SaveTests testExactTensorBuffersWithNoExcludedKeysMapsNothing]' passed (0.006 seconds).
+Test Case '-[MLXTests.SaveTests testFilteredExactTensorBuffersLoadMapsNothing]' started.
+Test Case '-[MLXTests.SaveTests testFilteredExactTensorBuffersLoadMapsNothing]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testLegacyMmapEnvironmentNoLongerMapsSafetensors]' started.
+Test Case '-[MLXTests.SaveTests testLegacyMmapEnvironmentNoLongerMapsSafetensors]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testLoadArraysProgressFailsOnTruncatedTensorData]' started.
+Test Case '-[MLXTests.SaveTests testLoadArraysProgressFailsOnTruncatedTensorData]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testLoadArraysProgressReportsThroughEvaluation]' started.
+Test Case '-[MLXTests.SaveTests testLoadArraysProgressReportsThroughEvaluation]' passed (0.007 seconds).
+Test Case '-[MLXTests.SaveTests testLoadFailsWhenFileIsTruncatedBeforeEvaluation]' started.
+Test Case '-[MLXTests.SaveTests testLoadFailsWhenFileIsTruncatedBeforeEvaluation]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testLoadFromDataLargerThanHeader]' started.
+Test Case '-[MLXTests.SaveTests testLoadFromDataLargerThanHeader]' passed (0.512 seconds).
+Test Case '-[MLXTests.SaveTests testLoadFromTruncatedDataFails]' started.
+Test Case '-[MLXTests.SaveTests testLoadFromTruncatedDataFails]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testLoadSafetensorsExcludingKeysBeforeMaterialization]' started.
+Test Case '-[MLXTests.SaveTests testLoadSafetensorsExcludingKeysBeforeMaterialization]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testMmapFileRegionCanFeedGPUComputation]' started.
+Test Case '-[MLXTests.SaveTests testMmapFileRegionCanFeedGPUComputation]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testNamedMmapBankForceInvalidateCanRefaultGPUComputation]' started.
+Test Case '-[MLXTests.SaveTests testNamedMmapBankForceInvalidateCanRefaultGPUComputation]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testNamedMmapBankRegistersLayerAndFeedsGPUAfterColdAdvice]' started.
+Test Case '-[MLXTests.SaveTests testNamedMmapBankRegistersLayerAndFeedsGPUAfterColdAdvice]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testNestedProgressHandlersRestoreAfterThrowAndExplicitHandlerWins]' started.
+Test Case '-[MLXTests.SaveTests testNestedProgressHandlersRestoreAfterThrowAndExplicitHandlerWins]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testProgressChunksLargeTensorReads]' started.
+Test Case '-[MLXTests.SaveTests testProgressChunksLargeTensorReads]' passed (0.043 seconds).
+Test Case '-[MLXTests.SaveTests testProgressRetainsHandlerAndSkipsUnevaluatedArrays]' started.
+Test Case '-[MLXTests.SaveTests testProgressRetainsHandlerAndSkipsUnevaluatedArrays]' passed (0.001 seconds).
+Test Case '-[MLXTests.SaveTests testSafetensorsLoadReadsDtypeUnalignedTensorBesideAlignedOne]' started.
+Test Case '-[MLXTests.SaveTests testSafetensorsLoadReadsDtypeUnalignedTensorBesideAlignedOne]' passed (0.003 seconds).
+Test Case '-[MLXTests.SaveTests testSaveArray]' started.
+Test Case '-[MLXTests.SaveTests testSaveArray]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testSaveArrays]' started.
+Test Case '-[MLXTests.SaveTests testSaveArrays]' passed (0.003 seconds).
+Test Case '-[MLXTests.SaveTests testSaveArraysData]' started.
+Test Case '-[MLXTests.SaveTests testSaveArraysData]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testSaveArraysMetadataData]' started.
+Test Case '-[MLXTests.SaveTests testSaveArraysMetadataData]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressAggregatesAcrossFiles]' started.
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressAggregatesAcrossFiles]' passed (0.002 seconds).
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressHandler]' started.
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressHandler]' passed (0.003 seconds).
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressHandlerIsScoped]' started.
+Test Case '-[MLXTests.SaveTests testScopedLoadProgressHandlerIsScoped]' passed (0.001 seconds).
+Test Suite 'SaveTests' passed at 2026-11-06 12:07:27.200.
+	 Executed 24 tests, with 0 failures (0 unexpected) in 0.609 (0.611) seconds
+Test Suite 'MLXTests.xctest' passed at 2026-11-06 12:07:27.200.
+	 Executed 24 tests, with 0 failures (0 unexpected) in 0.609 (0.611) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:27.200.
+	 Executed 24 tests, with 0 failures (0 unexpected) in 0.609 (0.612) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:27.295.
+Test Suite 'MLXPressPolicyTests.xctest' started at 2026-11-06 12:07:27.296.
+Test Suite 'MLXPressPolicyTests.xctest' passed at 2026-11-06 12:07:27.296.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:27.296.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:27.612.
+Test Suite 'MLXLMTests.xctest' started at 2026-11-06 12:07:27.613.
+Test Suite 'MLXLMTests.xctest' passed at 2026-11-06 12:07:27.613.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:27.613.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:27.785.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' started at 2026-11-06 12:07:27.786.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' passed at 2026-11-06 12:07:27.786.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:27.786.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:28.092.
+Test Suite 'MLXLMCommonFocusedTests.xctest' started at 2026-11-06 12:07:28.093.
+Test Suite 'MLXLMCommonFocusedTests.xctest' passed at 2026-11-06 12:07:28.093.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:28.093.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:28.189.
+Test Suite 'MLXDistributedCoreTests.xctest' started at 2026-11-06 12:07:28.190.
+Test Suite 'MLXDistributedCoreTests.xctest' passed at 2026-11-06 12:07:28.190.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:28.190.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:28.286.
+Test Suite 'JinjaReferenceTests.xctest' started at 2026-11-06 12:07:28.287.
+Test Suite 'JinjaReferenceTests.xctest' passed at 2026-11-06 12:07:28.287.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:28.287.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:28.457.
+Test Suite 'CmlxTests.xctest' started at 2026-11-06 12:07:28.458.
+Test Suite 'CmlxTests.xctest' passed at 2026-11-06 12:07:28.458.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:28.458.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

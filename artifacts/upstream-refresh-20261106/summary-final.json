@@ -1,0 +1,44 @@
+[
+  {
+    "suite": "RotatingPrefixReplayTests",
+    "exit": 0,
+    "seconds": 10.159,
+    "log": "/tmp/mei-upstream-regression-20261106/RotatingPrefixReplayTests.log"
+  },
+  {
+    "suite": "CacheCoordinatorTopologyFocusedTests",
+    "exit": 0,
+    "seconds": 21.127,
+    "log": "/tmp/mei-upstream-regression-20261106/CacheCoordinatorTopologyFocusedTests.log"
+  },
+  {
+    "suite": "CacheStoreBudgetTests",
+    "exit": 0,
+    "seconds": 4.664,
+    "log": "/tmp/mei-upstream-regression-20261106/CacheStoreBudgetTests.log"
+  },
+  {
+    "suite": "MTPRuntimeFocusedTests",
+    "exit": 0,
+    "seconds": 5.389,
+    "log": "/tmp/mei-upstream-regression-20261106/MTPRuntimeFocusedTests.log"
+  },
+  {
+    "suite": "RawTextGenerationTests",
+    "exit": 0,
+    "seconds": 4.622,
+    "log": "/tmp/mei-upstream-regression-20261106/RawTextGenerationTests.log"
+  },
+  {
+    "suite": "TokenIteratorAdditionalProcessorTests",
+    "exit": 0,
+    "seconds": 5.277,
+    "log": "/tmp/mei-upstream-regression-20261106/TokenIteratorAdditionalProcessorTests.log"
+  },
+  {
+    "suite": "BatchEngineGrowingChatCacheSourceTests",
+    "exit": 1,
+    "seconds": 4.913,
+    "log": "/tmp/mei-upstream-regression-20261106/BatchEngineGrowingChatCacheSourceTests.log"
+  }
+]

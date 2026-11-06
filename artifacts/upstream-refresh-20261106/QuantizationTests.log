@@ -1,0 +1,163 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+Test Suite 'Selected tests' started at 2026-11-06 12:07:33.458.
+Test Suite 'vMLXFluxTests.xctest' started at 2026-11-06 12:07:33.459.
+Test Suite 'vMLXFluxTests.xctest' passed at 2026-11-06 12:07:33.459.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:33.459.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:33.635.
+Test Suite 'VMLXLinuxTests.xctest' started at 2026-11-06 12:07:33.636.
+Test Suite 'VMLXLinuxTests.xctest' passed at 2026-11-06 12:07:33.636.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:33.636.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:33.805.
+Test Suite 'ToolSchemaReferenceTests.xctest' started at 2026-11-06 12:07:33.805.
+Test Suite 'ToolSchemaReferenceTests.xctest' passed at 2026-11-06 12:07:33.806.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:33.806.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:33.949.
+Test Suite 'MLXTests.xctest' started at 2026-11-06 12:07:33.950.
+Test Suite 'QuantizationTests' started at 2026-11-06 12:07:33.950.
+Test Case '-[MLXTests.QuantizationTests testCPUAffineGatherQuantizedMMKeepsBitsAndGroupSizeOrder]' started.
+Test Case '-[MLXTests.QuantizationTests testCPUAffineGatherQuantizedMMKeepsBitsAndGroupSizeOrder]' passed (0.011 seconds).
+Test Case '-[MLXTests.QuantizationTests testOneBitAffineNegativeEndpointsAndSmallKThroughCBridge]' started.
+Test Case '-[MLXTests.QuantizationTests testOneBitAffineNegativeEndpointsAndSmallKThroughCBridge]' passed (3.873 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingAppliesNVFP4GlobalScaleOnMetal]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingAppliesNVFP4GlobalScaleOnMetal]' passed (0.308 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingCheckpointInitializerRestoresUnpackedDimension]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingCheckpointInitializerRestoresUnpackedDimension]' passed (0.001 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingShapeDesc]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingShapeDesc]' passed (0.001 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingStoresGlobalScale]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedEmbeddingStoresGlobalScale]' passed (0.000 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedGlobalScaleIsOptionalParameter]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedGlobalScaleIsOptionalParameter]' passed (0.000 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearAppliesNVFP4GlobalScaleOnMetal]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearAppliesNVFP4GlobalScaleOnMetal]' passed (0.003 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearInitializerPreservesMXFP8Mode]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearInitializerPreservesMXFP8Mode]' passed (0.000 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearMxfp4DoesNotCreateAffineBiases]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearMxfp4DoesNotCreateAffineBiases]' passed (0.000 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearShapeDesc]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearShapeDesc]' passed (0.001 seconds).
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearStoresGlobalScale]' started.
+Test Case '-[MLXTests.QuantizationTests testQuantizedLinearStoresGlobalScale]' passed (0.000 seconds).
+Test Suite 'QuantizationTests' passed at 2026-11-06 12:07:38.150.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 4.198 (4.200) seconds
+Test Suite 'MLXTests.xctest' passed at 2026-11-06 12:07:38.150.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 4.198 (4.200) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:38.150.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 4.198 (4.200) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:38.242.
+Test Suite 'MLXPressPolicyTests.xctest' started at 2026-11-06 12:07:38.243.
+Test Suite 'MLXPressPolicyTests.xctest' passed at 2026-11-06 12:07:38.243.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:38.243.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:38.506.
+Test Suite 'MLXLMTests.xctest' started at 2026-11-06 12:07:38.507.
+Test Suite 'MLXLMTests.xctest' passed at 2026-11-06 12:07:38.507.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:38.507.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:38.676.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' started at 2026-11-06 12:07:38.677.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' passed at 2026-11-06 12:07:38.677.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:38.677.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:38.935.
+Test Suite 'MLXLMCommonFocusedTests.xctest' started at 2026-11-06 12:07:38.936.
+Test Suite 'MLXLMCommonFocusedTests.xctest' passed at 2026-11-06 12:07:38.936.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:38.936.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:39.030.
+Test Suite 'MLXDistributedCoreTests.xctest' started at 2026-11-06 12:07:39.031.
+Test Suite 'MLXDistributedCoreTests.xctest' passed at 2026-11-06 12:07:39.031.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:39.031.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:39.128.
+Test Suite 'JinjaReferenceTests.xctest' started at 2026-11-06 12:07:39.129.
+Test Suite 'JinjaReferenceTests.xctest' passed at 2026-11-06 12:07:39.129.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:39.129.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:07:39.300.
+Test Suite 'CmlxTests.xctest' started at 2026-11-06 12:07:39.301.
+Test Suite 'CmlxTests.xctest' passed at 2026-11-06 12:07:39.301.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:07:39.301.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite ModernBertQuantizationTests started.
+◇ Suite "DSV4 segmented pool quantization" started.
+◇ Test "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+◇ Test "production default is enabled with an explicit diagnostic opt-out" started.
+◇ Test "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test "quantize replaces only the embedding and every projection, with the case's own settings" started.
+◇ Test case passing 1 argument c → mxfp4 group 32 bits 4 to "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test case passing 1 argument c → mxfp8 group 32 bits 8 to "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+◇ Test case passing 1 argument c → affine group 64 bits 4 to "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+◇ Test case passing 1 argument c → mxfp8 group 32 bits 8 to "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test case passing 1 argument c → affine group 64 bits 4 to "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test case passing 1 argument c → mxfp4 group 32 bits 4 to "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+◇ Test case passing 1 argument c → affine group 64 bits 8 to "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+◇ Test case passing 1 argument c → affine group 64 bits 8 to "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test case passing 1 argument c → nvfp4 group 16 bits 4 to "the loader reads a saved quantized model back into one that computes exactly the same" started.
+◇ Test case passing 1 argument c → nvfp4 group 16 bits 4 to "a bfloat16 model stays bfloat16 and finite through every quantized layer" started.
+[vmlx-tests] The MLX Metal test lock /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock is taken; waiting for it, with no time limit. `lsof /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock` names the process that holds it.
+◇ Test case passing 1 argument c → affine group 64 bits 8 to "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test case passing 1 argument c → affine group 64 bits 4 to "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test case passing 1 argument c → mxfp4 group 32 bits 4 to "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test case passing 1 argument c → mxfp8 group 32 bits 8 to "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test case passing 1 argument c → nvfp4 group 16 bits 4 to "a quantized model matches its dequantized float twin at every layer in each kernel regime" started.
+◇ Test case passing 1 argument c → affine group 64 bits 8 to "quantize replaces only the embedding and every projection, with the case's own settings" started.
+◇ Test case passing 1 argument c → affine group 64 bits 4 to "quantize replaces only the embedding and every projection, with the case's own settings" started.
+◇ Test case passing 1 argument c → mxfp4 group 32 bits 4 to "quantize replaces only the embedding and every projection, with the case's own settings" started.
+◇ Test case passing 1 argument c → mxfp8 group 32 bits 8 to "quantize replaces only the embedding and every projection, with the case's own settings" started.
+◇ Test case passing 1 argument c → nvfp4 group 16 bits 4 to "quantize replaces only the embedding and every projection, with the case's own settings" started.
+✔ Test "production default is enabled with an explicit diagnostic opt-out" passed after 6.565 seconds.
+✔ Test "the loader reads a saved quantized model back into one that computes exactly the same" with 5 test cases passed after 6.565 seconds.
+✔ Test "a bfloat16 model stays bfloat16 and finite through every quantized layer" with 5 test cases passed after 6.565 seconds.
+◇ Test "small pools stay hot; promotion is segmented, bounded, and high fidelity" started.
+✔ Test "small pools stay hot; promotion is segmented, bounded, and high fidelity" passed after 1.544 seconds.
+◇ Test "quantized trim keeps the prefix encoded" started.
+✔ Test "quantized trim keeps the prefix encoded" passed after 0.277 seconds.
+◇ Test "SSD serializer preserves encoded segments instead of BF16 expansion" started.
+✔ Test "SSD serializer preserves encoded segments instead of BF16 expansion" passed after 0.359 seconds.
+◇ Test "one-million-token DSV4-Flash retained cache projection is below 10 GiB" started.
+✔ Test "one-million-token DSV4-Flash retained cache projection is below 10 GiB" passed after 0.001 seconds.
+◇ Test "tiled pool attention matches the dense softmax reference on q8 storage" started.
+✔ Test "tiled pool attention matches the dense softmax reference on q8 storage" passed after 1.985 seconds.
+◇ Test "selected pool attention with fixed indices matches the gathered reference" started.
+✔ Test "a quantized model matches its dequantized float twin at every layer in each kernel regime" with 5 test cases passed after 11.479 seconds.
+✔ Test "quantize replaces only the embedding and every projection, with the case's own settings" with 5 test cases passed after 11.517 seconds.
+✔ Suite ModernBertQuantizationTests passed after 11.517 seconds.
+✔ Test "selected pool attention with fixed indices matches the gathered reference" passed after 1.056 seconds.
+◇ Test "tiled index top-k selects the same score mass as dense argpartition" started.
+✔ Test "tiled index top-k selects the same score mass as dense argpartition" passed after 1.625 seconds.
+◇ Test "gather decodes exactly the selected q8 rows" started.
+✔ Test "gather decodes exactly the selected q8 rows" passed after 0.524 seconds.
+◇ Test "heads16 kernel self-test passes (bf16 + f16 vs fp32 reference)" started.
+✔ Test "heads16 kernel self-test passes (bf16 + f16 vs fp32 reference)" passed after 0.414 seconds.
+◇ Test "heads16 kernel matches reference on a wider non-self-test shape" started.
+✔ Test "heads16 kernel matches reference on a wider non-self-test shape" passed after 0.576 seconds.
+◇ Test "heads16 matches reference at cold-prefill production shape" started.
+✔ Test "heads16 matches reference at cold-prefill production shape" passed after 6.989 seconds.
+◇ Test "heads16 is bit-stable across repeated runs at production shape" started.
+✔ Test "heads16 is bit-stable across repeated runs at production shape" passed after 3.499 seconds.
+◇ Test "heads16 entry path reshapes/casts correctly and matches reference" started.
+✔ Test "heads16 entry path reshapes/casts correctly and matches reference" passed after 0.215 seconds.
+◇ Test "heads16 entry declines out-of-contract layouts" started.
+✔ Test "heads16 entry declines out-of-contract layouts" passed after 0.001 seconds.
+◇ Test "strided RoPE table matches the manual angle build and memoizes" started.
+✔ Test "strided RoPE table matches the manual angle build and memoizes" passed after 0.156 seconds.
+✔ Suite "DSV4 segmented pool quantization" passed after 25.790 seconds.
+✔ Test run with 20 tests in 2 suites passed after 25.791 seconds.

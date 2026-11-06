@@ -1,0 +1,13 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite RawTextGenerationTests started.
+◇ Test rawStopAcrossPiecesTruncatesWithoutLeakingTheHeldTail() started.
+◇ Test rawTextPreservesLiteralReasoningAndToolMarkup() started.
+◇ Test rawTextDoesNotDisappearIntoAChatReasoningChannel() started.
+✔ Test rawTextPreservesLiteralReasoningAndToolMarkup() passed after 0.001 seconds.
+✔ Test rawStopAcrossPiecesTruncatesWithoutLeakingTheHeldTail() passed after 0.001 seconds.
+✔ Test rawTextDoesNotDisappearIntoAChatReasoningChannel() passed after 0.001 seconds.
+✔ Suite RawTextGenerationTests passed after 0.001 seconds.
+✔ Test run with 3 tests in 1 suite passed after 0.001 seconds.

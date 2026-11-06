@@ -1,0 +1,159 @@
+{
+  "candidate_vmlx_revision": "e408c6ebdabb9d2dca382605fb6cb510c09e9996",
+  "mlx_core_revision": "ecc27d0b4b5d221cfe3dd5da50ab0e55d1a869d6",
+  "mlx_c_revision": "a69a7c5c08691025d38325b200d1cccdeff9236e",
+  "mlx_swift_release": "0.33.0",
+  "mlx_core_release": "0.32.4",
+  "swift_crypto": "5.1.1",
+  "swift_syntax": "604.0.0",
+  "passed_suites": [
+    {
+      "suite": "CompiledFunctionLifetimeTests",
+      "xctest": 1,
+      "swift_testing": 0,
+      "log": "CompiledFunctionLifetimeTests.log"
+    },
+    {
+      "suite": "CompileLockOrderingTests",
+      "xctest": 6,
+      "swift_testing": 0,
+      "log": "CompileLockOrderingTests.log"
+    },
+    {
+      "suite": "MaterializedTests",
+      "xctest": 0,
+      "swift_testing": 18,
+      "log": "MaterializedTests.log"
+    },
+    {
+      "suite": "EvalTests",
+      "xctest": 6,
+      "swift_testing": 13,
+      "log": "EvalTests.log"
+    },
+    {
+      "suite": "EvalInTransformsTests",
+      "xctest": 0,
+      "swift_testing": 17,
+      "log": "EvalInTransformsTests.log"
+    },
+    {
+      "suite": "MLXArrayHostReadRaceTests",
+      "xctest": 0,
+      "swift_testing": 7,
+      "log": "MLXArrayHostReadRaceTests.log"
+    },
+    {
+      "suite": "SaveTests",
+      "xctest": 24,
+      "swift_testing": 0,
+      "log": "SaveTests.log"
+    },
+    {
+      "suite": "QuantizationTests",
+      "xctest": 12,
+      "swift_testing": 20,
+      "log": "QuantizationTests.log"
+    },
+    {
+      "suite": "JSONSchemaLogitProcessorTests",
+      "xctest": 8,
+      "swift_testing": 0,
+      "log": "JSONSchemaLogitProcessorTests.log"
+    },
+    {
+      "suite": "JSONSchemaGrammarTests",
+      "xctest": 14,
+      "swift_testing": 0,
+      "log": "JSONSchemaGrammarTests.log"
+    },
+    {
+      "suite": "UnusedPromptSnapshotTests",
+      "xctest": 5,
+      "swift_testing": 0,
+      "log": "UnusedPromptSnapshotTests.log"
+    },
+    {
+      "suite": "RotatingPrefixReplayTests",
+      "xctest": 5,
+      "swift_testing": 0,
+      "log": "RotatingPrefixReplayTests.log"
+    },
+    {
+      "suite": "CacheCoordinatorTopologyFocusedTests",
+      "xctest": 0,
+      "swift_testing": 45,
+      "log": "CacheCoordinatorTopologyFocusedTests.log"
+    },
+    {
+      "suite": "CacheStoreBudgetTests",
+      "xctest": 0,
+      "swift_testing": 17,
+      "log": "CacheStoreBudgetTests.log"
+    },
+    {
+      "suite": "MTPRuntimeFocusedTests",
+      "xctest": 0,
+      "swift_testing": 98,
+      "log": "MTPRuntimeFocusedTests.log"
+    },
+    {
+      "suite": "RawTextGenerationTests",
+      "xctest": 0,
+      "swift_testing": 3,
+      "log": "RawTextGenerationTests.log"
+    },
+    {
+      "suite": "TokenIteratorAdditionalProcessorTests",
+      "xctest": 0,
+      "swift_testing": 6,
+      "log": "TokenIteratorAdditionalProcessorTests.log"
+    },
+    {
+      "suite": "MLXArrayEmptyHostReadTests",
+      "xctest": 0,
+      "swift_testing": 9,
+      "log": "MLXArrayEmptyHostReadTests-serialized.log"
+    },
+    {
+      "suite": "MiniMaxM3PromptSnapshotViewTests",
+      "xctest": 0,
+      "swift_testing": 9,
+      "log": "MiniMaxM3PromptSnapshotViewTests-finalization.log"
+    },
+    {
+      "suite": "BatchEngineGrowingChatCacheSourceTests",
+      "xctest": 0,
+      "swift_testing": 30,
+      "log": "BatchEngineGrowingChatCacheSourceTests-contracts.log"
+    },
+    {
+      "suite": "StructuredOutputGenerationTests",
+      "xctest": 14,
+      "swift_testing": 0,
+      "log": "structured-output-build-and-tests.log"
+    },
+    {
+      "suite": "MLXArrayUnrealizedHostReadTests",
+      "xctest": 0,
+      "swift_testing": 11,
+      "log": "MLXArrayUnrealizedHostReadTests.log"
+    }
+  ],
+  "unit_test_count": 398,
+  "core_tests": 10,
+  "core_assertions": 336,
+  "qualification_limit": "Model-free focused gates. Version-reporting macros were corrected to 0.32.4 after these unit runs; a fresh pinned Mei build, full Mei suite and real-model/native/performance gates remain required. No stable release or benchmark improvement is claimed.",
+  "preserved_failures": [
+    "MLXArrayEmptyHostReadTests.log: concurrent suite orchestration missed a 2-second entry deadline; unchanged isolated case passed, then serialized suite passed with explicit race tests intact.",
+    "MiniMaxM3PromptSnapshotViewTests.log: test expected a consumed prompt snapshot to remain retained after finalization; updated checks prove snapshot/reservation release and actual stores, alongside existing buffer-sharing and cold/warm parity tests.",
+    "BatchEngineGrowingChatCacheSourceTests.log: source contracts assumed pre-budget lock layout and old topology spelling; updated guards check reserve/unlock/materialize/commit/unlock/write order and the new decline/topology predicates."
+  ],
+  "upstream_contributions": [
+    {
+      "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/745",
+      "pr": "https://github.com/osaurus-ai/vmlx-swift/pull/746",
+      "revision": "79cc30f71bf6244c98e08bf01c2ab6672f9b879e"
+    }
+  ]
+}

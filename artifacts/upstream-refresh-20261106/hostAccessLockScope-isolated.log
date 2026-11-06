@@ -1,0 +1,9 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "MLXArray empty host reads" started.
+◇ Test "evaluated host access holds the stream lock through the read" started.
+✔ Test "evaluated host access holds the stream lock through the read" passed after 0.071 seconds.
+✔ Suite "MLXArray empty host reads" passed after 0.071 seconds.
+✔ Test run with 1 test in 1 suite passed after 0.071 seconds.

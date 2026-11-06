@@ -1,0 +1,82 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+Test Suite 'Selected tests' started at 2026-11-06 12:02:12.795.
+Test Suite 'vMLXFluxTests.xctest' started at 2026-11-06 12:02:12.796.
+Test Suite 'vMLXFluxTests.xctest' passed at 2026-11-06 12:02:12.796.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:12.796.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:12.971.
+Test Suite 'VMLXLinuxTests.xctest' started at 2026-11-06 12:02:12.972.
+Test Suite 'VMLXLinuxTests.xctest' passed at 2026-11-06 12:02:12.972.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:12.972.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:13.140.
+Test Suite 'ToolSchemaReferenceTests.xctest' started at 2026-11-06 12:02:13.141.
+Test Suite 'ToolSchemaReferenceTests.xctest' passed at 2026-11-06 12:02:13.141.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:13.141.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:13.284.
+Test Suite 'MLXTests.xctest' started at 2026-11-06 12:02:13.285.
+Test Suite 'CompileLockOrderingTests' started at 2026-11-06 12:02:13.285.
+Test Case '-[MLXTests.CompileLockOrderingTests testConcurrentDeinitErasesAndCompiledCalls]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testConcurrentDeinitErasesAndCompiledCalls]' passed (42.749 seconds).
+Test Case '-[MLXTests.CompileLockOrderingTests testDeinitEraseSerializesAgainstATraceInFlight]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testDeinitEraseSerializesAgainstATraceInFlight]' passed (0.178 seconds).
+Test Case '-[MLXTests.CompileLockOrderingTests testEvalLockIsHeldWhenTheInstanceLockIsTaken]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testEvalLockIsHeldWhenTheInstanceLockIsTaken]' passed (0.172 seconds).
+Test Case '-[MLXTests.CompileLockOrderingTests testNestedCompiledCallKeepsTheOrdering]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testNestedCompiledCallKeepsTheOrdering]' passed (0.214 seconds).
+Test Case '-[MLXTests.CompileLockOrderingTests testOwnershipIsPerThread]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testOwnershipIsPerThread]' passed (0.000 seconds).
+Test Case '-[MLXTests.CompileLockOrderingTests testOwnershipTrackingIsNotVacuous]' started.
+Test Case '-[MLXTests.CompileLockOrderingTests testOwnershipTrackingIsNotVacuous]' passed (0.000 seconds).
+Test Suite 'CompileLockOrderingTests' passed at 2026-11-06 12:02:56.599.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 43.313 (43.314) seconds
+Test Suite 'MLXTests.xctest' passed at 2026-11-06 12:02:56.599.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 43.313 (43.314) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:56.599.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 43.313 (43.315) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:56.690.
+Test Suite 'MLXPressPolicyTests.xctest' started at 2026-11-06 12:02:56.691.
+Test Suite 'MLXPressPolicyTests.xctest' passed at 2026-11-06 12:02:56.691.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:56.691.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:56.950.
+Test Suite 'MLXLMTests.xctest' started at 2026-11-06 12:02:56.951.
+Test Suite 'MLXLMTests.xctest' passed at 2026-11-06 12:02:56.951.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:56.951.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:57.121.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' started at 2026-11-06 12:02:57.122.
+Test Suite 'MLXLMCommonToolParserFocusedTests.xctest' passed at 2026-11-06 12:02:57.122.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:57.122.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:57.377.
+Test Suite 'MLXLMCommonFocusedTests.xctest' started at 2026-11-06 12:02:57.378.
+Test Suite 'MLXLMCommonFocusedTests.xctest' passed at 2026-11-06 12:02:57.378.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:57.378.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:57.468.
+Test Suite 'MLXDistributedCoreTests.xctest' started at 2026-11-06 12:02:57.469.
+Test Suite 'MLXDistributedCoreTests.xctest' passed at 2026-11-06 12:02:57.469.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:57.469.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:57.560.
+Test Suite 'JinjaReferenceTests.xctest' started at 2026-11-06 12:02:57.561.
+Test Suite 'JinjaReferenceTests.xctest' passed at 2026-11-06 12:02:57.561.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:57.561.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-06 12:02:57.721.
+Test Suite 'CmlxTests.xctest' started at 2026-11-06 12:02:57.722.
+Test Suite 'CmlxTests.xctest' passed at 2026-11-06 12:02:57.722.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-06 12:02:57.722.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

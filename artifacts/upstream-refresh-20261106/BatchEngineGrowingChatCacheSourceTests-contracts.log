@@ -1,0 +1,361 @@
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': Invalid Exclude '/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Source/Cmlx/mlx/mlx/backend/metal/tests': File not found.
+warning: 'vmlx-mei-upstream-sync-20261106': found 59 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/Flint/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-encoder-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-features-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/audio-tokenizer-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/processor-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiMoV26/vision-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/aligned-prefix/python-counts.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/attention/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark-parity.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/bf16/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-default/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-heads8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-markov8/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/q-mixed/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/dspark/release/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-attn.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/fused-moe.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/janght-reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/jangt-fast.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m3-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/generation_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-bundle/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-float/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/jang_config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model-00001-of-00001.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-janght/model.safetensors.index.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/config.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/m31-source/model.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-block-sparse.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/msa-select.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/reference.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/chat_template.shipped.jinja
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/thinking-mode/renders.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/decode_61x45.png
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.json
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-fixtures.safetensors
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMTests/Fixtures/MiniMaxM3/vision/vision-tiny-weights.safetensors
+warning: 'vmlx-mei-upstream-sync-20261106': found 2 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/BatchEngine/README.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLMCommon/SpecDec/DFLASH2.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 3 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-FINDINGS-AND-CROSSFAMILY-BACKLOG-2026-08-09.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-CAMPAIGN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXLLM/Models/DSV4-SPEED-HANDOFF-2026-08-08.md
+warning: 'vmlx-mei-upstream-sync-20261106': found 4 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/DeepseekOCR_PORT_PLAN.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_ARCHITECTURE.md
+    /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Libraries/MLXVLM/Models/MuseGlimmer_PROOF_MATRIX.md
+Building for debugging...
+[Computing dependencies]
+[Provisioning 6 / 197]
+[Using on-disk description]
+[1 / 1]
+[1 / 227] MLXLMCommonToolParserFocusedTests-product
+[1 / 151] MLXVLM
+[1 / 8] MLXLMCommonFocusedTests-product
+[2 / 8] MLXLMCommonFocusedTests-product
+[5 / 19] MLXLMCommonFocusedTests-product
+macro expansion #expect:1:42: warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+`- /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:17:62: note: expanded code originates here
+ 15 |             let parameters = GenerateParameters()
+ 16 |             #expect(parameters.processor() == nil)
+ 17 |             #expect(parameters.initialSuppressTokens.isEmpty)
+    |             `- note: in expansion of macro 'expect' here
+    +--- macro expansion #expect ---------------------------------------
+    |1 | Testing.__checkPropertyAccess(parameters.initialSuppressTokens.self,getting: { $0.isEmpty },expression: .__fromPropertyAccess(.__fromSyntaxNode("parameters.initialSuppressTokens"),.__fromSyntaxNode("isEmpty")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+    |  |                                          `- warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+    +-------------------------------------------------------------------
+ 18 |             #expect(parameters.initialSuppressCount == 0)
+ 19 |             #expect(parameters.reasoningBudgetTokens == nil)
+
+macro expansion #expect:1:43: warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+`- /Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:18:58: note: expanded code originates here
+ 16 |             #expect(parameters.processor() == nil)
+ 17 |             #expect(parameters.initialSuppressTokens.isEmpty)
+ 18 |             #expect(parameters.initialSuppressCount == 0)
+    |             `- note: in expansion of macro 'expect' here
+    +--- macro expansion #expect ---------------------------------------
+    |1 | Testing.__checkBinaryOperation(parameters.initialSuppressCount,{ $0 == $1() },0,expression: .__fromBinaryOperation(.__fromSyntaxNode("parameters.initialSuppressCount"),"==",.__fromSyntaxNode("0")),comments: [],isRequired: false,sourceLocation: Testing.SourceLocation.__here()).__expected()
+    |  |                                           `- warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+    +-------------------------------------------------------------------
+ 19 |             #expect(parameters.reasoningBudgetTokens == nil)
+ 20 |             #expect(parameters.requestedReasoningBudgetTokens == nil)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:17:32: warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+ 15 |             let parameters = GenerateParameters()
+ 16 |             #expect(parameters.processor() == nil)
+ 17 |             #expect(parameters.initialSuppressTokens.isEmpty)
+    |                                `- warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+ 18 |             #expect(parameters.initialSuppressCount == 0)
+ 19 |             #expect(parameters.reasoningBudgetTokens == nil)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:18:32: warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+ 16 |             #expect(parameters.processor() == nil)
+ 17 |             #expect(parameters.initialSuppressTokens.isEmpty)
+ 18 |             #expect(parameters.initialSuppressCount == 0)
+    |                                `- warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+ 19 |             #expect(parameters.reasoningBudgetTokens == nil)
+ 20 |             #expect(parameters.requestedReasoningBudgetTokens == nil)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:105:24: warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+103 |         try Device.withDefaultDevice(.cpu) {
+104 |             var parameters = GenerateParameters(temperature: 0)
+105 |             parameters.initialSuppressTokens = [0]
+    |                        `- warning: 'initialSuppressTokens' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+106 |             parameters.initialSuppressCount = 2
+107 |             #expect(!parameters.isNativeMTPLosslessGreedyEligible)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:106:24: warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+104 |             var parameters = GenerateParameters(temperature: 0)
+105 |             parameters.initialSuppressTokens = [0]
+106 |             parameters.initialSuppressCount = 2
+    |                        `- warning: 'initialSuppressCount' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+107 |             #expect(!parameters.isNativeMTPLosslessGreedyEligible)
+108 |             var processor = try #require(parameters.processor())
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NativeReasoningLogitsFocusedTests.swift:118:28: warning: 'InitialSuppressTokensProcessor' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+116 |             #expect(processor.process(logits: logits).asArray(Float.self) == [100, 3, -20, -100])
+117 |             #expect(alias.asArray(Float.self) == [100, 3, -20, -100])
+118 |             let disabled = InitialSuppressTokensProcessor(tokens: [0], count: 0)
+    |                            `- warning: 'InitialSuppressTokensProcessor' is deprecated: Explicit caller-only leading suppression; never enabled automatically [#DeprecatedDeclaration]
+119 |             #expect(disabled.process(logits: logits) === logits)
+120 |         }
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/NoHiddenReasoningCloseBiasFocusedTests.swift:77:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+  75 |         arguments: [[3], [1, 3], [1, 1, 3]], [0, 2])
+  76 |     func temperatureFilterDistributionsAndDraws(shape: [Int], topK: Int) throws {
+  77 |         try FocusedMLXTestSupport.withLock {
+     |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+  78 |             for dtype in [DType.float32, DType.bfloat16] {
+  79 |                 let logits = MLX.log(MLXArray([Float(0.5), 0.3, 0.2]))
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[7 / 19] MLXLMCommonFocusedTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DFlash2StageProbeTests.swift:41:13: warning: initialization of immutable value 'block' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+39 |         let drafter = try DFlash2Loader.load(from: Self.drafterURL)
+40 | 
+41 |         let block = golden["block"]!.asType(.int32)
+   |             `- warning: initialization of immutable value 'block' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+42 |         let targetHidden = golden["target_hidden"]!.asType(.bfloat16)
+43 |         let stubA = MLXArray.zeros([1])  // unused; embed comes from the golden file
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DFlash2TreeAndTopKAcceptanceTests.swift:212:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+210 |     /// tree's row r equals the chain kernel run over r's root path (its last output).
+211 |     func testTreeKernelMatchesChainKernelAlongEveryPath() throws {
+212 |         try FocusedMLXTestSupport.withLock {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+213 |             MLXRandom.seed(3)
+214 |             // The adaptive ladder can select 32 rows, beyond the old 16-row workspace.
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/LogitProcessorIndependentCopyTests.swift:23:13: warning: variable 'original' was never mutated; consider changing to 'let' constant [#VariableNeverMutated]
+21 |     func copyDoesNotShareCounts() throws {
+22 |         let vocab = 16
+23 |         var original = makeProcessor()
+   |             `- warning: variable 'original' was never mutated; consider changing to 'let' constant [#VariableNeverMutated]
+24 |         // Force the counts vector to exist: it allocates on first sight of logits.
+25 |         _ = original.process(logits: MLXArray.zeros([1, vocab], type: Float32.self))
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/MLADecodeSDPADtypeTests.swift:32:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 30 |         querySpread: Float = 1.0
+ 31 |     ) throws -> (MLXArray, MLXArray) {
+ 32 |         try FocusedMLXTestSupport.withLock {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+ 33 |             MLXRandom.seed(11)
+ 34 |             let q = (MLXRandom.normal([1, heads, 1, kDim]) * querySpread)
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[#VariableNeverMutated]: <https://docs.swift.org/compiler/documentation/diagnostics/variable-never-mutated>
+[9 / 20] MLXLMCommonFocusedTests-product
+[11 / 20] MLXLMCommonFocusedTests-product
+[13 / 20] MLXLMCommonFocusedTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/ToolCallProgressRoutingTests.swift:194:9: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+192 |     @Test("BatchEngine malformed DSML stream is finite and carries failure metadata")
+193 |     func batchEngineMalformedDSMLStreamIsFinite() async {
+194 |         nonisolated(unsafe) let context = malformedDSMLContext(output: malformedDSMLOutput)
+    |         `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+195 |         let engine = BatchEngine(context: context, maxBatchSize: 2)
+196 |         let input = LMInput(tokens: MLXArray([Int32(1)]))
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/ToolCallProgressRoutingTests.swift:227:9: warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+225 |     @Test("ChatSession throws typed malformed-tool failure without dispatch")
+226 |     func chatSessionThrowsTypedFailureWithoutDispatch() async {
+227 |         nonisolated(unsafe) let context = malformedDSMLContext(output: malformedDSMLOutput)
+    |         `- warning: 'nonisolated(unsafe)' is unnecessary for a constant with 'Sendable' type 'ModelContext', consider removing it
+228 |         let recorder = ToolDispatchRecorder()
+229 |         let session = ChatSession(
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/TopPSamplerShapeFocusedTests.swift:21:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+19 |     @Test("sample on a [1,1,vocab] row returns one integer token")
+20 |     func sampleShapeContract() throws {
+21 |         try FocusedMLXTestSupport.withLock {
+   |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+22 |             // Qwen3.8-27B-JANG_4D generation defaults: temp 1.0, top_p 0.95,
+23 |             // top_k 20 — and the real 248320-entry vocabulary row.
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[14 / 20] MLXLMCommonFocusedTests-product
+[15 / 20] MLXLMCommonFocusedTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DeepseekV41DecodeFusionFocusedTests.swift:265:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+263 |     func routerBench() throws {
+264 |         guard DSV41Synth.benchEnabled, let c = DSV41Synth.config else { return }
+265 |         try Device.withDefaultDevice(.gpu) {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+266 |             let layers = 40
+267 |             let ws = (0 ..< layers).map {
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DeepseekV41DecodeFusionFocusedTests.swift:487:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+485 |     func hcStageBitExact() throws {
+486 |         guard let c = DSV41Synth.config else { return }
+487 |         try Device.withDefaultDevice(.gpu) {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+488 |             for seed in UInt64(1) ... 6 {
+489 |                 let (hc, norm) = Self.hcModules(c, seed: seed &* 13)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DeepseekV41DecodeFusionFocusedTests.swift:514:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+512 |     func hcStageDeclines() throws {
+513 |         guard let c = DSV41Synth.config else { return }
+514 |         try Device.withDefaultDevice(.gpu) {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+515 |             let (hc, norm) = Self.hcModules(c, seed: 3)
+516 |             let h2 = MLXArray.zeros([1, 2, c.hcMult, c.hiddenSize], dtype: .bfloat16)
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DeepseekV41DecodeFusionFocusedTests.swift:530:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+528 |     func hcStageBench() throws {
+529 |         guard DSV41Synth.benchEnabled, let c = DSV41Synth.config else { return }
+530 |         try Device.withDefaultDevice(.gpu) {
+    |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+531 |             let layers = 40
+532 |             let mods = (0 ..< 8).map { Self.hcModules(c, seed: UInt64(40 + $0)) }
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/DeepseekV41VerifyRowKernelsTests.swift:362:13: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+360 |             let stageKey = DeepseekV41HCRows.Key(path: .stage, rows: R, hc: 4, hidden: D, expand: false)
+361 |             let boundaryKey = DeepseekV41HCRows.Key(path: .boundary, rows: R, hc: 4, hidden: D, expand: false)
+362 |             try VR.withRowKernels(tf32: false) {
+    |             `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+363 |                 #expect(call() == nil, "TF32 not trusted: stock")
+364 |                 #expect(DeepseekV41HCRows.verdict(stageKey) == nil, "no admission run without TF32")
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[16 / 20] MLXLMCommonFocusedTests-product
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/PEFTAdapterTranslationTests.swift:62:13: warning: initialization of immutable value 'reference' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 60 |         let B = MLXRandom.normal([outDim, rank])
+ 61 |         let x = MLXRandom.normal([3, inDim])
+ 62 |         let reference = matmul(matmul(x, A.transposed(1, 0)), B.transposed(1, 0))
+    |             `- warning: initialization of immutable value 'reference' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 63 | 
+ 64 |         // A left un-transposed is (r, in): x @ A is not even conformable, so the wrong-ness shows
+
+/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/Tests/MLXLMCommonFocusedTests/QuantizedSmallMScalingBenchTests.swift:28:9: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+26 |             return
+27 |         }
+28 |         try FocusedMLXTestSupport.withLock {
+   |         `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]
+29 |             // (name, K, N) — Qwen3.8-27B shapes: hidden 5120, a large FFN
+30 |             // projection, and the 248320-row LM head.
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[18 / 20] MLXLMCommonFocusedTests-product
+[19 / 20] MLXLMCommonFocusedTests-product
+[20 / 22] MLXLMCommonFocusedTests-product
+warning: missing creator for mutated node: ('/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (41,85 secs)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "BatchEngine growing-chat cache source coverage" started.
+◇ Test "disk cache serializes MLX safetensors IO across model cache instances" started.
+◇ Test "fresh required-tool restore policy survives input copies" started.
+◇ Test "solo and batched DSV4 paths capture prompt-minus-one disk seeds during prefill" started.
+◇ Test "batch engine stores post-answer cache boundaries and keeps hybrid full-hit guard" started.
+◇ Test "batch text forwarding does not inherit cache-store actor isolation" started.
+◇ Test "load-time stack materialization serializes with cache IO" started.
+◇ Test "token iterator does not blanket-eval disk-backed cache snapshots before store" started.
+◇ Test "coordinator miss resets only populated caller-owned caches" started.
+◇ Test "standalone rotating/SWA caches share the generation-suffix-stripped boundary policy" started.
+◇ Test "append-only checkpoints preserve exact KV and sealed rotating state after growth" started.
+◇ Test "MiMo V2 cache topology keeps TurboQuant limited to full-attention KV layers" started.
+◇ Test "non-recurrent reusable warmups never replay stable cache boundaries" started.
+◇ Test "token iterator materializes disk cache restores before prefill" started.
+◇ Test "batch engine has env-gated reasoning prompt-tail diagnostics" started.
+◇ Test "Laguna stays off compiled decode until parity is proven" started.
+◇ Test "SSM companion cache serializes in-memory MLX materialization" started.
+◇ Test "history-boundary rederive skips disk-backed cache topologies after trim miss" started.
+◇ Test "MiniMax stays off compiled decode until parity is proven" started.
+◇ Test "native MTP iterator skips disk-backed history boundary rederive" started.
+◇ Test "exact reusable-prefix warmups remain enabled only for non-recurrent cache topologies" started.
+◇ Test "token iterator mirrors post-answer cache boundary policy" started.
+◇ Test "batch DSV4 persists its N-1 seed before decode and releases the duplicate" started.
+◇ Test "token iterator publishes info early but finishes only after cache store drain" started.
+◇ Test "token iterator trims full cache hits before one-token seed prefill" started.
+◇ Test "batch warm DSV4 replay skips storage without bypassing terminal drain" started.
+◇ Test "all generation paths reject unsafe exact recurrent warmups and throwaway boundaries" started.
+◇ Test "only non-recurrent typed hybrid pools require prefill-captured disk seeds" started.
+◇ Test "reasoning close-token forcing is not a decode feature" started.
+◇ Test "DFlash and DSpark stores retain the requesting chat owner at both boundaries" started.
+◇ Test "reusable-prefix warmup intent survives input copies and forbids hybrid stripping" started.
+◇ Test case passing 1 argument tokenCount → 5 to "append-only checkpoints preserve exact KV and sealed rotating state after growth" started.
+◇ Test case passing 1 argument tokenCount → 7 to "append-only checkpoints preserve exact KV and sealed rotating state after growth" started.
+[vmlx-tests] The MLX Metal test lock /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock is taken; waiting for it, with no time limit. `lsof /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T/vmlx_mlx_lock` names the process that holds it.
+✔ Test "load-time stack materialization serializes with cache IO" passed after 0.039 seconds.
+✔ Test "coordinator miss resets only populated caller-owned caches" passed after 0.039 seconds.
+✔ Test "batch text forwarding does not inherit cache-store actor isolation" passed after 0.039 seconds.
+✔ Test "non-recurrent reusable warmups never replay stable cache boundaries" passed after 0.039 seconds.
+✔ Test "token iterator does not blanket-eval disk-backed cache snapshots before store" passed after 0.039 seconds.
+✔ Test "batch engine has env-gated reasoning prompt-tail diagnostics" passed after 0.039 seconds.
+✔ Test "disk cache serializes MLX safetensors IO across model cache instances" passed after 0.039 seconds.
+✔ Test "Laguna stays off compiled decode until parity is proven" passed after 0.039 seconds.
+✔ Test "MiMo V2 cache topology keeps TurboQuant limited to full-attention KV layers" passed after 0.039 seconds.
+✔ Test "fresh required-tool restore policy survives input copies" passed after 0.040 seconds.
+✔ Test "token iterator materializes disk cache restores before prefill" passed after 0.039 seconds.
+✔ Test "MiniMax stays off compiled decode until parity is proven" passed after 0.039 seconds.
+✔ Test "exact reusable-prefix warmups remain enabled only for non-recurrent cache topologies" passed after 0.039 seconds.
+✔ Test "SSM companion cache serializes in-memory MLX materialization" passed after 0.039 seconds.
+✔ Test "append-only checkpoints preserve exact KV and sealed rotating state after growth" with 2 test cases passed after 0.039 seconds.
+✔ Test "token iterator publishes info early but finishes only after cache store drain" passed after 0.039 seconds.
+✔ Test "batch DSV4 persists its N-1 seed before decode and releases the duplicate" passed after 0.039 seconds.
+✔ Test "only non-recurrent typed hybrid pools require prefill-captured disk seeds" passed after 0.039 seconds.
+✔ Test "batch warm DSV4 replay skips storage without bypassing terminal drain" passed after 0.039 seconds.
+✔ Test "token iterator trims full cache hits before one-token seed prefill" passed after 0.039 seconds.
+✔ Test "native MTP iterator skips disk-backed history boundary rederive" passed after 0.039 seconds.
+✔ Test "DFlash and DSpark stores retain the requesting chat owner at both boundaries" passed after 0.039 seconds.
+✔ Test "reusable-prefix warmup intent survives input copies and forbids hybrid stripping" passed after 0.041 seconds.
+✔ Test "standalone rotating/SWA caches share the generation-suffix-stripped boundary policy" passed after 0.084 seconds.
+✔ Test "all generation paths reject unsafe exact recurrent warmups and throwaway boundaries" passed after 0.098 seconds.
+✔ Test "history-boundary rederive skips disk-backed cache topologies after trim miss" passed after 0.107 seconds.
+✔ Test "reasoning close-token forcing is not a decode feature" passed after 0.118 seconds.
+✔ Test "solo and batched DSV4 paths capture prompt-minus-one disk seeds during prefill" passed after 0.123 seconds.
+✔ Test "batch engine stores post-answer cache boundaries and keeps hybrid full-hit guard" passed after 0.124 seconds.
+✔ Test "token iterator mirrors post-answer cache boundary policy" passed after 0.174 seconds.
+✔ Suite "BatchEngine growing-chat cache source coverage" passed after 0.175 seconds.
+✔ Test run with 30 tests in 1 suite passed after 0.175 seconds.
