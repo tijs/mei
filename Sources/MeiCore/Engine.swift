@@ -112,7 +112,7 @@ public actor Engine {
             directory: directory, enabled: config.enableFlint, janghEnabled: config.enableFlintJANGH)
         try config.applyFlintGenerationDefaults()
         print("mei: cache mode \(config.effectiveCacheMode.rawValue) (requested \(config.cacheMode.rawValue); \(config.cacheDecision))")
-        print("mei: MLXPress policy \(config.mlxPressPolicy.description) (source \(config.mlxPressPolicySource))")
+        print("mei: weight storage owned; bounded model residency requested=\(config.keepModelInMemory)")
         // A reported memory limit below the model's working set makes MLX
         // alloc calls wait on scheduled tasks instead of failing — the
         // "hang" failure mode. If the operator configured an explicit limit
@@ -199,8 +199,7 @@ public actor Engine {
     }
 
     public nonisolated func runtimePolicyStatus() -> MeiRuntimePolicies {
-        let actual = container.mlxPressStatus()
-        return config.runtimePolicies(mlxPressEnabled: actual.enabled, coldFraction: actual.coldFraction)
+        config.runtimePolicies()
     }
 
     public var servedModelID: String { config.servedModelID }

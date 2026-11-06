@@ -1,6 +1,6 @@
 # Runtime policies
 
-Mei resolves one prefix-cache mode and one MLXPress policy before loading. The
+Mei resolves prefix-cache and weight-residency settings before loading. The
 same resolver runs for the CLI and `Engine.load(config:)`. Parsing does not
 create cache directories or load weights.
 
@@ -26,18 +26,25 @@ selector retain legacy selection rules, except an explicit empty directory is
 rejected when it would break required disk reuse. Use `--cache-mode off` to opt
 out. Library users can set `ServerConfig.cacheMode` and `mlxPressPolicy` directly.
 
-MLXPress is experimental weight-page advice. `--mlxpress off` is the default;
-`auto` explicitly permits the dependency to select it based on the bundle and
-host. An integer `1..95` selects a cold percentage. This is not a promised RAM
-reduction. The actual activation and fraction appear in status after loading.
+Weights now use owned storage. The upstream loader removed cold-tier MLXPress
+advice and no longer uses mmap weight storage. Remove `--load-mmap true` and
+non-off `--mlxpress`/`MLXPRESS`/`JANGPRESS` settings when upgrading; Mei rejects
+these requests before loading instead of silently changing their meaning.
+Explicit legacy `--load-mmap false` and `--mlxpress off` remain accepted.
+An explicit `--mlxpress off` overrides stale legacy environment values.
+Programmatic configuration does not read those environment variables.
 
-For compatibility, the CLI reads legacy `MLXPRESS` then `JANGPRESS` environment
-values only when `--mlxpress` is absent. `off`, `false` and `0` disable it;
-`auto` and integer percentages are supported. Malformed values fail instead of
-silently becoming auto. An explicit CLI value wins over both variables. Startup
-and status identify the source. Programmatic configuration defaults to off and
-does not implicitly consult the process environment. This intentionally removes
-the old absent-variable/big-model automatic activation.
+`--keep-model-in-memory true|false` requests the upstream bounded weight-residency
+lease (default `true`, matching the upstream loader). It is independent of prefix
+reuse and allocator buffer caching. The loader can reduce or decline the lease
+based on device and system headroom; a true request does not prove that all
+weights are wired. Setting it to `false` opts out of that lease, while weights
+still use owned storage. `MEI_KEEP_MODEL_IN_MEMORY` forwards the same choice in
+`scripts/start_mei_server.sh`. Omitting it preserves the server default.
+
+The former mmap/cold-percentage performance and footprint measurements describe
+older releases. They do not qualify this owned-storage path. Fresh model loading,
+unloading, memory-pressure, context, cache and speed checks are required.
 
 There are three distinct memory controls:
 
@@ -77,7 +84,8 @@ requested values are effective throughout every internal operation.
 
 `GET /v1/mei/status` adds `runtimePolicies` with requested/effective cache mode,
 selection reason, actual directory and temporary-directory flag, prefix budget,
-explicit allocator requests, MLXPress policy/source and actual activation.
+explicit allocator requests, `weightStorage: "owned"`, and
+`keepModelInMemoryRequested`. The latter reports intent, not a per-model grant.
 Existing `memory.memoryLimitBytes` and `memory.cacheLimitBytes` report live
 allocator settings. Existing OpenAI request/response formats are unchanged.
 

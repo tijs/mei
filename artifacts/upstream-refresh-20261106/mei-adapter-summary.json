@@ -1,0 +1,22 @@
+{
+  "candidate_vmlx_revision": "d0e3d45404f9f19ea8dae2a3fca44edfff939870",
+  "offline_command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --jobs 2 --skip MeiAcceptanceTests",
+  "xctest_cases": 491,
+  "skipped": 2,
+  "failures": 0,
+  "swift_testing_cases": 3,
+  "mei_launcher_tests": 8,
+  "benchmark_launcher_tests": 17,
+  "logs": [
+    {
+      "file": "mei-upstream-adapter-tests-20261106.log.gz",
+      "uncompressed_sha256": "41d9421dba772c98fbaddb3df52a3f60ab924b9ba17f5ffe6a1c1fbb640d106c"
+    },
+    {
+      "file": "mei-upstream-adapter-tests-2-20261106.log.gz",
+      "uncompressed_sha256": "d841fdc3166160353532f56e7aa846a7e65f3b032711d7a7d2c284e18763a07a"
+    }
+  ],
+  "initial_failure": "Six assertions in two prompt snapshot tests: missing history replay regression, and expected live stripped copy after upstream moved publication into prefill. Original failed log retained.",
+  "limits": "No real-model qualification or stable-release/performance claim."
+}

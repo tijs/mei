@@ -41,11 +41,20 @@ class FlintLauncherTests(unittest.TestCase):
 
     def test_absent_limits_and_reuse_are_not_made_explicit(self):
         args = self.argv()
-        for flag in ("--cache-limit-bytes", "--cache-reuse", "--cache-mode", "--mlxpress", "--max-tokens"):
+        for flag in ("--cache-limit-bytes", "--cache-reuse", "--cache-mode", "--mlxpress", "--max-tokens", "--load-mmap", "--keep-model-in-memory"):
             self.assertNotIn(flag, args)
         args = self.argv(MEI_CACHE_LIMIT_BYTES="0", MEI_MAX_TOKENS="8192")
         self.assertEqual(args[args.index("--cache-limit-bytes") + 1], "0")
         self.assertEqual(args[args.index("--max-tokens") + 1], "8192")
+
+    def test_residency_and_legacy_storage_choices_are_explicit(self):
+        args = self.argv(MEI_KEEP_MODEL_IN_MEMORY="false", MEI_LOAD_MMAP="false")
+        for flag in ("--keep-model-in-memory", "--load-mmap"):
+            self.assertEqual(args[args.index(flag) + 1], "false")
+        # Preserve an obsolete explicit request so the server can reject it;
+        # never silently reinterpret mmap as residency.
+        args = self.argv(MEI_LOAD_MMAP="true")
+        self.assertEqual(args[args.index("--load-mmap") + 1], "true")
 
     def test_policy_selectors_forward_without_implicit_reuse_conflict(self):
         args = self.argv(MEI_CACHE_MODE="off", MEI_MLXPRESS="off")

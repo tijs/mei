@@ -52,7 +52,8 @@ SSM_ANCHOR_BOUNDARIES="${MEI_SSM_ANCHOR_BOUNDARIES:-0}"
 COMPILED_DECODE="${MEI_COMPILED_DECODE:-false}"
 COMPILED_DECODE_THRESHOLD="${MEI_COMPILED_DECODE_THRESHOLD:-}"
 MAX_KV_WINDOW="${MEI_MAX_KV_WINDOW:-0}"
-LOAD_MMAP="${MEI_LOAD_MMAP:-true}"
+LOAD_MMAP="${MEI_LOAD_MMAP:-}"
+KEEP_MODEL_IN_MEMORY="${MEI_KEEP_MODEL_IN_MEMORY:-}"
 
 usage() {
   cat <<EOF
@@ -66,7 +67,9 @@ variables (see the script); the bench config yaml sets them explicitly.
 
 Runtime policy:
   MEI_CACHE_MODE=auto|off|memory|disk
-  MEI_MLXPRESS=off|auto|1..95
+  MEI_KEEP_MODEL_IN_MEMORY=true|false  bounded weight residency request
+  MEI_MLXPRESS=off            legacy; auto/percent requests are rejected
+  MEI_LOAD_MMAP=false         legacy; true is rejected (weights use owned storage)
   MEI_CACHE_LIMIT_BYTES=N      omit for backend default; explicit0 disables pool
 
 Model profile:
@@ -105,7 +108,9 @@ ARGS=(--model-dir "$MODEL_DIR" --served-model-id "$SERVED_MODEL_ID"
   --enable-flint "$ENABLE_FLINT" --enable-flint-jangh "$ENABLE_FLINT_JANGH"
   --emit-reasoning "$EMIT_REASONING"
   --memory-limit-bytes "$MEMORY_LIMIT_BYTES"
-  --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE" --load-mmap "$LOAD_MMAP")
+  --log-requests "$LOG_REQUESTS" --ssm-rederive "$SSM_REDERIVE" --compiled-decode "$COMPILED_DECODE")
+[[ -n "$LOAD_MMAP" ]] && ARGS+=(--load-mmap "$LOAD_MMAP")
+[[ -n "$KEEP_MODEL_IN_MEMORY" ]] && ARGS+=(--keep-model-in-memory "$KEEP_MODEL_IN_MEMORY")
 [[ -n "$MAX_TOKENS" ]] && ARGS+=(--max-tokens "$MAX_TOKENS")
 [[ -n "$CACHE_LIMIT_BYTES" ]] && ARGS+=(--cache-limit-bytes "$CACHE_LIMIT_BYTES")
 [[ -n "$CACHE_MODE" ]] && ARGS+=(--cache-mode "$CACHE_MODE")

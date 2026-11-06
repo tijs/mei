@@ -244,7 +244,8 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.requestedOptimizationProfile, .auto)
         XCTAssertEqual(config.optimizationProfile, .generic)
         XCTAssertEqual(config.contextCap, 65_536)
-        XCTAssertTrue(config.useMmapSafetensors)
+        XCTAssertFalse(config.useMmapSafetensors)
+        XCTAssertTrue(config.keepModelInMemory)
     }
 
     func testKVBitsParses4And8() throws {

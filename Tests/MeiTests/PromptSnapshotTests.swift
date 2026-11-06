@@ -368,7 +368,7 @@ final class PromptSnapshotTests: XCTestCase {
         XCTAssertEqual(c.retainedCacheBytes, 0)
     }
 
-    func testDeclinedExactCopyStillStoresCapturedStripAndStableBoundaries() throws {
+    func testOmittedExactCopySpillsCapturedStripAndStillStoresStableBoundaries() throws {
         for (cap, pressure) in [(1, 1), (1_048_576, 2)] {
             let c = coordinator(cap: cap, pressure: pressure)
             let model = SnapshotBoundaryModel(.hybrid)
@@ -376,7 +376,10 @@ final class PromptSnapshotTests: XCTestCase {
             var iterator = try TokenIterator(input: input(12, prefixes: [4, 9], stable: [4]),
                 model: model, parameters: parameters, cacheCoordinator: c)
             XCTAssertNil(iterator.promptCacheSnapshot)
-            XCTAssertNotNil(iterator.hybridStripSnapshot)
+            // Upstream now publishes the canonical stripped checkpoint during
+            // prefill and drops that in-flight copy before decode starts.
+            XCTAssertNil(iterator.hybridStripSnapshot)
+            XCTAssertTrue(c.hasDurableDiskEntry(tokens: Array(iterator.promptTokenIds.prefix(9)), mediaSalt: iterator.mediaSalt))
             XCTAssertNotNil(iterator.stableBoundarySnapshots[3])
             let before = model.prepares
             iterator.storeCacheAfterGeneration(generatedTokenIds: [], includeGeneratedBoundary: false)

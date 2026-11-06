@@ -59,6 +59,11 @@ Normal-serving lineup status is unaffected. Per-model evidence:
 
 ## Quickstarts (Homebrew-installed `mei`)
 
+The validation and speeds below describe Mei 0.10.0 and earlier. The upstream
+refresh candidate uses owned weight storage and bounded residency leases;
+previous mmap/alignment performance claims need fresh qualification for it.
+See [runtime policies](RUNTIME-POLICIES.md) for the new settings and migration.
+
 General rules for all three: weights go into a user-local
 `$HOME/.cache/mei/models/...` directory (never a system path), the server
 serves on **port 8024** with **context cap 65536**, and only **one** server

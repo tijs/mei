@@ -31,3 +31,22 @@ install instructions.
 First atomic contribution: [problem #745](https://github.com/osaurus-ai/vmlx-swift/issues/745)
 and [resolving PR #746](https://github.com/osaurus-ai/vmlx-swift/pull/746),
 head `79cc30f71bf6244c98e08bf01c2ab6672f9b879e`.
+
+## Mei storage/residency adapter
+
+The follow-up vMLX pin `d0e3d45404f9f19ea8dae2a3fca44edfff939870`
+prevents post-answer history replay when an exact prompt snapshot was deliberately
+omitted. The initial full suite caught this integration regression; its failed
+log is preserved alongside the passing rerun.
+
+[Adapter summary](mei-adapter-summary.json): 491 XCTest cases, two skipped,
+zero failures, plus three Swift Testing cases. The native acceptance class was
+excluded because no model server was running. Eight Mei launcher tests and
+17 benchmark launcher tests passed separately.
+
+Mei now uses owned weights with an explicit bounded residency request. Obsolete
+mmap=true and non-off cold-tier settings fail before loading. The status field
+reports the requested residency policy, never an unobserved grant. Canonical
+hybrid stripped checkpoints may already be durable after prefill; tests verify
+that entry and stable stores instead of retaining an unused in-flight copy.
+Real-model loading, memory, cache/context and speed gates remain outstanding.

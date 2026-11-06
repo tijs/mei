@@ -120,11 +120,11 @@ public struct ServerConfig: Sendable {
     /// boundary instead of full-prefilling. 0 = upstream behavior exactly.
     /// TTFT/latency lever only; never a decode tok/s lever.
     public var ssmAnchorBoundaryCount: Int = 0
-    /// Use the mmap-backed safetensors loader (upstream default true). The
-    /// mmap loader realigns unaligned tensors into copies (the 35B gained
-    /// ~5GB active this way); stock file-backed loading uses less resident
-    /// memory at the cost of slower first touch.
-    public var useMmapSafetensors: Bool = true
+    /// Legacy request, rejected when true because the runtime uses owned weights.
+    public var useMmapSafetensors: Bool = false
+    /// Request the runtime's bounded GPU residency lease. The runtime may decline
+    /// a request that does not fit the device/system budget.
+    public var keepModelInMemory: Bool = true
 
     /// Bounded admission queue length: how many requests may wait for an
     /// execution slot (0 = no queue: reject whenever every slot is busy).
@@ -337,6 +337,8 @@ public extension ServerConfig {
                 ssmAnchorBoundariesExplicit = true
             case "--load-mmap":
                 config.useMmapSafetensors = try parseBool(flag, value())
+            case "--keep-model-in-memory":
+                config.keepModelInMemory = try parseBool(flag, value())
             case "--max-queue-depth":
                 config.maxQueueDepth = try parseInt(flag, value())
             case "--queue-wait-ms":
@@ -545,8 +547,11 @@ public extension ServerConfig {
       --cache-mode MODE         Prefix reuse: auto (default), off, memory, disk.
                                 Auto selects disk when required by the model.
                                 Explicit memory refuses unsupported topologies.
-      --mlxpress POLICY         Experimental weight advice: off (default), auto,
-                                or 1..95 percent. CLI overrides MLXPRESS/JANGPRESS.
+      --keep-model-in-memory BOOL
+                                Request bounded GPU residency (default true).
+                                False leaves residency to the OS/runtime.
+                                Weights use owned storage. Old --load-mmap true
+                                and non-off --mlxpress settings are rejected.
       --cache-limit-bytes N     Freed allocator buffer cache: explicit 0 disables;
                                 omitted uses backend default. Not a RAM ceiling.
       --prefix-cache-limit-bytes N Retained prefix KV/companion budget

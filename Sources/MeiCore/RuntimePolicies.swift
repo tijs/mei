@@ -6,9 +6,8 @@ public enum CacheMode: String, Sendable, Codable {
     case auto, off, memory, disk
 }
 
-/// Experimental weight-page advice is opt-in, never inferred from bundle size
-/// unless the caller explicitly selects auto. Percentages are policy settings,
-/// not promises of resident-memory savings.
+/// Legacy source configuration, retained to reject obsolete requests clearly.
+/// Only `.off` is supported by the owned-weight runtime.
 public enum WeightAdvicePolicy: Sendable, Equatable {
     case off, auto
     case percent(Int)
@@ -32,18 +31,10 @@ public enum WeightAdvicePolicy: Sendable, Equatable {
         case .percent(let n): String(n)
         }
     }
-
-    var loadPolicy: JangPressPolicy {
-        switch self {
-        case .off: .disabled
-        case .auto: .auto(envFallback: false)
-        case .percent(let n): .enabled(coldFraction: Double(n) / 100)
-        }
-    }
 }
 
 /// Requested settings accompany live allocator counters; none is a process-RAM
-/// ceiling. Optional actual MLXPress fields are filled only after model loading.
+/// ceiling. Residency is requested, subject to runtime/device/system admission.
 public struct MeiRuntimePolicies: Sendable, Codable {
     public var cacheModeRequested: String
     public var cacheModeEffective: String
@@ -53,20 +44,20 @@ public struct MeiRuntimePolicies: Sendable, Codable {
     public var prefixCacheLimitBytes: Int
     public var allocatorCacheLimitRequestedBytes: Int?
     public var memoryLimitRequestedBytes: Int?
-    public var mlxPressRequested: String
-    public var mlxPressSource: String
-    public var mlxPressEnabled: Bool?
-    public var mlxPressColdFraction: Double?
+    public var weightStorage: String
+    /// A request to the runtime's bounded residency policy, not a grant or RAM ceiling.
+    public var keepModelInMemoryRequested: Bool
 }
 
 public extension ServerConfig {
     /// Bind explicit allocator requests into loading as well as inference.
     internal var modelLoadConfiguration: LoadConfiguration {
-        LoadConfiguration(
-            jangPress: mlxPressPolicy.loadPolicy,
+        var configuration = LoadConfiguration(
             maxResidentBytes: cacheLimitExplicit ? .absolute(UInt64(cacheLimitBytes)) : .default,
             memoryLimit: memoryLimitBytes > 0 ? .absolute(UInt64(memoryLimitBytes)) : .default,
-            useMmapSafetensors: useMmapSafetensors)
+            useMmapSafetensors: false)
+        configuration.keepModelInMemory = keepModelInMemory
+        return configuration
     }
 
     var effectiveCacheMode: CacheMode {
@@ -82,8 +73,15 @@ public extension ServerConfig {
         guard prefixCacheLimitBytes > 0 else {
             throw ConfigError.invalidValue("--prefix-cache-limit-bytes must be > 0")
         }
-        if case .percent(let n) = mlxPressPolicy, !(1...95).contains(n) {
-            throw ConfigError.invalidValue("MLXPress percentage must be from 1 to 95")
+        guard mlxPressPolicy == .off else {
+            throw ConfigError.invalidValue(
+                "MLXPress cold-tier advice was removed upstream; remove --mlxpress/MLXPRESS/JANGPRESS. "
+                + "Weights use owned storage; --keep-model-in-memory controls a separate residency request.")
+        }
+        guard !useMmapSafetensors else {
+            throw ConfigError.invalidValue(
+                "--load-mmap true is no longer supported: weights use owned storage. Remove --load-mmap; "
+                + "--keep-model-in-memory controls a separate residency request.")
         }
         let requiresDisk = ModelOptimizationProfile.needsDiskKVTier(modelDirectory: modelDirectory)
         let autoNeedsDisk = requiresDisk || ssmAnchorBoundaryCount > 0
@@ -149,7 +147,7 @@ public extension ServerConfig {
         }
     }
 
-    func runtimePolicies(mlxPressEnabled: Bool? = nil, coldFraction: Double? = nil) -> MeiRuntimePolicies {
+    func runtimePolicies() -> MeiRuntimePolicies {
         MeiRuntimePolicies(
             cacheModeRequested: cacheMode.rawValue,
             cacheModeEffective: effectiveCacheMode.rawValue,
@@ -159,9 +157,7 @@ public extension ServerConfig {
             prefixCacheLimitBytes: prefixCacheLimitBytes,
             allocatorCacheLimitRequestedBytes: cacheLimitExplicit ? cacheLimitBytes : nil,
             memoryLimitRequestedBytes: memoryLimitBytes > 0 ? memoryLimitBytes : nil,
-            mlxPressRequested: mlxPressPolicy.description,
-            mlxPressSource: mlxPressPolicySource,
-            mlxPressEnabled: mlxPressEnabled,
-            mlxPressColdFraction: coldFraction)
+            weightStorage: "owned",
+            keepModelInMemoryRequested: keepModelInMemory)
     }
 }

@@ -10,20 +10,38 @@ final class RuntimePolicyTests: XCTestCase {
                                recommendedWorkingSetBytes: nil, environment: env)
     }
 
-    func testMLXPressDefaultAndPrecedenceAreExplicit() throws {
-        XCTAssertEqual(try parse().modelLoadConfiguration.jangPress, .disabled)
-        let old = try parse(env: ["JANGPRESS": "70"])
-        XCTAssertEqual(old.modelLoadConfiguration.jangPress, .enabled(coldFraction: 0.70))
-        XCTAssertEqual(old.mlxPressPolicySource, "environment:JANGPRESS")
-        XCTAssertEqual(try parse(env: ["MLXPRESS": "off", "JANGPRESS": "70"]).mlxPressPolicy, .off)
-        let explicit = try parse(["--mlxpress", "auto"], env: ["MLXPRESS": "garbage"])
-        XCTAssertEqual(explicit.modelLoadConfiguration.jangPress, .auto(envFallback: false))
-        XCTAssertEqual(explicit.mlxPressPolicySource, "cli")
+    func testOwnedStorageAndResidencyPolicyAreExplicit() throws {
+        let defaults = try parse()
+        XCTAssertFalse(defaults.modelLoadConfiguration.useMmapSafetensors)
+        XCTAssertTrue(defaults.modelLoadConfiguration.keepModelInMemory)
+        XCTAssertFalse(try parse(["--keep-model-in-memory", "false"]).modelLoadConfiguration.keepModelInMemory)
+        XCTAssertTrue(try parse(["--keep-model-in-memory", "true"]).modelLoadConfiguration.keepModelInMemory)
+        XCTAssertThrowsError(try parse(["--keep-model-in-memory", "auto"]))
+        // Explicit legacy Off can neutralize a stale inherited environment.
         XCTAssertEqual(try parse(["--mlxpress", "off"], env: ["MLXPRESS": "70"]).mlxPressPolicy, .off)
+        XCTAssertEqual(try parse(env: ["MLXPRESS": "off", "JANGPRESS": "70"]).mlxPressPolicy, .off)
+        XCTAssertFalse(try parse(["--load-mmap", "false"]).modelLoadConfiguration.useMmapSafetensors)
+    }
+
+    func testRemovedColdTierRequestsFailBeforeLoading() throws {
+        for flags in [["--mlxpress", "auto"], ["--mlxpress", "70"], ["--load-mmap", "true"]] {
+            XCTAssertThrowsError(try parse(flags)) { error in
+                XCTAssertTrue(String(describing: error).contains("owned storage"))
+            }
+        }
+        for key in ["MLXPRESS", "JANGPRESS"] {
+            XCTAssertThrowsError(try parse(env: [key: "70"]))
+        }
         for raw in ["garbage", "-1", "96", "1.5", ""] {
             XCTAssertThrowsError(try parse(env: ["MLXPRESS": raw]))
             XCTAssertThrowsError(try parse(["--mlxpress", raw]))
         }
+        var direct = try parse()
+        direct.mlxPressPolicy = .auto
+        XCTAssertThrowsError(try direct.resolveRuntimePolicies())
+        direct.mlxPressPolicy = .off
+        direct.useMmapSafetensors = true
+        XCTAssertThrowsError(try direct.resolveRuntimePolicies())
     }
 
     func testExplicitZeroSurvivesLoadPolicyAndAllocatorApplication() throws {
@@ -141,14 +159,16 @@ final class RuntimePolicyTests: XCTestCase {
     }
 
     func testPolicyStatusSeparatesRequestsAndActualActivation() throws {
-        let config = try parse(["--cache-mode", "disk", "--mlxpress", "auto", "--cache-limit-bytes", "0"])
-        let status = config.runtimePolicies(mlxPressEnabled: false)
+        let config = try parse(["--cache-mode", "disk", "--keep-model-in-memory", "false", "--cache-limit-bytes", "0"])
+        let status = config.runtimePolicies()
         let data = try JSONEncoder().encode(status)
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["cacheModeRequested"] as? String, "disk")
         XCTAssertEqual(json["cacheModeEffective"] as? String, "disk")
-        XCTAssertEqual(json["mlxPressRequested"] as? String, "auto")
-        XCTAssertEqual(json["mlxPressEnabled"] as? Bool, false)
+        XCTAssertEqual(json["weightStorage"] as? String, "owned")
+        XCTAssertEqual(json["keepModelInMemoryRequested"] as? Bool, false)
+        XCTAssertNil(json["mlxPressEnabled"])
+        XCTAssertNil(json["mlxPressRequested"])
         XCTAssertEqual(json["allocatorCacheLimitRequestedBytes"] as? Int, 0)
         XCTAssertEqual(json["kvCacheDirectory"] as? String, config.kvCacheDir)
     }
