@@ -1,0 +1,10 @@
+{
+  "runtime_source": "d0ea629e123769565ab20108696717a60e4fe3ad",
+  "vmlx_revision": "ffdc20f99dc96d5c95d645173a15abec3a0451a6",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build -c release --jobs 2",
+  "seconds": 432.1,
+  "status": "passed",
+  "binary_sha256": "6888ad0e6814454973e0557368a9b38dfbde62eebf84dc067c71dc6fe98aafbb",
+  "metallib_sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61",
+  "scope": "Build only. Focused upstream qualification and new runtime gates pending."
+}

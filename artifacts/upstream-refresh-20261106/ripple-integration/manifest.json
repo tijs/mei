@@ -1,0 +1,56 @@
+{
+  "vmlx_revision": "710741556966841b98d863220bda2d034671a58e",
+  "upstream_revision": "1bcd74ad182103a3b83941f61e57ee0bac23b330",
+  "production_fix": "c727e611",
+  "test_only_negative_commit": "11b2c442",
+  "negative": {
+    "scope": "Loader before validation fix; one new test fails five malformed declarations; other selected tests pass. Initial test compile error corrected before execution.",
+    "xctest_cases": 61,
+    "failed_assertions": 5,
+    "swift_testing_cases": 132
+  },
+  "positive": {
+    "xctest_cases": 62,
+    "skipped": 1,
+    "failures": 0,
+    "swift_testing_cases": 132
+  },
+  "additional_execution_coverage": [
+    "AR tool-call trims forwarded lookahead and stores correct token rows",
+    "All-KV DFlash2 tool interruption trims unreturned tokens; stored context/cache align; next turn forwards suffix only",
+    "Post-answer prompt retention at 512 versus513 cold suffix rows",
+    "Width-policy wider-rung bound opt-in and unchanged disabled behavior",
+    "Four-AR-step thin-evidence probing and cessation after established evidence",
+    "NoPE config/default/bounds and numerical cached-key rotation at offset7"
+  ],
+  "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/764",
+  "pr": "https://github.com/osaurus-ai/vmlx-swift/pull/765",
+  "clean_contribution_head": "b1d605d0527722f60fb66fa6f5084d30612e455e",
+  "scope": "Synthetic tests on integration fork; not full upstream suite, real Ripple qualification, or speculative performance evidence. Clean PR has identical two-file change; execution above is not claimed on clean-base checkout.",
+  "logs": [
+    {
+      "log": "vmlx-ripple-integration-tests-20261106.log.gz",
+      "uncompressed_sha256": "000d4c94fc2af7ebf0df95df7b74fe30feaa674905dcbc1e23c82feee77ce9cc"
+    },
+    {
+      "log": "vmlx-ripple-integration-tests-2-20261106.log.gz",
+      "uncompressed_sha256": "5499822f489c99306ba8713eedf42c92a6d943931b102ab23b6738becfd09d00"
+    },
+    {
+      "log": "vmlx-ripple-integration-fixed-tests-20261106.log.gz",
+      "uncompressed_sha256": "ad877485c3215485775e0ffb19e70b8ad8494ce161c91da95935764564d99081"
+    },
+    {
+      "log": "vmlx-ripple-integration-final-tests-20261106.log.gz",
+      "uncompressed_sha256": "850c713745a946394fc8cef9b39790c5973981342253d40419d9c68b302e9a7b"
+    },
+    {
+      "log": "vmlx-ripple-prompt-retention-tests-20261106.log.gz",
+      "uncompressed_sha256": "f4eb36f958d1c8737cec64349044e0d9185a8f22a4f1f95a52c6c9ec6f91d5fc"
+    },
+    {
+      "log": "vmlx-ripple-integration-complete-tests-20261106.log.gz",
+      "uncompressed_sha256": "8dfe2167f3d755e29b33718e34fde9a44c1df4f98fe2a6e793dd6fbd67b572be"
+    }
+  ]
+}

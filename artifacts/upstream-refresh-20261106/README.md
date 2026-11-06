@@ -242,3 +242,24 @@ support, not admitted or benchmarked on this 32 GiB host, and is outside the
 four-model comparison and ToolSpace/Gemma queue. No duplicate upstream PR is
 needed for work already in PR744. Existing fork-only audit and proposals retain
 their bounded scope.
+
+
+The Ripple integration review then reproduced a separate NoPE configuration bug:
+booleans/fractional indices were coerced and strings/scalars/null ignored.
+[Issue764](https://github.com/osaurus-ai/vmlx-swift/issues/764) precedes
+[atomic PR765](https://github.com/osaurus-ai/vmlx-swift/pull/765). The fork now
+pins validated integer-array decoding; valid and absent declarations retain
+behavior. [Negative/positive proof](ripple-integration/manifest.json) preserves
+five failing malformed-input assertions before the fix and the final selected
+62 XCTest cases (one skip, zero failures) plus132 Swift Testing cases passing.
+New execution checks cover AR/all-KV speculative tool boundaries, context/cache
+alignment and next-turn suffix forwarding, the512/513 prompt-entry policy,
+width-policy flags and NoPE cached-key rotation at a nonzero offset. This is
+synthetic integration-fork proof; no full upstream suite or live Ripple/speculation
+qualification is claimed. The clean PR contains only its two-file validation fix.
+
+The batching retune is [draft core PR54](https://github.com/osaurus-ai/mlx/pull/54),
+following [vMLX issue763](https://github.com/osaurus-ai/vmlx-swift/issues/763)
+because the core repository has issues disabled. Fresh native/untraced release
+qualification remains required. Both proposals are linked to the work thread;
+external merges are not a release prerequisite.
