@@ -213,3 +213,32 @@ lint job recursively rewrites unrelated baseline Swift/CMake files; no wholesale
 formatting was applied. Linux SwiftPM/container builds observed successful;
 queued Mac/CUDA jobs are not claimed green. Focused local proof remains bounded
 as described in each manifest.
+
+
+## Command batching follow-up and newly arrived upstream commit
+
+The completed original comparison found a repeatable Groot throughput decline;
+Mei 0.11 remains unreleased. A same-binary profiled 50/200 MiB command-budget
+screen supports excessive commit frequency after upstream corrected element-to-byte
+input accounting. The accounting correction stays intact. The reviewed prototype
+changes only the default input-byte budget on g13s GPUs with at least 24 GiB
+recommended working set; operation limits and explicit environment overrides stay
+unchanged. [Real-Metal negative/positive proof](m1-command-batching/review-and-tests.json)
+records 3 expected intermediate assertion failures before the change and all four
+cases / 28 assertions passing afterward. Fresh native and untraced release
+qualification of the final artifact is still required; profiled speeds are not
+release qualification.
+
+A fresh upstream check found `1bcd74ad182103a3b83941f61e57ee0bac23b330`
+(Ripple/Ricursive, upstream PR744) after the previous snapshot. Integration
+`ffdc20f99dc96d5c95d645173a15abec3a0451a6` includes it and core
+`e790cca9d`, preserving the owned Bonsai construction branch and fail-closed
+custom-bank handling. Ripple's parser contract is model-specific and defaults
+to off for other models. Its DFlash2 answer/stable-boundary persistence and
+append-only snapshot handling can also affect other eligible speculative targets;
+those changes require focused regressions. Mei does not enable speculation or
+change its public API as part of this update. Ripple65B is inherited source
+support, not admitted or benchmarked on this 32 GiB host, and is outside the
+four-model comparison and ToolSpace/Gemma queue. No duplicate upstream PR is
+needed for work already in PR744. Existing fork-only audit and proposals retain
+their bounded scope.

@@ -1,0 +1,54 @@
+{
+  "scope": "Real Metal command-buffer regression only; no runtime qualification claim",
+  "upstream_base": "3b39b5e7925fa8860ab8ccd79b054349872e24a5",
+  "clean_contribution_head": "c3c82bcbeb7d9c3b33d8a5be9bcde554830029a2",
+  "integrated_core_head": "e790cca9df907c30ff4f18b0c772b4d9f454132e",
+  "vmlx_head": "51699b7a03371405464c5a6600bafd51adbbaaf6",
+  "test_filter": "*Metal command buffer*",
+  "baseline": {
+    "cases": 4,
+    "passed": 3,
+    "failed": 1,
+    "assertions": 28,
+    "failed_assertions": 3
+  },
+  "fixed": {
+    "cases": 4,
+    "passed": 4,
+    "failed": 0,
+    "assertions": 28
+  },
+  "reviews": [
+    "correctness",
+    "tests",
+    "simplicity"
+  ],
+  "review_note": "kiem://note/94c03c48-e3d5-4d68-96c8-1df9dc6d353f",
+  "logs": [
+    {
+      "log": "mlx-m1-batching-configure-20261106.log.gz",
+      "uncompressed_sha256": "431c804df5cd636292bb0d697c05e81128bafb29bb1c197d05de0c2a570f094e",
+      "bytes": 1954
+    },
+    {
+      "log": "mlx-m1-batching-baseline-build-20261106.log.gz",
+      "uncompressed_sha256": "5e4b6496b36bf9a1966895d99e8d7ae4963359aaee77b9d2c555e6fc915ff2b3",
+      "bytes": 15021
+    },
+    {
+      "log": "mlx-m1-batching-baseline-tests-20261106.log.gz",
+      "uncompressed_sha256": "5ee15fdd567edebf416e6d05b9ba1fd44f9025933bd8881f1d351db0c0ef82c0",
+      "bytes": 1076
+    },
+    {
+      "log": "mlx-m1-batching-fixed-build-20261106.log.gz",
+      "uncompressed_sha256": "36127b59d881161f8334dea1442bd952016a437d203d75a5b3934a49fc75c1e9",
+      "bytes": 736
+    },
+    {
+      "log": "mlx-m1-batching-fixed-tests-20261106.log.gz",
+      "uncompressed_sha256": "1c026c807ff230dca358935ef56c0c957b1ceb53ed7d2102c74040d217c422a6",
+      "bytes": 297
+    }
+  ]
+}
