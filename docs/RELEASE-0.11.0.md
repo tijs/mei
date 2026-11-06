@@ -87,7 +87,9 @@ pressure and sentinel-only cache capability. See the
 [contribution index and proof scopes](../artifacts/upstream-refresh-20261106/README.md).
 Additional issue-first proposals cover the scoped batching retune (draft corePR54,
 vMLX issue763 because core issues are disabled) and malformed NoPE declarations
-(vMLX issue764/PR765). These are proposed contributions, not upstream acceptance.
+(vMLX issue764/PR765). Two test-only proposals cover width policies (issue766/PR767)
+and tool/prompt-retention boundaries (issue768/PR769), for14 total. These are
+proposed contributions, not upstream acceptance.
 
 ## Remaining release work
 

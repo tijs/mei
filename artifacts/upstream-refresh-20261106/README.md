@@ -65,6 +65,16 @@ claims of upstream acceptance.
 | Request processors need to compose with native schema constraints | [757](https://github.com/osaurus-ai/vmlx-swift/issues/757) → [758](https://github.com/osaurus-ai/vmlx-swift/pull/758) | 14 XCTest and six Swift Testing cases |
 | Optional cache copies continue under host pressure | [759](https://github.com/osaurus-ai/vmlx-swift/issues/759) → [760](https://github.com/osaurus-ai/vmlx-swift/pull/760) | Five policy cases; no induced-pressure claim |
 | Sentinel-only paged cache advertises unavailable persistence | [761](https://github.com/osaurus-ai/vmlx-swift/issues/761) → [762](https://github.com/osaurus-ai/vmlx-swift/pull/762) | One negative failure, then five passing cases |
+| Byte accounting leaves medium g13s inputs over the old command budget | [763](https://github.com/osaurus-ai/vmlx-swift/issues/763) → [core54 draft](https://github.com/osaurus-ai/mlx/pull/54) | Four real-Metal cases /28 assertions; fresh untraced gate pending |
+| NoPE loader silently coerces/drops malformed declarations | [764](https://github.com/osaurus-ai/vmlx-swift/issues/764) → [765](https://github.com/osaurus-ai/vmlx-swift/pull/765) | Five negative assertions, then three passing config/attention cases |
+| New opt-in width policies lack execution coverage | [766](https://github.com/osaurus-ai/vmlx-swift/issues/766) → [767](https://github.com/osaurus-ai/vmlx-swift/pull/767) | Test-only; all17 chooser cases on integration fork |
+| New tool/post-answer boundaries lack all-KV execution coverage | [768](https://github.com/osaurus-ai/vmlx-swift/issues/768) → [769](https://github.com/osaurus-ai/vmlx-swift/pull/769) | Test-only;13DFlash and5AR cases on integration fork |
+
+[Follow-up heads and scope](follow-up-proposals.json) record all four new
+proposals. Core issues are disabled, so corePR54 follows a parent-runtime issue.
+NoPE/width/cache local execution is on the integration fork with identical changed
+sections; full clean-base package suites, real Ripple and speculative speed are
+not claimed. All14 proposals are linked; external acceptance remains separate.
 
 The no-coordinator/auxiliary snapshot guards and quantization alias handling
 already exist upstream and were excluded as duplicates. Fork-specific prompt

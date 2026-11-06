@@ -1,0 +1,35 @@
+{
+  "original_proposals": 10,
+  "additional": [
+    {
+      "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/763",
+      "pr": "https://github.com/osaurus-ai/mlx/pull/54",
+      "head": "c3c82bcbeb7d9c3b33d8a5be9bcde554830029a2",
+      "scope": "Five-line scoped batching default; real-Metal4cases/28assertions; draft pending fresh untraced/runtime qualification. Core issues disabled; problem issue is in parent runtime repo."
+    },
+    {
+      "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/764",
+      "pr": "https://github.com/osaurus-ai/vmlx-swift/pull/765",
+      "head": "b1d605d0527722f60fb66fa6f5084d30612e455e",
+      "scope": "Strict NoPE declaration loader and three synthetic config/attention cases. Five failing negative assertions before fix."
+    },
+    {
+      "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/766",
+      "pr": "https://github.com/osaurus-ai/vmlx-swift/pull/767",
+      "head": "ec4fa27bcc4ddf33b9c5f42c9655159f696e8ee7",
+      "scope": "One-file test-only change; all17 chooser cases pass on integration fork, including opt-in/default-off policies."
+    },
+    {
+      "issue": "https://github.com/osaurus-ai/vmlx-swift/issues/768",
+      "pr": "https://github.com/osaurus-ai/vmlx-swift/pull/769",
+      "head": "ee23cb50cf179796c3b67b1077d1a2235e85e35d",
+      "scope": "Two-file test-only change;13DFlash prefix +5AR restore cases pass on integration fork, including iterator tool boundaries and512/513 prompt retention."
+    }
+  ],
+  "total": 14,
+  "issue_precedes_each_pr": true,
+  "all_linked_to_thread_immediately": true,
+  "execution_scope": "NoPE/width/cache execution proof is on integration fork71074155, not full clean-base package suites. Contribution diffs apply cleanly to upstream1bcd74ad. No real Ripple, API-level dispatch, hidden-state numerical parity or speculative-speed claim.",
+  "proof": "ripple-integration/manifest.json",
+  "external_merge_is_not_release_prerequisite": true
+}
