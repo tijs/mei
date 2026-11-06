@@ -19,10 +19,13 @@ prefill, all 64 passive status requests succeeded (maximum observed 21.13 ms).
 
 Exact profiles, logs, resource samples and preservation receipts live in the
 [benchmark qualification campaign](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
-Balanced 0.10.0/0.11.0 speed, greedy-output and live HTTP qualification is still
-running. Stable remains **0.10.0**. Publishing 0.11.0, verifying Homebrew delivery
-and obtaining fresh four-model scored results remain open. Native admission is
-not a scored-task result or a throughput improvement claim.
+All twelve balanced observable/API cells pass: 120 measured requests and 108
+live API cases. Groot's candidate throughput is lower in both process pairs,
+so stable promotion is held for a controlled performance investigation. The
+phase screen now explicitly mirrors backend diagnostics to stderr; the first
+capture mismatch is preserved. Stable remains **0.10.0**. Publishing 0.11.0,
+verifying Homebrew delivery and obtaining fresh four-model scored results remain
+open. Native admission is not a scored-task result or a speedup claim.
 
 ## Contribution index
 
