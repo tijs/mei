@@ -75,6 +75,12 @@ proposals. Core issues are disabled, so corePR54 follows a parent-runtime issue.
 NoPE/width/cache local execution is on the integration fork with identical changed
 sections; full clean-base package suites, real Ripple and speculative speed are
 not claimed. All14 proposals are linked; external acceptance remains separate.
+The [fresh PR/check snapshot](upstream-pr-checks-follow-up-20261106.json) records
+all14 open with no maintainer comments at that check. Available Linux build jobs
+pass; some newest container jobs are still running, and Mac/CUDA jobs are queued.
+Repository-wide advisory lint fails and is not claimed green; no wholesale baseline
+formatting rewrite is included. Core54 remains draft pending untraced qualification;
+Apple4842 requires upstream review. No watch or external-merge wait is active.
 
 The no-coordinator/auxiliary snapshot guards and quantization alias handling
 already exist upstream and were excluded as duplicates. Fork-specific prompt
