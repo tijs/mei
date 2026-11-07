@@ -78,8 +78,13 @@ At 30,000 tokens, each production process decoded faster than both preceding
 candidate processes, and their mean decode rate rose 7.5%. Against stable
 0.10.0, mean decode rose 3.7%, while full request time rose 1.5% and prefill
 time rose 1.9%. This is a comparison across run windows; the separate
-within-binary diagnostic supports the kernel effect. Ornith and Groot are
-still in qualification.
+within-binary diagnostic supports the kernel effect.
+
+Ornith passed both production timing cells and all 18 live API cases. Against
+stable 0.10.0, its mean decode throughput rose 20.3% in both contexts. Mean full
+request time fell 17.2% for short prompts and 7.1% at 30,000 tokens. These results
+describe the integrated runtime and serving profile. They do not isolate the
+selector's effect. Groot qualification is still running.
 
 ### Apple-main artifact before the selector
 
