@@ -15,12 +15,17 @@ upstream regressions pass62 XCTest cases (one skip) plus132 Swift Testing cases.
 [offline proof](ripple-integration/mei-final-pin-offline-summary.json) retain scope.
 
 Fresh native gates pass13/13 on each of Groot, Qwen and Ornith; all42 model
-files rehash unchanged. The twelve-cell untraced ABBA qualification is running
-from committed benchmark profiles e97b89b8. The batching retune is still a
-candidate: no stable readiness, new speedup or task-score claim is made.
+files rehash unchanged. The twelve-cell untraced ABBA campaign is complete:
+all168 observable rows,108 live API cases and168 post-run model-file checks pass;
+all120 measured requests are retained. Qwen's loaded-request slowdown and
+Groot's mixed throughput remain explicit performance findings. A predeclared
+same-binary Qwen row-layout diagnostic is now running. No stable readiness,
+universal speedup or task-score claim is made.
 The exact [artifact and campaign declarations](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
-retain all previous attempts. Stable remains **0.10.0**. Untraced API/speed
-qualification, stable release/Homebrew and eight fresh scored runs remain open.
+retain all previous attempts. Stable remains **0.10.0**. The separate
+[Apple-main source merge](apple-main-integration/manifest.json) still requires
+execution, Mei consumption/build and affected qualification. Performance
+diagnosis, stable release/Homebrew and eight fresh scored runs remain open.
 
 ### Previous candidate and the reproduced performance hold
 

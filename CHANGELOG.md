@@ -34,8 +34,11 @@ All notable changes to Mei are documented here.
 
 Offline checks pass:495 XCTest cases (two skips) plus four Swift Testing cases.
 The previous candidate passed native/API checks but showed lower Groot throughput.
-The final-pin artifact passes native checks on all three models; untraced
-qualification is in progress. No new speedup or scored-task result is claimed. Stable remains0.10.0 until the
+The frozen artifact passes native checks on all three models and all twelve
+observable/API cells. Qwen's loaded-request slowdown and mixed Groot throughput
+remain explicit review findings; a same-binary Qwen diagnostic is running.
+The additional Apple-main merge still requires execution and Mei qualification.
+No scored-task result or universal speedup is claimed. Stable remains0.10.0 until the
 release gates pass. See the [qualification evidence](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
 for exact artifact identities, resource limits and issue-first proposals.
 

@@ -3,8 +3,9 @@
 **Unreleased candidate. Stable remains 0.10.0.** A previous candidate passed
 observable/API checks but showed a repeatable Groot slowdown. A scoped batching
 retune and a reproduced NoPE configuration fix are now built. All three native
-gates pass; untraced qualification is running. Promotion remains held until those results
-are reviewed. Fresh four-model task results follow the published release.
+gates and all twelve frozen-candidate observable/API cells pass. Performance
+findings and the additional Apple merge remain open release work. Fresh
+four-model task results follow the published release.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
@@ -70,7 +71,7 @@ negative control reproduces malformed NoPE declarations before validation.
 Fresh native checks on Groot/Qwen/Ornith pass13/13 each, including65536-token
 context; all42 files rehash unchanged. Groot64/64 passive status GETs succeed
 during active prefill (maximum observed24.72ms). An untraced twelve-cell ABBA
-speed, observable-parity and live-API comparison is in progress. Each version has two
+speed, observable-parity and live-API comparison is complete. Each version has two
 fresh processes and five measured requests per short/30,000-token context per
 process; cold/warmups are separate. Old timings are not substituted. Profiles
 retain weights, precision, budgets, cache and resource guards. Storage migration
@@ -78,9 +79,16 @@ is part of this aggregate runtime comparison, which does not isolate every patch
 
 The completed Qwen group improves decode speed, but its measured long requests
 take slightly longer overall, with slower prefill. This remains a release hold
-while the other model groups finish and the cause is investigated. Decode speed
+while the cause is investigated with a predeclared same-binary diagnostic. Decode speed
 alone does not prove that requests became faster; all repeats remain in the
 linked evidence.
+
+Ornith's complete group passes; Groot has improved short decode, slightly lower
+loaded decode, and faster whole-request means in both contexts on these runs.
+The mixed results remain explicit. All168 observable rows,108 live API cases
+and168 post-run model-file checks pass, with all120 measured requests retained.
+These observations qualify only the frozen artifact above, not the additional
+Apple source merge or a later executable.
 
 The previous57b/9dd artifact passed13 native checks per model and all120 timing /
 108 live-API observations, but both Groot candidate processes were slower than
