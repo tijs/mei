@@ -32,17 +32,14 @@ All notable changes to Mei are documented here.
   or dropping them. Cover valid cached-key rotation and inherited tool/cache,
   prompt-retention and width-policy behavior with synthetic execution tests.
 
-The final Apple-main integration passes the offline suite:495 XCTest cases
+The final Apple-main integration passes the offline suite: 495 XCTest cases
 (two explicit actual-model skips, no failures) plus four Swift Testing cases.
 Cmlx trait builds on/off, selected dependency regressions and all three native
-gates pass. The fresh twelve-cell speed/API campaign is still running.
-Qwen and Ornith's complete observable/API groups pass. Qwen retains a small
-loaded-context decode/request slowdown for review; Ornith's complete group
-has faster candidate process means in both contexts. Groot's group remains open.
-The earlier same-binary diagnostic did not support Qwen row sharing as the
-cause; its memory-saving default is retained. Prepared attention diagnostics
-have not been built or run. No task score or universal speedup is claimed.
-Stable remains0.10.0 until the release gates pass. See the
+gates pass. The twelve-cell comparison also passed all 168 observable checks
+and 108 API cases. Compared with 0.10.0, Ornith decoded faster in both contexts;
+Groot had faster mean requests in both contexts; Qwen's 30,000-token requests
+took 1.8% longer on average. These measurements apply to the tested profiles
+and are separate from scored tasks. See the
 [qualification evidence](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
 for exact artifact identities, resource limits and issue-first proposals.
 

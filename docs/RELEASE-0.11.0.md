@@ -1,9 +1,8 @@
 # Mei 0.11.0 — release preparation
 
-**Unreleased candidate. Stable remains 0.10.0.** Dependency integration and
-selected regression tests, Mei's offline suite and optimized build pass. All
-three full native gates pass. Final-artifact performance/API qualification,
-publication and fresh four-model results remain open.
+**Unreleased candidate. Stable remains 0.10.0.** Dependency integration,
+offline tests and final-artifact native and API qualification passed.
+Performance review, publication and fresh four-model task results remain open.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
@@ -58,19 +57,25 @@ in [the fork guide](VMLX-FORK.md).
 
 The final Apple-main artifact uses source `651d7c93f003aab10581a935c139ea717fa97335`,
 executable `12fa6435558ce679b698804137e6c36ac9e031332408143096474405b33c1bd9`
-and the unchanged source-built Metal hash below. All three models pass13/13
-native checks, including cache reuse and65,536-token admission, with all42 files
+and the unchanged source-built Metal hash below. All three models passed 13/13
+native checks, including cache reuse and 65,536-token admission, with all 42 files
 unchanged. Qwen/Ornith each record one pressure warning below the sustained stop
-threshold; complete resource observations remain in the evidence. A fresh12-cell
-ABBA/API campaign is running; performance qualification is still pending.
-Qwen and Ornith's full four-cell audits pass. Qwen's loaded-context slowdown
-remains an explicit finding before promotion; Ornith's candidate process means
-are faster for decode and whole-request time at both contexts. Groot's full
-group is still pending. These observations retain all measured repeats and equal
-process weights; they are runtime qualification, not scored tasks. The
-[current final-artifact reviews](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
-separate them from preceding artifacts. Prepared operator diagnostics have not
-been built or executed.
+threshold. The fresh twelve-cell comparison passed all 168 observable checks,
+108 API cases and 168 post-run model file checks. It retains all 120 measured
+requests, using equal weight for the two fresh processes on each version.
+
+| Model | Short decode | 30,000-token decode | Short request time | 30,000-token request time |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen | +0.4% | −3.6% | −1.9% | +1.8% |
+| Ornith | +20.7% | +11.8% | −17.5% | −7.1% |
+| Groot | +1.6% | −0.6% | −2.8% | −0.3% |
+
+Changes are relative to Mei 0.10.0 on a 32 GB M1 Max. Positive decode numbers
+mean faster generation; negative request times mean shorter waits. Qwen's
+loaded backend prefill took 2.0% longer. These are runtime measurements on
+fixed requests; scored workflow tasks are a separate comparison. The
+[final-artifact reviews](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
+preserve raw repeats and separate the preceding artifacts and diagnostics.
 
 ### Preceding batched artifact
 
@@ -134,8 +139,8 @@ proposed contributions, not upstream acceptance.
 
 ## Remaining release work
 
-Finish and review all balanced qualification cells, resolve any reproduced
-regression, publish the final source/artifact identity, then verify GitHub assets
+Finish the Qwen performance review, publish the final source/artifact identity,
+then verify GitHub assets
 and Homebrew delivery. After release, rerun Qwen, Ornith and Groot on the released
 Mei artifact plus the pinned Logics-SWE llama.cpp control, seeds 17 and 29, using
 the frozen household/Python benchmark. Publish all reviewed attempts and current
