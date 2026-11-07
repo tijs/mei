@@ -63,6 +63,14 @@ native checks, including cache reuse and65,536-token admission, with all42 files
 unchanged. Qwen/Ornith each record one pressure warning below the sustained stop
 threshold; complete resource observations remain in the evidence. A fresh12-cell
 ABBA/API campaign is running; performance qualification is still pending.
+Qwen and Ornith's full four-cell audits pass. Qwen's loaded-context slowdown
+remains an explicit finding before promotion; Ornith's candidate process means
+are faster for decode and whole-request time at both contexts. Groot's full
+group is still pending. These observations retain all measured repeats and equal
+process weights; they are runtime qualification, not scored tasks. The
+[current final-artifact reviews](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
+separate them from preceding artifacts. Prepared operator diagnostics have not
+been built or executed.
 
 ### Preceding batched artifact
 
