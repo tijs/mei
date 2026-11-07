@@ -18,10 +18,11 @@ The current [issue-first proposal audit](upstream-issue-pr-audit-20261107.json)
 verifies all14 atomic PRs reference older problem issues. No upstream acceptance
 or CI-success claim follows from that audit.
 
-Final-artifact native qualification is running: Groot and Qwen each pass13/13,
-with all31 model files unchanged. Qwen has one pressure warning below the
-sustained stop threshold; all resource observations remain in the evidence.
-Ornith and all12 fresh untraced speed cells remain pending. See the
+Final-artifact native qualification passes13/13 on each of Groot, Qwen and
+Ornith; all42 model files rehash unchanged. Qwen and Ornith each have one warning
+sample below the sustained stop threshold, with no critical pressure. All
+resource observations are retained. The fresh12-cell speed/API comparison is
+running, with no performance or release verdict yet. See the
 [final artifact and campaign](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
 Stable remains **0.10.0**. Stable/Homebrew publication and the eight fresh
 four-model task trajectories require the complete reviewed final qualification.

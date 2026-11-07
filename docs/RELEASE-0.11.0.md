@@ -1,9 +1,9 @@
 # Mei 0.11.0 — release preparation
 
 **Unreleased candidate. Stable remains 0.10.0.** Dependency integration and
-selected regression tests pass. Mei's final offline build, new-artifact native
-and performance qualification, publication and fresh four-model results remain
-open.
+selected regression tests, Mei's offline suite and optimized build pass. All
+three full native gates pass. Final-artifact performance/API qualification,
+publication and fresh four-model results remain open.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
@@ -55,6 +55,16 @@ Inherited Qwen/Gemma improvements and these integration boundaries are explained
 in [the fork guide](VMLX-FORK.md).
 
 ## Qualification status
+
+The final Apple-main artifact uses source `651d7c93f003aab10581a935c139ea717fa97335`,
+executable `12fa6435558ce679b698804137e6c36ac9e031332408143096474405b33c1bd9`
+and the unchanged source-built Metal hash below. All three models pass13/13
+native checks, including cache reuse and65,536-token admission, with all42 files
+unchanged. Qwen/Ornith each record one pressure warning below the sustained stop
+threshold; complete resource observations remain in the evidence. A fresh12-cell
+ABBA/API campaign is running; performance qualification is still pending.
+
+### Preceding batched artifact
 
 The preceding frozen runtime, before the additional Apple-main merge, is source `588413434e9c5cc417e3a6da1bf9cef90598ba32`,
 executable SHA-256
