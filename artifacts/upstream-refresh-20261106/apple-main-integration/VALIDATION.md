@@ -1,7 +1,15 @@
-# Pending Apple-main execution
+# Apple-main integration validation
 
-These commands are prepared, **not executed**. Finish and review the live
-qualification campaign first. Confirm its exact process is terminal, no Mei
+Cmlx trait-on/off builds pass. The corrected compiler-enabled selection passes
+74 XCTest cases; the dedicated allocator process passes exactly two cases.
+Five new error-recovery cases pass separately with compilation disabled.
+The original failed runs and the stream-pool negative control are retained.
+Array/module migration and inherited cache/NoPE/width tests are still pending.
+These are dependency tests, not final Mei runtime or release proof.
+
+The commands below are the initial preparation record; execution details and
+policy-specific corrections are in the adjacent JSON proofs. The frozen
+qualification campaign is terminal and preserved. Confirm its exact process is terminal, no Mei
 server owns ports8017/8024, and the normal memory/disk gates permit build work.
 Keep every current5884134/71074155 observation under its original identity.
 
@@ -44,3 +52,15 @@ and adjacent Metal resource, and qualify the affected runtime behavior. Compare
 Metal/source identities explicitly. Current binary/native/performance evidence
 does not automatically transfer to this additional source. Stable publication,
 installed-artifact verification and the eight fresh task trajectories follow.
+
+## Stream regression diagnosis
+
+At b32472a1, the shared-stream test passed alone but aborted after the native-default
+restoration test. Its helper wrapped native thread-local handles in `Stream`, whose
+deinitializer returned them to the cross-thread stream pool. Commit1f90918a keeps
+those borrowed handles in C, compares their identities and frees only the handles.
+The unchanged ordering now passes. The default drain check uses the supported
+`Stream.defaultStream`; `Stream()` intentionally creates a fresh stream upstream.
+The linked-core assertion now matches0.32.4. Compiler lock counters are tested
+with opt-ins1; the separate policy-bypass test uses opt-ins0. Production source
+remains unchanged by these test corrections.

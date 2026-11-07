@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-11-07T01:19:05.112779+00:00",
+  "source_revision": "b32472a185ebc03ed2608dd9b33e880ecd90797f",
+  "observed_exit_code": 1,
+  "scope": "Unmodified testRunWith followed by testSharedStream reproduces thread-local stream abort; native-default wrapper contaminates shared pool.",
+  "log": "stream-pool-negative-control-20261107.log.gz",
+  "uncompressed_log_sha256": "cd6083193f80833ced88bb38cedbcc794315c4e048a52b51c102b22ba2bd902b"
+}

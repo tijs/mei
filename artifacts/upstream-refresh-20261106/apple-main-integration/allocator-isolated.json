@@ -1,0 +1,8 @@
+{
+  "source_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "executed_xctest_cases": 2,
+  "scope": "Compiler opt-ins0; dedicated process, two XCTest cases only; Swift Testing disabled.",
+  "log": "allocator-isolated-20261107.log.gz",
+  "uncompressed_log_sha256": "ed31e64ebc52f904056a963fac37c7a8616541e7847bd42d50ccd639fd2270a7"
+}

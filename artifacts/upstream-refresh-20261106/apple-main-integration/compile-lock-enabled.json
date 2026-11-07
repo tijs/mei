@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-11-07T01:19:05.112263+00:00",
+  "source_revision": "b32472a185ebc03ed2608dd9b33e880ecd90797f",
+  "observed_exit_code": 0,
+  "scope": "Six XCTest cases executed and passed with unsafe compile opt-ins1.",
+  "log": "compile-lock-enabled-20261107.log.gz",
+  "uncompressed_log_sha256": "8ae1e9bc3a199624eac12d912f85693b4d6ffa84fd2c45559fc962a0098a28e4"
+}

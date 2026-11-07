@@ -1,0 +1,8 @@
+{
+  "source_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "executed_xctest_cases": 74,
+  "scope": "Compiler opt-ins1; 74 XCTest cases, all pass, includes sequential native-default and cross-thread stream regression.",
+  "log": "selected-tests-corrected-20261107.log.gz",
+  "uncompressed_log_sha256": "98728eaf01b091d402fbbfacaefae50c08fedbb566831772c60fe0b0d6bee660"
+}

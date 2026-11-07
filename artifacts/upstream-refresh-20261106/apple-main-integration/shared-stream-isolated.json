@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-11-07T01:19:05.112529+00:00",
+  "source_revision": "b32472a185ebc03ed2608dd9b33e880ecd90797f",
+  "observed_exit_code": 0,
+  "scope": "One cross-thread stream XCTest passes in fresh process.",
+  "log": "shared-stream-isolated-20261107.log.gz",
+  "uncompressed_log_sha256": "1223fcce108f1a7c0092bb4880ef19de3573ef13571a5ef9d107988bc3627f67"
+}

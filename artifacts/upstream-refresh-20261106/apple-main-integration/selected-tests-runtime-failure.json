@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-11-07T01:19:05.111137+00:00",
+  "source_revision": "b32472a185ebc03ed2608dd9b33e880ecd90797f",
+  "observed_exit_code": 1,
+  "scope": "Expanded selection compiled and executed, then failed assertions and aborted. No suite pass.",
+  "log": "selected-tests-runtime-failure-20261107.log.gz",
+  "uncompressed_log_sha256": "c10e12e1ccc529b19c3251ab5c9e7256ca0d0ff9265adda3b6a243076160df27"
+}
