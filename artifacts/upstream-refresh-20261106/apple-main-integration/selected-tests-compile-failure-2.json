@@ -1,0 +1,10 @@
+{
+  "observed_at": "2026-11-07T01:06:08.310722+00:00",
+  "source_revision": "374ce3a907ee149cbea13d0f54944ca258c309a3",
+  "observed_exit_code": 1,
+  "scope": "Second Swift test compile failure; no test pass/execution claimed.",
+  "cause": "New CPU quantization/SVD failure tests require throwing method/device-scope annotations under current XCTest/Swift inference.",
+  "fix": "Add throws/try, retain expected-error assertions. Add focused failed-broadcast assignment invalidation case for changed indexing path. Production Source/Package unchanged.",
+  "log": "vmlx-apple-main-selected-tests-compile-failure-2-20261107.log.gz",
+  "uncompressed_log_sha256": "cc7873b9454a39dc4c1e888c8e38ed03a6f407bdb3698ea893bdd30da3500f75"
+}
