@@ -15,15 +15,20 @@ revision. A fresh Mei build retrieves the fork through SwiftPM. There is no
 normal build-time patch application and no dependency on a local SwiftPM
 repository cache being pre-populated.
 
-## Current integration candidate: 0.11
+## Published dependency pin: 0.11.0
 
-The 0.11 candidate pins vMLX
-`1f90918ac0872b134ac40c31a1f4a7b68b4982f5`, integrating current Osaurus
-`1bcd74ad`, Apple MLX Swift main `5f117a2e` (0.33.0 plus three commits) and
-MLX core 0.32.4. It preserves Mei's bounded prefix
-storage, raw-text generation and request-local constrained decoding while
-adapting to upstream materialization, host-read and eval-lock ownership.
-Stable remains 0.10.0 until the remaining release gates pass.
+[Mei 0.11.0](https://github.com/tijs/mei/releases/tag/v0.11.0) pins vMLX
+`3cb7240a39d92475345c6c1d0c9057da31a2f289`. That revision includes Osaurus
+vMLX through `1bcd74ad` and Apple MLX Swift through `5f117a2e` (0.33.0
+plus three commits). Its MLX core pin is
+`49631e976f01ba148abf4b041ca61ff2f1d5bfdd`, based on Osaurus core
+`3b39b5e7` and Apple MLX 0.32.4. The core pin also carries the
+qualified M1 Max attention selector. These are release pins; they do not
+track the moving upstream branches at build time.
+
+The release preserves Mei's bounded prefix storage, raw-text generation and
+request-local constrained decoding while adapting to upstream materialization,
+host-read and eval-lock ownership.
 
 Upstream's owned weight storage replaces the earlier mmap path. Mei exposes a
 bounded residency request with explicit CLI/library/status behavior; see
@@ -55,7 +60,7 @@ Several upstream features need a separate integration gate:
   provenance, greedy correctness and measured short/long-context benefit before
   enabling a serving profile.
 
-The [qualification and contribution index](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
+The [qualification and contribution index](../artifacts/upstream-refresh-20261106/README.md)
 records exact artifacts, negative/positive regressions and fourteen small issue-first
 upstream PRs. The overlap audit excluded snapshot guards and quantization aliases
 already upstream. Fork-specific ownership policy remains separate where an
