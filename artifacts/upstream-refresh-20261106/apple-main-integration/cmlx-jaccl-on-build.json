@@ -1,0 +1,30 @@
+{
+  "observed_at": "2026-11-07T00:55:22.098872+00:00",
+  "source_revision": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
+  "core_revision": "e790cca9df907c30ff4f18b0c772b4d9f454132e",
+  "command": "env-i HOME/PATH/DEVELOPER_DIR xcrun swift build --target Cmlx --jobs2 --traits JACCL -v",
+  "observed_exit_code": 0,
+  "scope": "Cmlx build only; emits compiler warnings, not claimed warning-free. No Swift tests/link/application/native/runtime/Mei qualification claim.",
+  "log": "vmlx-apple-main-jaccl-on-20261107.log.gz",
+  "uncompressed_log_sha256": "dabdd17266283ff0c82f9b1cf05044a03c14be90611017a308fb48abeb0ae2af",
+  "compiler_response_snapshots": [
+    {
+      "file": "cmlx-jaccl-on-args-0.rsp",
+      "source_response_file": ".build/out/Intermediates.noindex/mlx-swift.build/Debug/Cmlx-t.build/Objects-normal/arm64/e6072d4f65d7061329687fe24e3d63a7-common-args.resp",
+      "sha256": "efc5ce927661e7a4d55b4997e40cc45c97f4f423af904423c105d20a6983856c",
+      "MLX_USE_JACCL_present": true
+    },
+    {
+      "file": "cmlx-jaccl-on-args-1.rsp",
+      "source_response_file": ".build/out/Intermediates.noindex/mlx-swift.build/Debug/Cmlx-t.build/Objects-normal/arm64/82b82416624d2658e5098eb0a28c15c5-common-args.resp",
+      "sha256": "39ee85a3ea56026eefb5444d1021bbebaf07d1f45b245cd0c431b51b13aa6149",
+      "MLX_USE_JACCL_present": true
+    }
+  ],
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+  "preprocessed_availability": "VMLX_BUILD_JACCL=1",
+  "warning_categories": {
+    "shorten-64-to-32": 5466,
+    "logical-op-parentheses": 1
+  }
+}
