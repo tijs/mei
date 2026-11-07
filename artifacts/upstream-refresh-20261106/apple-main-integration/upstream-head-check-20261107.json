@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-11-07T01:30:32.924673+00:00",
+  "source": "GitHub primary repository commit/release APIs",
+  "apple_swift_main": "5f117a2e7ee1ce92f8dcc1520bc07535c43846f9",
+  "apple_swift_release": "0.33.0",
+  "apple_core_release": "v0.32.4",
+  "vmlx_main": "1bcd74ad182103a3b83941f61e57ee0bac23b330",
+  "integration": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "all_observed_upstream_heads_included": true
+}

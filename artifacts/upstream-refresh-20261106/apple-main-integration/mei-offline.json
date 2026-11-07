@@ -1,0 +1,8 @@
+{
+  "source_revision": "651d7c93f003aab10581a935c139ea717fa97335",
+  "vmlx_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "scope": "Build268.59s;495XCTest with2explicit actual-model skips/0failures (71.153s);4SwiftTesting cases pass. Env-i, compile opt-ins0; skip live MeiAcceptanceTests.",
+  "log": "mei-offline-20261107.log.gz",
+  "uncompressed_log_sha256": "203cc603d602156004f1a8304cd1790065dd22dca8821c4326a6ffdbe00b0e02"
+}

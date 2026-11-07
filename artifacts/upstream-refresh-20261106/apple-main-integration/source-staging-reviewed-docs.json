@@ -1,0 +1,8 @@
+{
+  "source_revision": "651d7c93f003aab10581a935c139ea717fa97335",
+  "vmlx_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "scope": "All16weight-free source staging checks pass after new pin and reviewed release notes.",
+  "log": "source-staging-reviewed-docs-20261107.log.gz",
+  "uncompressed_log_sha256": "fa3ce2c9da8ed523895679cf2666ec862a50ba9c47fde348ea10c1db56649f9e"
+}
