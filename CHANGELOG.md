@@ -36,8 +36,10 @@ Offline checks pass:495 XCTest cases (two skips) plus four Swift Testing cases.
 The previous candidate passed native/API checks but showed lower Groot throughput.
 The frozen artifact passes native checks on all three models and all twelve
 observable/API cells. Qwen's loaded-request slowdown and mixed Groot throughput
-remain explicit review findings; a same-binary Qwen diagnostic is running.
-The additional Apple-main merge still requires execution and Mei qualification.
+remain explicit review findings. The same-binary diagnostic did not support
+Qwen row sharing as a sufficient cause; its memory-saving default is retained.
+The additional Apple-main merge passes Cmlx trait builds on/off; Swift tests,
+Mei consumption and final runtime qualification remain required.
 No scored-task result or universal speedup is claimed. Stable remains0.10.0 until the
 release gates pass. See the [qualification evidence](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
 for exact artifact identities, resource limits and issue-first proposals.

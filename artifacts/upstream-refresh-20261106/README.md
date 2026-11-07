@@ -18,13 +18,18 @@ Fresh native gates pass13/13 on each of Groot, Qwen and Ornith; all42 model
 files rehash unchanged. The twelve-cell untraced ABBA campaign is complete:
 all168 observable rows,108 live API cases and168 post-run model-file checks pass;
 all120 measured requests are retained. Qwen's loaded-request slowdown and
-Groot's mixed throughput remain explicit performance findings. A predeclared
-same-binary Qwen row-layout diagnostic is now running. No stable readiness,
+Groot's mixed throughput remain explicit performance findings. The completed
+same-binary Qwen screen does not support row sharing as a sufficient cause;
+retain the default instead of duplicating projection weights. No stable readiness,
 universal speedup or task-score claim is made.
 The exact [artifact and campaign declarations](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
 retain all previous attempts. Stable remains **0.10.0**. The separate
 [Apple-main source merge](apple-main-integration/manifest.json) still requires
-execution, Mei consumption/build and affected qualification. Performance
+Swift-test execution, Mei consumption/build and affected qualification. Its
+[JACCL-disabled Cmlx build](apple-main-integration/cmlx-jaccl-off-build.json) and
+[enabled build](apple-main-integration/cmlx-jaccl-on-build.json) pass with actual
+compiler defines and SDK availability0/1 verified. This is build proof, not
+application or native-runtime qualification. Performance
 diagnosis, stable release/Homebrew and eight fresh scored runs remain open.
 
 ### Previous candidate and the reproduced performance hold
