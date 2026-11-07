@@ -2,9 +2,9 @@
 
 **Unreleased candidate. Stable remains 0.10.0.** The Apple-main integration
 passed offline, native and API qualification before the attention selector
-change. The new production artifact passed the offline suite; its native and
-API checks run separately. Publication and fresh four-model task results remain
-open.
+change. The new production artifact passed the offline suite and all three
+native gates. Live API and performance qualification is in progress. Publication
+and fresh four-model task results remain open.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
@@ -67,8 +67,11 @@ does not qualify the production candidate or establish a prefill improvement.
 The production build is `282cbf9a202d85191ffe8f5b2df95a0109934592`, executable
 `85ae551e76435dc3bf21f01c6b1c1f0699d803edefe6c80f36ba1d1023fd1756`, with the
 same source-built Metal library. The refreshed offline suite passed 495 XCTest
-cases (two actual-model skips, no failures) plus four Swift Testing cases. Its
-independent live checks are in progress.
+cases (two actual-model skips, no failures) plus four Swift Testing cases. Qwen,
+Groot and Ornith each passed all 13 native probes, including 65,536-token
+admission, and all 42 model files rehashed unchanged after the runs. The six
+untraced timing and API cells use this executable and remain separate from
+the preceding artifact's results.
 
 ### Apple-main artifact before the selector
 
