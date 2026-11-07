@@ -142,7 +142,7 @@ Flint/JANGH2 support. Stable remains 0.9.0 pending contender qualification.
 Qwen3.6-35B-A3B is still resource-blocked on the current 32 GiB host. Its latest
 low-buffer admission reached sustained warning pressure before scoring. This
 preview is not a stable throughput qualification or a completed Qwen benchmark.
-See [release notes](docs/RELEASE-0.10.0-rc.1.md).
+See [release notes](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.10.0-rc.1.md).
 
 ## [0.9.0] - 2026-10-13
 

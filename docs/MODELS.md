@@ -1,13 +1,13 @@
 # Models
 
 The runtime's named presets and immutable download revisions live in
-[`ModelTuningRegistry`](../Sources/MeiCore/ModelTuning.swift); inspect one with
+[`ModelTuningRegistry`](https://github.com/tijs/mei/blob/main/Sources/MeiCore/ModelTuning.swift); inspect one with
 `mei pull <profile> --dry-run`. The active Qwen3.6/Ornith/Groot text-profile
 comparison is linked from the [README](../README.md#supported-models), with
 exact evaluated packs, runtime pins and gate scope in
 [local-model-bench](https://github.com/tijs/local-model-bench/blob/main/docs/FOUR_MODEL_COMPARISON.md).
 
-The earlier research catalog [`configs/model-lineup.json`](../configs/model-lineup.json)
+The earlier research catalog [`configs/model-lineup.json`](https://github.com/tijs/mei/blob/main/configs/model-lineup.json)
 retains its own candidate roles and provenance. It is not the CLI preset registry
 or the current household/Python ranking. The historical catalog and prior-release
 proof below remain useful for reproducing those experiments; a new runtime or
@@ -37,7 +37,7 @@ checkpoints; its tool canary passed only for Ornith. CoCore's installed
 provider advertisement is not verified. Nemotron is untested, and
 image-conditioned structured output on Qwen3.6 vision remains unverified.
 Normal-serving lineup status is unaffected. Per-model evidence:
-[docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
+[docs/OPENAI-COMPATIBILITY.md](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md) §8.
 
 ## Provenance and quantization policy
 
@@ -147,7 +147,7 @@ quantization) are **not** part of this preset and remain off/unvalidated.
 > also read back `structured_output=true` and `tool_calls=true`. The packaged
 > 0.7.1 binary was
 > not model-loaded during the release run; normal-serving lineup and performance
-> claims above are separate. Evidence: [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
+> claims above are separate. Evidence: [docs/OPENAI-COMPATIBILITY.md](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md) §8.
 
 ### Qwen3.6 — exploratory candidate
 
@@ -199,7 +199,7 @@ VMLX_FUSED_GATE_UP_CACHE_LIMIT_BYTES=0 mei \
 > The packaged 0.7.1 binary was not model-loaded during the release run; only
 > the version constant changed after the tested source. Provider Register/PDS
 > advertisement is not verified. Evidence:
-> [docs/OPENAI-COMPATIBILITY.md](OPENAI-COMPATIBILITY.md) §8.
+> [docs/OPENAI-COMPATIBILITY.md](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md) §8.
 
 ### Nemotron — experimental, pending gate
 

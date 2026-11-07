@@ -28,7 +28,7 @@ unreleased changes.
 The separately installed preview formula is for explicit prerelease evaluation:
 `brew install tijs/tap/mei-preview`. Check `mei-preview --version` before
 comparing it with stable; a preview formula can trail the current stable release.
-Earlier [0.10.0-rc.2 notes](docs/RELEASE-0.10.0-rc.2.md) retain text-only bundle
+Earlier [0.10.0-rc.2 notes](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.10.0-rc.2.md) retain text-only bundle
 preparation, the Groot profile admission and their original qualification scope.
 
 **0.7.0** introduced token-level constrained structured output (`json_object`
@@ -59,7 +59,7 @@ Qwen3.6-35B-A3B text-only failed the 4-GiB memory reserve in every tested
 configuration (3.32–3.43 GiB) and is **not accepted** for this workload on the
 tested device; Peix end-to-end orchestration remains unverified (its harness
 does not exist yet), and the result does not generalize beyond the tested
-model/device. See [release notes](docs/RELEASE-0.9.0.md).
+model/device. See [release notes](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.9.0.md).
 
 The latest live structured-output evidence remains
 the 0.7.1 runtime source (`ea5a67a`): the exact buffered and streaming CoCore
@@ -67,8 +67,8 @@ canaries passed on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and
 aligned Ornith, as well as the existing Qwen3-4B checkpoint; image-conditioned
 structured output on Qwen3.6 vision remains unverified. See
 [inference scheduling](docs/INFERENCE-SCHEDULING.md),
-[CoCore compatibility](docs/COCORE.md), and the
-[compatibility matrix](docs/OPENAI-COMPATIBILITY.md).
+[CoCore compatibility](https://github.com/tijs/mei/blob/main/docs/COCORE.md), and the
+[compatibility matrix](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md).
 
 Earlier releases fixed prefix reuse, added cross-conversation prefix anchors,
 per-request instrumentation, and source-built Metal kernel packaging; see
@@ -93,11 +93,11 @@ Peixinho application acceptance. Qualification of an unreleased runtime remains
 separate from published task results.
 
 Named presets and download revisions live in
-[`ModelTuningRegistry`](Sources/MeiCore/ModelTuning.swift).
+[`ModelTuningRegistry`](https://github.com/tijs/mei/blob/main/Sources/MeiCore/ModelTuning.swift).
 The vision preset `qwen3.6-35b-a3b` remains available; current text-only benchmark
 results do not qualify image-conditioned behavior. Earlier profile figures and
 the 0.6.1 coding comparison are preserved in
-[historical model results](docs/HISTORICAL-MODEL-RESULTS.md).
+[historical model results](https://github.com/tijs/mei/blob/main/docs/HISTORICAL-MODEL-RESULTS.md).
 
 ```bash
 mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
@@ -144,7 +144,7 @@ report the same `model_type`, architecture and layer topology. Mei detects the
 *architecture*, which keeps an unknown model safe, but will not guess which
 specific model you have. Serving without a profile works; you get architecture
 defaults and Mei says so at startup. Rationale in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md).
 
 **Use the artifact named by the profile.** Profiles pin an exact repository and
 revision; some use an aligned derivative. `mei pull --dry-run` shows the precise
@@ -152,7 +152,7 @@ plan before any download. Details and earlier alignment measurements are in
 [docs/MODELS.md](docs/MODELS.md).
 
 For explicit text-only preparation of compatible Qwen3.5-family bundles, see
-[the payload-preserving exporter](tools/export_qwen_text.md). Architecture defaults
+[the payload-preserving exporter](https://github.com/tijs/mei/blob/main/tools/export_qwen_text.md). Architecture defaults
 are reported as `qwen35-moe`; this identifies the family, not a named model or
 validated tuning for every derivative. Existing `--model-profile` names are unchanged.
 
@@ -174,7 +174,7 @@ validated tuning for every derivative. Existing `--model-profile` names are unch
   ports.
 
 Deeper detail on the runtime, optimization profiles, memory behavior, and
-design: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+design: **[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md)**.
 
 ## Install on Apple Silicon (stable)
 
@@ -194,7 +194,7 @@ beside the executable.
 
 See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
 source-built `scripts/install_mei.sh` installer. Release notes:
-[`docs/RELEASE-0.10.0.md`](docs/RELEASE-0.10.0.md).
+[`docs/RELEASE-0.10.0.md`](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.10.0.md).
 
 ## One-time prerequisite: `hf`
 
@@ -274,17 +274,17 @@ bounded local admission queue in front of the execution slot
 gate — and adds opt-in bounded-overlap concurrency
 (`--max-active-generations 2`, experimental); the default remains strict
 single-flight. See
-[docs/OPENAI-COMPATIBILITY.md](docs/OPENAI-COMPATIBILITY.md) §8,
-[docs/COCORE.md](docs/COCORE.md), and
+[docs/OPENAI-COMPATIBILITY.md](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md) §8,
+[docs/COCORE.md](https://github.com/tijs/mei/blob/main/docs/COCORE.md), and
 [docs/INFERENCE-SCHEDULING.md](docs/INFERENCE-SCHEDULING.md) for exact
 evidence.
 
 ## Build
 
-Mei is bundled SwiftPM ([`Package.swift`](Package.swift), fork-pinned
+Mei is bundled SwiftPM ([`Package.swift`](https://github.com/tijs/mei/blob/main/Package.swift), fork-pinned
 `Package.resolved`); most users just install the release. To build from source
 (debug/release, test, package, `mlx.metallib`, installer), see
-**[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** — the release build is fast on
+**[docs/DEVELOPMENT.md](https://github.com/tijs/mei/blob/main/docs/DEVELOPMENT.md)** — the release build is fast on
 Apple Silicon. The packaged Homebrew binary and the `docs/INSTALL.md`
 installer both assume an already-built (or prebuilt) binary.
 
@@ -293,16 +293,16 @@ installer both assume an already-built (or prebuilt) binary.
 - **[docs/MODELS.md](docs/MODELS.md)** — candidate status, provenance and
   quantization; the historical four-model comparator lineup; per-model
   quickstarts.
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — runtime flow, optimization
+- **[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md)** — runtime flow, optimization
   profiles, memory/KV/prefill behavior, design notes.
-- **[docs/BENCHMARKING.md](docs/BENCHMARKING.md)** — memory measurement,
+- **[docs/BENCHMARKING.md](https://github.com/tijs/mei/blob/main/docs/BENCHMARKING.md)** — memory measurement,
   acceptance probes, `local-model-bench` integration, methodology, evidence
   conventions.
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** — repo layout, build/test/
+- **[docs/DEVELOPMENT.md](https://github.com/tijs/mei/blob/main/docs/DEVELOPMENT.md)** — repo layout, build/test/
   package, `mlx.metallib`, vMLX fork pin and workflow.
 - **[docs/INSTALL.md](docs/INSTALL.md)** — installer paths and safety contract
   (authoritative).
-- **[docs/COCORE.md](docs/COCORE.md)** — CoCore attached-engine integration:
+- **[docs/COCORE.md](https://github.com/tijs/mei/blob/main/docs/COCORE.md)** — CoCore attached-engine integration:
   engine map, canaries, streaming, and model-specific structured-output support.
 - **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
   upstream-PR workflow (authoritative).

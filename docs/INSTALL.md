@@ -2,7 +2,7 @@
 
 This document covers the **source-built / user-local path** — installing a
 `mei` binary you have *already built* into a single destination directory via
-[`scripts/install_mei.sh`](../scripts/install_mei.sh).
+[`scripts/install_mei.sh`](https://github.com/tijs/mei/blob/main/scripts/install_mei.sh).
 
 Most end users should instead install the **stable v0.10.0 prebuilt release:**
 
