@@ -1,0 +1,24 @@
+{
+  "observed_at": "2026-11-07T00:51:04.123676+00:00",
+  "source_revision": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
+  "core_revision": "e790cca9df907c30ff4f18b0c772b4d9f454132e",
+  "command": "env-i HOME/PATH/DEVELOPER_DIR xcrun swift build --target Cmlx --jobs2 --disable-default-traits -v",
+  "observed_exit_code": 0,
+  "scope": "Cmlx build only; no Swift tests, link/application/native/runtime/Mei qualification claim",
+  "log": "vmlx-apple-main-jaccl-off-20261107.log.gz",
+  "uncompressed_log_sha256": "6264b28c93a77790cabe9e91482f379559d9863588542c5f2e82faad9eabe2b9",
+  "compiler_response_snapshots": [
+    {
+      "file": "cmlx-jaccl-off-args-0.rsp",
+      "sha256": "0b6c74ccf1962f13459f50474aef7e590ba78bde0728ac3aa2254129b8edf96b",
+      "MLX_USE_JACCL_present": false
+    },
+    {
+      "file": "cmlx-jaccl-off-args-1.rsp",
+      "sha256": "743479795f429075aad1ca23de580473a7d4125fb83a6fe42d7fd4525761ee6b",
+      "MLX_USE_JACCL_present": false
+    }
+  ],
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk",
+  "preprocessed_availability": "VMLX_BUILD_JACCL=0"
+}
