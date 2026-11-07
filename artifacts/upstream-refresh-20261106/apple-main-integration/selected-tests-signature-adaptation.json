@@ -1,0 +1,10 @@
+{
+  "base_revision": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
+  "fix_revision": "374ce3a907ee149cbea13d0f54944ca258c309a3",
+  "changed_file": "Tests/MLXTests/MLX0322IntegrationTests.swift",
+  "adapted_calls": 4,
+  "expected_results_per_call": 1,
+  "production_Source_and_Package_blobs_unchanged": true,
+  "scope": "Test-source adaptation only. Both prior Cmlx trait builds retain applicable production inputs; full Swift test retry is still required. No test pass claimed.",
+  "retry_log": "/tmp/vmlx-apple-main-selected-tests-retry-20261107.log"
+}

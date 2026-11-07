@@ -1,0 +1,10 @@
+{
+  "observed_at": "2026-11-07T01:02:05.075640+00:00",
+  "source_revision": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
+  "observed_exit_code": 1,
+  "scope": "Swift test compile failure; no test execution/pass claimed. Cmlx trait build results remain separate.",
+  "cause": "Retained MLX0322IntegrationTests had four CompiledFunction.call sites across three tests without the new upstream expected-result-count argument.",
+  "fix": "Pass expected:1 at the foreign-worker cache, nested inner/outer lock-order and custom-kernel shape calls; retain original math/identity assertions. Production Source/Package blobs unchanged.",
+  "log": "vmlx-apple-main-selected-tests-compile-failure-20261107.log.gz",
+  "uncompressed_log_sha256": "2e647aaa73f10c97f1d7f1dc6478273004c1b02ab610a67854780ed742e9608e"
+}
