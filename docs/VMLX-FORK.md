@@ -18,8 +18,9 @@ repository cache being pre-populated.
 ## Current integration candidate: 0.11
 
 The 0.11 candidate pins vMLX
-`9dd023d3299b16e7695470911c0a7ed36b7656c4`, integrating Osaurus `effcd981`,
-Apple MLX Swift 0.33.0 and MLX core 0.32.4. It preserves Mei's bounded prefix
+`1f90918ac0872b134ac40c31a1f4a7b68b4982f5`, integrating current Osaurus
+`1bcd74ad`, Apple MLX Swift main `5f117a2e` (0.33.0 plus three commits) and
+MLX core 0.32.4. It preserves Mei's bounded prefix
 storage, raw-text generation and request-local constrained decoding while
 adapting to upstream materialization, host-read and eval-lock ownership.
 Stable remains 0.10.0 until the remaining release gates pass.

@@ -2,13 +2,39 @@
 
 ## Current candidate and remaining gates
 
-The current frozen runtime is Mei `588413434e9c5cc417e3a6da1bf9cef90598ba32`
+The final candidate is Mei `651d7c93f003aab10581a935c139ea717fa97335`, vMLX
+`1f90918ac0872b134ac40c31a1f4a7b68b4982f5`, core
+`e790cca9df907c30ff4f18b0c772b4d9f454132e`. It includes the current Apple and
+Osaurus heads checked on2026-11-07. Executable SHA-256:
+`12fa6435558ce679b698804137e6c36ac9e031332408143096474405b33c1bd9`;
+Metal remains `5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
+
+The optimized build passes in501.59s. The offline suite passes495 XCTest cases
+(two explicit actual-model skips, zero failures) plus four Swift Testing cases.
+Source staging passes16 checks. Both JACCL trait builds, the selected dependency
+regressions and dedicated allocator process pass; original failures and negative
+controls are preserved in the [Apple integration index](apple-main-integration/).
+The current [issue-first proposal audit](upstream-issue-pr-audit-20261107.json)
+verifies all14 atomic PRs reference older problem issues. No upstream acceptance
+or CI-success claim follows from that audit.
+
+Final-artifact native qualification is running: Groot and Qwen each pass13/13,
+with all31 model files unchanged. Qwen has one pressure warning below the
+sustained stop threshold; all resource observations remain in the evidence.
+Ornith and all12 fresh untraced speed cells remain pending. See the
+[final artifact and campaign](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106).
+Stable remains **0.10.0**. Stable/Homebrew publication and the eight fresh
+four-model task trajectories require the complete reviewed final qualification.
+
+### Preceding batched candidate
+
+The preceding frozen runtime is Mei `588413434e9c5cc417e3a6da1bf9cef90598ba32`
 with vMLX `710741556966841b98d863220bda2d034671a58e` and core
 `e790cca9df907c30ff4f18b0c772b4d9f454132e`. Executable SHA-256:
 `195e0d43b09c25fa485c0955d9beda5a4ac40a04961791a97cc45ef399e9622e`;
 source-built Metal:
 `5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
-The final release build passes (382.63 seconds), with495 offline XCTest cases
+Its release build passes (382.63 seconds), with495 offline XCTest cases
 (two skips, zero failures) and four Swift Testing cases. Selected synthetic
 upstream regressions pass62 XCTest cases (one skip) plus132 Swift Testing cases.
 [Final build proof](ripple-integration/mei-final-build-summary.json) and
@@ -23,14 +49,8 @@ same-binary Qwen screen does not support row sharing as a sufficient cause;
 retain the default instead of duplicating projection weights. No stable readiness,
 universal speedup or task-score claim is made.
 The exact [artifact and campaign declarations](https://github.com/tijs/local-model-bench/tree/main/artifacts/mei-upstream-qualification-20261106)
-retain all previous attempts. Stable remains **0.10.0**. The separate
-[Apple-main source merge](apple-main-integration/manifest.json) still requires
-Swift-test execution, Mei consumption/build and affected qualification. Its
-[JACCL-disabled Cmlx build](apple-main-integration/cmlx-jaccl-off-build.json) and
-[enabled build](apple-main-integration/cmlx-jaccl-on-build.json) pass with actual
-compiler defines and SDK availability0/1 verified. This is build proof, not
-application or native-runtime qualification. Performance
-diagnosis, stable release/Homebrew and eight fresh scored runs remain open.
+retain all previous attempts. These observations qualify that executable only,
+not the final Apple-main executable above.
 
 ### Previous candidate and the reproduced performance hold
 
