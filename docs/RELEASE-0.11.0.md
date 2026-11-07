@@ -73,6 +73,14 @@ admission, and all 42 model files rehashed unchanged after the runs. The six
 untraced timing and API cells use this executable and remain separate from
 the preceding artifact's results.
 
+Qwen passed both production timing cells, including all 18 live API cases.
+At 30,000 tokens, each production process decoded faster than both preceding
+candidate processes, and their mean decode rate rose 7.5%. Against stable
+0.10.0, mean decode rose 3.7%, while full request time rose 1.5% and prefill
+time rose 1.9%. This is a comparison across run windows; the separate
+within-binary diagnostic supports the kernel effect. Ornith and Groot are
+still in qualification.
+
 ### Apple-main artifact before the selector
 
 The preceding Apple-main artifact uses source `651d7c93f003aab10581a935c139ea717fa97335`,
