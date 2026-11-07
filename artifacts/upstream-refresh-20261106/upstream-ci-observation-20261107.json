@@ -1,0 +1,32 @@
+{
+  "checked_utc": "2026-11-07T07:08:38Z",
+  "scope": "Read-only snapshot of the fourteen issue-first PRs. No CI success or upstream acceptance is inferred.",
+  "pr_state": "All fourteen remain open at their audited heads; core PR 54 is draft. Apple PR 4842 and Osaurus core PR 54 had no commit check rollup.",
+  "vmlx_prs": [746, 749, 750, 752, 754, 756, 758, 760, 762, 765, 767, 769],
+  "vmlx_checks": {
+    "passed_on_all_twelve": ["Linux SwiftPM aarch64 and x86_64", "Linux CMake bookworm and fedora39 aarch64 and x86_64", "Jinja HF reference contracts"],
+    "queued_on_all_twelve": ["mac_build_and_test", "Linux CUDA CMake Swift Build"],
+    "failed_on_all_twelve": ["lint"],
+    "lint_policy": "Advisory (continue-on-error) in the pinned upstream pull_request.yml."
+  },
+  "lint_evidence": [
+    {
+      "pr": 746,
+      "job": "https://github.com/osaurus-ai/vmlx-swift/actions/runs/42208966666/job/127862579776",
+      "failed_step": "Build swift-format",
+      "finding": "The latest-release lookup left SWIFT_FORMAT_VERSION empty; the checkout then failed with repository '1' before any formatter ran. The empty output is proved by the rendered clone command; the HTTP response behind it is not recorded."
+    },
+    {
+      "pr": 750,
+      "job": "https://github.com/osaurus-ai/vmlx-swift/actions/runs/42216281680/job/127886980504",
+      "failed_step": "Run style checks",
+      "finding": "The Swift and CMake hooks produced 1087 file diffs, including the PR paths and unrelated paths. The other ten lint jobs failed at the same step; their full diffs were not individually attributed."
+    },
+    {
+      "pr": 744,
+      "job": "https://github.com/osaurus-ai/vmlx-swift/actions/runs/42278698694/job/128101679142",
+      "finding": "An unrelated upstream PR reproduced repository-wide formatter churn (1091 diffs). Upstream already tracks it in issue 400. This is not proof every changed file in our PRs is individually style-clean."
+    }
+  ],
+  "disposition": "Do not mix unrelated baseline formatting into atomic runtime PRs. No branch changes or rerun requests were sent. Release qualification remains the separate exact local artifact gate."
+}
