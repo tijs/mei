@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "terminal_exit_code": 0,
+  "source_revision": "282cbf9a202d85191ffe8f5b2df95a0109934592",
+  "vmlx_revision": "3cb7240a39d92475345c6c1d0c9057da31a2f289",
+  "xctest_cases": 495,
+  "actual_model_skips": 2,
+  "xctest_failures": 0,
+  "swift_testing_passed": 4,
+  "command": "swift test --build-system swiftbuild --configuration debug --disable-automatic-resolution --jobs 2 --no-parallel --skip MeiAcceptanceTests",
+  "environment": "env-i; Xcode selected; deterministic hash override and four compile opt-ins all 0",
+  "uncompressed_log_sha256": "b4e24994632f9e833b0658981b78eda9f41792d49a1d775cb3867c78d5ae5dda",
+  "log": "offline.log.gz"
+}

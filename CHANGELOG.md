@@ -28,20 +28,22 @@ All notable changes to Mei are documented here.
 
 - Retune byte-based command batching on roomy g13s GPUs while preserving correct
   storage accounting, operation limits and explicit environment overrides.
+- Prefer an existing attention kernel on M1 Max for single-query BF16 GQA in
+  the measured context band. Preserve the required threadgroup-limit fallback
+  and qualify the new executable separately.
 - Reject malformed DFlash2 NoPE layer declarations instead of silently coercing
   or dropping them. Cover valid cached-key rotation and inherited tool/cache,
   prompt-retention and width-policy behavior with synthetic execution tests.
 
-The final Apple-main integration passes the offline suite: 495 XCTest cases
+The Apple-main integration before the selector passed the offline suite: 495 XCTest cases
 (two explicit actual-model skips, no failures) plus four Swift Testing cases.
 Cmlx trait builds on/off, selected dependency regressions and all three native
 gates pass. The twelve-cell comparison also passed all 168 observable checks
 and 108 API cases. Compared with 0.10.0, Ornith decoded faster in both contexts;
 Groot had faster mean requests in both contexts; Qwen's 30,000-token requests
-took 1.8% longer on average. These measurements apply to the tested profiles
-and are separate from scored tasks. See the
-[qualification evidence](https://github.com/tijs/mei/blob/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/README.md)
-for exact artifact identities, resource limits and issue-first proposals.
+took 1.8% longer on average. Those measurements apply to the preceding artifact.
+The [release notes](docs/RELEASE-0.11.0.md) distinguish it from the new candidate
+and link to exact artifact identities, resource limits and issue-first proposals.
 
 ## [0.10.0] - 2026-11-03
 

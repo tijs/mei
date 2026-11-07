@@ -1,12 +1,14 @@
 # Mei 0.11.0 — release preparation
 
-**Unreleased candidate. Stable remains 0.10.0.** Dependency integration,
-offline tests and final-artifact native and API qualification passed.
-Performance review, publication and fresh four-model task results remain open.
+**Unreleased candidate. Stable remains 0.10.0.** The Apple-main integration
+passed offline, native and API qualification before the attention selector
+change. The new production artifact passed the offline suite; its native and
+API checks run separately. Publication and fresh four-model task results remain
+open.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
-The candidate pins vMLX `1f90918ac0872b134ac40c31a1f4a7b68b4982f5`, integrating
+The candidate pins vMLX `3cb7240a39d92475345c6c1d0c9057da31a2f289`, integrating
 Osaurus `1bcd74ad`, Apple MLX Swift main `5f117a2e` (release0.33.0 plus three
 commits), and MLX core0.32.4. Compatible dependencies include Swift Crypto5.1.1
 and SwiftSyntax604.0.0.
@@ -55,7 +57,22 @@ in [the fork guide](VMLX-FORK.md).
 
 ## Qualification status
 
-The final Apple-main artifact uses source `651d7c93f003aab10581a935c139ea717fa97335`,
+The production candidate selects an existing attention kernel on M1 Max only
+for single-query BF16 GQA in the measured 24,576–32,768-token band and matching
+KV layouts. The existing threadgroup-limit fallback and final safety check
+remain in place. An optimized diagnostic showed 7.2% faster decode and 0.7%
+shorter total requests on Qwen at 30,000 tokens, with identical API-observable
+output. That diagnostic had one measured loaded request per fresh process and
+does not qualify the production candidate or establish a prefill improvement.
+The production build is `282cbf9a202d85191ffe8f5b2df95a0109934592`, executable
+`85ae551e76435dc3bf21f01c6b1c1f0699d803edefe6c80f36ba1d1023fd1756`, with the
+same source-built Metal library. The refreshed offline suite passed 495 XCTest
+cases (two actual-model skips, no failures) plus four Swift Testing cases. Its
+independent live checks are in progress.
+
+### Apple-main artifact before the selector
+
+The preceding Apple-main artifact uses source `651d7c93f003aab10581a935c139ea717fa97335`,
 executable `12fa6435558ce679b698804137e6c36ac9e031332408143096474405b33c1bd9`
 and the unchanged source-built Metal hash below. All three models passed 13/13
 native checks, including cache reuse and 65,536-token admission, with all 42 files
@@ -139,8 +156,8 @@ proposed contributions, not upstream acceptance.
 
 ## Remaining release work
 
-Finish the Qwen performance review, publish the final source/artifact identity,
-then verify GitHub assets
+Finish native, API and performance qualification on the new executable,
+publish the final source/artifact identity, then verify GitHub assets
 and Homebrew delivery. After release, rerun Qwen, Ornith and Groot on the released
 Mei artifact plus the pinned Logics-SWE llama.cpp control, seeds 17 and 29, using
 the frozen household/Python benchmark. Publish all reviewed attempts and current
