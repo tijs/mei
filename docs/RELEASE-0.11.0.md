@@ -1,24 +1,22 @@
 # Mei 0.11.0 — release preparation
 
-**Unreleased candidate. Stable remains 0.10.0.** A previous candidate passed
-observable/API checks but showed a repeatable Groot slowdown. A scoped batching
-retune and a reproduced NoPE configuration fix are now built. All three native
-gates and all twelve frozen-candidate observable/API cells pass. Performance
-findings and the additional Apple merge remain open release work. Fresh
-four-model task results follow the published release.
+**Unreleased candidate. Stable remains 0.10.0.** Dependency integration and
+selected regression tests pass. Mei's final offline build, new-artifact native
+and performance qualification, publication and fresh four-model results remain
+open.
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
-The candidate pins vMLX `710741556966841b98d863220bda2d034671a58e`, integrating
-Osaurus `1bcd74ad`, Apple MLX Swift 0.33.0 and MLX core 0.32.4. Compatible
-dependencies include Swift Crypto 5.1.1 and SwiftSyntax 604.0.0.
+The candidate pins vMLX `1f90918ac0872b134ac40c31a1f4a7b68b4982f5`, integrating
+Osaurus `1bcd74ad`, Apple MLX Swift main `5f117a2e` (release0.33.0 plus three
+commits), and MLX core0.32.4. Compatible dependencies include Swift Crypto5.1.1
+and SwiftSyntax604.0.0.
 
-A further upstream-head audit found three Apple commits beyond release0.33.0.
-Their source merge is prepared separately, including empty-result recovery and
-the JACCL opt-out trait, with review fixes for Xcode defaults and test isolation.
-That source is not yet built, consumed by Mei or qualified. The frozen artifact
-and live observations below retain their original identity; they cannot qualify
-the additional merge. See the
+The Apple additions include empty-result error recovery, a JACCL package trait
+and Swift Testing migration. The integration retains fork compiler ownership,
+locking, invalid-assignment behavior and dedicated allocator lifetime tests.
+Both Cmlx trait builds pass. The selected dependency tests and their original
+failures are recorded in the
 [integration review](https://github.com/tijs/mei/tree/codex/dependency-refresh-20261106/artifacts/upstream-refresh-20261106/apple-main-integration).
 
 ## Upgrading weight-storage settings
@@ -58,12 +56,12 @@ in [the fork guide](VMLX-FORK.md).
 
 ## Qualification status
 
-The new frozen runtime is source `588413434e9c5cc417e3a6da1bf9cef90598ba32`,
+The preceding frozen runtime, before the additional Apple-main merge, is source `588413434e9c5cc417e3a6da1bf9cef90598ba32`,
 executable SHA-256
 `195e0d43b09c25fa485c0955d9beda5a4ac40a04961791a97cc45ef399e9622e`,
 with source-built Metal SHA-256
 `5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61`.
-The final release build and full offline495-case suite (two skips, no failures)
+That artifact’s release build and full offline495-case suite (two skips, no failures)
 plus four Swift Testing cases pass. Selected synthetic parser/cache/width/NoPE
 tests pass62 XCTest cases (one skip) plus132 Swift Testing cases. A five-input
 negative control reproduces malformed NoPE declarations before validation.
@@ -77,11 +75,12 @@ process; cold/warmups are separate. Old timings are not substituted. Profiles
 retain weights, precision, budgets, cache and resource guards. Storage migration
 is part of this aggregate runtime comparison, which does not isolate every patch.
 
-The completed Qwen group improves decode speed, but its measured long requests
-take slightly longer overall, with slower prefill. This remains a release hold
-while the cause is investigated with a predeclared same-binary diagnostic. Decode speed
-alone does not prove that requests became faster; all repeats remain in the
-linked evidence.
+The completed Qwen group improves decode speed, but long requests average1.48%
+slower overall, with about2% slower prefill. A predeclared same-binary row-sharing
+diagnostic did not support shared projection views as the cause: retaining
+original projections adds about416MiB at nearly identical request times. Keep
+row sharing enabled and retain the small latency difference in reporting. This
+diagnostic is one process per arm and does not establish statistical equivalence.
 
 Ornith's complete group passes; Groot has improved short decode, slightly lower
 loaded decode, and faster whole-request means in both contexts on these runs.

@@ -12,7 +12,7 @@
   "prepared_merge": "ffdee6f449b06108be48e044d4efee1345377119",
   "branch": "codex/apple-head-integration-20261106",
   "checkout": "/Users/tijs/projects/vmlx-apple-head-integration-20261106",
-  "status": "source_prepared_execution_and_Mei_consumption_pending",
+  "status": "dependency_regressions_pass_Mei_pin_resolved_full_offline_build_in_progress",
   "overlap": "Empty result padding overlaps fork splitPieces/invalid-array/compiler recovery. Use upstream helper for tuple split and quantize/linalg/transform paths; retain stricter general split and invalid-assignment semantics. No duplicate upstream PR is warranted for a fix already committed there.",
   "adaptations": [
     "Retain compile hard-disable/trusted policy, lock order and cached closure lifetime; pad policy bypass as well as compiled results.",
@@ -23,9 +23,11 @@
     "empty vector invalid placeholders",
     "quantization failure recovery",
     "SVD failure recovery",
-    "disabled-compile result padding"
+    "disabled-compile result padding",
+    "failed broadcast invalidates assignment destination"
   ],
-  "qualification_boundary": "Current live5884134/71074155 measurements retain exact original identity. No ffdee build/native/performance result is claimed. Execute after current campaign terminal, then pin/build/freeze/requalify before release.",
+  "qualification_boundary": "Cmlx on/off, selected dependency suites and isolated allocator pass. Mei now resolves exact tested head1f90918a; full offline suite/build then new executable qualification remain pending. Earlier588/710 observations retain original identity.",
   "prepared_head": "243cb4f2a324552cd96d240a6d6fae65c6f58bd4",
-  "review": "review.json"
+  "review": "review.json",
+  "tested_head": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5"
 }

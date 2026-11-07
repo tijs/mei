@@ -1,0 +1,14 @@
+{
+  "source_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "xctest_cases": 28,
+  "swift_testing_cases": 267,
+  "swift_testing_process_counts": [
+    51,
+    21,
+    195
+  ],
+  "scope": "Unsafe compile opt-ins0; array/module migration, empty-result and selected cache/width/processor suites. Full log identifies cases. No statistical or model proof.",
+  "log": "migration-cache-tests-20261107.log.gz",
+  "uncompressed_log_sha256": "398a9ef97fdc9a3fec964c6c0421b2ac938dff92b6754348d287f4aba4b43df8"
+}

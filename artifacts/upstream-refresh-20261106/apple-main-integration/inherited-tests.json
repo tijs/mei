@@ -1,0 +1,17 @@
+{
+  "source_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "observed_exit_code": 0,
+  "xctest_process_counts": [
+    24,
+    33,
+    19
+  ],
+  "swift_testing_process_counts": [
+    64,
+    20,
+    18
+  ],
+  "scope": "Inherited host-read/eval/materialization/schema/prompt snapshot, Flint NoPE and width/cache boundary selection; log retains exact discovery. No models.",
+  "log": "inherited-tests-20261107.log.gz",
+  "uncompressed_log_sha256": "44ddbd756788715f3ce017721829a11730595ae506535d0601e147046ceb6175"
+}

@@ -1,0 +1,110 @@
+{
+  "source_revision": "1f90918ac0872b134ac40c31a1f4a7b68b4982f5",
+  "reason": "Completed dependency-test build; preserve proof and free disk for final Mei build. All test handles terminal.",
+  "products": [
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMCommonToolParserFocusedTests.xctest/Contents/MacOS/MLXLMCommonToolParserFocusedTests",
+      "bytes": 87640896,
+      "sha256": "d314dc9e20f0581aee41ab8e253fe53ea5c2d2fddfb6342d8ae05467835493c9"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMCommonToolParserFocusedTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/VMLXLinuxTests.xctest/Contents/MacOS/VMLXLinuxTests",
+      "bytes": 121364464,
+      "sha256": "3296b186a471f1a2f1c4ac8681cfc2585c3b51c6a41ddc0e2be7bd6bc6e5360c"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/VMLXLinuxTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMTests.xctest/Contents/MacOS/MLXLMTests",
+      "bytes": 259653712,
+      "sha256": "bb6206c4f52452fc48073d0bc959c3fbb81cbe75e7dcc1652390b38dc6c40092"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/JinjaReferenceTests.xctest/Contents/MacOS/JinjaReferenceTests",
+      "bytes": 3607040,
+      "sha256": "2f027aea3f6b94dfaca7bfce18ec82168e6e0da7109c359044d147c5e974f440"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXDistributedCoreTests.xctest/Contents/MacOS/MLXDistributedCoreTests",
+      "bytes": 1825264,
+      "sha256": "c5bad63c5c51d0a15a6ba19b090f22f2eee20d2c525ed7a7a75c15d59f40100d"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXTests.xctest/Contents/MacOS/MLXTests",
+      "bytes": 63146016,
+      "sha256": "2fe69d562c1dfffe39ebeca3f4c330b346feca19eaaa63500b4a47a2dbfdd901"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/CmlxTests.xctest/Contents/MacOS/CmlxTests",
+      "bytes": 49620704,
+      "sha256": "5408f022d63c15a22f56c1435acd840a4d7033bddaddd5b4f99a482fb67c6d9b"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/CmlxTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/ToolSchemaReferenceTests.xctest/Contents/MacOS/ToolSchemaReferenceTests",
+      "bytes": 86063952,
+      "sha256": "3a79e0491a3f304e6fe0a683a8f6738c8a4cdc8ca19f7e998da80d4d199e5364"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/ToolSchemaReferenceTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMCommonFocusedTests.xctest/Contents/MacOS/MLXLMCommonFocusedTests",
+      "bytes": 205191200,
+      "sha256": "139d0b1850aabda6a4374b81bc79debaf11c7c29d1a71b14fdc5f82eb3e457c8"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXLMCommonFocusedTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/vMLXFluxTests.xctest/Contents/MacOS/vMLXFluxTests",
+      "bytes": 132260912,
+      "sha256": "84c90bebe69cb337ad17ebe83608a2bf8288a95aab361948f3f1efe4dcaa8cb3"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/vMLXFluxTests.xctest/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib",
+      "bytes": 4752912,
+      "sha256": "5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61"
+    },
+    {
+      "path": "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug/MLXPressPolicyTests.xctest/Contents/MacOS/MLXPressPolicyTests",
+      "bytes": 746592,
+      "sha256": "c9a4c4c029bb1645e07b8ec750d04432eaa36f4327557388df7b16753898b548"
+    }
+  ],
+  "removed_roots": [
+    "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Products/Debug",
+    "/Users/tijs/projects/vmlx-mei-upstream-sync-20261106/.build/out/Intermediates.noindex"
+  ]
+}

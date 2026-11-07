@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "log": "source-staging-final-pin-20261107.log.gz",
+  "sha256": "fa3ce2c9da8ed523895679cf2666ec862a50ba9c47fde348ea10c1db56649f9e",
+  "scope": "16 source-staging checks pass at new manifest pin"
+}

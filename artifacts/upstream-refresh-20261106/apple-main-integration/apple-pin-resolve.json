@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "log": "apple-pin-resolve-20261107.log.gz",
+  "sha256": "4fbeae9644db97d1a37bd2e27802d3f4803c428de4d6022e3a799ca2894f0d10",
+  "scope": "Resolved lock changes only originHash and vMLX exact revision"
+}

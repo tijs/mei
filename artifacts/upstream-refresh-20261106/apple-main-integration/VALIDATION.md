@@ -4,7 +4,9 @@ Cmlx trait-on/off builds pass. The corrected compiler-enabled selection passes
 74 XCTest cases; the dedicated allocator process passes exactly two cases.
 Five new error-recovery cases pass separately with compilation disabled.
 The original failed runs and the stream-pool negative control are retained.
-Array/module migration and inherited cache/NoPE/width tests are still pending.
+Array/module migration and selected cache/width/processor suites pass28 XCTest
+and267 Swift Testing cases. Further inherited selection passes76 XCTest and102
+Swift Testing cases (separate processes, not a unique-case grand total).
 These are dependency tests, not final Mei runtime or release proof.
 
 The commands below are the initial preparation record; execution details and
