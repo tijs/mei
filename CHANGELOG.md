@@ -2,7 +2,7 @@
 
 All notable changes to Mei are documented here.
 
-## [0.11.0] - Unreleased candidate
+## [0.11.0] - 2026-11-07
 
 - Refresh the pinned runtime to Apple MLX Swift 0.33.0 / MLX core 0.32.4,
   with current compatible dependencies including Swift Crypto 5.1.1 and
@@ -30,20 +30,19 @@ All notable changes to Mei are documented here.
   storage accounting, operation limits and explicit environment overrides.
 - Prefer an existing attention kernel on M1 Max for single-query BF16 GQA in
   the measured context band. Preserve the required threadgroup-limit fallback
-  and qualify the new executable separately.
+  and verify the change against the preceding build and stable 0.10.0.
 - Reject malformed DFlash2 NoPE layer declarations instead of silently coercing
   or dropping them. Cover valid cached-key rotation and inherited tool/cache,
   prompt-retention and width-policy behavior with synthetic execution tests.
 
-The Apple-main integration before the selector passed the offline suite: 495 XCTest cases
-(two explicit actual-model skips, no failures) plus four Swift Testing cases.
-Cmlx trait builds on/off, selected dependency regressions and all three native
-gates pass. The twelve-cell comparison also passed all 168 observable checks
-and 108 API cases. Compared with 0.10.0, Ornith decoded faster in both contexts;
-Groot had faster mean requests in both contexts; Qwen's 30,000-token requests
-took 1.8% longer on average. Those measurements apply to the preceding artifact.
-The [release notes](docs/RELEASE-0.11.0.md) distinguish it from the new candidate
-and link to exact artifact identities, resource limits and issue-first proposals.
+The release passed 495 offline XCTest cases (two actual-model skips, no
+failures), four Swift Testing cases, 39 native probes and 54 live API cases.
+On the tested M1 Max, mean decode at 30,000 tokens was 3.7% faster for Qwen,
+20.3% faster for Ornith and 5.6% faster for Groot than on 0.10.0. Qwen's mean
+full request still took 1.5% longer because prefill was slower. Status replies
+during cold long prefill stayed below 30 ms in this test. The
+[release notes](docs/RELEASE-0.11.0.md) identify the exact artifact and
+separate the measured results from earlier builds.
 
 ## [0.10.0] - 2026-11-03
 

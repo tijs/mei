@@ -1,14 +1,8 @@
-# Mei 0.11.0 — release preparation
-
-**Unreleased candidate. Stable remains 0.10.0.** The Apple-main integration
-passed offline, native and API qualification before the attention selector
-change. The new production artifact passed the offline suite and all three
-native gates. Live API and performance qualification is in progress. Publication
-and fresh four-model task results remain open.
+# Mei 0.11.0
 
 Mei 0.11 integrates the refreshed vMLX/MLX dependency chain while preserving
 Mei's cache budgets, raw completions and strict structured-output behavior.
-The candidate pins vMLX `3cb7240a39d92475345c6c1d0c9057da31a2f289`, integrating
+The release pins vMLX `3cb7240a39d92475345c6c1d0c9057da31a2f289`, integrating
 Osaurus `1bcd74ad`, Apple MLX Swift main `5f117a2e` (release0.33.0 plus three
 commits), and MLX core0.32.4. Compatible dependencies include Swift Crypto5.1.1
 and SwiftSyntax604.0.0.
@@ -55,9 +49,9 @@ and model-specific requirements; this refresh does not enable them implicitly.
 Inherited Qwen/Gemma improvements and these integration boundaries are explained
 in [the fork guide](VMLX-FORK.md).
 
-## Qualification status
+## Release qualification
 
-The production candidate selects an existing attention kernel on M1 Max only
+The production runtime selects an existing attention kernel on M1 Max only
 for single-query BF16 GQA in the measured 24,576–32,768-token band and matching
 KV layouts. The existing threadgroup-limit fallback and final safety check
 remain in place. An optimized diagnostic showed 7.2% faster decode and 0.7%
@@ -84,7 +78,17 @@ Ornith passed both production timing cells and all 18 live API cases. Against
 stable 0.10.0, its mean decode throughput rose 20.3% in both contexts. Mean full
 request time fell 17.2% for short prompts and 7.1% at 30,000 tokens. These results
 describe the integrated runtime and serving profile. They do not isolate the
-selector's effect. Groot qualification is still running.
+selector's effect. Groot passed both timing cells and all 18 live API cases.
+Its decode throughput rose 1.5% on short prompts and 5.6% at 30,000 tokens;
+full request time fell 2.7% and 0.6%, respectively, compared with 0.10.0.
+
+All six processes passed the reviewed parity and resource gates: 84 observable
+checks, 60 timed requests, 54 live API cases and 84 model-file rechecks. Across
+1,180 active status samples during cold long prefill, the slowest status
+response was 29 ms on the tested 32 GB M1 Max. No model triggered the
+prespecified material-regression review against the preceding 0.11 build.
+These fixed-request results do not establish workload-wide speed or task quality.
+See the [final audit and measured repeats](https://github.com/tijs/local-model-bench/blob/00cbbaf2/artifacts/mei-upstream-qualification-20261106/attention-selector-final-review-20261107.json).
 
 ### Apple-main artifact before the selector
 
@@ -170,11 +174,14 @@ vMLX issue763 because core issues are disabled) and malformed NoPE declarations
 and tool/prompt-retention boundaries (issue768/PR769), for14 total. These are
 proposed contributions, not upstream acceptance.
 
-## Remaining release work
+The attention-kernel change is also documented in
+[vMLX issue #770](https://github.com/osaurus-ai/vmlx-swift/issues/770), with a
+minimal port for a maintainer to test on the direct MLX core fork.
 
-Finish native, API and performance qualification on the new executable,
-publish the final source/artifact identity, then verify GitHub assets
-and Homebrew delivery. After release, rerun Qwen, Ornith and Groot on the released
-Mei artifact plus the pinned Logics-SWE llama.cpp control, seeds 17 and 29, using
-the frozen household/Python benchmark. Publish all reviewed attempts and current
-weighted-average comparisons before declaring the broader upgrade complete.
+## Workflow comparison
+
+The fixed-request qualification above is separate from the held-out household
+and Python workflow benchmark. The follow-up compares Qwen, Ornith and Groot
+on this release and the unchanged Logics-SWE llama.cpp control, using seeds 17
+and 29. Results are published in
+[local-model-bench](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).

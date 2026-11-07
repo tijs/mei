@@ -1,0 +1,76 @@
+== source staging checks (version 0.11.0) ==
+ok   - python3 -c 
+import json,sys
+d=json.load(open('/Users/tijs/projects/mei-dependency-refresh-20261106/configs/release-allowlist.json'))
+sys.exit(0 if d['release'] == '0.11.0' else 1)
+
+ok   - stage_release_candidate.sh (no arg) exits 0
+ok   - test -d /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src
+ok   - grep -q static let version = "0.11.0" /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/Sources/MeiCore/ServerConfig.swift
+ok   - grep -q ## \[0.11.0\] /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/CHANGELOG.md
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/docs/RELEASE-0.11.0.md
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/THIRD-PARTY-NOTICES.md
+ok   - grep -q Mei 0.11.0 /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/docs/RELEASE-0.11.0.md
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/scripts/test_concurrent_generations_integration.py
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/scripts/integration/peix_like.py
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/docs/INFERENCE-SCHEDULING.md
+ok   - bash -c cd '/Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src' && ! test -e artifacts && ! test -e .git && ! test -e .build && ! test -e dist && ! test -e __pycache__
+ok   - bash -c cd '/Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src' && ! find . -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \) | grep -q .
+ok   - python3 -c 
+import json,sys
+m=json.load(open('/Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src/staging-manifest.json'))
+sys.exit(0 if m['release']=='0.11.0' and m['kind']=='source-first' and m['file_count']>0 else 1)
+
+ok   - bash -c cd '/Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-src' && shasum -a 256 -c STAGING-MANIFEST.sha256 >/dev/null 2>&1
+ok   - (expected failure) bash /Users/tijs/projects/mei-dependency-refresh-20261106/scripts/stage_release_candidate.sh 9.9.9
+
+RESULT: 16 ok, 0 failed
+ok   - test -x /Users/tijs/projects/mei-dependency-refresh-20261106/scripts/package_release.sh
+ok   - (expected failure) bash /Users/tijs/projects/mei-dependency-refresh-20261106/scripts/package_release.sh 9.9.9 --skip-build
+== packaging (skip-build) ==
+== packaging Mei 0.11.0 (Apple Silicon CLI/runtime bundle) ==
+repo:   /Users/tijs/projects/mei-dependency-refresh-20261106
+out:    /Users/tijs/projects/mei-dependency-refresh-20261106/dist
+binary: /Users/tijs/projects/mei-dependency-refresh-20261106/.build/out/Products/Release/mei -> mei 0.11.0
+mlx.metallib installed from SwiftPM Cmlx build product (/Users/tijs/projects/mei-dependency-refresh-20261106/.build/out/Products/Release/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib)
+PASS: test -x /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64/bin/mei
+PASS: test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64/bin/mlx.metallib
+mei 0.11.0
+PASS: /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64/bin/mei --version
+PASS: grep -q version = "0.11.0" /Users/tijs/projects/mei-dependency-refresh-20261106/Sources/MeiCore/ServerConfig.swift
+== tar (reproducible) ==
+== sha256 ==
+8a2515dc3b0017fa249336144bd629bcc1ef095c6464509ba9ad5c29b345594e  mei-0.11.0-macos-arm64.tar.gz
+mei-0.11.0-macos-arm64.tar.gz: OK
+== packaging OK ==
+bundle:   /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64
+tarball:  /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64.tar.gz  ( 27M)
+checksum: /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64.tar.gz.sha256
+ok   - tarball produced: mei-0.11.0-macos-arm64.tar.gz
+ok   - downloaded checksum verifies in a different directory
+ok   - package is byte-identical across timezones
+ok   - no AppleDouble (._*) sidecar members in tarball
+== extracted bundle checks ==
+ok   - tarball extracts
+ok   - test -d /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64
+ok   - test -x /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/bin/mei
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/bin/mlx.metallib
+ok   - grep -Fx installed_at: 2026-11-07T08:20:28Z /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/bin/mlx.metallib.provenance
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/LICENSE
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/THIRD-PARTY-NOTICES.md
+ok   - grep -q Flint architecture reference /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/THIRD-PARTY-NOTICES.md
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/docs/RUNTIME-POLICIES.md
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/docs/MODELS.md
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/CHANGELOG.md
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/README.md
+ok   - test -f /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/docs/INFERENCE-SCHEDULING.md
+ok   - grep -q -- --max-active-generations /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/docs/INFERENCE-SCHEDULING.md
+ok   - grep -q opt-in /var/folders/1s/ggz8433s6x56bzrwdtfbblfc0000gn/T//mei-pkg-test.rvuRLC/mei-0.11.0-macos-arm64/docs/INFERENCE-SCHEDULING.md
+ok   - bin/mei --version == 'mei 0.11.0'
+ok   - no model-weight blobs bundled
+ok   - test -f /Users/tijs/projects/mei-dependency-refresh-20261106/dist/mei-0.11.0-macos-arm64/bin/mei
+
+RESULT: 24 ok, 0 failed
+85ae551e76435dc3bf21f01c6b1c1f0699d803edefe6c80f36ba1d1023fd1756  dist/mei-0.11.0-macos-arm64/bin/mei
+5be6b742d5017c31a8db5b87cdf90265c8219867039eb871b42a737908aebc61  dist/mei-0.11.0-macos-arm64/bin/mlx.metallib
+mei-0.11.0-macos-arm64.tar.gz: OK
