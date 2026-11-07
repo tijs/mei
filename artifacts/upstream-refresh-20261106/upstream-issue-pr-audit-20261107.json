@@ -1,0 +1,452 @@
+{
+  "checked_at": "2026-11-07T01:45:36.736326+00:00",
+  "proposals": [
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/745",
+        "title": "MTP phase diagnostic checks reconstruct the full process environment on the forward path",
+        "createdAt": "2026-11-06T11:15:28Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/746",
+        "title": "Avoid full environment snapshots in phase diagnostic checks",
+        "body": "Closes #745.\n\nRead the two phase-diagnostic flags through `RuntimeEnvironment.value` instead of reconstructing the complete process environment on each check. Values remain live, only exact `\"1\"` enables diagnostics, and a legacy `\"1\"` still wins over a current spelling set to `\"0\"`.\n\nAdds a focused regression for all 49 flag combinations and enabled/disabled recording. No model-throughput improvement is claimed.\n\nValidation:\n\n- 98 focused MTP runtime tests passed on the integrated Mei branch containing this exact change.\n- Independently compiled the unmodified diagnostic declarations and `RuntimeEnvironment` from this clean `effcd981`-based branch; all 49 flag combinations and recording checks passed.\n- Full upstream package/CI qualification has not been run locally for this branch.\n",
+        "createdAt": "2026-11-06T11:15:59Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "79cc30f71bf6244c98e08bf01c2ab6672f9b879e",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/SpecDec/MTPRuntime.swift"
+            },
+            {
+              "path": "Tests/MLXLMCommonFocusedTests/MTPRuntimeFocusedTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/748",
+        "title": "MLXDistributedTP directly imports undeclared MLXRandom dependency",
+        "createdAt": "2026-11-06T12:06:24Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/749",
+        "title": "Declare the direct MLXRandom dependency of MLXDistributedTP",
+        "body": "Closes #748.\n\n`MLXDistributedTP/LinearLayers.swift` imports `MLXRandom` directly, but the target manifest omits it. Declare the direct dependency so the package graph matches the source imports and Swift dependency scanning does not rely on transitive availability.\n\nValidation: `swift package dump-package` succeeds and resolves `MLXRandom` as a direct dependency of `MLXDistributedTP`. The original Swift 6.3 Mei release build reproduced the missing-dependency warning. Mei's next pinned build will provide consumer validation; no distributed tensor or performance behavior changes are claimed.\n",
+        "createdAt": "2026-11-06T12:07:13Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "14879a0ebf677be6c66507cb5f32c70b8d5282f8",
+        "changedFiles": 1,
+        "files": {
+          "nodes": [
+            {
+              "path": "Package.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/747",
+        "title": "Allow literal text generation without chat markup parsing",
+        "createdAt": "2026-11-06T12:06:23Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/750",
+        "title": "Allow low-level text generation to opt out of chat markup parsing",
+        "body": "Closes #747.\n\nAdd an optional `parseChatMarkup` parameter to the low-level `generateTask`, defaulting to `true`. A text-completions caller can set it to `false` to preserve literal reasoning/tool markers and ordinary generated text instead of sending it to chat channels. Tokenization, generation, usage and ordinary stop matching remain on the existing path.\n\nNative schema handling still takes precedence: its grammar-approved EOS determines termination and literal JSON string contents are not interpreted as chat markup. Raw ordinary output retains explicit text stops, including stops spanning pieces.\n\nFour model-free handler regressions cover ordinary text versus the chat reasoning channel, literal Unicode and markup, a split stop sequence, and schema mode with either raw/chat selection. All four pass in Mei's integrated pinned runtime alongside its 492-case offline XCTest suite (two skipped, zero failures). The three ordinary raw-output cases also passed the earlier focused vMLX integration gate. This is consumer/integration validation, not a claim that the entire clean upstream package test suite was run on this branch.\n\nThe PR contains only the opt-out and handler tests; it does not expose a new server API, alter model defaults, or change schema generation.\n",
+        "createdAt": "2026-11-06T12:15:25Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "33b39d4098cef98c0f499f05389032f31b9956c9",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Evaluate.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/RawTextGenerationTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/751",
+        "title": "Rotating restores can alias and mutate retained snapshot wrappers",
+        "createdAt": "2026-11-06T12:16:06Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/752",
+        "title": "Isolate mutable rotating-cache wrappers across restores",
+        "body": "Closes #751.\n\nGive restored rotating keys/values independent `MLXArray` wrappers using full-range slices. Direct assignment shares mutable wrapper contexts with the retained payload and other restores; advancing one request can then change another request's KV state without changing its boundary metadata. The slices retain copy-on-write storage and leave the serialized format/configuration unchanged.\n\nThe regression restores the same payload twice, advances one request through ring wrap, and verifies that the retained source, payload and untouched request keep their original keys, values and metadata. It then advances the second request independently and checks the first is unchanged. It covers keep=0/1 and standalone/`CacheList` layouts.\n\nValidation:\n- Exact private function extracted from upstream `effcd981`, compiled with current integrated MLX/KV types: 12 isolation assertions fail before the fix (standalone keep=0/1).\n- Public `restoreFromDiskArrays` on Mei's integrated pin: the new regression passes all standalone/composite cases; full offline suite passes 492 XCTest cases (two skipped), plus four Swift Testing cases.\n\nThese are exact-function and integrated-consumer checks; the full clean upstream package suite was not run on this branch. No model accuracy or throughput claim.\n",
+        "createdAt": "2026-11-06T12:16:26Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "155006ddf2b2a68a59ed59ba9d410205fbfe17f0",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheHelpers.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/RotatingRestoreIsolationTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/753",
+        "title": "Add a shared retained-byte allowance for paged and recurrent prefix state",
+        "createdAt": "2026-11-06T15:10:48Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/754",
+        "title": "Add a shared retained-byte budget for prefix caches",
+        "body": "## Proposed changes\n\nCloses #753.\n\nIntroduce optional `CacheCoordinatorConfig.maxCacheBytes` for one retained-byte allowance across paged KV, rotating companions and separate SSM snapshots. Upstream currently exposes block/entry counts; nil preserves that behavior. Reserve before optional materialization, return charges on replacement/eviction/clear/deinit, and keep pending reservations charged across concurrent clears. Preserve legacy count limits when the byte allowance is nil and disk-only persistence/restoration when RAM retention is declined. Zero RAM without disk correctly reports boundary persistence unavailable.\n\nPaged copies are compacted without changing tensor dtype and materialized under the existing cache-I/O serialization gate. This bounds retained prefixes; it does not cap model/live-request RAM or resolve the broader transient-writer investigation in #624.\n\n## Validation\n\nA clean-base consumer built against effcd981 plus this patch passes 16 real-Metal XCTest cases. Coverage includes mixed tiers, replacement/removal, disk fallback, copy isolation, overflow, in-flight reservation/clear, both paged materialization paths waiting for the global I/O gate, and zero-byte boundary capability with/without disk fallback. The two gate regressions fail before that guard and pass afterward; no crash was induced.\n\n[Exact revisions, fixture, source-built Metal identity and logs](https://github.com/tijs/mei/tree/57b620b352a7f479b4403cc1ea0c4b3fae06994b/artifacts/upstream-refresh-20261106/shared-budget-contribution). This is a focused suite, not a full upstream package or model-family qualification claim.\n\n[Final zero-byte regression and 16-case proof](https://github.com/tijs/mei/tree/69fa5cb/artifacts/upstream-refresh-20261106/shared-budget-zero-cap-proof).\n\n## Checklist\n\n- [ ] I have read the CONTRIBUTING document\n- [ ] I have run pre-commit across the repository\n- [x] I have added tests that prove the scoped fix\n- [x] I have documented the configured allowance and its limits in the API comments\n",
+        "createdAt": "2026-11-06T15:11:34Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "ba6c1fcfa7e4df2eb33d4f770d30586306e1ae48",
+        "changedFiles": 7,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheCoordinator.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheCoordinatorConfig.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/FreeBlockQueue.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/PagedCacheManager.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/RetainedCacheBudget.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/SSMStateCache.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/SharedPrefixCacheBudgetTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/755",
+        "title": "Select the longest complete safe rotating-prefix replay boundary",
+        "createdAt": "2026-11-06T15:13:54Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/756",
+        "title": "Restore the longest complete rotating replay boundary",
+        "body": "## Proposed changes\n\nCloses #755.\n\nWhen a rotating companion is required, select the longest complete safe boundary rather than accepting a longer companion-less chain. Keep partial companion leaves reachable even behind longer full-block chains. Exact-request replay uses the captured earlier boundary; shorter media-independent probes retain their full safe prefix because they already leave a request suffix.\n\nA missing safe seed remains a miss. Dense-KV exact-hit behavior and the separate stripped-boundary store policy from #456 are preserved.\n\n## Validation\n\nSix real-Metal XCTest cases pass against clean upstream effcd981 plus this patch: repeated replay across block/window boundaries, missing-seed fallback, growing/diverging requests, hidden partial companions, shorter media-independent prefixes and dense exact hits.\n\n[Exact source/core revisions, fixture, source-built Metal and logs](https://github.com/tijs/mei/tree/57b620b352a7f479b4403cc1ea0c4b3fae06994b/artifacts/upstream-refresh-20261106/rotating-replay-contribution). This is a focused cache fixture, not a real multimodal model or full-package qualification claim.\n\n## Checklist\n\n- [ ] I have read the CONTRIBUTING document\n- [ ] I have run pre-commit across the repository\n- [x] I have added tests that prove the scoped fix\n- [x] I have documented the lookup contract in API comments\n",
+        "createdAt": "2026-11-06T15:14:14Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "3f97a93077d43e3214f11107fdc8f4f1c22980f3",
+        "changedFiles": 4,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Cache/BlockHashMap.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheCoordinator.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/Cache/PagedCacheManager.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/RotatingPrefixReplayTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/757",
+        "title": "Allow request-local logit processors without replacing parameter-based iterator setup",
+        "createdAt": "2026-11-06T15:14:52Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/758",
+        "title": "Add schema-safe request-local logit processors",
+        "body": "## Proposed changes\n\nCloses #757.\n\nAdd an optional request-local processor to the parameter-based single-sequence `TokenIterator`. Compose after effective built-in penalties, forward prompt/process/sample callbacks, and independently copy both members' mutable state. The default nil path retains the previous processor.\n\nNative JSON-schema masking stays outermost. Recursive constraint metadata preserves fail-closed errors and EOS/completion through composites, while ordinary processors keep structured-output status unset. Speculative iterators are outside this extension's scope.\n\n## Validation\n\nA clean-base consumer passes 14 native-schema generation XCTest cases and six Swift Testing processor cases, including callback order, state isolation, default behavior, rejected-token reopening, EOS authority and nested failure propagation.\n\n[Exact revisions, fixture, source-built Metal identity and logs](https://github.com/tijs/mei/tree/57b620b352a7f479b4403cc1ea0c4b3fae06994b/artifacts/upstream-refresh-20261106/request-processor-contribution). This is focused iterator qualification, not a full-package or speculative-generation claim.\n\n## Checklist\n\n- [ ] I have read the CONTRIBUTING document\n- [ ] I have run pre-commit across the repository\n- [x] I have added tests that prove the scoped feature\n- [x] I have documented ordering, defaults and supported scope in API comments\n",
+        "createdAt": "2026-11-06T15:15:11Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "59f70ee096eb0ad8a4d957db600e7fba65526250",
+        "changedFiles": 5,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Evaluate.swift"
+            },
+            {
+              "path": "Libraries/MLXLMCommon/StructuredOutput/JSONSchemaLogitProcessor.swift"
+            },
+            {
+              "path": "Package.swift"
+            },
+            {
+              "path": "Tests/MLXLMCommonFocusedTests/TokenIteratorAdditionalProcessorTests.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/StructuredOutputGenerationTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/759",
+        "title": "Veto optional prefix stores when the kernel reports host memory pressure",
+        "createdAt": "2026-11-06T15:15:39Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/760",
+        "title": "Skip optional prefix stores under kernel memory pressure",
+        "body": "## Proposed changes\n\nCloses #759.\n\nIndependently refuse nonempty optional prefix stores when macOS reports kernel warning or critical memory pressure. Keep the existing process-footprint byte budget for normal/unavailable readings, preserve empty stores, and log why the optional store was skipped. Other platforms retain their existing byte policy.\n\nThis is a cache-store admission veto, not a new model-load gate, free-memory percentage cutoff, generation failure or total-memory guarantee.\n\n## Validation\n\nFive focused XCTest cases pass against clean upstream effcd981 plus this patch. They cover warning/critical vetoes despite process headroom, normal/unavailable readings, unavailable physical budgets, empty stores and existing footprint-vs-MLX accounting. Pressure states are injected into the policy; no real host-pressure event was induced.\n\n[Exact source/core revisions, consumer fixture and logs](https://github.com/tijs/mei/tree/57b620b352a7f479b4403cc1ea0c4b3fae06994b/artifacts/upstream-refresh-20261106/store-pressure-contribution). No full-package or all-family memory-safety claim.\n\n## Checklist\n\n- [ ] I have read the CONTRIBUTING document\n- [ ] I have run pre-commit across the repository\n- [x] I have added tests that prove the scoped policy\n- [x] I have documented the pressure veto and byte-estimate limits in API comments\n",
+        "createdAt": "2026-11-06T15:16:09Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "13700ad8bbdc2ebc4fb995682d469ee6da2c781d",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheStoreBudget.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/CacheStorePressureTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/761",
+        "title": "Do not advertise boundary persistence for a sentinel-only paged pool",
+        "createdAt": "2026-11-06T15:44:25Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/762",
+        "title": "Exclude sentinel-only pools from boundary persistence capability",
+        "body": "## Proposed changes\n\nCloses #761.\n\nRequire a data block before `CacheCoordinator.canPersistBoundaries` advertises paged persistence. Block zero is reserved, so a one-block pool cannot store a boundary payload. Keep disk fallback available and retain the existing incompatible-topology behavior.\n\nThis is a two-line capability fix plus five focused tests. It does not change cache sizing defaults, snapshot formats or generation behavior.\n\n## Validation\n\nThe clean-base suite runs five model-free XCTest cases. Before the fix, the sentinel-only assertion fails; afterward all five pass. The controls cover one usable block, paging disabled, incompatible paging, and disk fallback.\n\n[Exact revisions, consumer fixture and negative/positive logs](https://github.com/tijs/mei/tree/42482f3/artifacts/upstream-refresh-20261106/boundary-capability-contribution). No model/throughput claim.\n\n## Checklist\n\n- [ ] I have read the CONTRIBUTING document\n- [ ] I have run pre-commit across the repository\n- [x] I have added tests that prove the scoped fix\n- [x] I have clarified the sentinel capacity in the API implementation comment\n",
+        "createdAt": "2026-11-06T15:45:00Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "2a1e967e9678407fb28d5cc44f88873b2e989c41",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/Cache/CacheCoordinator.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/BoundaryPersistenceAvailabilityTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/764",
+        "title": "Reject malformed DFlash2 no_rope_layers declarations",
+        "createdAt": "2026-11-06T21:01:35Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/765",
+        "title": "Reject malformed DFlash2 NoPE layer declarations",
+        "body": "Fixes #764.\n\nA present `no_rope_layers` declaration previously used `NSNumber.intValue` and `compactMap`: `[true]` selects layer1, `[0.5]` selects layer0, and strings/scalars/null silently become no selected layers. Decode the complete declaration as `[Int]` before the existing bounds check, and reject malformed values. An absent key still means no NoPE layers; valid arrays and negative/out-of-range rejection retain their behavior.\n\nThe three synthetic tests cover absent/empty/valid selection, five malformed declarations plus bounds, and actual cached attention keys at nonzero position: the selected layer remains unrotated and the ordinary layer retains RoPE. On the Mei integration fork with identical changed source, the original loader fails all five malformed-input assertions; the fix passes all three NoPE cases. The selected parser/cache/width regressions pass 61 XCTest cases (one existing skip) and132 Swift Testing cases. No checkpoint downloads or actual Ripple runtime/performance qualification is claimed.\n\nThis clean contribution contains only the loader validation and its test file against current upstream1bcd74ad. It does not include the Mei integration, batching retune, other cache tests or a speculative default change. Local execution evidence above comes from the integration fork, not a full clean-base upstream suite.\n",
+        "createdAt": "2026-11-06T21:03:36Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "b1d605d0527722f60fb66fa6f5084d30612e455e",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Libraries/MLXLMCommon/SpecDec/DFlash2DraftModel.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/DFlash2NoRopeTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/766",
+        "title": "Cover opt-in DFlash2 width policies with deterministic tests",
+        "createdAt": "2026-11-06T21:23:24Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/767",
+        "title": "Test opt-in DFlash2 width policies and disabled behavior",
+        "body": "Fixes #766.\n\nAdd two deterministic tests for the new opt-in width policies: wider-rung cost bounds retain AR/widest-rung rates, and thin-evidence probing occurs after four AR steps but stays off when disabled or evidence is established. Fixed cost tables and explicit observations avoid hardware/timing assertions.\n\nThe integration fork runs all17 `DFlash2WidthChooserTests` successfully, including these two cases. This clean one-file contribution applies to current upstream1bcd74ad and changes no production code. Execution evidence is from the integration fork with identical chooser/test source, not a full clean-base package suite or a model-speed qualification.\n",
+        "createdAt": "2026-11-06T21:23:38Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "ec4fa27bcc4ddf33b9c5f42c9655159f696e8ee7",
+        "changedFiles": 1,
+        "files": {
+          "nodes": [
+            {
+              "path": "Tests/MLXLMCommonFocusedTests/DFlash2WidthChooserTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/768",
+        "title": "Execute tool-call and speculative prompt-retention boundaries in tests",
+        "createdAt": "2026-11-06T21:24:08Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/pull/769",
+        "title": "Execute tool-call and speculative prompt retention boundaries",
+        "body": "Fixes #768.\n\nAdd three iterator-level execution regressions using tiny recording models:\n- AR tool-call boundaries trim forwarded lookahead and restore the actual two-token cache values.\n- An all-KV DFlash2 tool boundary discards output not returned to the consumer, aligns the stored key/cache offset/conditioning-window length, and makes the next turn forward only its suffix.\n- Completed answers skip a separate prompt entry at512 cold suffix rows and retain it at513.\n\nOn the integration fork, all13 `DFlash2PrefixCacheReuseTests` and five `TokenIteratorCacheRestoreProgressTests` pass. Tests use temporary cache directories and synthetic arrays; no checkpoint downloads or timing assertions. This does not qualify live Ripple, API-level tool dispatch, hidden-state numerical parity or speculative throughput.\n\nThis clean two-file contribution applies to upstream1bcd74ad and changes no production code. The execution evidence comes from the integration fork with identical changed test/runtime sections; a full clean-base upstream suite is not claimed.\n",
+        "createdAt": "2026-11-06T21:24:31Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "ee23cb50cf179796c3b67b1077d1a2235e85e35d",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "Tests/MLXLMTests/DFlash2PrefixCacheReuseTests.swift"
+            },
+            {
+              "path": "Tests/MLXLMTests/TokenIteratorCacheRestoreProgressTests.swift"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/ml-explore/mlx/issues/4841",
+        "title": "Metal cache admission can exceed the configured cache limit",
+        "createdAt": "2026-11-06T11:57:43Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/ml-explore/mlx/pull/4842",
+        "title": "Bound Metal cache admission and retain recent buffer shapes",
+        "body": "Closes #4841.\n\n`MetalAllocator::free()` currently tests only the cache's existing size. Releasing a buffer can therefore exceed the configured cache allowance until a later allocation trims it.\n\nInclude the incoming buffer length in admission. Release older cached buffers before recycling a fitting incoming buffer, and release incoming buffers larger than the entire allowance. This keeps recently used shapes eligible for reuse while preserving a zero allowance.\n\nThe regression allocates buffers directly, so no GPU commands remain in flight. It covers an oversized buffer, mixed-size admission, recent-shape reuse, and disabled caching. On unmodified main `9f806b3606eaa9f7c807238f6bd465185cd94d6d`, it fails with 2,097,152 and 1,310,720 cached bytes against a 1,048,576-byte allowance.\n\nValidation on 32 GB M1 Max, Release CMake build with Metal enabled:\n- New regression: 6/6 assertions pass after the change (3 failed before).\n- Six neighboring memory/cache/evaluation/asynchronous-launch tests: 22/22 assertions pass.\n\nThis bounds freed-buffer admission; it does not impose a ceiling on active allocations or total process memory. No throughput claim.\n",
+        "createdAt": "2026-11-06T11:58:04Z",
+        "state": "OPEN",
+        "isDraft": false,
+        "headRefOid": "a58d29baff3f3685b338382706eb95c01c066321",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "mlx/backend/metal/allocator.cpp"
+            },
+            {
+              "path": "tests/gpu_tests.cpp"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    },
+    {
+      "issue": {
+        "url": "https://github.com/osaurus-ai/vmlx-swift/issues/763",
+        "title": "MLX core: retune byte-based command batches on roomy M1 Max GPUs",
+        "createdAt": "2026-11-06T20:49:21Z",
+        "state": "OPEN"
+      },
+      "pr": {
+        "url": "https://github.com/osaurus-ai/mlx/pull/54",
+        "title": "Retain useful byte-based command batches on roomy g13s GPUs",
+        "body": "Fixes osaurus-ai/vmlx-swift#763. The MLX core repository has issues disabled, so the problem is recorded in the parent runtime repository.\n\nAfter input accounting changed from elements to storage bytes, one 64 MiB array exceeds the unchanged 50 MiB g13s/Max command-buffer budget. Preserve correct byte accounting and set a 200 MiB default only for g13s GPUs with at least 24 GiB recommended working set. The operation cap, explicit environment override, smaller working sets and other GPU defaults remain unchanged. This is an input-byte batching threshold, not an allocator cache or total-memory limit.\n\nThe real-Metal test keeps three distinct 64 MiB inputs batched and requires a commit at the fourth. On a 32 GiB M1 Max, the original default fails the three intermediate assertions; the patch passes all four command-buffer cases / 28 assertions, including existing dtype, broadcast-storage and alias checks. Three independent read-only reviews found no actionable correctness, coverage or simplicity defect in this two-file patch. Other hardware paths and explicit overrides were source-reviewed, not executed.\n\nA same-binary profiled Groot diagnostic supports reduced commit overhead (details in issue763), with approximately 344 MB higher maximum physical footprint. **Draft:** fresh untraced release/native/model qualification is pending. This does not claim universal speedup, arbitrary-workload memory safety or qualification of other devices.\n\nValidation:\n- Release C++/Metal test build using Xcode Metal toolchain.\n- `./build/tests/tests --test-case='*Metal command buffer*'`: baseline3/4 cases,25/28 assertions; patch4/4 cases,28/28 assertions.\n- No whole-tree formatting or unrelated changes.\n",
+        "createdAt": "2026-11-06T20:49:45Z",
+        "state": "OPEN",
+        "isDraft": true,
+        "headRefOid": "c3c82bcbeb7d9c3b33d8a5be9bcde554830029a2",
+        "changedFiles": 2,
+        "files": {
+          "nodes": [
+            {
+              "path": "mlx/backend/metal/device.cpp"
+            },
+            {
+              "path": "tests/metal_command_buffer_tests.cpp"
+            }
+          ]
+        }
+      },
+      "issue_precedes_pr": true,
+      "issue_referenced_by_pr": true
+    }
+  ],
+  "total": 14,
+  "all_issues_precede_and_are_referenced": true,
+  "scope": "Read-only public issue-first/scope audit, not CI success, clean-base execution proof, merge readiness or upstream acceptance. No watching or external merge prerequisite."
+}
