@@ -21,6 +21,13 @@ Most end users should instead install the **stable v0.11.0 prebuilt release:**
   ```
 
 Both already carry the prebuilt `mei` binary and its `mlx.metallib` companion.
+
+The repository's `scripts/stage_model.sh` can use a shared benchmark model
+store. Put the absolute store base in
+`${XDG_CONFIG_HOME:-$HOME/.config}/local-model-bench/model-root`, with a
+`mei-models/` directory inside it. A configured volume must be available; the
+script fails rather than downloading onto another disk. Use `--model-root`
+or `MEI_MODEL_ROOT` to choose a different staging directory explicitly.
 You do **not** need to build anything for those paths.
 
 ## About binaries and weights

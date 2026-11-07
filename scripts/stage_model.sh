@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # Stage the primary MVP model for Mei into an isolated model directory.
 #
-# Isolated runtime convention (matches local-model-bench's oMLX staging):
-#   models live under ~/.local/share/local-model-bench/mei-models/<name>
+# Use the host's benchmark model store when configured. Otherwise retain the
+# isolated per-user default.
 # Never uses the benchmark ports, logs, or venvs of other engines.
 set -euo pipefail
 
 MODEL_ID="${MEI_MODEL_ID:-ornith-ai/Ornith-1.5-35B-A3B-MLX-4bit}"
-MODEL_ROOT="${MEI_MODEL_ROOT:-$HOME/.local/share/local-model-bench/mei-models}"
+MODEL_ROOT="${MEI_MODEL_ROOT:-}"
+HOST_STORE="${LOCAL_MODEL_BENCH_MODEL_ROOT-}"
+HOST_SETTING="${XDG_CONFIG_HOME:-$HOME/.config}/local-model-bench/model-root"
+if [[ -z "$MODEL_ROOT" && -z "${LOCAL_MODEL_BENCH_MODEL_ROOT+x}" && -f "$HOST_SETTING" ]]; then
+  HOST_STORE="$(cat "$HOST_SETTING")"
+fi
+FALLBACK_ROOT="$HOME/.local/share/local-model-bench/mei-models"
+DEFAULT_ROOT="${MODEL_ROOT:-${HOST_STORE:+$HOST_STORE/mei-models}}"
 HF_TOKEN_SOURCE="${MEI_HF_TOKEN_FILE:-$HOME/.cache/huggingface/token}"
 BENCH_REPO="${MEI_BENCH_REPO:-$HOME/projects/local-model-bench}"
 
@@ -16,7 +23,7 @@ usage() {
 Usage: stage_model.sh [--model-id ID] [--model-root DIR]
 
 Downloads the model (default $MODEL_ID) into the isolated Mei model root
-(default $MODEL_ROOT) using the local-model-bench Hugging Face credentials.
+(default ${DEFAULT_ROOT:-$FALLBACK_ROOT}) using the Hugging Face credentials.
 The download is idempotent: an existing complete directory is left untouched.
 EOF
 }
@@ -30,6 +37,25 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -z "$MODEL_ROOT" ]]; then
+  if [[ -n "${LOCAL_MODEL_BENCH_MODEL_ROOT+x}" || -f "$HOST_SETTING" ]]; then
+    [[ "$HOST_STORE" == /* && "$HOST_STORE" != *$'\n'* && -d "$HOST_STORE/mei-models" ]] || {
+      echo "FATAL: configured Mei model store is unavailable: $HOST_STORE/mei-models" >&2
+      exit 1
+    }
+    if [[ "$HOST_STORE" == /Volumes/* ]]; then
+      VOLUME_NAME="${HOST_STORE#/Volumes/}"
+      MOUNT_DIR="/Volumes/${VOLUME_NAME%%/*}"
+      [[ "$MOUNT_DIR" != /Volumes/ && "$(stat -f %d "$MOUNT_DIR")" != "$(stat -f %d /Volumes)" ]] || {
+        echo "FATAL: configured model volume is not mounted: $MOUNT_DIR" >&2
+        exit 1
+      }
+    fi
+    MODEL_ROOT="$HOST_STORE/mei-models"
+  else
+    MODEL_ROOT="$FALLBACK_ROOT"
+  fi
+fi
 TARGET_DIR="$MODEL_ROOT/$(basename "$MODEL_ID")"
 mkdir -p "$MODEL_ROOT"
 [[ -f "$HF_TOKEN_SOURCE" ]] || { echo "FATAL: no HF token at $HF_TOKEN_SOURCE" >&2; exit 1; }
