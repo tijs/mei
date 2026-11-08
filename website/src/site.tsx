@@ -390,7 +390,18 @@ function Page({ view, base }: { view: View; base: string }) {
             <div class="model-grid">
               {models.map((m) => (
                 <article class="model" id={m.id}>
-                  <h3>{m.name}</h3>
+                  <div class="model-heading">
+                    <img
+                      class="model-logo"
+                      src={`${base}assets/model-${m.id}.png`}
+                      alt=""
+                      width="64"
+                      height="64"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <h3>{m.name}</h3>
+                  </div>
                   <p class="model-size">{m.fullName}</p>
                   <p>{m.description}</p>
                   <div class="model-fact">

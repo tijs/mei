@@ -1,0 +1,22 @@
+{
+  "retrieved": "2026-11-08",
+  "treatment": "Simplified single-cobalt icons with transparent backgrounds, adapted using the built-in image-generation tool. Original model identities retained.",
+  "models": {
+    "qwen": {
+      "page": "https://huggingface.co/Qwen",
+      "asset": "https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg",
+      "description": "Qwen organization avatar: three angular ribbons arranged around a triangular center."
+    },
+    "ornith": {
+      "page": "https://huggingface.co/ornith-ai",
+      "asset": "https://cdn-avatars.huggingface.co/v1/production/uploads/68661bce022667cf9c7534fb/dwzGCqj9B7NGaJRO-NjjP.png",
+      "description": "Ornith organization avatar: bird wearing glasses and a hoodie."
+    },
+    "groot": {
+      "page": "https://huggingface.co/GrootTeam",
+      "asset": "https://cdn-avatars.huggingface.co/v1/production/uploads/6ad8afeb813131b48569fd8f/RpbYxdy_fKO52vRsL29rY.png",
+      "modelCardArtwork": "https://huggingface.co/GrootTeam/Groot-19B-A3B-261023/resolve/main/assets/title.png",
+      "description": "GrootTeam avatar and original model-card title: tree character with leaves and a hoodie. The final adaptation uses the square avatar."
+    }
+  }
+}

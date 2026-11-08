@@ -41,6 +41,10 @@ unfinished qualifications as completed results or silently blend runtimes.
   redrawing it. The source lockup retains the wordmark as well.
 - Anton and Manrope: self-hosted fonts; OFL licenses alongside them.
 - htmx: copied from the locked npm dependency; license shipped with it.
+- Model icons: cobalt adaptations of the original Hugging Face model/team
+  artwork. Original marks belong to their creators; these are Mei-specific
+  adaptations, not official alternate logos. Source links are in
+  `design/model-logo-sources.json`; generation prompts are kept alongside it.
 
 The website design/content lives here; durable scope and decisions live in Kiem:
 `kiem://note/700e0747-dcbb-4132-b216-34ae5bde0594`.

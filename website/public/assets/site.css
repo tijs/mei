@@ -285,6 +285,19 @@ p + p {
   font-size: 47px;
   letter-spacing: -0.01em;
 }
+.model-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+}
+.model-logo {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex: 0 0 64px;
+}
 .model-size {
   font-size: 12px;
   margin-top: 8px !important;
