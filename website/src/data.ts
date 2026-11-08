@@ -18,6 +18,7 @@ export const models = [
   {
     id: "groot",
     name: "Groot",
+    modelCard: "https://huggingface.co/GrootTeam/Groot-19B-A3B-261023",
     fullName: "19B parameters · text-only · 4.5 bits/weight",
     profile: "groot-19b-a3b-text",
     repo: "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
@@ -35,6 +36,7 @@ export const models = [
   {
     id: "qwen",
     name: "Qwen3.6",
+    modelCard: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
     fullName: "35B parameters · text-only · 4-bit weights",
     profile: "qwen3.6-35b-a3b-text",
     repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
@@ -52,6 +54,7 @@ export const models = [
   {
     id: "ornith",
     name: "Ornith 1.5",
+    modelCard: "https://huggingface.co/ornith-ai/Ornith-1.5-35B-A3B",
     fullName: "35B parameters · MLX · 4-bit weights",
     profile: "ornith-1.5-35b-a3b",
     repo: "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",

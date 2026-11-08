@@ -323,7 +323,15 @@ p + p {
 .model-fact span {
   font-size: 12px;
 }
-.model > a {
+.model-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+.model-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   font-size: 13px;
   font-weight: 700;
 }

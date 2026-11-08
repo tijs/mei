@@ -408,11 +408,14 @@ function Page({ view, base }: { view: View; base: string }) {
                     <strong>{m.household}/24</strong>
                     <span>assistant tasks passed</span>
                   </div>
-                  <a
-                    href={`https://huggingface.co/${m.repo}/tree/${m.revision}`}
-                  >
-                    Model files and version ↗
-                  </a>
+                  <div class="model-links">
+                    <a href={m.modelCard}>Original model card ↗</a>
+                    <a
+                      href={`https://huggingface.co/${m.repo}/tree/${m.revision}`}
+                    >
+                      Files used by Mei ↗
+                    </a>
+                  </div>
                   <details class="profile">
                     <summary>Configuration name</summary>
                     <code>{m.profile}</code>
