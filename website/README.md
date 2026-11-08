@@ -13,9 +13,10 @@ npm run build
 npm run dev
 ```
 
-Local preview: `http://127.0.0.1:4173/mei/`. `BASE_PATH` defaults to `/mei/`;
-set `BASE_PATH=/` and `SITE_URL=https://mei.computer/` when attaching the custom
-domain later. `dist/` is generated.
+Local preview: `http://127.0.0.1:4173/mei/`. `BASE_PATH` defaults to `/mei/`
+for local development. Production uses `BASE_PATH=/` and
+`SITE_URL=https://mei.computer/` to serve the custom domain from its root.
+`dist/` is generated.
 GitHub Actions builds and publishes it. There is intentionally no CNAME file.
 
 ## Updating content

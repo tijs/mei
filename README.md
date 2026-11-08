@@ -4,7 +4,7 @@
 
 # Mei
 
-[Website](https://tijs.github.io/mei/) · [Get started](https://tijs.github.io/mei/#get-started)
+[Website](https://mei.computer/) · [Get started](https://mei.computer/#get-started)
 
 Mei ([*Mei long*](https://en.wikipedia.org/wiki/Mei_long), the "sleeping dragon"
 dinosaur) is a narrow, **native Swift/MLX OpenAI-compatible inference server for

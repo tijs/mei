@@ -33,7 +33,8 @@ jobs:
         uses: actions/configure-pages@v5
       - run: npm run build
         env:
-          BASE_PATH: /mei/
+          BASE_PATH: /
+          SITE_URL: https://mei.computer/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: website/dist
