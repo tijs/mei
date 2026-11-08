@@ -25,6 +25,8 @@ export const models = [
     revision: "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
     description:
       "We suggest starting with Groot on a 32 GB M1 Max. It passed 22 of 24 assistant tasks and all 6 Python tasks. It also had the lowest measured memory increase of these three models.",
+    preparation:
+      "Uses hermitdave’s MLX version. We removed image-processing weights and unused multi-token prediction components, and corrected the settings describing weight precision. The retained language-model weights are unchanged.",
     household: 22,
     python: 6,
     taskSeconds: 38.9,
@@ -43,6 +45,8 @@ export const models = [
     revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
     description:
       "Qwen finished the test tasks faster on average than Groot and Ornith. It passed 18 of 24 assistant tasks and all 6 Python tasks. Its measured memory increase was higher than Groot’s.",
+    preparation:
+      "Uses mlx-community’s 4-bit MLX version with the image-processing weights removed. The text weights, tokenizer and chat template are unchanged. This version accepts text only.",
     household: 18,
     python: 6,
     taskSeconds: 29.44,
@@ -61,6 +65,8 @@ export const models = [
     revision: "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
     description:
       "Ornith passed 19 of 24 assistant tasks and 4 of 6 Python tasks. It took longer per task on average than Qwen and Groot. Mei includes separate settings for running this model.",
+    preparation:
+      "Uses Ornith’s 4-bit MLX version. We changed the file padding to align the stored weights. The weight values are unchanged.",
     household: 19,
     python: 4,
     taskSeconds: 44.24,

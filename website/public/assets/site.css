@@ -273,6 +273,11 @@ p + p {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 52px;
 }
+.repack-explanation {
+  max-width: 900px;
+  margin-bottom: 44px;
+  font-size: 15px;
+}
 .model {
   display: flex;
   flex-direction: column;
@@ -304,7 +309,7 @@ p + p {
   font-weight: 600;
   color: var(--muted);
 }
-.model > p:not(.model-size) {
+.model > .model-description {
   margin-top: 24px;
   flex: 1;
 }
@@ -327,6 +332,12 @@ p + p {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 20px;
+}
+.model > .model-preparation {
+  flex: none;
+  margin: 12px 0 18px;
+  font-size: 13px;
+  color: var(--muted);
 }
 .model-links a {
   display: inline-flex;
@@ -880,7 +891,7 @@ pre code {
   .model h3 {
     font-size: 43px;
   }
-  .model > p:not(.model-size) {
+  .model > .model-description {
     margin-top: 18px;
     font-size: 15px;
   }

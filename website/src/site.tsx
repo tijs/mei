@@ -387,6 +387,14 @@ function Page({ view, base }: { view: View; base: string }) {
                 set of tests.
               </p>
             </div>
+            <p class="repack-explanation">
+              Mei uses repacks of existing, quantized MLX models. A repack
+              changes the packaged files, for example by removing unused
+              components or adjusting the file layout. The repacking step leaves
+              the retained language-model weights unchanged. Each Mei
+              configuration selects a fixed version and includes the settings we
+              tested with it.
+            </p>
             <div class="model-grid">
               {models.map((m) => (
                 <article class="model" id={m.id}>
@@ -403,13 +411,17 @@ function Page({ view, base }: { view: View; base: string }) {
                     <h3>{m.name}</h3>
                   </div>
                   <p class="model-size">{m.fullName}</p>
-                  <p>{m.description}</p>
+                  <p class="model-description">{m.description}</p>
                   <div class="model-fact">
                     <strong>{m.household}/24</strong>
                     <span>assistant tasks passed</span>
                   </div>
+                  <p class="model-preparation">{m.preparation}</p>
                   <div class="model-links">
                     <a href={m.modelCard}>Original model card ↗</a>
+                    <a href={`https://huggingface.co/${m.repo}`}>
+                      Preparation notes ↗
+                    </a>
                     <a
                       href={`https://huggingface.co/${m.repo}/tree/${m.revision}`}
                     >
