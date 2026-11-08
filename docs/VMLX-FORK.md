@@ -15,6 +15,36 @@ revision. A fresh Mei build retrieves the fork through SwiftPM. There is no
 normal build-time patch application and no dependency on a local SwiftPM
 repository cache being pre-populated.
 
+## Dependency selection policy
+
+Use compatible released versions for Mei-owned dependencies. The maintained
+vMLX fork is the sole exception: follow incoming Osaurus vMLX changes, preserve
+Mei's carrying fixes, and consume a reviewed, immutable published fork commit.
+
+That vMLX commit owns its dependency graph: its vendored source, submodule
+commits and manifest constraints. Mei does not independently update MLX Swift,
+MLX LM/VLM, MLX core, mlx-c or shared SwiftPM dependencies, or apply alternate
+versions and local overrides on top. Underlying revisions need not each be a
+release tag when they are part of the selected vMLX snapshot; they are inherited
+from that snapshot rather than tracked independently by Mei.
+
+Where vMLX declares version ranges without a committed lockfile, Mei's committed
+`Package.resolved` preserves the exact integration graph. Keep shared resolutions
+consistent with the selected vMLX graph. Resolve changes only when required by an
+intentional vMLX pin change or a compatible Mei-owned dependency update; do not
+blanket-update transitive packages separately.
+
+Rely on upstream testing for dependency internals. Validate our changes and the
+relevant Mei integration with focused checks. If a vMLX candidate cannot be
+accepted, retain the last known compatible vMLX pin instead of independently
+repairing its underlying dependency selections.
+
+Mei 0.11.1 already follows this ownership boundary: its exact vMLX commit selects
+the core and C bridge documented below, and its shared resolved versions match
+the selected vMLX graph. This policy does not change those release pins or the
+published binary. A future dependency change affecting the distributed binary
+requires a new Mei release; documenting the existing policy does not.
+
 ## Published dependency pin: 0.11.1
 
 Mei 0.11.1 pins vMLX to `e280bd2b87dff614991cb6f9213adaf797eb2db4`.
