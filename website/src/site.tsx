@@ -304,7 +304,6 @@ function Page({ view, base }: { view: View; base: string }) {
               fetchpriority="high"
             />
             <div class="hero-copy">
-              <p class="eyebrow">Local inference. Open possibilities.</p>
               <h1 id="hero-title">
                 Small Mac.
                 <br />
