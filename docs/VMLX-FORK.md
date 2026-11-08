@@ -15,7 +15,17 @@ revision. A fresh Mei build retrieves the fork through SwiftPM. There is no
 normal build-time patch application and no dependency on a local SwiftPM
 repository cache being pre-populated.
 
-## Published dependency pin: 0.11.0
+## Published dependency pin: 0.11.1
+
+Mei 0.11.1 pins vMLX to `e280bd2b87dff614991cb6f9213adaf797eb2db4`.
+It includes Apple MLX core main through `fc344c98` via the pinned fork
+revision `b06cc4dc5af50e281b1b6309b2f7b79719fa9427`, with the C bridge
+at `1169bf6796e05e5857f8d40af5a66b361df3ae5b`. These immutable revisions
+keep the qualified M1 Max attention selector and disable graph debug checks
+in both C++ targets in Release mode. See [the release notes](RELEASE-0.11.1.md)
+for model coverage.
+
+## Previous dependency pin: 0.11.0
 
 [Mei 0.11.0](https://github.com/tijs/mei/releases/tag/v0.11.0) pins vMLX
 `3cb7240a39d92475345c6c1d0c9057da31a2f289`. That revision includes Osaurus

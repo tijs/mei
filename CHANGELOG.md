@@ -2,6 +2,17 @@
 
 All notable changes to Mei are documented here.
 
+## [0.11.1] - 2026-11-08
+
+- Stop structured generation from spending the remaining budget on whitespace
+  after a complete JSON value. Gemma now finishes with a normal stop.
+- Update the Apple MLX core and C bridge pins. Keep graph debug checks out of
+  Release mode in both native C++ targets.
+- Read the configured host model store when staging model weights.
+
+See the [release notes](docs/RELEASE-0.11.1.md) for the pinned revisions and
+four-model qualification.
+
 ## [0.11.0] - 2026-11-07
 
 - Refresh the pinned runtime to Apple MLX Swift 0.33.0 / MLX core 0.32.4,

@@ -186,17 +186,17 @@ Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
 
 ```bash
 brew install tijs/tap/mei
-mei --version     # -> mei 0.11.0
+mei --version     # -> mei 0.11.1
 ```
 
-**Manual — release asset:** download `mei-0.11.0-macos-arm64.tar.gz` and its
+**Manual — release asset:** download `mei-0.11.1-macos-arm64.tar.gz` and its
 `.sha256` file from the GitHub release page, verify the checksum, and unpack
 (`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
 beside the executable.
 
 See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
 source-built `scripts/install_mei.sh` installer. Release notes:
-[`docs/RELEASE-0.11.0.md`](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.11.0.md).
+[`docs/RELEASE-0.11.1.md`](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.11.1.md).
 
 ## One-time prerequisite: `hf`
 
