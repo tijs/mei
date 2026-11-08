@@ -20,14 +20,15 @@ document.addEventListener("click", async (event) => {
   if (event.target.closest(".mobile-menu a"))
     document.querySelector(".mobile-menu").open = false;
 });
-document.addEventListener("htmx:responseError", () => {
+document.addEventListener("htmx:responseError", (event) => {
   // The links always work as full static pages even if a fragment request fails.
-  const panel = document.querySelector("#results-panel");
+  const panel = event.detail?.target;
+  if (!panel) return;
   if (!panel.querySelector(".chart-error")) {
     const message = document.createElement("p");
     message.className = "chart-error";
     message.textContent =
-      "The chart couldn’t load. Open the link for that chart in a new browser tab to load the full page.";
+      "This view couldn’t load. Open its link in a new browser tab to load the full page.";
     panel.append(message);
   }
 });

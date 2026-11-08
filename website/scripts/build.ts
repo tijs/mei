@@ -11,7 +11,7 @@ for (const route of outputRoutes) {
   const response = await app.request(`http://build.local${route}`);
   if (!response.ok)
     throw new Error(`Failed to render ${route}: ${response.status}`);
-  const output = `dist${route === "/" ? "/index.html" : route}`;
+  const output = `dist${route.endsWith("/") ? `${route}index.html` : route}`;
   await mkdir(output.slice(0, output.lastIndexOf("/")), { recursive: true });
   let body = await response.text();
   if (!route.includes("/fragments/") && !route.endsWith(".json"))

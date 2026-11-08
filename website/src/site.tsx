@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { evidence, labels, methods, models, views, type View } from "./data.js";
+import { Code, SiteFooter, SiteHead, SiteHeader } from "./components.js";
+import { ExplainerPage, SystemDiagram } from "./explainer.js";
 
 export function basePath(value = process.env.BASE_PATH ?? "/mei/") {
   if (!/^\/(?:[a-zA-Z0-9_-]+\/)*$/.test(value))
@@ -31,18 +33,6 @@ function Icon({ name }: { name: "tools" | "chat" | "code" | "arrow" }) {
     >
       <path d={paths[name]} />
     </svg>
-  );
-}
-
-function Brand({ base }: { base: string }) {
-  // Viewport crops the exact approved raster, without redrawing the seal.
-  return (
-    <a class="brand" href={`${base}#top`} aria-label="Mei home">
-      <svg class="brand-seal" viewBox="238 134 758 745" aria-hidden="true">
-        <image href={`${base}assets/mei-logo.png`} width="1254" height="1254" />
-      </svg>
-      <span>mei</span>
-    </a>
   );
 }
 
@@ -205,94 +195,19 @@ export function Results({ view, base }: { view: View; base: string }) {
   );
 }
 
-function Code({ children, label }: { children: string; label: string }) {
-  return (
-    <div class="code-block">
-      <div class="code-top">
-        <span>{label}</span>
-        <button
-          id={`copy-${label.toLowerCase().replaceAll(" ", "-")}`}
-          type="button"
-          class="copy-button"
-          data-copy
-          aria-label={`Copy ${label}`}
-        >
-          Copy
-        </button>
-      </div>
-      <pre>
-        <code>{children}</code>
-      </pre>
-    </div>
-  );
-}
-
 function Page({ view, base }: { view: View; base: string }) {
-  const url = new URL(process.env.SITE_URL ?? `https://tijs.github.io${base}`)
-    .href;
   return (
     <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Mei — Run language models on your Mac</title>
-        <meta
-          name="description"
-          content="Mei runs language models on Apple Silicon using MLX. Connect your apps through an OpenAI-compatible API. Includes tested model settings and published results."
-        />
-        <meta name="theme-color" content="#fbf4e9" />
-        <link rel="canonical" href={url} />
-        <meta
-          property="og:title"
-          content="Mei — Run language models on your Mac"
-        />
-        <meta
-          property="og:description"
-          content="Run language models on Apple Silicon using MLX and connect your apps through an OpenAI-compatible API."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={url} />
-        <meta property="og:image" content={`${url}assets/mei-coast.jpg`} />
-        <link rel="icon" href={`${base}assets/mei-logo.png`} type="image/png" />
-        <link
-          rel="preload"
-          href={`${base}assets/Anton-Regular.ttf`}
-          as="font"
-          type="font/ttf"
-          crossorigin="anonymous"
-        />
-        <link rel="stylesheet" href={`${base}assets/site.css`} />
-        <meta
-          name="htmx-config"
-          content='{"allowEval":false,"allowScriptTags":false,"selfRequestsOnly":true}'
-        />
-        <script src={`${base}assets/htmx.min.js`} defer></script>
-        <script src={`${base}assets/site.js`} defer></script>
-      </head>
+      <SiteHead
+        base={base}
+        title="Mei — Run language models on your Mac"
+        description="Mei runs language models on Apple Silicon using MLX. Connect your apps through an OpenAI-compatible API. Includes tested model settings and published results."
+      />
       <body id="top">
         <a class="skip-link" href="#main">
           Skip to content
         </a>
-        <header class="site-header wrap">
-          <Brand base={base} />
-          <nav class="desktop-nav" aria-label="Main navigation">
-            <a href={`${base}#models`}>Models</a>
-            <a href={`${base}#results`}>Results</a>
-            <a href={`${base}#get-started`}>Get started</a>
-            <a href={github}>GitHub ↗</a>
-          </nav>
-          <details class="mobile-menu">
-            <summary>
-              Menu <span aria-hidden="true">☰</span>
-            </summary>
-            <nav aria-label="Mobile navigation">
-              <a href={`${base}#models`}>Models</a>
-              <a href={`${base}#results`}>Results</a>
-              <a href={`${base}#get-started`}>Get started</a>
-              <a href={github}>GitHub ↗</a>
-            </nav>
-          </details>
-        </header>
+        <SiteHeader base={base} />
         <main id="main">
           <section class="hero wrap" aria-labelledby="hero-title">
             <img
@@ -331,6 +246,9 @@ function Page({ view, base }: { view: View; base: string }) {
                 Mei runs the model on your Mac. Your app provides the tools and
                 carries out the actions the model requests.
               </p>
+              <a class="explainer-link" href={`${base}how-mei-fits/`}>
+                See how your app, Mei and the model fit together →
+              </a>
             </div>
             <div class="work-list">
               <article>
@@ -636,19 +554,7 @@ function Page({ view, base }: { view: View; base: string }) {
             </div>
           </section>
         </main>
-        <footer class="site-footer wrap">
-          <Brand base={base} />
-          <p>A Swift/MLX model server for Apple Silicon.</p>
-          <nav aria-label="Footer">
-            <a href={github}>GitHub ↗</a>
-            <a href={`${github}#readme`}>Documentation ↗</a>
-            <a href="https://github.com/ml-explore/mlx">MLX ↗</a>
-            <a href="https://github.com/tijs/vmlx-swift">vMLX ↗</a>
-          </nav>
-          <small>
-            Open source · MIT · Model weights have their own licenses.
-          </small>
-        </footer>
+        <SiteFooter base={base} />
         <div class="sr-only" role="status" id="copy-status" />
       </body>
     </html>
@@ -658,6 +564,16 @@ function Page({ view, base }: { view: View; base: string }) {
 export function createSite(base = basePath()) {
   const app = new Hono();
   app.get("/", (c) => c.html(<Page view="quality" base={base} />));
+  app.get("/how-mei-fits/", (c) => c.html(<ExplainerPage base={base} />));
+  app.get("/how-mei-fits/llama-server.html", (c) =>
+    c.html(<ExplainerPage base={base} system="llama" />),
+  );
+  app.get("/fragments/system-mei.html", (c) =>
+    c.html(<SystemDiagram base={base} system="mei" />),
+  );
+  app.get("/fragments/system-llama.html", (c) =>
+    c.html(<SystemDiagram base={base} system="llama" />),
+  );
   for (const view of views) {
     app.get(`/results/${view}.html`, (c) =>
       c.html(<Page view={view} base={base} />),
@@ -694,6 +610,10 @@ export function createSite(base = basePath()) {
 
 export const outputRoutes = [
   "/",
+  "/how-mei-fits/",
+  "/how-mei-fits/llama-server.html",
+  "/fragments/system-mei.html",
+  "/fragments/system-llama.html",
   ...views.flatMap((v) => [
     `/results/${v}.html`,
     `/fragments/results-${v}.html`,

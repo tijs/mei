@@ -5,6 +5,12 @@ the build; htmx switches result views without a full reload. Every result link
 also targets a complete static page, so the site works without JavaScript.
 No server, analytics, external CDN or model downloads run in production.
 
+`/how-mei-fits/` explains the system diagram, compares Mei with llama-server,
+and shows generic-client and CoCore connection examples. Full-page comparison
+links work without JavaScript; htmx swaps only the diagram when available.
+The page uses shared navigation and metadata components and can grow into
+additional explanations later.
+
 ```sh
 npm ci
 npm run check
