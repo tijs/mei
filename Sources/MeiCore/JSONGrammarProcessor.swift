@@ -69,12 +69,10 @@ public struct StaticTokenFragmentTable: TokenFragmentTable {
 /// premature EOS throws (`prematureEndOfSequence`). None of these may be
 /// reported as a successful structured response.
 ///
-/// The token-level mask is a strict subset of the byte grammar: while the
-/// root value is incomplete it bounds whitespace runs (one whitespace-only
-/// token at a time) so a model that prefers whitespace over structural bytes
-/// cannot pad the budget without progress. Everything the mask admits still
-/// satisfies the byte grammar; whitespace outside the run bound simply goes
-/// unsampled rather than being rewritten.
+/// The token-level mask bounds whitespace runs to one whitespace-only token
+/// so a model cannot spend the budget on padding before or after the root
+/// completes. Everything the mask admits satisfies the byte grammar; extra
+/// whitespace goes unsampled rather than being rewritten.
 public struct JSONGrammarProcessor: Sendable {
 
     /// The compiled format this processor enforces.
@@ -88,17 +86,11 @@ public struct JSONGrammarProcessor: Sendable {
     private var state: JSONGrammarState
 
     /// True when the most recently consumed token's fragment was whitespace
-    /// only. While the root value is incomplete the mask refuses a second
-    /// consecutive whitespace-only token: JSON whitespace is legal at every
-    /// structural position, so a model that prefers whitespace when its
-    /// natural continuation is masked would otherwise pad the whole token
-    /// budget without ever starting the value (observed live on the Qwen3.6
-    /// checkpoints: 64 leading whitespace tokens, `incompleteAtStop`).
-    /// Bounding the run forces structural progress; every emitted document is
-    /// still valid JSON, and the byte grammar still accepts arbitrary
-    /// whitespace — only the token-level mask is stricter. After the root
-    /// value completes, trailing whitespace is unbounded again (a completed
-    /// run is already reportable).
+    /// only. The mask refuses a second consecutive whitespace-only token.
+    /// This forces progress before the root completes, and prevents a model
+    /// from spending the remaining budget on padding after it completes.
+    /// The byte grammar still accepts arbitrary whitespace; only the token
+    /// mask is stricter.
     private var previousFragmentWasWhitespaceOnly = false
 
     /// Builds a processor for a compiled format. `.text` has no grammar and
@@ -146,10 +138,8 @@ public struct JSONGrammarProcessor: Sendable {
     // MARK: Allowed-token decisions
 
     /// Whether `tokenId` can be sampled in the current state. EOS is allowed
-    /// only after a complete root value; while the root value is incomplete a
-    /// whitespace-only fragment is refused when the previous fragment was also
-    /// whitespace only (the anti-stall rule; see
-    /// `previousFragmentWasWhitespaceOnly`).
+    /// only after a complete root value. A whitespace-only fragment is
+    /// refused when the previous fragment was also whitespace only.
     public func isAllowed(tokenId: Int) -> Bool {
         guard tokenId >= 0, tokenId < table.vocabularySize else { return false }
         if table.endOfSequenceTokenIds.contains(tokenId) {
@@ -209,7 +199,7 @@ public struct JSONGrammarProcessor: Sendable {
     /// - EOS: allowed only when the root value is complete; marks the
     ///   processor finished.
     /// - Any other token: its fragment must be fully consumable. After a
-    ///   complete root, only whitespace-only fragments are consumable.
+    ///   complete object, only one whitespace-only fragment may follow.
     ///
     /// Throws (and fails closed) instead of accepting a token the mask should
     /// have excluded.
@@ -246,13 +236,10 @@ public struct JSONGrammarProcessor: Sendable {
 
     // MARK: Anti-stall whitespace bound
 
-    /// True when admitting this fragment would extend a whitespace run while
-    /// the root value is incomplete: the mask (and `consume`) refuse it so a
-    /// whitespace-preferring model cannot stall generation without structural
-    /// progress. See `previousFragmentWasWhitespaceOnly`.
+    /// A second consecutive whitespace-only token stalls generation without
+    /// advancing the JSON or terminating it.
     private func isStalledWhitespace(_ fragment: [UInt8]) -> Bool {
-        state.status == .inProgress && previousFragmentWasWhitespaceOnly
-            && Self.isWhitespaceOnly(fragment)
+        previousFragmentWasWhitespaceOnly && Self.isWhitespaceOnly(fragment)
     }
 
     /// JSON whitespace bytes only (`space`, tab, newline, carriage return).

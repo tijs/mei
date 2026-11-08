@@ -587,14 +587,23 @@ final class JSONGrammarProcessorTests: XCTestCase {
         }
     }
 
-    func testWhitespaceOnlyTokensAreAllowedAfterCompleteRoot() throws {
+    func testCompletedObjectCannotLoopOnTrailingWhitespace() throws {
         var processor = try canaryProcessor()
         try processor.consume(tokenId: ToyToken.wholeCanary.rawValue)
         XCTAssertTrue(processor.isAllowed(tokenId: ToyToken.space.rawValue))
-        XCTAssertTrue(processor.isAllowed(tokenId: ToyToken.newline.rawValue))
         try processor.consume(tokenId: ToyToken.space.rawValue)
-        try processor.consume(tokenId: ToyToken.newline.rawValue)
+        XCTAssertEqual(processor.allowedTokenIds(), [ToyToken.eos.rawValue])
+        XCTAssertThrowsError(try processor.consume(tokenId: ToyToken.newline.rawValue)) { error in
+            XCTAssertEqual(error as? JSONGrammarError, .illegalToken(ToyToken.newline.rawValue))
+        }
         XCTAssertEqual(processor.status, .complete)
+        try processor.consume(tokenId: ToyToken.eos.rawValue)
+        XCTAssertEqual(processor.status, .finished)
+    }
+
+    func testTrailingNonWhitespaceFailsClosed() throws {
+        var processor = try canaryProcessor()
+        try processor.consume(tokenId: ToyToken.wholeCanary.rawValue)
         XCTAssertThrowsError(try processor.consume(tokenId: ToyToken.closeBrace.rawValue)) { error in
             XCTAssertEqual(error as? JSONGrammarError, .illegalToken(ToyToken.closeBrace.rawValue))
         }

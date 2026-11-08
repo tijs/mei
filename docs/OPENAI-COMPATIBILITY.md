@@ -242,11 +242,10 @@ Serializer: `JSONEncoder` with `.sortedKeys` — deterministic key order
   has not started), and enforced token-by-token by `JSONGrammarLogitProcessor`
   riding the ordinary single-sequence, non-speculative decode path through the
   vmlx `additionalProcessor:` seam, composed **after** the built-in penalty
-  processors. The token mask is a strict subset of the byte grammar: while the
-  root value is incomplete it bounds whitespace runs to one whitespace-only
-  token, so a checkpoint that prefers whitespace over structural bytes cannot
-  spend the whole budget without making progress; after the root value
-  completes, trailing whitespace is unbounded. Nothing the mask admits is
+  processors. The token mask is a strict subset of the byte grammar: it bounds
+  whitespace runs to one whitespace-only token, including after the root
+  value completes. This prevents a checkpoint that prefers whitespace from
+  spending the token budget on padding. Nothing the mask admits is
   rewritten, and the byte grammar's accepted language is unchanged. The
   response DTOs are unchanged (same `completionResponse` /
   SSE chunk shape as any other completion).
