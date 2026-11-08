@@ -72,10 +72,10 @@ function Bar({
 
 export function Results({ view, base }: { view: View; base: string }) {
   const titles = {
-    quality: "Can it do the job?",
-    time: "How long does a task take?",
-    memory: "What did we measure in memory?",
-    decode: "How fast does it generate?",
+    quality: "Tasks completed successfully",
+    time: "Average time per task",
+    memory: "Increase in wired memory",
+    decode: "Text generation speed",
   };
   return (
     <div
@@ -114,7 +114,7 @@ export function Results({ view, base }: { view: View; base: string }) {
       {view === "quality" ? (
         <>
           <h4 class="plot-label">
-            Assistant workflows <span>out of 24 attempts</span>
+            Assistant tasks <span>out of 24 attempts</span>
           </h4>
           <div class="plot">
             {models.map((m) => (
@@ -127,7 +127,7 @@ export function Results({ view, base }: { view: View; base: string }) {
             ))}
           </div>
           <h4 class="plot-label">
-            Light Python <span>out of 6 attempts</span>
+            Python tasks <span>out of 6 attempts</span>
           </h4>
           <div class="plot">
             {models.map((m) => (
@@ -199,7 +199,7 @@ export function Results({ view, base }: { view: View; base: string }) {
         class="text-link"
         href={view === "decode" ? evidence.contextSource : evidence.source}
       >
-        Read the test and exact profiles ↗
+        Test setup and full results ↗
       </a>
     </div>
   );
@@ -235,20 +235,20 @@ function Page({ view, base }: { view: View; base: string }) {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Mei — Small Mac. Serious inference.</title>
+        <title>Mei — Run language models on your Mac</title>
         <meta
           name="description"
-          content="A local inference engine for tool-using agents and assistants. Built on MLX, tuned on a 32 GB M1 Max. OpenAI-compatible. Open source."
+          content="Mei runs language models on Apple Silicon using MLX. Connect your apps through an OpenAI-compatible API. Includes tested model settings and published results."
         />
         <meta name="theme-color" content="#fbf4e9" />
         <link rel="canonical" href={url} />
         <meta
           property="og:title"
-          content="Mei — Small Mac. Serious inference."
+          content="Mei — Run language models on your Mac"
         />
         <meta
           property="og:description"
-          content="Local inference for the tools you build. Native to Apple Silicon. Built on MLX."
+          content="Run language models on Apple Silicon using MLX and connect your apps through an OpenAI-compatible API."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={url} />
@@ -305,14 +305,17 @@ function Page({ view, base }: { view: View; base: string }) {
             />
             <div class="hero-copy">
               <h1 id="hero-title">
-                Small Mac.
+                Run language models
                 <br />
-                Serious inference.
+                on your Mac.
               </h1>
               <p class="hero-description">
-                A local engine for tool-using agents and assistants.
+                Mei runs language models on Apple Silicon and makes them
+                available to your apps through an OpenAI-compatible API.
               </p>
-              <p class="hero-detail">Built on MLX. Tuned on a 32 GB M1 Max.</p>
+              <p class="hero-detail">
+                Uses MLX. Tested on an M1 Max with 32 GB of memory.
+              </p>
               <a class="button" href="#get-started">
                 Get started <Icon name="arrow" />
               </a>
@@ -323,15 +326,10 @@ function Page({ view, base }: { view: View; base: string }) {
           </section>
           <section class="section wrap work" aria-labelledby="work-title">
             <div class="section-intro">
-              <p class="eyebrow">A useful little engine</p>
-              <h2 id="work-title">
-                Built for
-                <br class="desktop-break" /> useful work.
-              </h2>
+              <h2 id="work-title">What you can use it for</h2>
               <p>
-                Give your tools a model close to home. Mei handles inference;
-                your application supplies the tools, runs the actions and owns
-                the conversation.
+                Mei runs the model on your Mac. Your app provides the tools and
+                carries out the actions the model requests.
               </p>
             </div>
             <div class="work-list">
@@ -340,8 +338,8 @@ function Page({ view, base }: { view: View; base: string }) {
                 <div>
                   <h3>Tool-using agents</h3>
                   <p>
-                    Choose a tool, work with its results, take the next step.
-                    Build focused workflows around your own APIs.
+                    Let a model request actions through your app’s APIs, read
+                    the results, and decide what to do next.
                   </p>
                 </div>
               </article>
@@ -350,8 +348,8 @@ function Page({ view, base }: { view: View; base: string }) {
                 <div>
                   <h3>Local assistants</h3>
                   <p>
-                    Find information, summarize retrieved material, and turn
-                    text into structured answers.
+                    Build assistants that search information supplied by your
+                    app, summarize it, or extract data from text.
                   </p>
                 </div>
               </article>
@@ -360,17 +358,18 @@ function Page({ view, base }: { view: View; base: string }) {
                 <div>
                   <h3>Light coding</h3>
                   <p>
-                    Small scripts, data transformations and focused edits. A
-                    useful helper for contained tasks.
+                    Write small scripts, process data, or make changes to a few
+                    lines of code.
                   </p>
                 </div>
               </article>
             </div>
             <aside class="expectation">
-              <strong>Right-sized expectations.</strong> Compact, quantized
-              models can be useful assistants. They still make mistakes. Keep
-              tools scoped and validate important actions; demanding autonomous
-              software engineering is beyond this setup’s recommended scope.
+              <strong>What to expect.</strong> The models we recommend are best
+              suited to assistants, tool calls and small coding tasks. They
+              still make mistakes. Give them only the actions they need and
+              check important changes. We do not recommend this setup for
+              independently building or maintaining large software projects.
             </aside>
           </section>
           <section
@@ -380,87 +379,86 @@ function Page({ view, base }: { view: View; base: string }) {
           >
             <div class="section-heading">
               <div>
-                <p class="eyebrow">Selected. Tested. Refined.</p>
-                <h2 id="models-title">Models we tune for.</h2>
+                <h2 id="models-title">Recommended models</h2>
               </div>
               <p>
-                Three named profiles, with settings chosen from measured
-                behavior. Start with the job you want done—and the memory you
-                have.
+                Mei includes tested settings for these three models. The
+                descriptions below explain the differences we found in the same
+                set of tests.
               </p>
             </div>
             <div class="model-grid">
               {models.map((m) => (
                 <article class="model" id={m.id}>
-                  <span class="model-label">{m.label}</span>
                   <h3>{m.name}</h3>
                   <p class="model-size">{m.fullName}</p>
                   <p>{m.description}</p>
                   <div class="model-fact">
                     <strong>{m.household}/24</strong>
-                    <span>assistant workflows</span>
+                    <span>assistant tasks passed</span>
                   </div>
                   <a
                     href={`https://huggingface.co/${m.repo}/tree/${m.revision}`}
                   >
-                    View the pinned model ↗
+                    Model files and version ↗
                   </a>
                   <details class="profile">
-                    <summary>Mei profile</summary>
+                    <summary>Configuration name</summary>
                     <code>{m.profile}</code>
                   </details>
                 </article>
               ))}
             </div>
             <p class="model-note">
-              A3B means roughly 3 billion active parameters per token; all
-              weights still need storage. The evaluated weight-storage sizes are
-              about 11.45 GiB for Groot and 18.17 GiB for Qwen and Ornith. These
-              are not total serving-memory requirements.
+              All three are mixture-of-experts models: they use about 3 billion
+              parameters for each token, but the full set of weights must be
+              stored. Weight storage in these tests was about 11.45 GiB for
+              Groot and 18.17 GiB for Qwen and Ornith. Running a model also
+              needs memory for the prompt, generated text and calculations.
             </p>
             <div class="ongoing">
-              <h3>Good recommendations keep moving.</h3>
+              <h3>We keep testing new models</h3>
               <p>
-                We evaluate new models, test practical workflows, and refine
-                serving profiles. In the latest challenger tests, Gemma matched
-                Groot’s 22/24 assistant passes, but passed 3/6 Python tasks and
-                averaged 72.27 seconds per task. The tuned lineup stays
-                unchanged.
+                We use test results to choose models and adjust their settings.
+                In the latest tests, Gemma passed the same 22 of 24 assistant
+                tasks as Groot, but passed 3 of 6 Python tasks and averaged
+                72.27 seconds per task. Our current recommendations remain
+                Groot, Qwen and Ornith.
               </p>
               <a href={evidence.evaluationSource}>
-                Follow the latest evaluations ↗
+                Read the latest model tests ↗
               </a>
             </div>
           </section>
           <section class="results" id="results" aria-labelledby="results-title">
             <div class="wrap">
               <div class="results-intro">
-                <p class="eyebrow">Measured, not imagined</p>
-                <h2 id="results-title">On a 32 GB M1.</h2>
+                <h2 id="results-title">Test results</h2>
                 <p>
-                  A small machine, real tradeoffs. Here’s how the three tuned
-                  profiles performed in our latest completed comparison.
+                  Compare task results, time per task, memory measurements and
+                  text generation speed for the three models.
                 </p>
                 <p class="test-stamp">
                   M1 Max · 32 GB · Mei 0.11.0
                   <br />
-                  Evaluated 7 November 2026 · two runs per profile
+                  Tested 7 November 2026 · two runs per model
                 </p>
               </div>
               <Results view={view} base={base} />
               <details class="methodology">
-                <summary>Method, limits &amp; all values</summary>
+                <summary>How we tested</summary>
                 <p>
-                  Frozen {evidence.method}, seeds 17 and 29. Each run has 12
-                  synthetic household-assistant workflows and 3 isolated Python
-                  tasks. Both runs receive equal weight. Models use different
-                  declared sampling and cache profiles. Two repeats do not
-                  establish statistical superiority or real-application
-                  acceptance.
+                  We used test suite {evidence.method} with random seeds 17 and
+                  29. Each model ran 12 simulated household-assistant tasks and
+                  3 small Python tasks per run. We gave both runs equal weight
+                  when calculating averages. Each model used its own sampling
+                  and cache settings. Two runs are too few to show that one
+                  model will consistently outperform another or to predict how
+                  it will work in your app.
                 </p>
                 <div class="table-scroll">
                   <table>
-                    <caption>Three Mei profiles · two runs each</caption>
+                    <caption>Results from two runs per model</caption>
                     <thead>
                       <tr>
                         <th scope="col">Model</th>
@@ -484,45 +482,43 @@ function Page({ view, base }: { view: View; base: string }) {
                   </table>
                 </div>
                 <p>
-                  Wired increase is a partial system-wide measurement, not total
-                  memory. Task duration includes failures. Longer-context decode
-                  tests are separate from scored task quality. This selection
-                  shows only the three tuned Mei profiles; the source also
+                  The memory figures show changes in the Mac’s wired memory, not
+                  total memory used by each model. Task times include failures.
+                  Text generation speed was tested separately and does not show
+                  whether longer prompts produced correct answers. These charts
+                  show the three recommended Mei models; the full report
                   includes other models and engines.
                 </p>
                 <a href={`${base}data/results.json`}>
-                  Download this data snapshot ↗
+                  Download the chart data ↗
                 </a>
               </details>
             </div>
           </section>
           <section class="section wrap engine">
             <div>
-              <p class="eyebrow">Native, from the start</p>
-              <h2>
-                Made for
-                <br />
-                Apple Silicon.
-              </h2>
+              <h2>How Mei runs models</h2>
             </div>
             <div class="engine-copy">
               <p>
-                One Swift process, one model, an OpenAI-compatible HTTP API. Mei
-                builds on MLX and vMLX, with model-specific serving profiles,
-                chunked prefill and prefix reuse.
+                Mei is written in Swift and uses MLX through vMLX to run models
+                on Apple Silicon. Each server process loads one model and
+                responds to HTTP requests from your app.
               </p>
               <p>
-                Text, streaming, native tool calls and a documented
-                structured-output subset. A focused engine you can connect to
-                your own software.
+                It can stream generated text, return tool calls and produce JSON
+                using supported schema rules. It reads long prompts in chunks to
+                limit memory use and can reuse calculations from earlier
+                requests.
               </p>
               <p>
-                Our reference machine is a 32 GB M1 Max. Other Apple Silicon
-                Macs can run Mei too; model fit and performance depend on the
-                hardware, context and workload.
+                We test on an M1 Max with 32 GB of memory. Other Apple Silicon
+                Macs can run Mei too. The model you can run and its speed depend
+                on your Mac’s memory, the length of the prompt and the work you
+                ask it to do.
               </p>
               <a href={`${github}/blob/main/docs/OPENAI-COMPATIBILITY.md`}>
-                See the API’s supported surface ↗
+                Supported API features and limits ↗
               </a>
             </div>
           </section>
@@ -533,52 +529,53 @@ function Page({ view, base }: { view: View; base: string }) {
           >
             <div class="section-heading">
               <div>
-                <p class="eyebrow">Bring your own tools</p>
-                <h2 id="start-title">Let’s get it running.</h2>
+                <h2 id="start-title">Install and run Mei</h2>
               </div>
               <p>
-                A native CLI, a model downloaded separately, and a local
-                endpoint. No bundled chat interface or hosted account.
+                Mei is a command-line server. Install it, download a model, then
+                connect your own app or send an API request. Mei does not
+                include a chat interface.
               </p>
             </div>
             <div class="steps">
               <article>
                 <span class="step-number">01</span>
-                <h3>Install the engine.</h3>
+                <h3>Install Mei</h3>
                 <p>
-                  Homebrew installs the stable arm64 binary and its Metal
-                  library. Apple Silicon and macOS 15 or later required.
+                  This installs the stable release. You need an Apple Silicon
+                  Mac running macOS 15 or later.
                 </p>
                 <Code label="Install Mei">{"brew install tijs/tap/mei"}</Code>
               </article>
               <article>
                 <span class="step-number">02</span>
-                <h3>Pull a model. Start serving.</h3>
+                <h3>Download and start Groot</h3>
                 <p>
-                  Groot is our suggested first profile on the reference machine.
-                  Install the Hugging Face CLI once if you don’t have it; the
-                  weights are a separate download.
+                  These commands use Groot, our suggested first model for the 32
+                  GB M1 Max. Install the Hugging Face download tool first. If
+                  you already have the <code>hf</code> command, skip that first
+                  block.
                 </p>
                 <Code label="Install the download helper">
                   {"brew install uv\nuv tool install huggingface_hub"}
                 </Code>
-                <Code label="Pull and serve Groot">
+                <Code label="Download and run Groot">
                   {
                     "mei pull groot-19b-a3b-text\n\nmei \\\n  --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \\\n  --model-profile groot-19b-a3b-text \\\n  --served-model-id groot"
                   }
                 </Code>
                 <p class="small">
-                  The model is pinned to a specific revision.{" "}
+                  Mei downloads a fixed version of the model.{" "}
                   <code>mei pull groot-19b-a3b-text --dry-run</code> previews
-                  the download. One model per process; stop it with Ctrl-C
-                  before switching.
+                  what it would download. Each server runs one model; stop it
+                  with Ctrl-C before switching models.
                 </p>
               </article>
               <article>
                 <span class="step-number">03</span>
-                <h3>Connect your tools.</h3>
+                <h3>Send a request</h3>
                 <p>
-                  Point an OpenAI-compatible client at{" "}
+                  Set your OpenAI-compatible client’s base URL to{" "}
                   <code>http://127.0.0.1:8024/v1</code> and use the served model
                   ID <code>groot</code>.
                 </p>
@@ -590,14 +587,14 @@ function Page({ view, base }: { view: View; base: string }) {
                 <div class="integration">
                   <span class="integration-dot" aria-hidden="true" />
                   <div>
-                    <h4>Works with CoCore.</h4>
+                    <h4>Use Mei with CoCore</h4>
                     <p>
-                      CoCore can connect to Mei as an attached inference engine.
-                      Its startup checks establish the model’s available
-                      capabilities.
+                      CoCore supports Mei as an external model server. When it
+                      connects, it checks whether the selected model can handle
+                      tool calls and structured responses.
                     </p>
                     <a href={`${github}/blob/main/docs/COCORE.md`}>
-                      Connect CoCore ↗
+                      CoCore setup instructions ↗
                     </a>
                   </div>
                 </div>
@@ -615,7 +612,7 @@ function Page({ view, base }: { view: View; base: string }) {
         </main>
         <footer class="site-footer wrap">
           <Brand base={base} />
-          <p>A little engine for the things you build.</p>
+          <p>A Swift/MLX model server for Apple Silicon.</p>
           <nav aria-label="Footer">
             <a href={github}>GitHub ↗</a>
             <a href={`${github}#readme`}>Documentation ↗</a>
@@ -656,7 +653,7 @@ export function createSite(base = basePath()) {
         </head>
         <body>
           <main class="wrap section">
-            <h1>A little lost?</h1>
+            <h1>Page not found</h1>
             <p>This page doesn’t exist.</p>
             <a class="button" href={base}>
               Back to Mei

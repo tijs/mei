@@ -14,7 +14,7 @@ document.addEventListener("click", async (event) => {
       }, 1800);
     } catch {
       document.querySelector("#copy-status").textContent =
-        "Copy unavailable. Select the code to copy it.";
+        "Couldn’t copy. Select the code and copy it manually.";
     }
   }
   if (event.target.closest(".mobile-menu a"))
@@ -27,7 +27,7 @@ document.addEventListener("htmx:responseError", () => {
     const message = document.createElement("p");
     message.className = "chart-error";
     message.textContent =
-      "Couldn’t load this view. Open the measurement link in a new tab to view the full page.";
+      "The chart couldn’t load. Open the link for that chart in a new browser tab to load the full page.";
     panel.append(message);
   }
 });

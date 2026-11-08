@@ -18,13 +18,12 @@ export const models = [
   {
     id: "groot",
     name: "Groot",
-    fullName: "19B · A3B · text-only · 4.5 bpw",
+    fullName: "19B parameters · text-only · 4.5 bits/weight",
     profile: "groot-19b-a3b-text",
     repo: "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
     revision: "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
-    label: "A good place to start",
     description:
-      "The strongest assistant-workflow result of our three tuned profiles in this test, with the lowest measured memory increase. A useful starting point for local assistants and light coding.",
+      "We suggest starting with Groot on a 32 GB M1 Max. It passed 22 of 24 assistant tasks and all 6 Python tasks. It also had the lowest measured memory increase of these three models.",
     household: 22,
     python: 6,
     taskSeconds: 38.9,
@@ -36,13 +35,12 @@ export const models = [
   {
     id: "qwen",
     name: "Qwen3.6",
-    fullName: "35B · A3B · text-only · 4-bit",
+    fullName: "35B parameters · text-only · 4-bit weights",
     profile: "qwen3.6-35b-a3b-text",
     repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
     revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
-    label: "When task time matters",
     description:
-      "The shortest average task time in this comparison. It passed all six Python tasks, with fewer assistant-workflow passes than Groot. Budget more memory for this profile.",
+      "Qwen finished the test tasks faster on average than Groot and Ornith. It passed 18 of 24 assistant tasks and all 6 Python tasks. Its measured memory increase was higher than Groot’s.",
     household: 18,
     python: 6,
     taskSeconds: 29.44,
@@ -54,13 +52,12 @@ export const models = [
   {
     id: "ornith",
     name: "Ornith 1.5",
-    fullName: "35B · A3B · MLX · 4-bit",
+    fullName: "35B parameters · MLX · 4-bit weights",
     profile: "ornith-1.5-35b-a3b",
     repo: "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
     revision: "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
-    label: "Another tuned option",
     description:
-      "A separately tuned assistant and tool-calling profile. It passed one more assistant workflow than Qwen, but fewer Python tasks and took longer on average in this test.",
+      "Ornith passed 19 of 24 assistant tasks and 4 of 6 Python tasks. It took longer per task on average than Qwen and Groot. Mei includes separate settings for running this model.",
     household: 19,
     python: 4,
     taskSeconds: 44.24,
@@ -74,18 +71,18 @@ export const models = [
 export const views = ["quality", "time", "memory", "decode"] as const;
 export type View = (typeof views)[number];
 export const labels: Record<View, string> = {
-  quality: "Task success",
+  quality: "Tasks passed",
   time: "Task time",
   memory: "Memory",
-  decode: "Decode speed",
+  decode: "Generation speed",
 };
 
 export const methods = {
   quality:
-    "Two runs per model: 12 synthetic household-assistant workflows and 3 isolated Python tasks per run. All attempts count, including failures. These are serving-profile results, not production application acceptance.",
-  time: "Mean wall time across all 15 tasks per run, then equal weight for the two runs. Includes failed attempts; excludes model startup and admission. Read alongside task success: a fast failure is still a failure.",
+    "We tested each model twice. Each run used 12 simulated household-assistant tasks and 3 small Python tasks. Failed attempts count too. The results measure each model with its Mei settings; they do not tell us how well it will work in your application.",
+  time: "Average time per task, including failed attempts. We averaged the 15 tasks in each run, then averaged the two runs. Loading the model and running startup checks are excluded. Check the pass counts as well as the time.",
   memory:
-    "Average of two per-run peak system-wide wired-memory increases over a pre-run baseline. This is partial accounting, affected by background activity—not total model memory or a RAM requirement. Weight-storage size is a separate measurement and must not be added to these bars.",
+    "We measured how much the Mac’s wired memory increased from before each run. Wired memory cannot be moved to swap. Each bar averages the highest increase from the two runs. Other applications can affect this measurement. It is not total model memory and does not tell you how much RAM you need. The model-weight sizes are measured separately; do not add them to these values.",
   decode:
-    "Each prompt length averages two fresh processes with five measured greedy 128-token decodes each. Cold requests and warmups are excluded. Decode speed excludes prefill and is not whole-request latency. This does not measure answer quality at 30,000 tokens.",
+    "This measures how fast the model generates text after reading the prompt. Each result averages 10 responses across two separate server starts. Each response generated 128 tokens by choosing the most likely next token. First requests and warmup requests are excluded. These speeds exclude the time spent reading the prompt and do not measure answer quality at 30,000 tokens.",
 };

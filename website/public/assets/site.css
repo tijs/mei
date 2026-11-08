@@ -116,14 +116,6 @@ p + p {
 .section {
   padding-block: 112px;
 }
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.5;
-  margin-bottom: 22px;
-}
 .site-header {
   display: flex;
   align-items: center;
@@ -229,7 +221,7 @@ p + p {
   gap: 64px 100px;
   padding-top: 140px;
 }
-.section-intro > p:not(.eyebrow) {
+.section-intro > p {
   margin-top: 28px;
   max-width: 480px;
 }
@@ -286,14 +278,6 @@ p + p {
   flex-direction: column;
   align-items: flex-start;
   scroll-margin-top: 28px;
-}
-.model-label {
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: var(--pink);
-  margin-bottom: 12px;
 }
 .model h3 {
   font-family: Anton, "Arial Narrow", sans-serif;
@@ -373,7 +357,7 @@ p + p {
 .results h2 {
   font-size: clamp(46px, 7vw, 86px);
 }
-.results-intro > p:not(.eyebrow) {
+.results-intro > p {
   max-width: 650px;
   margin-top: 24px;
   font-size: 19px;
@@ -792,11 +776,6 @@ pre code {
   .hero-copy {
     padding: 28px 24px 0;
   }
-  .hero-copy .eyebrow {
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    margin-bottom: 18px;
-  }
   h1 {
     font-size: clamp(53px, 13vw, 79px);
     line-height: 1.09;
@@ -834,12 +813,8 @@ pre code {
     padding-top: 90px;
     display: block;
   }
-  .section-intro > p:not(.eyebrow) {
+  .section-intro > p {
     margin-top: 22px;
-  }
-  .eyebrow {
-    font-size: 10px;
-    margin-bottom: 18px;
   }
   h2 {
     font-size: 43px;
@@ -892,10 +867,6 @@ pre code {
     margin-top: 18px;
     margin-bottom: 10px;
   }
-  .model-label {
-    font-size: 10px;
-    margin-bottom: 10px;
-  }
   .model-fact strong {
     font-size: 28px;
   }
@@ -922,7 +893,7 @@ pre code {
     font-size: 50px;
     line-height: 1.12;
   }
-  .results-intro > p:not(.eyebrow) {
+  .results-intro > p {
     font-size: 16px;
     margin-top: 22px;
   }
