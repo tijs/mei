@@ -46,6 +46,11 @@ export function SiteHead({
       />
       <script src={`${base}assets/htmx.min.js`} defer></script>
       <script src={`${base}assets/site.js`} defer></script>
+      <script
+        async
+        data-hostname="mei.computer"
+        src="https://scripts.simpleanalyticscdn.com/latest.js"
+      ></script>
     </head>
   );
 }

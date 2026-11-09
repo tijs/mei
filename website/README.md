@@ -3,7 +3,9 @@
 Mobile-first static website. Hono renders JSX full pages and HTML fragments during
 the build; htmx switches result views without a full reload. Every result link
 also targets a complete static page, so the site works without JavaScript.
-No server, analytics, external CDN or model downloads run in production.
+No application server or model downloads run in production. The shared page
+template loads Simple Analytics asynchronously from its CDN, with
+`data-hostname="mei.computer"` for privacy-first page-view analytics.
 
 `/how-mei-fits/` explains the system diagram, compares Mei with llama-server,
 and shows generic-client and CoCore connection examples. Full-page comparison
