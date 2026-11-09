@@ -461,6 +461,11 @@ function Page({ view, base }: { view: View; base: string }) {
                 on your Mac’s memory, the length of the prompt and the work you
                 ask it to do.
               </p>
+              <p>
+                <a href={`${base}how-mei-fits/`}>
+                  Read more about how Mei fits into your app →
+                </a>
+              </p>
               <a href={`${github}/blob/main/docs/OPENAI-COMPATIBILITY.md`}>
                 Supported API features and limits ↗
               </a>
