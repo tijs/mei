@@ -680,6 +680,9 @@ pre code {
   font-size: 11px;
   color: var(--muted);
 }
+.analytics-badge {
+  justify-self: start;
+}
 .sr-only,
 .skip-link:not(:focus) {
   position: absolute;

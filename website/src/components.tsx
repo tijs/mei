@@ -118,6 +118,23 @@ export function SiteFooter({ base }: { base: string }) {
         <a href="https://github.com/tijs/vmlx-swift">vMLX ↗</a>
       </nav>
       <small>Open source · MIT · Model weights have their own licenses.</small>
+      <a
+        class="analytics-badge"
+        href="https://www.simpleanalytics.com?utm_source=mei.computer&utm_content=badge"
+        referrerpolicy="origin"
+        target="_blank"
+        rel="noopener"
+      >
+        <img
+          src="https://simpleanalyticsbadges.com/mei.computer?background=fbf4e9&text=193faf&logo=ff478b&radius=3&counter=false"
+          width="210"
+          height="50"
+          alt="Simple Analytics"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          crossorigin="anonymous"
+        />
+      </a>
     </footer>
   );
 }
