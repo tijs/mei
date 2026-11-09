@@ -166,6 +166,11 @@ export function ExplainerPage({
           >
             <h2 id="layers-title">What Mei adds</h2>
             <p>
+              Mei is a native Swift server that runs as a compiled executable.
+              Its inference libraries are bundled with it, so you don’t need
+              to set up a Python environment to run models.
+            </p>
+            <p>
               Mei provides the HTTP server, model configurations, request limits
               and response handling. It uses vMLX to load models and generate
               text, and MLX to perform the underlying calculations.

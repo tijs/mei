@@ -201,7 +201,7 @@ function Page({ view, base }: { view: View; base: string }) {
       <SiteHead
         base={base}
         title="Mei — Run language models on your Mac"
-        description="Mei runs language models on Apple Silicon using MLX. Connect your apps through an OpenAI-compatible API. Includes tested model settings and published results."
+        description="Mei is a native Swift model server for Apple Silicon, powered by MLX. Connect your apps through an OpenAI-compatible API. No Python environment required."
       />
       <body id="top">
         <a class="skip-link" href="#main">
@@ -229,7 +229,8 @@ function Page({ view, base }: { view: View; base: string }) {
                 available to your apps through an OpenAI-compatible API.
               </p>
               <p class="hero-detail">
-                Uses MLX. Tested on an M1 Max with 32 GB of memory.
+                Native Swift, powered by MLX. No Python environment required.
+                Tested on an M1 Max with 32 GB of memory.
               </p>
               <a class="button" href="#get-started">
                 Get started <Icon name="arrow" />
@@ -448,6 +449,10 @@ function Page({ view, base }: { view: View; base: string }) {
                 Mei is written in Swift and uses MLX through vMLX to run models
                 on Apple Silicon. Each server process loads one model and
                 responds to HTTP requests from your app.
+              </p>
+              <p>
+                It runs as a compiled executable, so you don’t need to install
+                Python or manage a Python environment to use it.
               </p>
               <p>
                 It can stream generated text, return tool calls and produce JSON
