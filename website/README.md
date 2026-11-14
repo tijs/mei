@@ -6,7 +6,8 @@ also targets a complete static page, so the site works without JavaScript.
 No application server or model downloads run in production. The shared page
 template loads Simple Analytics asynchronously from its CDN, with
 `data-hostname="mei.computer"` for privacy-first page-view analytics.
-The shared footer includes the official badge required by the Free plan.
+The shared footer uses Simple Analytics' Text link badge preset, labelled
+“100% privacy-first analytics”, for the Free plan attribution.
 
 `/how-mei-fits/` explains the system diagram, compares Mei with llama-server,
 and shows generic-client and CoCore connection examples. Full-page comparison
