@@ -13,7 +13,7 @@ Mei depends on the public Mei-maintained fork
 current source tree pins fork revision:
 
 ```text
-f6510fc384bcddb5db9efc96e1dd5ab3afc49346
+3aa7b086b22c67f5e36db29128f9f251b7227c63
 ```
 
 The released Mei 0.6.1 build used the preceding pinned revision
@@ -39,6 +39,14 @@ The upstream vmlx-swift project is MIT-licensed; the fork retains that license
 and provenance. Mei also depends on Apple's MLX components and SwiftNIO. Their
 respective licenses and notices are obtained with their Swift package
 checkouts and are not replaced by Mei's license.
+
+## Mei 0.11.2 retained kernel adaptations
+
+The pinned release branch `mei/0.11.2` starts at the 0.11.1 runtime pin and
+adds the stop-tail correction and explicit opt-in precise kernels. The kernel
+adaptations credit Rapid-MLX, oMLX, mlx-vlm and vmlx-swift. Full copied-code
+license texts and attribution are in `THIRD-PARTY-NOTICES.md`, which is shipped
+in the binary bundle. No model weights or Python runtime are incorporated.
 
 ## Model checkpoints
 

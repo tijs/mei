@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/tijs/vmlx-swift.git",
-            revision: "e280bd2b87dff614991cb6f9213adaf797eb2db4"
+            revision: "3aa7b086b22c67f5e36db29128f9f251b7227c63"
         ),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
     ],
@@ -49,6 +49,7 @@ let package = Package(
                 "MeiCore",
                 .product(name: "MLX", package: "vmlx-swift"),
                 .product(name: "MLXNN", package: "vmlx-swift"),
+                .product(name: "MLXLLM", package: "vmlx-swift"),
                 .product(name: "MLXLMCommon", package: "vmlx-swift"),
                 // The structured-output model matrix tests load the staged
                 // checkpoints' real tokenizer.json through the same

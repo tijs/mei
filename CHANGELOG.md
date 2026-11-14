@@ -2,6 +2,21 @@
 
 All notable changes to Mei are documented here.
 
+## [0.11.2] - 2026-11-14
+
+- Report `stop`, rather than `length`, when the final detokenizer flush reveals
+  a configured stop string at the token cap. Preserve cancellation and error
+  finish reasons.
+- Include opt-in precise router/GDN and blocked-prefill kernels for the tested
+  Groot profile. Normal model defaults are unchanged. The campaign measured
+  5.25% faster loaded requests at the same 4096-token prefill size; this is not
+  a speed claim for other models or a change to the default prefill policy.
+- Keep prompt-token caching and rejected speculative/batching experiments out
+  of the release. Include the retained kernels' source and license notices.
+
+See the [release notes](docs/RELEASE-0.11.2.md) for opt-in instructions,
+qualification and limitations.
+
 ## [0.11.1] - 2026-11-08
 
 - Stop structured generation from spending the remaining budget on whitespace
