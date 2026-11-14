@@ -27,10 +27,10 @@ public struct ServerConfig: Sendable {
     /// overrides an explicit operator choice.
     public var maxTokensExplicit: Bool = false
 
-    /// The named model tuning selected with `--model-profile`, if any.
-    /// Nil means no per-model tuning was requested: architecture detection
-    /// still applies, but none of the measured per-model numbers do.
+    /// Measured settings, selected explicitly or recognized from exact curated
+    /// metadata. Unknown artifacts retain architecture defaults.
     public private(set) var modelTuning: ModelTuning?
+    public private(set) var modelTuningWasDetected: Bool = false
     public var prefillStepSize: Int = 64
     /// Set when a named profile's prefill step did not fit this device's
     /// recommended working set and was reduced. Carries the ORIGINAL value so
@@ -232,6 +232,7 @@ public extension ServerConfig {
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
         var prefillStepSizeExplicit = false
+        var modelProfileExplicit = false
         var ssmAnchorBoundariesExplicit = false
         var mlxPressExplicit = false
         var config = ServerConfig(modelDirectory: "", servedModelID: "")
@@ -324,12 +325,17 @@ public extension ServerConfig {
                 config.maxKVWindowSize = try parseInt(flag, value())
             case "--model-profile":
                 let raw = try value()
+                modelProfileExplicit = true
+                if raw.lowercased() == "none" {
+                    config.modelTuning = nil
+                    break
+                }
                 guard let tuning = ModelTuningRegistry.named(raw) else {
                     throw ConfigError.invalidValue(
                         "--model-profile '\(raw)' is not a supported model. "
                         + "Known profiles: "
                         + ModelTuningRegistry.names.joined(separator: ", ")
-                        + ". Omit the flag to run on architecture defaults.")
+                        + ". Omit the flag for automatic selection, or use none for architecture defaults.")
                 }
                 config.modelTuning = tuning
             case "--ssm-anchor-boundaries":
@@ -384,6 +390,15 @@ public extension ServerConfig {
         config.servedModelIDWasDefaulted = (servedModelID == nil)
         config.modelDirectory = modelDirectory
         config.servedModelID = resolvedServedModelID
+
+        // Exact curated artifact metadata can select the same profile as an
+        // explicit name. Unknown exports and an explicit opt-out do not
+        // inherit guessed per-model settings.
+        if !modelProfileExplicit,
+           let tuning = ModelTuningIdentity.detect(modelDirectory: modelDirectory) {
+            config.modelTuning = tuning
+            config.modelTuningWasDetected = true
+        }
 
         // A named model profile supplies the numbers we MEASURED for that
         // model. An explicit flag still wins — the operator asked for it.
@@ -479,13 +494,13 @@ public extension ServerConfig {
                              was measured on, then verify the weights are
                              naturally aligned. Uses the `hf` CLI.
 
-      --model-profile NAME   Serve a supported model with its MEASURED settings:
+      --model-profile NAME   Override automatic measured model settings (none disables):
                              \(ModelTuningRegistry.names.joined(separator: " | "))
                              Selects architecture handling, prefill step, anchor
-                             boundaries and max-tokens together. Omit it and Mei
-                             falls back to architecture defaults detected from
-                             config.json, which are safe but not tuned. Explicit
-                             flags always win over the profile.
+                             boundaries and max-tokens together. Omit it for
+                             automatic selection from known artifact metadata;
+                             unknown models use safe architecture defaults.
+                             Explicit flags always win over the profile.
       --version               Print the Mei release version
       --enable-flint-jangh BOOL  EXPERIMENTAL JANGH2 adapter (also enable Flint)
       --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support

@@ -5,30 +5,37 @@ discovered during the final detokenizer flush at the token cap. The response
 now reports `stop`; actual cancellation and decoding failures keep their
 original finish reasons.
 
-It also includes precise router/GDN and stock-order blocked-prefill kernels
-as an explicit opt-in for the tested Groot profile. Existing model defaults,
-prefill policy and cache settings remain unchanged.
+It also recognises supported model artifacts and automatically loads their
+validated profiles, including precise router/GDN and eligible stock-order
+blocked-prefill kernels for Groot. Explicit settings remain authoritative;
+unknown artifacts retain safe architecture defaults.
 
-## Opt-in Groot profile
+## Automatic model settings
+
+Starting Mei with a supported model directory selects that artifact's validated
+settings automatically. Recognition uses exact metadata fingerprints tied to
+the curated revisions, not an architecture or filename guess. Modified or
+unknown metadata does not inherit another model's tuning. Startup names the
+selected profile. `--model-profile NAME` remains an explicit selection, and
+`--model-profile none` opts out. This recognition does not verify weight payloads.
+
+## Groot profile
 
 The tested artifact is `Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly`,
 revision `53f52e0eb8d67d2941010688b2a6b8807d9a3bea`, available through Mei's
 existing `groot-19b-a3b-text` model profile. Other Groot packs are unqualified.
-Set these switches when starting Mei and pass the explicit prefill size:
+No environment variables are needed:
 
 ```sh
-MEI_EXPERIMENTAL_ROUTER_TAIL=1 \
-MEI_EXPERIMENTAL_GDN=1 \
-MEI_EXPERIMENTAL_BLOCKED_GDN=1 \
-mei --model-dir /path/to/groot --model-profile groot-19b-a3b-text \
-    --prefill-step-size 4096 --compiled-decode false
+mei --model-dir /path/to/groot
 ```
 
-The switches are off by default. They do not select a checkpoint, add model
-weights or enable speculative decoding. Do not apply this profile to Qwen or
-Ornith: the tested compositions regressed on those models. Gemma does not use
-these Qwen-family kernels. A 4096-token prefill requires more memory than the
-ordinary smaller chunks; this release does not raise the default chunk size.
+The Groot profile selects eligible kernels as a group, while preserving
+explicit operator overrides. Other models do not receive these kernels:
+tested Qwen/Ornith combinations regressed and Gemma uses a different architecture.
+Groot keeps its existing 256-token default prefill. The blocked kernel uses the
+stock fallback for small chunks; an explicit 4096-token chunk can use the
+larger blocked path, at a greater memory cost. No chunk default is raised.
 
 On an M1 Max with 32 GB, the preceding qualified campaign build improved loaded
 whole-request speed by 5.25% against released 0.11.1 at the same 4096-token chunk

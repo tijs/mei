@@ -55,8 +55,20 @@ struct MeiMain {
         }
 
         config.optimizationProfile.applyRuntimeEnvironment(
-            force: config.requestedOptimizationProfile.isQwen35MoE,
+            force: config.requestedOptimizationProfile.isQwen35MoE && !config.modelTuningWasDetected,
             modelDirectory: config.modelDirectory)
+        if let tuning = config.modelTuning {
+            let kernelEnvironment = tuning.retainedKernelEnvironment(
+                prefillStepSize: config.prefillStepSize,
+                compiledDecode: config.enableCompiledDecode,
+                environment: ProcessInfo.processInfo.environment)
+            for (name, value) in kernelEnvironment {
+                setenv(name, value, 0)
+            }
+            if !kernelEnvironment.isEmpty {
+                print("mei: model profile enabled precise Groot router/GDN kernels (prefill \(config.prefillStepSize))")
+            }
+        }
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")
         // If the operator sets no flags, the profile is choosing for them — so
         // say what it chose. Silent auto-tuning is only an improvement if it is
@@ -68,16 +80,16 @@ struct MeiMain {
                 + ", unsafe-compile \(compile), fused-gate-up-limit \(fused)")
         }
         if config.modelTuning == nil, config.optimizationProfile.isQwen35MoE {
-            // Detection knows the ARCHITECTURE, never which model this is —
-            // the supported models are indistinguishable from their metadata.
-            // So point at the lookup rather than pretending to recognise it.
-            print("mei: no --model-profile given; serving on architecture "
+            // Architecture fields alone cannot identify these models. If no
+            // curated fingerprint matches, explain the safe fallback and the
+            // available explicit profiles.
+            print("mei: no supported artifact profile recognized; serving on architecture "
                 + "defaults, which are safe but not tuned. If this is a "
                 + "supported model, naming it loads its measured settings: "
                 + ModelTuningRegistry.names.joined(separator: ", "))
         }
         if let tuning = config.modelTuning {
-            print("mei: model profile \(tuning.name) — \(tuning.model)")
+            print("mei: model profile \(tuning.name) (\(config.modelTuningWasDetected ? "automatic" : "explicit")) — \(tuning.model)")
             if let clamped = config.prefillStepClampedFrom {
                 print(ModelOptimizationProfile.prefillClampMessage(
                     from: clamped, to: config.prefillStepSize))

@@ -41,15 +41,24 @@ here and loads them together (prefill step, SSM anchors, max tokens). The
 registered names are the ones `mei pull` lists:
 
 | Name | Repo |
-| --- | --- |---|
-| `ornith-1.5-35b-a3b` | `ornith-ai/Ornith-1.5-35B-A3B` (MLX 4-bit) |
+| --- | --- |
+| `ornith-1.5-35b-a3b` | `Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned` |
 | `qwen3.6-35b-a3b` | `mlx-community/Qwen3.6-35B-A3B-4bit` (vision tower) |
 | `qwen3.6-35b-a3b-text` | `Tostibrown/Qwen3.6-35B-A3B-4bit-textonly` |
+| `groot-19b-a3b-text` | `Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly` |
 
-Omit the flag and the **architecture** profile is resolved from the model's own
-`config.json`: validated `qwen3_5_moe` metadata gets Ornith behavior, anything
-else (or unreadable metadata) stays generic. Those defaults are safe but not
-tuned, and the server says so at startup.
+Omit the flag and exact metadata fingerprints from curated revisions select the
+matching model profile automatically. Recognition checks `config.json`,
+`generation_config.json` and `tokenizer_config.json`, not directory names or
+shared architecture fields. It selects settings and does not verify weights.
+Unknown or modified artifacts fall back to safe architecture defaults.
+`--model-profile none` disables automatic model selection. Explicit serving
+options and low-level kernel overrides remain authoritative.
+
+Groot's profile automatically selects its qualified precise router/GDN kernel
+group with compatible settings. Its default prefill remains 256; blocked prefill
+uses the stock path below the retained kernel's threshold. Qwen and Ornith do
+not inherit that group. Startup reports the effective model and kernel policy.
 
 The architecture profile itself decides only two things:
 
@@ -59,7 +68,9 @@ The architecture profile itself decides only two things:
 | generic | 64 | unchanged |
 
 Explicit flags always win over a named profile. Compiled decode, rotating-KV
-quantization, bounded windows, and SSM anchors remain default-off. Per-model
+quantization and bounded windows remain default-off. SSM anchors are selected
+by the measured model profile (enabled for Qwen text-only, off for Groot and
+Ornith). Per-model
 recommendation is in [`docs/MODELS.md`](MODELS.md).
 
 ## Chunked prefill

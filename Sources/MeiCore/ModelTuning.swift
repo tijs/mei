@@ -1,19 +1,18 @@
 import Foundation
 
-/// A curated settings bundle for one specific supported model, selected BY NAME.
+/// A curated settings bundle for one specific supported model.
 ///
 /// The distinction that matters: `ModelOptimizationProfile` detects the
 /// ARCHITECTURE from `config.json`'s `model_type` — a declared field that
 /// determines topology, and the thing that keeps an unknown model safe. This
-/// type is different. It carries the per-MODEL numbers we measured, and it is
-/// never inferred, because the models we support are not distinguishable from
-/// their metadata: Ornith 1.5 and Qwen3.6 text-only report the identical
-/// `model_type`, architecture and layer topology. Guessing between them would
-/// mean keying behaviour off incidental fields like `transformers_version` or a
-/// config hash, which breaks the moment an upstream re-export changes them.
+/// type is different. It carries the per-MODEL numbers we measured. Known
+/// artifact revisions can be recognized by the complete curated metadata
+/// fingerprint in ModelTuningIdentity, never by model_type or topology:
+/// Ornith and Qwen3.6 text-only share those architecture fields. Changed or
+/// unknown re-exports safely remain on architecture defaults.
 ///
-/// So the operator names the model and gets the measured settings. There are
-/// only a handful of supported models, which is what makes curation viable.
+/// Explicit --model-profile names still override recognition. There are only
+/// a handful of supported artifacts, which makes this curation viable.
 public struct ModelTuning: Sendable, Equatable {
     /// The name passed to `--model-profile`.
     public let name: String

@@ -7,8 +7,11 @@ All notable changes to Mei are documented here.
 - Report `stop`, rather than `length`, when the final detokenizer flush reveals
   a configured stop string at the token cap. Preserve cancellation and error
   finish reasons.
-- Include opt-in precise router/GDN and blocked-prefill kernels for the tested
-  Groot profile. Normal model defaults are unchanged. The campaign measured
+- Automatically recognise supported model artifacts and load their validated
+  per-model settings. Preserve explicit overrides and safe defaults for unknown
+  artifacts; no manual kernel flags are needed.
+- Select precise router/GDN and eligible blocked-prefill kernels for the tested
+  Groot profile. Existing prefill chunk defaults are unchanged. The campaign measured
   5.25% faster loaded requests at the same 4096-token prefill size; this is not
   a speed claim for other models or a change to the default prefill policy.
 - Keep prompt-token caching and rejected speculative/batching experiments out

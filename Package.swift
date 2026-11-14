@@ -60,7 +60,7 @@ let package = Package(
                 .product(name: "NIOEmbedded", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
             ],
-            exclude: ["Fixtures/JANGH2"]
+            exclude: ["Fixtures/JANGH2", "Fixtures/AutomaticModelSettings"]
         ),
     ]
 )

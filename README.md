@@ -103,22 +103,21 @@ the 0.6.1 coding comparison are preserved in
 
 ```bash
 mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
-mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
-    --model-profile qwen3.6-35b-a3b-text
+mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly
 ```
 
 `mei pull <profile> --dry-run` shows you what it would fetch and where, without
 downloading anything.
 
 
-The 0.10.0-rc.2 preview adds `groot-19b-a3b-text`, pinned to the
+The `groot-19b-a3b-text` profile is pinned to the
 [prepared text-only artifact](https://huggingface.co/Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly).
 Its full native tool/cache/context admission passed on the pinned artifact:
 
 ```sh
-mei-preview pull groot-19b-a3b-text
-mei-preview --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \
-    --model-profile groot-19b-a3b-text --served-model-id groot
+mei pull groot-19b-a3b-text
+mei --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \
+    --served-model-id groot
 ```
 
 The profile keeps the measured 256-token prefill step, disables anchors and
@@ -128,8 +127,9 @@ for exact sampler/cache profiles and trial limits. Presets and explicit benchmar
 
 The profile sets the chunked-prefill step, cross-conversation anchor
 boundaries, the generation cap and the architecture handling together — these
-have different optima per model, so one flag selects the whole set. Any flag you
-pass explicitly still wins.
+have different optima per model. Mei automatically selects the profile when
+the bundle matches a known artifact's metadata; no kernel flags are needed.
+Any serving flag you pass explicitly still wins.
 
 Profiles record their measured settings; they do not guarantee identical
 answers across hardware or sampling trajectories. One setting
@@ -140,12 +140,13 @@ prefill is not answer-invariant on this architecture, so a clamped server can
 generate different text than the numbers here were measured on. Pass
 `--prefill-step-size` yourself to override the clamp in either direction.
 
-**Why you name the model rather than Mei detecting it:** the supported models
-are not distinguishable from their metadata — Ornith and Qwen3.6 text-only
-report the same `model_type`, architecture and layer topology. Mei detects the
-*architecture*, which keeps an unknown model safe, but will not guess which
-specific model you have. Serving without a profile works; you get architecture
-defaults and Mei says so at startup. Rationale in
+**Automatic model settings:** Mei recognises exact metadata fingerprints from
+the curated artifact revisions, rather than guessing from a directory name or
+architecture. Known models load their validated profile automatically, including
+eligible Groot kernels. An unknown or modified bundle keeps safe architecture
+defaults. Startup reports which profile was selected. `--model-profile NAME`
+still selects a profile explicitly; `--model-profile none` disables automatic
+selection. Metadata recognition does not verify model weight payloads. Rationale in
 [docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md).
 
 **Use the artifact named by the profile.** Profiles pin an exact repository and
