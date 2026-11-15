@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { evidence, labels, methods, models, views, type View } from "./data.js";
+import { evidence, labels, methods, models, modelCommands, release, views, type View } from "./data.js";
 import { Code, SiteFooter, SiteHead, SiteHeader } from "./components.js";
 import { ExplainerPage, SystemDiagram } from "./explainer.js";
 
@@ -236,7 +236,7 @@ function Page({ view, base }: { view: View; base: string }) {
                 Get started <Icon name="arrow" />
               </a>
               <span class="hero-footnote">
-                Apple Silicon · macOS 15+ · MIT licensed
+                <a href={release.url}>Mei {release.version}</a> · Apple Silicon · macOS 15+ · MIT licensed
               </span>
             </div>
           </section>
@@ -348,8 +348,9 @@ function Page({ view, base }: { view: View; base: string }) {
                     </a>
                   </div>
                   <details class="profile">
-                    <summary>Configuration name</summary>
-                    <code>{m.profile}</code>
+                    <summary>Download and run {m.name}</summary>
+                    <p>{m.automaticSettings}</p>
+                    <Code label={`${m.name} model commands`}>{modelCommands(m)}</Code>
                   </details>
                 </article>
               ))}
@@ -496,10 +497,14 @@ function Page({ view, base }: { view: View; base: string }) {
                 <span class="step-number">01</span>
                 <h3>Install Mei</h3>
                 <p>
-                  This installs the stable release. You need an Apple Silicon
-                  Mac running macOS 15 or later.
+                  This installs stable <a href={release.url}>Mei {release.version}</a>.
+                  You need an Apple Silicon Mac running macOS 15 or later.
                 </p>
                 <Code label="Install Mei">{"brew install tijs/tap/mei"}</Code>
+                <p class="small">
+                  Manual install: <a href={release.archive}>Apple Silicon archive</a>{" "}
+                  and <a href={`${release.archive}.sha256`}>checksum</a>.
+                </p>
               </article>
               <article>
                 <span class="step-number">02</span>
@@ -514,12 +519,10 @@ function Page({ view, base }: { view: View; base: string }) {
                   {"brew install uv\nuv tool install huggingface_hub"}
                 </Code>
                 <Code label="Download and run Groot">
-                  {
-                    "mei pull groot-19b-a3b-text\n\nmei \\\n  --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \\\n  --model-profile groot-19b-a3b-text \\\n  --served-model-id groot"
-                  }
+                  {modelCommands(models[0])}
                 </Code>
                 <p class="small">
-                  Mei downloads a fixed version of the model.{" "}
+                  Mei downloads a fixed version and loads its validated settings automatically.{" "}
                   <code>mei pull groot-19b-a3b-text --dry-run</code> previews
                   what it would download. Each server runs one model; stop it
                   with Ctrl-C before switching models.
@@ -555,8 +558,8 @@ function Page({ view, base }: { view: View; base: string }) {
               </article>
             </div>
             <div class="start-links">
-              <a class="button" href={`${github}/releases/latest`}>
-                Get the latest release <Icon name="arrow" />
+              <a class="button" href={release.url}>
+                Get Mei {release.version} <Icon name="arrow" />
               </a>
               <a class="text-link" href={`${github}#quickstart`}>
                 Read the full quickstart ↗

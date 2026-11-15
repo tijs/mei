@@ -1,3 +1,10 @@
+const releaseVersion = "0.11.2";
+export const release = {
+  version: releaseVersion,
+  url: `https://github.com/tijs/mei/releases/tag/v${releaseVersion}`,
+  archive: `https://github.com/tijs/mei/releases/download/v${releaseVersion}/mei-${releaseVersion}-macos-arm64.tar.gz`,
+};
+
 // Frozen, published evidence. Change this snapshot deliberately, not on each build.
 export const evidence = {
   commit: "abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf",
@@ -21,6 +28,8 @@ export const models = [
     modelCard: "https://huggingface.co/GrootTeam/Groot-19B-A3B-261023",
     fullName: "19B parameters · text-only · 4.5 bits/weight",
     profile: "groot-19b-a3b-text",
+    automaticSettings:
+      "Mei automatically loads Groot’s measured settings: 256-token prefill, conversation anchors off, stock decode kernels and eligible blocked prefill. No kernel flags are needed.",
     repo: "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
     revision: "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
     description:
@@ -41,6 +50,8 @@ export const models = [
     modelCard: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
     fullName: "35B parameters · text-only · 4-bit weights",
     profile: "qwen3.6-35b-a3b-text",
+    automaticSettings:
+      "Mei automatically loads Qwen’s measured settings: 1024-token prefill on a fitting Mac and two conversation anchors. Smaller devices use the documented prefill fallback.",
     repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
     revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
     description:
@@ -61,6 +72,8 @@ export const models = [
     modelCard: "https://huggingface.co/ornith-ai/Ornith-1.5-35B-A3B",
     fullName: "35B parameters · MLX · 4-bit weights",
     profile: "ornith-1.5-35b-a3b",
+    automaticSettings:
+      "Mei automatically loads Ornith’s measured settings: 1024-token prefill on a fitting Mac and conversation anchors off. Smaller devices use the documented prefill fallback.",
     repo: "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
     revision: "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
     description:
@@ -76,6 +89,16 @@ export const models = [
     longDecode: 50.7,
   },
 ] as const;
+
+export function modelCommands(model: (typeof models)[number]): string {
+  return [
+    `mei pull ${model.profile}`,
+    "",
+    "mei \\",
+    `  --model-dir ~/.cache/mei/models/${model.repo.split("/").at(-1)} \\`,
+    `  --served-model-id ${model.id}`,
+  ].join("\n");
+}
 
 export const views = ["quality", "time", "memory", "decode"] as const;
 export type View = (typeof views)[number];

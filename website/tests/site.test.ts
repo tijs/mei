@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import { createSite, basePath, outputRoutes } from "../src/site.js";
+import { evidence, models, release } from "../src/data.js";
+
+test("current release matches the binary version; model examples use automatic settings without relabelling evidence", async () => {
+  const config = readFileSync(new URL("../../Sources/MeiCore/ServerConfig.swift", import.meta.url), "utf8");
+  assert.equal(config.match(/static let version = "([^"]+)"/)?.[1], release.version);
+  const html = await (await createSite("/").request("https://test.local/")).text();
+  assert.ok(html.includes(`href="${release.url}"`));
+  assert.ok(html.includes(`href="${release.archive}"`));
+  assert.ok(html.includes(`href="${release.archive}.sha256"`));
+  for (const model of models) {
+    assert.ok(html.includes(`mei pull ${model.profile}`));
+    assert.ok(html.includes(`models/${model.repo.split("/").at(-1)}`));
+    assert.ok(html.includes(`--served-model-id ${model.id}`));
+    assert.ok(html.includes(model.automaticSettings));
+  }
+  assert.ok(!html.includes("--model-profile"));
+  assert.equal(evidence.runtime, "Mei 0.11.0");
+  const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(new Set(ids).size, ids.length, "copy controls and sections must have unique IDs");
+});
 
 test("all public routes render; chart links have complete-page and fragment destinations for both hosting paths", async () => {
   for (const base of ["/mei/", "/"]) {
