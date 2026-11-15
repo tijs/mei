@@ -6,8 +6,8 @@ now reports `stop`; actual cancellation and decoding failures keep their
 original finish reasons.
 
 It also recognises supported model artifacts and automatically loads their
-validated profiles, including precise router/GDN and eligible stock-order
-blocked-prefill kernels for Groot. Explicit settings remain authoritative;
+validated profiles, including eligible stock-order blocked prefill for Groot
+with stock router and decode kernels. Explicit settings remain authoritative;
 unknown artifacts retain safe architecture defaults.
 
 ## Automatic model settings
@@ -30,18 +30,19 @@ No environment variables are needed:
 mei --model-dir /path/to/groot
 ```
 
-The Groot profile selects eligible kernels as a group, while preserving
-explicit operator overrides. Other models do not receive these kernels:
+The Groot profile selects eligible blocked prefill while preserving
+explicit operator overrides. Other models do not receive this kernel:
 tested Qwen/Ornith combinations regressed and Gemma uses a different architecture.
 Groot keeps its existing 256-token default prefill. The blocked kernel uses the
 stock fallback for small chunks; an explicit 4096-token chunk can use the
 larger blocked path, at a greater memory cost. No chunk default is raised.
 
-On an M1 Max with 32 GB, the preceding qualified campaign build improved loaded
-whole-request speed by 5.25% against released 0.11.1 at the same 4096-token chunk
-size. Six counterbalanced process pairs preserved all 72 full 256-token
-responses. This is a scoped internal Mei result, not a universal engine or
-task-quality ranking. The release build has separate qualification records.
+Normal release-policy measurements rejected the broader precise router/GDN
+decode group because it slowed short requests. An isolated blocked-prefill
+screen preserved short-request performance and improved loaded requests at
+the same 4096-token chunk. The final automatic policy has separate release
+qualification records; these are scoped internal Mei observations, not a
+universal engine or task-quality ranking.
 
 ## Scope and provenance
 

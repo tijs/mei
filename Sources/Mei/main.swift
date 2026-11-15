@@ -66,7 +66,7 @@ struct MeiMain {
                 setenv(name, value, 0)
             }
             if !kernelEnvironment.isEmpty {
-                print("mei: model profile enabled precise Groot router/GDN kernels (prefill \(config.prefillStepSize))")
+                print("mei: model profile selected eligible Groot blocked prefill with stock decode (prefill \(config.prefillStepSize))")
             }
         }
         print("mei: optimization profile \(config.optimizationProfile.rawValue) (requested \(config.requestedOptimizationProfile.rawValue), prefill \(config.prefillStepSize), compiled-decode \(config.enableCompiledDecode), kv-window \(config.maxKVWindowSize), ssm-anchors \(config.ssmAnchorBoundaryCount))")

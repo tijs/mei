@@ -86,7 +86,10 @@ extension ModelTuning {
         "MEI_EXPERIMENTAL_BLOCKED_GDN",
     ]
 
-    /// One qualified combination, selected with the model. Explicit low-level
+    /// Stock decode plus eligible blocked prefill, selected with the model.
+    /// The precise router/GDN decode combination regressed short requests under
+    /// normal compilation defaults. Small prefill chunks use the stock fallback.
+    /// Explicit low-level
     /// operator settings stand down the whole automatic group, not just one
     /// member. Keep the existing unsafe/micro-fusion policy unchanged.
     public func retainedKernelEnvironment(prefillStepSize: Int, compiledDecode: Bool,
@@ -98,6 +101,10 @@ extension ModelTuning {
                   environment[$0] == nil || environment[$0] == "0"
               })
         else { return [:] }
-        return Dictionary(uniqueKeysWithValues: Self.retainedGrootKernelSwitches.map { ($0, "1") })
+        return [
+            "MEI_EXPERIMENTAL_ROUTER_TAIL": "0",
+            "MEI_EXPERIMENTAL_GDN": "0",
+            "MEI_EXPERIMENTAL_BLOCKED_GDN": "1",
+        ]
     }
 }

@@ -103,9 +103,10 @@ struct AutomaticModelSettingsTests {
         #expect(none.optimizationProfile == .qwen35MoE)
     }
 
-    @Test func onlyKnownGrootAndQualifiedChunksEnableCompleteKernelGroup() throws {
-        let expected = Dictionary(uniqueKeysWithValues:
-            ModelTuning.retainedGrootKernelSwitches.map { ($0, "1") })
+    @Test func onlyKnownGrootAndQualifiedChunksSelectBlockedPrefillWithStockDecode() throws {
+        let expected = ["MEI_EXPERIMENTAL_ROUTER_TAIL": "0",
+                        "MEI_EXPERIMENTAL_GDN": "0",
+                        "MEI_EXPERIMENTAL_BLOCKED_GDN": "1"]
         for tuning in ModelTuningRegistry.all {
             for chunk in [256, 4096] {
                 #expect(tuning.retainedKernelEnvironment(prefillStepSize: chunk,

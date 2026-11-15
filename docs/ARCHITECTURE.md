@@ -55,10 +55,10 @@ Unknown or modified artifacts fall back to safe architecture defaults.
 `--model-profile none` disables automatic model selection. Explicit serving
 options and low-level kernel overrides remain authoritative.
 
-Groot's profile automatically selects its qualified precise router/GDN kernel
-group with compatible settings. Its default prefill remains 256; blocked prefill
+Groot's profile automatically selects eligible blocked prefill with stock
+router and decode kernels. Its default prefill remains 256; blocked prefill
 uses the stock path below the retained kernel's threshold. Qwen and Ornith do
-not inherit that group. Startup reports the effective model and kernel policy.
+not inherit this policy. Startup reports the effective model and kernel policy.
 
 The architecture profile itself decides only two things:
 
