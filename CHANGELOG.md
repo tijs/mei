@@ -13,7 +13,10 @@ All notable changes to Mei are documented here.
 - Select eligible blocked prefill for the tested Groot profile while retaining
   stock router and decode kernels. Existing prefill chunk defaults are unchanged.
   The broader kernel group regressed short requests under normal compilation
-  defaults and is not automatically selected.
+  defaults and is not automatically selected. At the same explicit 4096-token
+  chunk, loaded Groot request latency fell 4.75% versus 0.11.1 in the release
+  qualification; short requests remained neutral. No default-chunk speedup is
+  claimed.
 - Keep prompt-token caching and rejected speculative/batching experiments out
   of the release. Include the retained kernels' source and license notices.
 
