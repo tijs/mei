@@ -1,0 +1,2092 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-16",
+  "hardware": "M1 Max \u00b7 32 GB unified memory",
+  "runtime": {
+    "version": "0.11.2",
+    "sourceCommit": "66d9499163a8cfc76772a2f55db16bd8142551fb",
+    "binarySHA256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+    "vmlxCommit": "3aa7b086b22c67f5e36db29128f9f251b7227c63",
+    "mlxVersion": "0.32.5",
+    "metallibSHA256": "56289ad54445d717bce56d7b964927dc092b5face4428db7881ab8f1ad5269cc"
+  },
+  "method": {
+    "benchmarkRelease": "benchmark-v9.11.5",
+    "benchmarkCommit": "7d70334d368d81ea4376823b0655fa2dd6c4d001",
+    "seeds": [
+      17,
+      29
+    ],
+    "taskCoveragePerSeed": {
+      "household": 12,
+      "python": 3
+    },
+    "decode": {
+      "prompts": [
+        17,
+        30000
+      ],
+      "generatedTokens": 128,
+      "greedy": true,
+      "processesPerModel": 2,
+      "measuredRequestsPerContextPerProcess": 5,
+      "coldAndWarmupExcluded": true,
+      "cachedPromptTokens": 0
+    },
+    "averaging": "Task success pools all attempts. Task time averages15tasks/seed then gives both seeds50percent weight. Memory averages the2per-run peak system wired increases over median baseline. Decode gives2freshprocesses50percent weight each.",
+    "modelPolicy": "Shipped automatic model-specific prefill and conversation anchors. Original benchmark samplers and explicit cache/context/output budgets retained.",
+    "scope": "Serving profiles, not isolated runtime-version or model-weight comparisons; two seeds do not establish independence/statistical superiority. Memory is partial system-wide accounting; do not add it to weight sizes or interpret as total RAM requirement. No30Kanswer-quality or maximum-window quality claim.",
+    "preparations": "Stopped, declined and launcher-failed preparation attempts excluded. Full scored cohort completed after user-authorized simulator shutdown under unchanged original pressure/swap/disk/capacity guards."
+  },
+  "models": {
+    "groot": {
+      "name": "Groot",
+      "household": 24,
+      "householdAttempts": 24,
+      "python": 6,
+      "pythonAttempts": 6,
+      "taskSeconds": 39.617983438893376,
+      "wiredGiB": 13.641304016113281,
+      "weightsGiB": 11.449743665754795,
+      "shortDecode": 59.49408041703671,
+      "longDecode": 46.88183920657103,
+      "modelRepo": "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
+      "modelRevision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "prefillTokens": 256,
+      "conversationAnchors": 0,
+      "allocatorCacheBytes": 536870912
+    },
+    "qwen": {
+      "name": "Qwen3.6",
+      "household": 18,
+      "householdAttempts": 24,
+      "python": 6,
+      "pythonAttempts": 6,
+      "taskSeconds": 30.166564280570796,
+      "wiredGiB": 20.473907470703125,
+      "weightsGiB": 18.169194906949997,
+      "shortDecode": 71.3568283281774,
+      "longDecode": 53.677535689312414,
+      "modelRepo": "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
+      "modelRevision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "prefillTokens": 1024,
+      "conversationAnchors": 2,
+      "allocatorCacheBytes": 536870912
+    },
+    "ornith": {
+      "name": "Ornith1.5",
+      "household": 22,
+      "householdAttempts": 24,
+      "python": 6,
+      "pythonAttempts": 6,
+      "taskSeconds": 34.25665721524274,
+      "wiredGiB": 20.43352508544922,
+      "weightsGiB": 18.169194661080837,
+      "shortDecode": 71.40970469972564,
+      "longDecode": 53.73862224013434,
+      "modelRepo": "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
+      "modelRevision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "prefillTokens": 1024,
+      "conversationAnchors": 0,
+      "allocatorCacheBytes": 134217728
+    }
+  },
+  "taskRuns": [
+    {
+      "model": "groot",
+      "seed": 17,
+      "household": 12,
+      "python": 3,
+      "taskSeconds": 40.66555428607389,
+      "fullRunMinutes": 11.496749315282795,
+      "baselineWiredGiB": 2.0494384765625,
+      "peakWiredGiB": 15.680557250976562,
+      "wiredIncreaseGiB": 13.631118774414062,
+      "originalConfigSHA256": "7c45d4f5a58dc1d04cf64d8ae2432d78c3dcc7117aa364095b33680720bfb0a6",
+      "tracks": {
+        "standin": "20261116T073347Z-e7a28156",
+        "automation": "20261116T074006Z-f72cd5d5"
+      }
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "household": 9,
+      "python": 3,
+      "taskSeconds": 28.012774733275485,
+      "fullRunMinutes": 9.464192520832876,
+      "baselineWiredGiB": 1.956634521484375,
+      "peakWiredGiB": 22.386474609375,
+      "wiredIncreaseGiB": 20.429840087890625,
+      "originalConfigSHA256": "0169803e6a7b10f0406c9df61dfb49220e6988c256540476c1044eb7c9e7db04",
+      "tracks": {
+        "standin": "20261116T075404Z-0aac3c75",
+        "automation": "20261116T075947Z-5011b33a"
+      }
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "household": 10,
+      "python": 3,
+      "taskSeconds": 35.36424996945231,
+      "fullRunMinutes": 11.326420684717595,
+      "baselineWiredGiB": 2.0172271728515625,
+      "peakWiredGiB": 22.51080322265625,
+      "wiredIncreaseGiB": 20.493576049804688,
+      "originalConfigSHA256": "e6a46beb6f4055a386ae1dde749921d40cf0ea5344eabe7b9edb726383c819a5",
+      "tracks": {
+        "standin": "20261116T081157Z-24e5be35",
+        "automation": "20261116T081712Z-6ad1b1ff"
+      }
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "household": 12,
+      "python": 3,
+      "taskSeconds": 38.57041259171286,
+      "fullRunMinutes": 11.397447011117281,
+      "baselineWiredGiB": 1.9465179443359375,
+      "peakWiredGiB": 15.598007202148438,
+      "wiredIncreaseGiB": 13.6514892578125,
+      "originalConfigSHA256": "ada1fc5c9916f86753d9028f9e7f0c1675319032c891e9a2c2a0de25993ce086",
+      "tracks": {
+        "standin": "20261116T082454Z-01e4defd",
+        "automation": "20261116T083111Z-a1c22582"
+      }
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "household": 9,
+      "python": 3,
+      "taskSeconds": 32.32035382786611,
+      "fullRunMinutes": 10.4778819500003,
+      "baselineWiredGiB": 1.939971923828125,
+      "peakWiredGiB": 22.45794677734375,
+      "wiredIncreaseGiB": 20.517974853515625,
+      "originalConfigSHA256": "381baa608263ed3878ceb85b7dccbe9f64f3f7d1d50720d91307bc55d8c9fe73",
+      "tracks": {
+        "standin": "20261116T083845Z-ee2fda1d",
+        "automation": "20261116T084528Z-5fc79fb3"
+      }
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "household": 12,
+      "python": 3,
+      "taskSeconds": 33.14906446103317,
+      "fullRunMinutes": 10.643523450684734,
+      "baselineWiredGiB": 1.946624755859375,
+      "peakWiredGiB": 22.320098876953125,
+      "wiredIncreaseGiB": 20.37347412109375,
+      "originalConfigSHA256": "947e91256ee8a631e32cdfdc5574af7e3d4d0458d1b8b4262b89fe54af4204ff",
+      "tracks": {
+        "standin": "20261116T085134Z-3325f198",
+        "automation": "20261116T085710Z-5a2fc4f1"
+      }
+    }
+  ],
+  "taskObservations": [
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 12.052871250081807,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": true,
+      "wallSeconds": 52.66098295804113,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": true,
+      "wallSeconds": 89.05236375005916,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": true,
+      "wallSeconds": 34.41008825006429,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 25.70843341690488,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": true,
+      "wallSeconds": 21.664575208094902,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 15.292608166928403,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 13.8955134160351,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": true,
+      "wallSeconds": 38.091551541001536,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": true,
+      "wallSeconds": 15.993041082983837,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 28.763719916925766,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 16.47207412496209,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 72.88477641704958,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 100.62807916698512,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 17,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 72.4126356249908,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 10.092661165981553,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": true,
+      "wallSeconds": 29.951189917046577,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": false,
+      "wallSeconds": 75.77597545797471,
+      "failedChecks": [
+        "retry_receipts_exist"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": false,
+      "wallSeconds": 38.90992812498007,
+      "failedChecks": [
+        "deleted_source_not_reused"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 16.024988375022076,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": true,
+      "wallSeconds": 18.063818000024185,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 13.843978375080042,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 16.739884542068467,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": false,
+      "wallSeconds": 55.57677879091352,
+      "failedChecks": [
+        "no_unsafe_attempt",
+        "no_invalid_operation"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": true,
+      "wallSeconds": 14.638306041015312,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 21.594762875000015,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 17.541176083032042,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 25.3346189170843,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 27.556391041958705,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 17,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 38.54716329195071,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 8.912313124979846,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": true,
+      "wallSeconds": 29.776381250005215,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": false,
+      "wallSeconds": 64.16552062495612,
+      "failedChecks": [
+        "no_unsafe_attempt",
+        "no_invalid_operation"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": true,
+      "wallSeconds": 28.53634362493176,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 25.14360966696404,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": true,
+      "wallSeconds": 19.94553712499328,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 13.686869666911662,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 9.612054541008547,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": true,
+      "wallSeconds": 47.06227737502195,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": false,
+      "wallSeconds": 13.627063166932203,
+      "failedChecks": [
+        "correct_explicit_schedule"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 27.198468000045978,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 15.304407999967225,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 80.31069908302743,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 61.651492208009586,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 17,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 85.5307120840298,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 12.406549124978483,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": true,
+      "wallSeconds": 40.46541429194622,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": true,
+      "wallSeconds": 86.1761669999687,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": true,
+      "wallSeconds": 43.07112612493802,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 25.34385783399921,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": true,
+      "wallSeconds": 27.413379917037673,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 14.282223458983935,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 13.679010957945138,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": true,
+      "wallSeconds": 39.638777457992546,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": true,
+      "wallSeconds": 17.047291582915932,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 28.649714250001125,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 15.338861374999397,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 71.95635737502016,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 78.81670220801607,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "groot",
+      "seed": 29,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 64.27075591695029,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 10.453932624892332,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": false,
+      "wallSeconds": 27.065625500050373,
+      "failedChecks": [
+        "routing_choice_requested"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": true,
+      "wallSeconds": 66.70389854197856,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": true,
+      "wallSeconds": 41.71729816694278,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 23.93596904107835,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": false,
+      "wallSeconds": 84.91365433402825,
+      "failedChecks": [
+        "finished_with_final_answer"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 12.30548470793292,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 14.04381037503481,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": true,
+      "wallSeconds": 54.478394750040025,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": false,
+      "wallSeconds": 15.634530000039376,
+      "failedChecks": [
+        "correct_explicit_schedule"
+      ],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 21.303725208970718,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 16.234325374942273,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 21.788863167050295,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 41.99087924999185,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "qwen",
+      "seed": 29,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 32.234916375018656,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-family",
+      "passed": true,
+      "wallSeconds": 9.736495374934748,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-ambiguous",
+      "passed": true,
+      "wallSeconds": 24.295446166885085,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "capture-multipart",
+      "passed": true,
+      "wallSeconds": 106.06386704195756,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-grounded",
+      "passed": true,
+      "wallSeconds": 27.485690249945037,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retrieve-isolation",
+      "passed": true,
+      "wallSeconds": 24.147330416017212,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "share-preview",
+      "passed": true,
+      "wallSeconds": 18.537883124896325,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "private-copy",
+      "passed": true,
+      "wallSeconds": 12.287575999973342,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "resume-step",
+      "passed": true,
+      "wallSeconds": 9.868316749925725,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "completion-intent",
+      "passed": true,
+      "wallSeconds": 40.7113788749557,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "routine-occurrence",
+      "passed": true,
+      "wallSeconds": 12.28985995799303,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "retry-outage",
+      "passed": true,
+      "wallSeconds": 23.828898582956754,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "household",
+      "taskId": "untrusted-content",
+      "passed": true,
+      "wallSeconds": 14.595370749942958,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "python",
+      "taskId": "shopping-csv",
+      "passed": true,
+      "wallSeconds": 42.97535608301405,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "python",
+      "taskId": "expense-summary",
+      "passed": true,
+      "wallSeconds": 47.632596542011015,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    },
+    {
+      "model": "ornith",
+      "seed": 29,
+      "track": "python",
+      "taskId": "reminder-repair",
+      "passed": true,
+      "wallSeconds": 82.77990100008901,
+      "failedChecks": [],
+      "harnessError": false,
+      "criticalSafetyFailure": false
+    }
+  ],
+  "decodeObservations": [
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.42093184462682
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.90488211572137
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.87406737903277
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.434206621057015
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.55250033111165
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.88514242515688
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.91119175213051
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.39658824505601
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.49191022983306
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.8753013193506
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.548814482914366
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.901427801718256
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.8519002664568
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.45350113883045
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.581415051487056
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.90218377356855
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.86970715845888
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.52020853268251
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 59.54072769276828
+    },
+    {
+      "model": "Groot",
+      "process_id": "groot-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 46.84258807411564
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.15277410460634
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.79964274259966
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.63002081335147
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.25203158590944
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.38945135450838
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.574643381007604
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.61148560242918
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.2740528278341
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.30450579508333
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.65614233709996
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.38148771255142
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.6354804589284
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.83901682964072
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.51229621254676
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.44774726115992
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.67029508115435
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.69693116263555
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.26897197798839
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.58496444958594
+    },
+    {
+      "model": "Base Qwen3.6",
+      "process_id": "qwen-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.66169848427724
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.32421421539777
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.76630778958178
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.72780613148644
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.42131894878725
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.52348099622459
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.66030397625505
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.83863079409614
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.33009427468916
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.63692668005635
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p1",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.82704150792059
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 1,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.28087574143463
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 1,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.664825663832076
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 2,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.77349175788198
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 2,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.3490582649983
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 3,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.29684040541402
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 3,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.69762667435351
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 4,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.70346270060428
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 4,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.46721624902982
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "short",
+      "repeat": 5,
+      "prompt_tokens": 17,
+      "completion_tokens": 128,
+      "decode_tps": 71.46702122122444
+    },
+    {
+      "model": "Ornith1.5",
+      "process_id": "ornith-decode-p2",
+      "runtime_sha256": "584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0",
+      "model_revision": "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
+      "context": "long",
+      "repeat": 5,
+      "prompt_tokens": 30000,
+      "completion_tokens": 128,
+      "decode_tps": 53.726725405331514
+    }
+  ],
+  "decodeResourceAudits": [
+    {
+      "model": "groot",
+      "id": "groot-decode-p1",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "f15de604439370b1c69a2896dff1b5f85b57131beea3946ad2c2a373a586419b"
+    },
+    {
+      "model": "groot",
+      "id": "groot-decode-p2",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "a8c9fec8da2c16ead25b3c67617dc7454b0e18fddd7e72f2a0936bec012b2fee"
+    },
+    {
+      "model": "qwen",
+      "id": "qwen-decode-p1",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "305887345820fd5b85af4af607b34b085443048d35e61d950b4144359df968a4"
+    },
+    {
+      "model": "qwen",
+      "id": "qwen-decode-p2",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "d68ec61c4beef1ce80b304767e4dd8d171c1b01477da73084abe382b5b5990b2"
+    },
+    {
+      "model": "ornith",
+      "id": "ornith-decode-p1",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "3cdf6088c91eadcde6e5acdab076ec2dddb45dd336aafc130d0333bab680269f"
+    },
+    {
+      "model": "ornith",
+      "id": "ornith-decode-p2",
+      "pressure_levels": [
+        1
+      ],
+      "swap_growth_mib": 0.0,
+      "qualification_sha256": "50920a9a54605dffdaf974710a5cbe5de4fda93c7554098f4fcf188954ff91d3"
+    }
+  ],
+  "nativeAdmission": [
+    {
+      "model": "groot",
+      "checks": [
+        "cache_growing_turn1",
+        "cache_growing_turn2_reuses_slot",
+        "cache_repeat_1",
+        "cache_repeat_2",
+        "context_exact_cap",
+        "context_over_cap_rejected",
+        "mei_status",
+        "models_identity",
+        "parity_stream_vs_nonstream",
+        "plain_completion",
+        "tool_call_history_replay",
+        "tool_nonstreaming",
+        "tool_streaming"
+      ],
+      "passed": 13,
+      "fullContextCap": 65536
+    },
+    {
+      "model": "qwen",
+      "checks": [
+        "cache_growing_turn1",
+        "cache_growing_turn2_reuses_slot",
+        "cache_repeat_1",
+        "cache_repeat_2",
+        "context_exact_cap",
+        "context_over_cap_rejected",
+        "mei_status",
+        "models_identity",
+        "parity_stream_vs_nonstream",
+        "plain_completion",
+        "tool_call_history_replay",
+        "tool_nonstreaming",
+        "tool_streaming"
+      ],
+      "passed": 13,
+      "fullContextCap": 65536
+    },
+    {
+      "model": "ornith",
+      "checks": [
+        "cache_growing_turn1",
+        "cache_growing_turn2_reuses_slot",
+        "cache_repeat_1",
+        "cache_repeat_2",
+        "context_exact_cap",
+        "context_over_cap_rejected",
+        "mei_status",
+        "models_identity",
+        "parity_stream_vs_nonstream",
+        "plain_completion",
+        "tool_call_history_replay",
+        "tool_nonstreaming",
+        "tool_streaming"
+      ],
+      "passed": 13,
+      "fullContextCap": 65536
+    }
+  ],
+  "rawEvidenceSHA256": {
+    "groot-native-admission-simulator-off-v6-20261116": {
+      "config.yaml": "4aaae22707c7e73bb71e10e78ed6b3a795b5b0dae3efceed3ca3fd76922dda72",
+      "outcome.json": "0bd43ffdec5faa139367a3df574e6fc0ddb84ef45afb1b6dc9a64d48da19f499",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "probe.json": "c4c5ad2e5e279f4c6675060776aeeb089bd03bdbcd97475ee9e57b32233035e7"
+    },
+    "groot-tasks-seed17": {
+      "config.yaml": "7c45d4f5a58dc1d04cf64d8ae2432d78c3dcc7117aa364095b33680720bfb0a6",
+      "outcome.json": "f3a1ab9d5407971d7f3c1d647e05cff23246832459d83f4be4916ec69cfe145c",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "1000311cb98d3834353e789f144359b86a3117cec3bae03b3973b8780d969121",
+      "post-run-model-hashes.json": "ded4d4bde3b2e5b5683c77b609374b2f0b08ccc955a71ecacd750693842f2e89"
+    },
+    "qwen-native-admission": {
+      "config.yaml": "0fd470b8f91b4c6ad36d106946871e84b09897adbac4b0838f6b4cf67ad809af",
+      "outcome.json": "429f1e508ec8102182020da3c8030c01fceaf3403b7ea489102ba2e8d32a8fed",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "probe.json": "4ae6ccf2298eeb2381408a6f4ff692e4b2cbe9e701fd058d29e781f37cc38edb"
+    },
+    "qwen-tasks-seed17": {
+      "config.yaml": "0169803e6a7b10f0406c9df61dfb49220e6988c256540476c1044eb7c9e7db04",
+      "outcome.json": "334f480ee60664f065b9d1e78bde9bb6ae9f176cc4d6da632a94e58ae5d98ee3",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "746cc5869a00a3337b61d9d85902f28aa9665e9bc905d072bb776c9c02dbbbb4",
+      "post-run-model-hashes.json": "e92dcb2982a6965d9e4cf66ee83e4b94ba32d91a1ba5e33f1cec4a9067f59e9a"
+    },
+    "ornith-native-admission": {
+      "config.yaml": "a657797a728c0dce155281c2a9cc8354bccdfecb2b1bd05a674e937ba1fbdcbd",
+      "outcome.json": "589c6667ecee65afa9ad9c45352661b4bfa26757f86dab9a6ad088f457e6e09c",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "probe.json": "311f764c1b1ab1d7f90d48e38aee939de7c1cf121d502bea0c885aa74cb62522"
+    },
+    "ornith-tasks-seed17": {
+      "config.yaml": "e6a46beb6f4055a386ae1dde749921d40cf0ea5344eabe7b9edb726383c819a5",
+      "outcome.json": "a2be58db9dc4c6fac0fdb2bbdd8b21b7a0c4d4edc091063b907156baa46a9df9",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "4341433d3052a1b36092d537e36a2b33f1b3ca3e3145abe6b008568fa070a95b",
+      "post-run-model-hashes.json": "aa3bbf7064357ce8d78e10de2fc63696f1b7ff6a94f330f9a24a84a068a03095"
+    },
+    "groot-tasks-seed29": {
+      "config.yaml": "ada1fc5c9916f86753d9028f9e7f0c1675319032c891e9a2c2a0de25993ce086",
+      "outcome.json": "a2977a2d207fe22df5670996b6fe3849c0f6ee508a0bc1ac3e7da3639215eac0",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "31b9c962c8672d93ea76625038144c76ae63768b7fe397f6101f1b2be07c4d91",
+      "post-run-model-hashes.json": "ded4d4bde3b2e5b5683c77b609374b2f0b08ccc955a71ecacd750693842f2e89"
+    },
+    "qwen-tasks-seed29": {
+      "config.yaml": "381baa608263ed3878ceb85b7dccbe9f64f3f7d1d50720d91307bc55d8c9fe73",
+      "outcome.json": "f62a8c557699198a260c295a604e403fb58840ad0591b15a52510738364bb7a8",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "7eacb809515e4b2804b1773091ec42ceb2a44e760247e6fc731309150dea3729",
+      "post-run-model-hashes.json": "e92dcb2982a6965d9e4cf66ee83e4b94ba32d91a1ba5e33f1cec4a9067f59e9a"
+    },
+    "ornith-tasks-seed29": {
+      "config.yaml": "947e91256ee8a631e32cdfdc5574af7e3d4d0458d1b8b4262b89fe54af4204ff",
+      "outcome.json": "afd95230bb61c8e663df3acd53b505d656fc5981396bd3207d23d2d13bc6094e",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "audit.json": "3911e4a2a219797c9e2807dc224cd5ba22992582fbbaf9f12636f6b94be17845",
+      "post-run-model-hashes.json": "aa3bbf7064357ce8d78e10de2fc63696f1b7ff6a94f330f9a24a84a068a03095"
+    },
+    "groot-decode-p1": {
+      "config.yaml": "fa7fa3d51c498fb996a1c41e9526b0be0a63f45b1bcce78db6a012ea13f724f0",
+      "outcome.json": "17c4824d56dee78c5a033ca3f7d20907a6af4e9e271e400e4200363e356883b7",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "f15de604439370b1c69a2896dff1b5f85b57131beea3946ad2c2a373a586419b",
+      "responses.jsonl": "7e8ce553306585aa77eba147453648b5052ea4c286bc44b86db5f98a2b840152",
+      "post-run-model-hashes.json": "ded4d4bde3b2e5b5683c77b609374b2f0b08ccc955a71ecacd750693842f2e89"
+    },
+    "qwen-decode-p1": {
+      "config.yaml": "92ca401e4c27620137fbc34daf75297e5a873ae1dbeaa3c8f77d6a5f57190a5e",
+      "outcome.json": "3c60ac003190034f7657f6d3915daad4e2794a2aa35d4c07a9976af21a826063",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "305887345820fd5b85af4af607b34b085443048d35e61d950b4144359df968a4",
+      "responses.jsonl": "eff1d11869374ee54e2e02eaa2874c5bfaf476b19126a9600d212776e835ea81",
+      "post-run-model-hashes.json": "e92dcb2982a6965d9e4cf66ee83e4b94ba32d91a1ba5e33f1cec4a9067f59e9a"
+    },
+    "ornith-decode-p1": {
+      "config.yaml": "74226c7481bb960b606900229cfe7bbb5fae57033185d9d0f5e0df808ea4be54",
+      "outcome.json": "6a4915d4e937d372cb7a407597281bfe08ac69f1d0b1109c1775f82fb1310d9f",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "3cdf6088c91eadcde6e5acdab076ec2dddb45dd336aafc130d0333bab680269f",
+      "responses.jsonl": "e0e92eccfedb952584a11e86287ba51bb3d7c8673c37ab1246b69729785699e8",
+      "post-run-model-hashes.json": "aa3bbf7064357ce8d78e10de2fc63696f1b7ff6a94f330f9a24a84a068a03095"
+    },
+    "groot-decode-p2": {
+      "config.yaml": "af2e57328807dd2ad280e49e99d84ff2942037fd7960ea7d7b63652d12dd7dc1",
+      "outcome.json": "0699658df68ab820eaabb7cc5b276e685430637be4a041f1ebea6b471a451b13",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "a8c9fec8da2c16ead25b3c67617dc7454b0e18fddd7e72f2a0936bec012b2fee",
+      "responses.jsonl": "fff8c552c51dc81db8bc58b9e55d5c653a286e8cae6dedcea49b94cff76ba374",
+      "post-run-model-hashes.json": "ded4d4bde3b2e5b5683c77b609374b2f0b08ccc955a71ecacd750693842f2e89"
+    },
+    "qwen-decode-p2": {
+      "config.yaml": "64459c93bf2db11b32e15f227a2c13eecd11d35df1acb0677aee2d30168afb48",
+      "outcome.json": "97056a0fd278ffd61ff03cc130f291e9908f92e6e7419b982899cc657ba95f41",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "d68ec61c4beef1ce80b304767e4dd8d171c1b01477da73084abe382b5b5990b2",
+      "responses.jsonl": "7d0155b621c7179ad5a5f3ddf6c2a44ac365f41c82b355f3cad6d03aee524411",
+      "post-run-model-hashes.json": "e92dcb2982a6965d9e4cf66ee83e4b94ba32d91a1ba5e33f1cec4a9067f59e9a"
+    },
+    "ornith-decode-p2": {
+      "config.yaml": "2eb438aff29c097db4597de721cbc897232760dfa54c5e6bc835ba90b792f243",
+      "outcome.json": "b692708812890b8878252e2930a06429b583daff5af85ebbd0bc1a68b48212df",
+      "post-run-runtime-verification.json": "71a97d3493745de9d6e05b07410269361f5b0c0fc84ad518bc265a2fddf71208",
+      "qualification.json": "50920a9a54605dffdaf974710a5cbe5de4fda93c7554098f4fcf188954ff91d3",
+      "responses.jsonl": "c6e9e521df190f607d6412543a67206aa991f26b4dea5de39bbea3f9f5abd80e",
+      "post-run-model-hashes.json": "aa3bbf7064357ce8d78e10de2fc63696f1b7ff6a94f330f9a24a84a068a03095"
+    }
+  }
+}

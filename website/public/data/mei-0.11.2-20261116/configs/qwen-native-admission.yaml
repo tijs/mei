@@ -1,0 +1,100 @@
+model: Tostibrown/Qwen3.6-35B-A3B-4bit-textonly
+source_revision: 693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56
+base_model: mlx-community/Qwen3.6-35B-A3B-4bit
+inference_engine: mei
+mei_source_commit: 66d9499163a8cfc76772a2f55db16bd8142551fb
+vmlx_commit: 3aa7b086b22c67f5e36db29128f9f251b7227c63
+mlx_version: 0.32.5
+model_bytes: 19509024480
+weight_bytes: 19509024480
+weight_shards: 4
+quant_family: MLX 4-bit affine g64; 8-bit router gates; text-only derivative
+context_cap: 65536
+temperature: 0.6
+benchmark_scope: mei-native-v1
+benchmark_status: Fresh0.11.2website measurement on frozen benchmark-v9.11.5 with
+  released automatic model profiles. Full original workloads and allowances; no retry-to-pass
+  selection.
+benchmark_endpoint: http://127.0.0.1:18039/v1
+required_runner_environment:
+  MEI_RUNTIME_BASE: __SESSION_DIR__
+  SWIFT_DETERMINISTIC_HASHING: '0'
+benchmark_launch_command: bash runner/start_mei_server.sh --mei-binary __MEI_BINARY__
+  --mei-repo __MEI_SOURCE__ --model-dir __MODEL_DIR__ --served-model-id Tostibrown/Qwen3.6-35B-A3B-4bit-textonly
+  --port 18039 --context-cap 65536 --max-tokens 8192 --temperature 0.6 --top-p 0.95
+  --top-k 20 --emit-reasoning true --prefix-cache-limit-bytes 536870912 --cache-limit-bytes
+  536870912 --compiled-decode false --request-log __SESSION_DIR__/logs/requests.jsonl
+  --runtime-base __SESSION_DIR__ --kv-cache-dir __SESSION_DIR__/kv --cache-mode disk
+  --log-requests true --memory-limit-bytes 0
+generation_profiles:
+  model_card:
+    temperature: 0.6
+    top_p: 0.95
+    top_k: 20
+    seed: 17
+orchestration:
+  raw_port: 18039
+  served_model_id: Tostibrown/Qwen3.6-35B-A3B-4bit-textonly
+  needs_proxy: false
+  viable: model_only
+  rank_eligible: false
+admission_evidence: __BENCH_ROOT__/artifacts/mei012-website-20261115/qwen-native-admission
+settings:
+- name: released_automatic_model_profile
+  value: Mei0.11.2; automatic curated profile and normal runtime compilation defaults.
+    Actual effective settings recorded at startup. Historical manual prefill/anchor/unsafe
+    overrides intentionally omitted.
+- name: weight_residency
+  value: Mei0.11.2 default keepModelInMemory=true; redundant flag omitted because
+    frozen launcher predates that option. Effective server policy unchanged.
+known_gaps:
+- Synthetic stand-in workflows and isolated Python, not Peixinho app acceptance.
+- Fresh serving-profile comparison; automatic settings differ from historical0.11.0manual
+  profiles. No pure runtime/model-weight causal claim.
+- Two declared seeds/processes do not establish statistical independence or universal
+  superiority.
+- 65536capacity admission is separate from measured task/context quality.
+last_updated: '2026-11-15'
+standin_generation_profile: model_card
+standin_partition: heldout
+standin_smoke: false
+standin_cache_policy: Released automatic model-specific prefill/anchors; original
+  allocator cache allowance 536870912bytes, retained prefix allowance536870912bytes;
+  disk for scored tasks/native, off for decode.
+reasoning_mode: native_default
+resource_monitor_policy:
+  supervisor: runner/supervise_bench.py
+  normal_pressure_required_at_launch: true
+  stop_min_free_percent: null
+  sustained_samples: 2
+  sample_seconds: 5
+  critical_pressure: immediate stop
+  warning_pressure: two consecutive samples stop
+  swap_growth_stop_mib: 2048
+  swap_absolute_stop_mib: 16384
+  disk_min_gib: 10
+  justification: Byte-plan feasibility plus stable normal-pressure/flat-swap baseline,
+    then continuously guarded load. Memorystatus percentage is telemetry only; no
+    launch or runtime percentage cutoff. Budget includes context caches, allowances
+    and host reserve; not a reservation or proof of full-context safety.
+  admission_mode: capacity
+  launch_baseline_samples: 7
+python_automation: true
+capacity_plan:
+  context_tokens: 65536
+  model_bytes: 19509024480
+  context_cache_bytes: 1408040960
+  retained_cache_bytes: 536870912
+  allocator_cache_bytes: 536870912
+  workspace_allowance_bytes: 2147483648
+  host_reserve_bytes: 4294967296
+  derivation: Pinned model weight/config and65536-token hybrid-cache bound unchanged;
+    512MiB retained prefixes,512MiB allocator allowance,2GiB workspace and4GiB host
+    reserve. Feasibility estimate,not a reservation or proof of full-context safety.
+  model_config_sha256: ac8c9c4a36ce2205ada3cf938002166529403475f830e4366c818c18569f78b0
+mei_release_artifact:
+  release: https://github.com/tijs/mei/releases/tag/v0.11.2
+  source_revision: 66d9499163a8cfc76772a2f55db16bd8142551fb
+  binary_sha256: 584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0
+  metallib_sha256: 56289ad54445d717bce56d7b964927dc092b5face4428db7881ab8f1ad5269cc
+  runtime_tested_source_revision: 32af276c071e87db625af74641c7d4852dce0160

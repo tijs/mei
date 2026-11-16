@@ -1,0 +1,112 @@
+model: Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly
+source_revision: 53f52e0eb8d67d2941010688b2a6b8807d9a3bea
+base_model: GrootTeam/Groot-19B-A3B-261023
+inference_engine: mei
+mei_source_commit: 66d9499163a8cfc76772a2f55db16bd8142551fb
+vmlx_commit: 3aa7b086b22c67f5e36db29128f9f251b7227c63
+mlx_version: 0.32.5
+model_bytes: 12294068648
+weight_bytes: 12294068648
+weight_shards: 5
+quant_family: MLX RCO mixed affine4/6/8-bit; payload-preserving text-only derivative
+context_cap: 65536
+temperature: 1.0
+benchmark_scope: mei-release-qualification-v1
+benchmark_status: Fresh0.11.2website measurement on frozen benchmark-v9.11.5 with
+  released automatic model profiles. Full original workloads and allowances; no retry-to-pass
+  selection.
+benchmark_endpoint: http://127.0.0.1:18039/v1
+required_runner_environment:
+  MEI_RUNTIME_BASE: __SESSION_DIR__
+  SWIFT_DETERMINISTIC_HASHING: '0'
+benchmark_launch_command: bash runner/start_mei_server.sh --mei-binary __MEI_BINARY__
+  --mei-repo __MEI_SOURCE__ --model-dir __MODEL_DIR__ --served-model-id Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly
+  --port 18039 --context-cap 65536 --max-tokens 8192 --temperature 1.0 --top-p 0.95
+  --top-k 20 --min-p 0 --enable-thinking true --emit-reasoning true --prefix-cache-limit-bytes
+  536870912 --cache-limit-bytes 536870912 --compiled-decode false --request-log __SESSION_DIR__/logs/requests.jsonl
+  --runtime-base __SESSION_DIR__ --cache-mode off --log-requests true --memory-limit-bytes
+  0
+generation_profiles:
+  model_card:
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 20
+    min_p: 0.0
+    presence_penalty: 1.5
+    repetition_penalty: 1.0
+    frequency_penalty: 0.0
+    seed: 17
+orchestration:
+  raw_port: 18039
+  served_model_id: Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly
+  needs_proxy: false
+  viable: model_only
+  rank_eligible: false
+settings:
+- name: released_automatic_model_profile
+  value: Mei0.11.2; automatic curated profile and normal runtime compilation defaults.
+    Actual effective settings recorded at startup. Historical manual prefill/anchor/unsafe
+    overrides intentionally omitted.
+- name: weight_residency
+  value: Mei0.11.2 default keepModelInMemory=true; redundant flag omitted because
+    frozen launcher predates that option. Effective server policy unchanged.
+known_gaps:
+- Synthetic stand-in workflows and isolated Python, not Peixinho app acceptance.
+- Fresh serving-profile comparison; automatic settings differ from historical0.11.0manual
+  profiles. No pure runtime/model-weight causal claim.
+- Two declared seeds/processes do not establish statistical independence or universal
+  superiority.
+- 65536capacity admission is separate from measured task/context quality.
+last_updated: '2026-11-16'
+standin_generation_profile: model_card
+standin_partition: heldout
+standin_smoke: false
+standin_cache_policy: Released automatic model-specific prefill/anchors; original
+  allocator cache allowance 536870912bytes, retained prefix allowance536870912bytes;
+  disk for scored tasks/native, off for decode.
+reasoning_mode: thinking
+resource_monitor_policy:
+  supervisor: runner/supervise_bench.py
+  normal_pressure_required_at_launch: true
+  stop_min_free_percent: null
+  sustained_samples: 2
+  sample_seconds: 5
+  critical_pressure: immediate stop
+  warning_pressure: two consecutive samples stop
+  swap_growth_stop_mib: 2048
+  swap_absolute_stop_mib: 16384
+  disk_min_gib: 10
+  justification: Byte-plan feasibility plus stable normal-pressure/flat-swap baseline,
+    then continuously guarded load. Memorystatus percentage is telemetry only; no
+    launch or runtime percentage cutoff. Budget includes context caches, allowances
+    and host reserve; not a reservation or proof of full-context safety.
+  admission_mode: capacity
+  launch_baseline_samples: 7
+python_automation: true
+capacity_plan:
+  context_tokens: 65536
+  model_bytes: 12294068648
+  context_cache_bytes: 1408040960
+  retained_cache_bytes: 536870912
+  allocator_cache_bytes: 536870912
+  workspace_allowance_bytes: 2147483648
+  host_reserve_bytes: 4294967296
+  derivation: Pinned model weight/config and65536-token hybrid-cache bound unchanged;
+    512MiB retained prefixes,512MiB allocator allowance,2GiB workspace and4GiB host
+    reserve. Feasibility estimate,not a reservation or proof of full-context safety.
+  model_config_sha256: b8752d33e18bde028b4af79b29b24242df1bb9b33a8772b357d0262e8097bc58
+base_source_revision: d089dadfe280289b2f3cd2ae9ef9796c2495529a
+source_quant_model: hermitdave/Groot-19B-A3B-261023-MLX-rco-role-4.5bpw
+source_quant_revision: 6b0c0cfedb818d739ce5fded969dbbb071546f45
+mei_release_artifact:
+  release: https://github.com/tijs/mei/releases/tag/v0.11.2
+  source_revision: 66d9499163a8cfc76772a2f55db16bd8142551fb
+  binary_sha256: 584e4deb1149f8ef0c9fbdda74640ebc69536e5db7a3c99b6ed35c72375cabc0
+  metallib_sha256: 56289ad54445d717bce56d7b964927dc092b5face4428db7881ab8f1ad5269cc
+  runtime_tested_source_revision: 32af276c071e87db625af74641c7d4852dce0160
+admission_evidence: __BENCH_ROOT__/artifacts/mei012-website-20261115/groot-native-admission-simulator-off-v6-20261116
+mei_qualification:
+  repeats: 5
+  loaded_tokens: 30000
+  decode_tokens: 128
+  status_timeout: 1

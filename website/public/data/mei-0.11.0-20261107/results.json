@@ -1,0 +1,59 @@
+{
+  "snapshotOf": "https://github.com/tijs/mei/blob/1c55603765ef1a914087749baf2fb4ea2744f9fd/website/src/data.ts",
+  "scope": "Historical chart metrics and definitions measured on Mei 0.11.0, preserved from the linked website snapshot. Current installation/profile descriptions are intentionally omitted.",
+  "evidence": {
+    "commit": "abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf",
+    "date": "2026-11-07",
+    "hardware": "M1 Max \u00b7 32 GB unified memory",
+    "runtime": "Mei 0.11.0",
+    "method": "benchmark-v9.11.5",
+    "seeds": [
+      17,
+      29
+    ],
+    "source": "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/FOUR_MODEL_MEI011_FINAL.md",
+    "contextSource": "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/CONTEXT_SPEED_MEI011.md",
+    "evaluationSource": "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/QUEUED_CHALLENGERS_FINAL.md"
+  },
+  "models": [
+    {
+      "id": "groot",
+      "name": "Groot",
+      "household": 22,
+      "python": 6,
+      "taskSeconds": 38.9,
+      "wiredGiB": 13.72,
+      "weightsGiB": 11.45,
+      "shortDecode": 55.6,
+      "longDecode": 44.5
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen3.6",
+      "household": 18,
+      "python": 6,
+      "taskSeconds": 29.44,
+      "wiredGiB": 20.34,
+      "weightsGiB": 18.17,
+      "shortDecode": 67.2,
+      "longDecode": 50.8
+    },
+    {
+      "id": "ornith",
+      "name": "Ornith 1.5",
+      "household": 19,
+      "python": 4,
+      "taskSeconds": 44.24,
+      "wiredGiB": 19.86,
+      "weightsGiB": 18.17,
+      "shortDecode": 67.2,
+      "longDecode": 50.7
+    }
+  ],
+  "definitions": {
+    "quality": "We tested each model twice. Each run used 12 simulated household-assistant tasks and 3 small Python tasks. Failed attempts count too. The results measure each model with its Mei settings; they do not tell us how well it will work in your application.",
+    "time": "Average time per task, including failed attempts. We averaged the 15 tasks in each run, then averaged the two runs. Loading the model and running startup checks are excluded. Check the pass counts as well as the time.",
+    "memory": "We measured how much the Mac\u2019s wired memory increased from before each run. Wired memory cannot be moved to swap. Each bar averages the highest increase from the two runs. Other applications can affect this measurement. It is not total model memory and does not tell you how much RAM you need. The model-weight sizes are measured separately; do not add them to these values.",
+    "decode": "This measures how fast the model generates text after reading the prompt. Each result averages 10 responses across two separate server starts. Each response generated 128 tokens by choosing the most likely next token. First requests and warmup requests are excluded. These speeds exclude the time spent reading the prompt and do not measure answer quality at 30,000 tokens."
+  }
+}
