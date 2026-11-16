@@ -366,13 +366,13 @@ function Page({ view, base }: { view: View; base: string }) {
               <h3>We keep testing new models</h3>
               <p>
                 We use test results to choose models and adjust their settings.
-                In the latest tests, Gemma passed the same 22 of 24 assistant
-                tasks as Groot, but passed 3 of 6 Python tasks and averaged
-                72.27 seconds per task. Our current recommendations remain
-                Groot, Qwen and Ornith.
+                Earlier tests of Gemma on Mei 0.11.0 passed 22 of 24 assistant
+                tasks and 3 of 6 Python tasks, averaging 72.27 seconds per task.
+                Those results are separate from this refreshed comparison.
+                Our current recommendations remain Groot, Qwen and Ornith.
               </p>
               <a href={evidence.evaluationSource}>
-                Read the latest model tests ↗
+                Read the earlier model tests ↗
               </a>
             </div>
           </section>
@@ -385,9 +385,9 @@ function Page({ view, base }: { view: View; base: string }) {
                   text generation speed for the three models.
                 </p>
                 <p class="test-stamp">
-                  M1 Max · 32 GB · Mei 0.11.0
+                  {evidence.hardware} · {evidence.runtime}
                   <br />
-                  Tested 7 November 2026 · two runs per model
+                  Tested {evidence.dateLabel} · two runs per model
                 </p>
               </div>
               <Results view={view} base={base} />
@@ -398,7 +398,11 @@ function Page({ view, base }: { view: View; base: string }) {
                   29. Each model ran 12 simulated household-assistant tasks and
                   3 small Python tasks per run. We gave both runs equal weight
                   when calculating averages. Each model used its own sampling
-                  and cache settings. Two runs are too few to show that one
+                  and cache settings. Mei 0.11.2 selected model-specific prefill
+                  and conversation anchors automatically; the benchmark's
+                  sampler and cache allowances remained explicit. These are
+                  current serving-profile results, not an isolated comparison
+                  of runtime versions. Two runs are too few to show that one
                   model will consistently outperform another or to predict how
                   it will work in your app.
                 </p>
@@ -432,9 +436,10 @@ function Page({ view, base }: { view: View; base: string }) {
                   total memory used by each model. Task times include failures.
                   Text generation speed was tested separately and does not show
                   whether longer prompts produced correct answers. These charts
-                  show the three recommended Mei models; the full report
-                  includes other models and engines.
+                  show the three recommended Mei models. Earlier measurements
+                  of other models and engines remain historical evidence.
                 </p>
+                <p><a href={evidence.historicalSource}>Previous Mei 0.11.0 chart data ↗</a></p>
                 <a href={`${base}data/results.json`}>
                   Download the chart data ↗
                 </a>

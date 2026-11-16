@@ -1,3 +1,5 @@
+import measured from "../public/data/mei-0.11.2-20261116/measurements.json" with { type: "json" };
+
 const releaseVersion = "0.11.2";
 export const release = {
   version: releaseVersion,
@@ -5,18 +7,21 @@ export const release = {
   archive: `https://github.com/tijs/mei/releases/download/v${releaseVersion}/mei-${releaseVersion}-macos-arm64.tar.gz`,
 };
 
-// Frozen, published evidence. Change this snapshot deliberately, not on each build.
+// Frozen, audited observations. Release links can advance independently.
+const measurementSource = "https://github.com/tijs/mei/blob/297a4d6c5f75c68a821ec64c5c975e371c493168/website/public/data";
 export const evidence = {
-  commit: "abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf",
-  date: "2026-11-07",
-  hardware: "M1 Max · 32 GB unified memory",
-  runtime: "Mei 0.11.0",
-  method: "benchmark-v9.11.5",
-  seeds: [17, 29],
-  source:
-    "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/FOUR_MODEL_MEI011_FINAL.md",
-  contextSource:
-    "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/CONTEXT_SPEED_MEI011.md",
+  commit: "297a4d6c5f75c68a821ec64c5c975e371c493168",
+  date: measured.date,
+  dateLabel: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${measured.date}T00:00:00Z`)),
+  hardware: measured.hardware,
+  runtime: `Mei ${measured.runtime.version}`,
+  method: measured.method.benchmarkRelease,
+  methodCommit: measured.method.benchmarkCommit,
+  seeds: measured.method.seeds,
+  source: `${measurementSource}/mei-0.11.2-20261116/report.md`,
+  contextSource: `${measurementSource}/mei-0.11.2-20261116/report.md#generation-speed`,
+  rawSource: `${measurementSource}/mei-0.11.2-20261116/measurements.json`,
+  historicalSource: `${measurementSource}/mei-0.11.0-20261107/results.json`,
   evaluationSource:
     "https://github.com/tijs/local-model-bench/blob/abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf/results/QUEUED_CHALLENGERS_FINAL.md",
 };
@@ -33,16 +38,16 @@ export const models = [
     repo: "Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly",
     revision: "53f52e0eb8d67d2941010688b2a6b8807d9a3bea",
     description:
-      "We suggest starting with Groot on a 32 GB M1 Max. It passed 22 of 24 assistant tasks and all 6 Python tasks. It also had the lowest measured memory increase of these three models.",
+      `We suggest starting with Groot on a 32 GB M1 Max. It passed ${measured.models.groot.household} of 24 assistant tasks and all ${measured.models.groot.python} Python tasks. It also had the lowest measured memory increase of these three models.`,
     preparation:
       "Uses hermitdave’s MLX version. We removed image-processing weights and unused multi-token prediction components, and corrected the settings describing weight precision. The retained language-model weights are unchanged.",
-    household: 22,
-    python: 6,
-    taskSeconds: 38.9,
-    wiredGiB: 13.72,
-    weightsGiB: 11.45,
-    shortDecode: 55.6,
-    longDecode: 44.5,
+    household: measured.models.groot.household,
+    python: measured.models.groot.python,
+    taskSeconds: measured.models.groot.taskSeconds,
+    wiredGiB: measured.models.groot.wiredGiB,
+    weightsGiB: measured.models.groot.weightsGiB,
+    shortDecode: measured.models.groot.shortDecode,
+    longDecode: measured.models.groot.longDecode,
   },
   {
     id: "qwen",
@@ -55,16 +60,16 @@ export const models = [
     repo: "Tostibrown/Qwen3.6-35B-A3B-4bit-textonly",
     revision: "693d7a0f4d0c1feb97d8e885ceb2c67d3eb98a56",
     description:
-      "Qwen finished the test tasks faster on average than Groot and Ornith. It passed 18 of 24 assistant tasks and all 6 Python tasks. Its measured memory increase was higher than Groot’s.",
+      `Qwen finished the test tasks faster on average than Groot and Ornith. It passed ${measured.models.qwen.household} of 24 assistant tasks and all ${measured.models.qwen.python} Python tasks. Its measured memory increase was higher than Groot’s.`,
     preparation:
       "Uses mlx-community’s 4-bit MLX version with the image-processing weights removed. The text weights, tokenizer and chat template are unchanged. This version accepts text only.",
-    household: 18,
-    python: 6,
-    taskSeconds: 29.44,
-    wiredGiB: 20.34,
-    weightsGiB: 18.17,
-    shortDecode: 67.2,
-    longDecode: 50.8,
+    household: measured.models.qwen.household,
+    python: measured.models.qwen.python,
+    taskSeconds: measured.models.qwen.taskSeconds,
+    wiredGiB: measured.models.qwen.wiredGiB,
+    weightsGiB: measured.models.qwen.weightsGiB,
+    shortDecode: measured.models.qwen.shortDecode,
+    longDecode: measured.models.qwen.longDecode,
   },
   {
     id: "ornith",
@@ -77,16 +82,16 @@ export const models = [
     repo: "Tostibrown/Ornith-1.5-35B-A3B-MLX-4bit-aligned",
     revision: "ddce5cd6e3d8bc720a5bac5a68c22f406f90403d",
     description:
-      "Ornith passed 19 of 24 assistant tasks and 4 of 6 Python tasks. It took longer per task on average than Qwen and Groot. Mei includes separate settings for running this model.",
+      `Ornith passed ${measured.models.ornith.household} of 24 assistant tasks and all ${measured.models.ornith.python} Python tasks. It took longer per task on average than Qwen in this cohort. Mei includes separate settings for running this model.`,
     preparation:
       "Uses Ornith’s 4-bit MLX version. We changed the file padding to align the stored weights. The weight values are unchanged.",
-    household: 19,
-    python: 4,
-    taskSeconds: 44.24,
-    wiredGiB: 19.86,
-    weightsGiB: 18.17,
-    shortDecode: 67.2,
-    longDecode: 50.7,
+    household: measured.models.ornith.household,
+    python: measured.models.ornith.python,
+    taskSeconds: measured.models.ornith.taskSeconds,
+    wiredGiB: measured.models.ornith.wiredGiB,
+    weightsGiB: measured.models.ornith.weightsGiB,
+    shortDecode: measured.models.ornith.shortDecode,
+    longDecode: measured.models.ornith.longDecode,
   },
 ] as const;
 
