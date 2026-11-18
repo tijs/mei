@@ -499,6 +499,7 @@ public actor Engine {
             modelConfiguration: await container.configuration,
             tokenizer: await container.tokenizer,
             iterator: iterator,
+            extraStopStrings: parameters.extraStopStrings,
             toolSchemas: MessageMapping.templateTools(tools))
 
         var run = GenerationRun()
@@ -637,6 +638,7 @@ public actor Engine {
             modelConfiguration: await container.configuration,
             tokenizer: await container.tokenizer,
             iterator: iterator,
+            extraStopStrings: parameters.extraStopStrings,
             toolSchemas: MessageMapping.templateTools(request.tools))
 
         var run = GenerationRun()

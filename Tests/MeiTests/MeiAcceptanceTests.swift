@@ -125,6 +125,45 @@ final class MeiAcceptanceTests: XCTestCase {
         XCTAssertFalse(content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, "plain completion returned empty content")
     }
 
+    func testRequestStopStringReachesBufferedAndStreamingChat() throws {
+        var payload: [String: Any] = [
+            "model": modelID,
+            "messages": [["role": "user", "content": "Reply with exactly: ready"]],
+            "temperature": 0,
+            "seed": 17,
+            "max_tokens": try normalOutputBudget(),
+        ]
+        func choice(_ body: [String: Any]) throws -> [String: Any] {
+            try XCTUnwrap((body["choices"] as? [[String: Any]])?.first)
+        }
+        func content(_ choice: [String: Any]) -> String {
+            (choice["message"] as? [String: Any])?["content"] as? String ?? ""
+        }
+
+        let (control, response) = try post("/chat/completions", json: payload)
+        XCTAssertEqual(response.statusCode, 200)
+        let text = content(try choice(dict(control)))
+        let stop = String(text.trimmingCharacters(in: .whitespacesAndNewlines).suffix(1))
+        guard !stop.isEmpty else {
+            XCTFail("The unstopped control returned no visible text")
+            return
+        }
+        let boundary = try XCTUnwrap(text.range(of: stop)).lowerBound
+        payload["stop"] = [stop]
+
+        for stream in [false, true] {
+            payload["stream"] = stream
+            let (data, response) = try post("/chat/completions", json: payload)
+            XCTAssertEqual(response.statusCode, 200)
+            if stream {
+                XCTAssertTrue(String(decoding: data, as: UTF8.self).contains("data: [DONE]"))
+            }
+            let stopped = try choice(stream ? assembleSSE(data) : dict(data))
+            XCTAssertEqual(content(stopped), String(text[..<boundary]))
+            XCTAssertEqual(stopped["finish_reason"] as? String, "stop")
+        }
+    }
+
     func testToolCallNonStreaming() throws {
         let toolPayload: [String: Any] = [
             "model": modelID,
