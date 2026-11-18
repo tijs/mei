@@ -351,3 +351,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ```
+
+
+## SenseNova Loop architecture reference
+
+The experimental Swift Loop implementation in the Mei-maintained vMLX fork
+adapts the fixed shared-weight recurrence and mHC routing described by the
+SenseNova authors in [modeling_sensenova_loop.py](https://huggingface.co/sensenova/SenseNova-Loop-9B/blob/329a65f701ba8c48b73c30d0cbaa6f0449733673/modeling_sensenova_loop.py).
+The port adds an MLX implementation, separate state for each layer visit,
+and an opt-in fused Metal router. The upstream project's
+[Apache License 2.0](https://github.com/OpenSenseNova/SenseNova-Loop/blob/7e5f7cd97fc975fef27e9696be9128e386c0dff3/LICENSE)
+is reproduced in the Apache License section above. Mei distributes no model
+weights in its binary archive.
