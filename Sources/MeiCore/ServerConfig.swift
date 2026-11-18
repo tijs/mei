@@ -513,9 +513,10 @@ public extension ServerConfig {
       --version               Print the Mei release version
       --enable-flint-jangh BOOL  EXPERIMENTAL JANGH2 adapter (also enable Flint)
       --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support
-      --enable-sensenova-loop BOOL  EXPERIMENTAL pinned 6/8-bit FP32 Loop text export
-                             Single generation, 4K total context, no compiled decode
                              (default false; JANGH2 requires its separate adapter flag)
+      --enable-sensenova-loop BOOL  EXPERIMENTAL pinned 6/8-bit FP32 Loop text export
+                             Default false. One generation, 4K total context,
+                             uncompiled decode and unquantized attention KV.
 
     Network:
       --host HOST            (default 127.0.0.1)
