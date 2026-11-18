@@ -103,6 +103,7 @@ extension MeiJSONValue: Decodable {
 // MARK: - Request DTOs
 
 public struct ChatRequest: Sendable {
+    public var containsUnsupportedContent: Bool = false
     public var model: String
     public var messages: [APIMessage]
     public var temperature: Double?
@@ -171,26 +172,33 @@ public struct CompletionRequest: Sendable {
 
 private struct FlexibleString: Decodable {
     let value: String?
+    let unsupported: Bool
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let string = try? container.decode(String.self) {
             value = string
+            unsupported = false
         } else if let array = try? container.decode([ContentPart].self) {
             value = array.compactMap { $0.text }.joined(separator: "\n")
+            unsupported = array.contains(where: \.unsupported)
         } else {
             value = nil
+            unsupported = !container.decodeNil()
         }
     }
 }
 
 private struct ContentPart: Decodable {
     let text: String?
+    let unsupported: Bool
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         text = try? container.decode(String.self, forKey: .text)
+        let type = try? container.decode(String.self, forKey: .type)
+        unsupported = text == nil || (container.contains(.type) && type != "text")
     }
     private enum CodingKeys: String, CodingKey {
-        case text
+        case text, type
     }
 }
 
@@ -345,6 +353,7 @@ extension ChatRequest {
         }
 
         let raw = try decoder.decode(Raw.self, from: json)
+        self.containsUnsupportedContent = raw.messages.contains { $0.content?.unsupported == true }
         self.model = raw.model
         self.messages = raw.messages.map { message in
             let toolCalls = message.toolCalls?.compactMap { call -> APIMessage.APIToolCall? in

@@ -6,13 +6,14 @@ import Darwin
 
 /// Selects safe runtime defaults for the active model bundle.
 ///
-/// `auto` is deliberately conservative: only the exact validated
-/// qwen3_5_moe family is recognized. This is architecture policy, not model
-/// identification or a measured model tuning. Everything else,
-/// including missing or malformed metadata, resolves to `generic`.
+/// `auto` selects declared Qwen3.5 MoE handling and the experimental
+/// SenseNova Loop envelope. SenseNova admission separately requires explicit
+/// opt-in and a pinned Q6 or Q8 export with FP32 activations. This is architecture policy rather
+/// than measured model tuning; unknown metadata resolves to `generic`.
 public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable {
     case auto
     case generic
+    case senseNovaLoop = "sensenova-loop"
     case qwen35MoE = "qwen35-moe"
     /// Compatibility spelling for callers of the earlier Swift API.
     case ornith
@@ -86,7 +87,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
         switch requested {
         case .auto:
             return detect(modelDirectory: modelDirectory)
-        case .generic, .qwen35MoE:
+        case .generic, .qwen35MoE, .senseNovaLoop:
             return requested
         case .ornith:
             return .qwen35MoE
@@ -101,7 +102,8 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// Detect only from valid model metadata; model names and paths are not
     /// enough to activate the memory-sensitive architecture policy.
     public static func detect(modelDirectory: String) -> ModelOptimizationProfile {
-        collectedModelTypes(in: modelDirectory).isDisjoint(with: qwen35MoEModelTypes)
+        if SenseNovaSupport.isModel(directory: modelDirectory) { return .senseNovaLoop }
+        return collectedModelTypes(in: modelDirectory).isDisjoint(with: qwen35MoEModelTypes)
             ? .generic
             : .qwen35MoE
     }
@@ -441,7 +443,7 @@ public enum ModelOptimizationProfile: String, CaseIterable, Sendable, Equatable 
     /// 8192 cannot truncate legitimate work here: per request p99 is 2,933
     /// tokens and the largest non-degenerate completion observed was 4,674. It
     /// only bounds callers that send no max_tokens of their own.
-    public var defaultMaxTokens: Int? { isQwen35MoE ? 8192 : nil }
+    public var defaultMaxTokens: Int? { self == .senseNovaLoop ? 256 : (isQwen35MoE ? 8192 : nil) }
 
     private static func collectModelTypes(
         in value: Any,

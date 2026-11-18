@@ -12,6 +12,8 @@ public struct ServerConfig: Sendable {
     public var enableFlint: Bool = false
     /// Separately gated, payload-preserving JANGH2 adapter.
     public var enableFlintJANGH: Bool = false
+    public var enableSenseNovaLoop: Bool = false
+    public internal(set) var isSenseNovaLoop: Bool = false
     /// Set when --served-model-id was omitted and defaulted from the
     /// bundle directory name, so startup can report the chosen ID.
     public var servedModelIDWasDefaulted: Bool = false
@@ -36,7 +38,8 @@ public struct ServerConfig: Sendable {
     /// recommended working set and was reduced. Carries the ORIGINAL value so
     /// startup can name what was given up.
     public var prefillStepClampedFrom: Int?
-    /// KV cache quantization: nil = fp16, else bits (4 or 8).
+    /// Attention KV quantization: nil preserves the model's cache dtype;
+    /// otherwise symmetric affine bits (4 or 8). Recurrent state is separate.
     public var kvBits: Int? = nil
     public var kvGroupSize: Int = 64
     public var quantizedKVStart: Int = 0
@@ -152,7 +155,7 @@ public struct ServerConfig: Sendable {
 
     /// KV capacity bound: the cache must hold the full context plus a
     /// generation headroom window.
-    public var maxKVSize: Int { contextCap + 4096 }
+    public var maxKVSize: Int { isSenseNovaLoop ? contextCap : contextCap + 4096 }
 
     /// Flint's selected bundle declares its sampler. Adopt only its authored
     /// values when the operator did not set a CLI/programmatic override. This
@@ -232,6 +235,7 @@ public extension ServerConfig {
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
         var prefillStepSizeExplicit = false
+        var contextCapExplicit = false
         var modelProfileExplicit = false
         var ssmAnchorBoundariesExplicit = false
         var mlxPressExplicit = false
@@ -252,11 +256,13 @@ public extension ServerConfig {
             case "--served-model-id": servedModelID = try value()
             case "--enable-flint": config.enableFlint = try parseBool(flag, value())
             case "--enable-flint-jangh": config.enableFlintJANGH = try parseBool(flag, value())
+            case "--enable-sensenova-loop": config.enableSenseNovaLoop = try parseBool(flag, value())
             case "--host": config.host = try value()
             case "--port":
                 config.port = try parseInt(flag, value())
             case "--context-cap":
                 config.contextCap = try parseInt(flag, value())
+                contextCapExplicit = true
             case "--max-tokens":
                 config.maxTokensDefault = try parseInt(flag, value())
                 config.maxTokensExplicit = true
@@ -436,6 +442,9 @@ public extension ServerConfig {
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
+        if !contextCapExplicit, config.optimizationProfile == .senseNovaLoop {
+            config.contextCap = 4096
+        }
         if !prefillStepSizeExplicit {
             // No named profile: the architecture default, device-aware for
             // the ornith family. Restores behaviour 0.4.1 shipped and the
@@ -504,6 +513,8 @@ public extension ServerConfig {
       --version               Print the Mei release version
       --enable-flint-jangh BOOL  EXPERIMENTAL JANGH2 adapter (also enable Flint)
       --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support
+      --enable-sensenova-loop BOOL  EXPERIMENTAL pinned 6/8-bit FP32 Loop text export
+                             Single generation, 4K total context, no compiled decode
                              (default false; JANGH2 requires its separate adapter flag)
 
     Network:

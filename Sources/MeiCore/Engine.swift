@@ -108,8 +108,15 @@ public actor Engine {
             throw EngineError.modelDirectoryMissing(config.modelDirectory)
         }
         try config.resolveRuntimePolicies()
-        let modelConfiguration = try await FlintSupport.prepare(
+        var modelConfiguration = try await FlintSupport.prepare(
             directory: directory, enabled: config.enableFlint, janghEnabled: config.enableFlintJANGH)
+        if config.isSenseNovaLoop {
+            // The root architecture name is distinct from Qwen3.5. Select
+            // the parsers for the pinned release template's XML envelopes.
+            modelConfiguration = ModelConfiguration(
+                directory: directory, toolCallFormat: .xmlFunction,
+                reasoningParserName: "think_xml")
+        }
         try config.applyFlintGenerationDefaults()
         print("mei: cache mode \(config.effectiveCacheMode.rawValue) (requested \(config.cacheMode.rawValue); \(config.cacheDecision))")
         print("mei: weight storage owned; bounded model residency requested=\(config.keepModelInMemory)")
@@ -298,6 +305,7 @@ public actor Engine {
 
     private func chatRunLocked(request: ChatRequest, grant: SlotGrant) async throws -> GenerationRun {
         try Task.checkCancellation()
+        try SenseNovaSupport.validateInput(request, textOnly: config.isSenseNovaLoop)
         // Structured requests: compile + build the constraint processor
         // BEFORE any tokenization work, and force thinking off (the grammar
         // constrains the first sampled token to start a JSON value).
@@ -584,6 +592,7 @@ public actor Engine {
         continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation
     ) async throws {
         try Task.checkCancellation()
+        try SenseNovaSupport.validateInput(request, textOnly: config.isSenseNovaLoop)
         // Structured requests: same pre-generation plan as the buffered path.
         let structuredPlan = try await makeStructuredPlan(for: request)
         let (template, tokens, context) = try await renderChatTemplate(
@@ -1090,6 +1099,7 @@ public actor Engine {
         context: [String: any Sendable]?,
         anchorOffsets: [Int] = []
     ) async throws -> GenerateParameters {
+        try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
         guard tokens.count <= config.contextCap else {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
         }
@@ -1142,6 +1152,7 @@ public actor Engine {
         tokens: [Int],
         request: CompletionRequest
     ) async throws -> GenerateParameters {
+        try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
         guard tokens.count <= config.contextCap else {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
         }

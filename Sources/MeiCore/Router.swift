@@ -123,6 +123,7 @@ public final class Router: @unchecked Sendable {
     private func chat(body: Data) async -> RouteResult {
         do {
             let request = try ChatRequest(json: body)
+            try SenseNovaSupport.validateInput(request, textOnly: engine.config.isSenseNovaLoop)
             // Structured requests are validated and compiled BEFORE
             // generation: compiler rejections and unsupported combinations
             // are HTTP 400, including for streaming requests (the response

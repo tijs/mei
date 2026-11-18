@@ -65,8 +65,9 @@ public extension ServerConfig {
     }
 
     /// Called both after CLI parsing and before library loading. Resolving twice
-    /// preserves the same instance-specific directory and performs no I/O.
+    /// preserves the same instance-specific directory.
     mutating func resolveRuntimePolicies() throws {
+        isSenseNovaLoop = try SenseNovaSupport.validateLoad(self)
         guard memoryLimitBytes >= 0, cacheLimitBytes >= 0 else {
             throw ConfigError.invalidValue("memory and allocator cache limits must be >= 0")
         }
@@ -83,7 +84,8 @@ public extension ServerConfig {
                 "--load-mmap true is no longer supported: weights use owned storage. Remove --load-mmap; "
                 + "--keep-model-in-memory controls a separate residency request.")
         }
-        let requiresDisk = ModelOptimizationProfile.needsDiskKVTier(modelDirectory: modelDirectory)
+        let requiresDisk = isSenseNovaLoop
+            || ModelOptimizationProfile.needsDiskKVTier(modelDirectory: modelDirectory)
         let autoNeedsDisk = requiresDisk || ssmAnchorBoundaryCount > 0
         if disposableKVCache,
            cacheMode == .off || cacheMode == .memory || (cacheMode == .auto && !autoNeedsDisk) {
