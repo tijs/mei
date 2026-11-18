@@ -2,6 +2,16 @@
 
 All notable changes to Mei are documented here.
 
+## [0.12.0] - 2026-11-18
+
+- Honor request stop strings in buffered and streaming chat completions.
+- Add opt-in experimental text support for SenseNova-Loop-9B with a 4K total
+  context limit, one active generation, and unquantized attention KV. Model
+  selection and the existing recommended profiles continue to use their
+  existing artifacts.
+
+See the [release notes](docs/RELEASE-0.12.0.md) for setup and qualification limits.
+
 ## [0.11.2] - 2026-11-15
 
 - Report `stop`, rather than `length`, when the final detokenizer flush reveals
