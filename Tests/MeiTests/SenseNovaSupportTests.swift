@@ -78,7 +78,7 @@ final class SenseNovaSupportTests: XCTestCase {
         let directory = try bundle(["model_type": "qwen3_5_text"])
         let config = try ServerConfig.parse(arguments: ["--model-dir", directory.path],
             recommendedWorkingSetBytes: nil, environment: [:])
-        let defaults = ServerConfig()
+        let defaults = ServerConfig(modelDirectory: directory.path, servedModelID: "test")
         XCTAssertFalse(config.isSenseNovaLoop)
         XCTAssertEqual(config.optimizationProfile, .generic)
         XCTAssertEqual(config.contextCap, defaults.contextCap)
