@@ -13,6 +13,11 @@ The public scheduler initializer retains its clock and admission defaults.
 
 The model-free check command is `bash scripts/check_scheduler.sh`. See
 `verification/scheduler/README.md` for bounds, trace regeneration and exclusions.
+The 19 existing scheduler tests and generated replay of 33 Quint traces passed
+both in the model-free package and inside the complete Mei package using the
+published vMLX pin `3c2823b7`. The complete package check selects only those 20
+scheduler tests; it does not run the full offline or real-model suite.
+
 Studio account/connection assessment and combined release qualification are still
 pending; local model/replay evidence must not be described as full runtime proof.
 

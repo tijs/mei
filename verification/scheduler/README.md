@@ -19,13 +19,24 @@ uv run --no-project python tools/convert_scheduler_traces.py "$trace_dir" --outp
 bash scripts/check_scheduler.sh
 ```
 
+For integration with the complete Mei package and its exact dependency pin, also
+run:
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --jobs 2 --filter 'RequestSchedulerTests|SchedulerTraceReplayTests'
+```
+
+This selects only the scheduler tests at runtime; it is not the full offline
+suite or real-model release qualification. Use a separate production-build
+scratch directory when preparing a release.
+
 The script compiles the actual scheduler and the normal scheduling tests in a
 disposable Swift package, without MLX or model weights. The generated replay test
 also runs in the normal Mei suite. It compares grants (by requiring the modeled
 request to enter its operation), active/queued counts, priority mix, admission
-counts exact terminal outcomes and failure/cancellation counters, and exactly-once
-release after every action. Manual deadlines and explicit
-latches control ordering; wall-clock deadlines are only fail-fast watchdogs.
+counts, exact terminal outcomes, failure/cancellation counters, and exactly-once
+release after every action. Manual deadlines and explicit latches control
+ordering; wall-clock deadlines are only fail-fast watchdogs.
 Each trace owns its tasks and settles them before trying a healthy next request.
 A failed replay also attempts bounded cleanup; an implementation that cannot
 settle fails the watchdog rather than leaving the test waiting indefinitely.
