@@ -38,3 +38,18 @@ or push without explicit permission.
 
 During the benchmark experiments, CoCore remains off. Mei work must not
 restart or restore it automatically.
+
+## Scheduler verification before PRs
+
+For a PR touching `Sources/MeiCore/Scheduling.swift` or its scheduler checks,
+run `bash scripts/check_scheduler.sh`, then ask `Run a Quint review of this
+branch against origin/main` (substitute an explicitly specified base). Follow
+the installed `quint-studio` skill's review workflow against that merge-base. Scope the assessment to changed components and the scheduler
+contract in `verification/scheduler/README.md`; do not expand it to cache/GPU
+behavior. Studio must be running, signed in, and connected. Record failed checks,
+a missing/stale model, an unavailable connection, and uncovered behavior in the
+PR description; an agent policy is not a GitHub-enforced required check.
+
+This policy authorizes the local review workflow and updates to the existing
+scheduler model. First-time modeling of any other component still requires an
+explicit request. It does not authorize commits, pushes, posting, or CI setup.

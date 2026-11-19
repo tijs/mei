@@ -2,6 +2,12 @@
 
 All notable changes to Mei are documented here.
 
+## [Unreleased]
+
+- Add a bounded Quint scheduler model and generated Swift trace replay for
+  admission, priority/FIFO ordering, cancellation, timeout and cleanup ownership.
+  Include a model-free check command and a scoped local PR-review policy.
+
 ## [0.12.0] - 2026-11-18
 
 - Honor request stop strings in buffered and streaming chat completions.

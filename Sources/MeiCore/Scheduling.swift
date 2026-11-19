@@ -237,9 +237,25 @@ public actor RequestScheduler {
     private var waiters: [Waiter] = []
     private var nextWaiterID: UInt64 = 0
     private var counters = Counters()
+    // Internal deterministic replay seams. Production uses the ordinary clock
+    // and has no suspension between admission and the cancellation check.
+    private let timeoutSleep: (@Sendable (Int) async throws -> Void)?
+    private let beforeOperation: (@Sendable () async -> Void)?
 
     public init(limits: Limits) {
         self.limits = limits
+        self.timeoutSleep = nil
+        self.beforeOperation = nil
+    }
+
+    init(
+        limits: Limits,
+        timeoutSleep: @escaping @Sendable (Int) async throws -> Void,
+        beforeOperation: (@Sendable () async -> Void)? = nil
+    ) {
+        self.limits = limits
+        self.timeoutSleep = timeoutSleep
+        self.beforeOperation = beforeOperation
     }
 
     /// The live scheduling snapshot for `/v1/mei/status`.
@@ -267,6 +283,7 @@ public actor RequestScheduler {
         operation: @escaping @Sendable (SlotGrant) async throws -> T
     ) async throws -> T {
         let grant = try await acquire(priority: priority)
+        if let beforeOperation { await beforeOperation() }
         // From here on the slot is held. A cancellation between the grant
         // and the operation start must not run the operation at all.
         if Task.isCancelled {
@@ -338,8 +355,12 @@ public actor RequestScheduler {
                 waiters.append(waiter)
                 if limits.queueWaitTimeoutMilliseconds > 0 {
                     let budget = limits.queueWaitTimeoutMilliseconds
+                    let sleep = timeoutSleep
                     waiter.timeoutTask = Task { [weak self] in
-                        try? await Task.sleep(for: .milliseconds(budget))
+                        do {
+                            if let sleep { try await sleep(budget) }
+                            else { try await Task.sleep(for: .milliseconds(budget)) }
+                        } catch { return }
                         guard !Task.isCancelled else { return }
                         await self?.expireWaiter(id: waiterID)
                     }
