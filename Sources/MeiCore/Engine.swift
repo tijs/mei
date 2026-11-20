@@ -556,9 +556,8 @@ public actor Engine {
         // generation leaves an incomplete root by design, and the run is
         // recorded once as `cancelled` below — never as a structured-output
         // failure.
-        if !cancelled, let error = StructuredGeneration.postGenerationError(
-            plan: structuredPlan, stopReason: info?.stopReason,
-            toolCallCount: run.toolCalls.count) {
+        if !cancelled, let error = Self.terminalGenerationError(
+            info, structuredPlan: structuredPlan, toolCallCount: run.toolCalls.count) {
             throw error
         }
 
@@ -699,8 +698,9 @@ public actor Engine {
                     // (no complete root value while the finish would say `stop`):
                     // never emit a success finish frame. Stop consuming; the
                     // check after `task.value` fails the stream instead.
-                    if StructuredGeneration.postGenerationError(
-                        plan: structuredPlan, stopReason: completionInfo.stopReason,
+                    info = completionInfo
+                    if Self.terminalGenerationError(
+                        completionInfo, structuredPlan: structuredPlan,
                         toolCallCount: run.toolCalls.count) != nil {
                         break streamLoop
                     }
@@ -716,7 +716,6 @@ public actor Engine {
                     // slot is still held until `task.value` returns
                     // below, and the cache store still cannot race the next
                     // request.
-                    info = completionInfo
                     infoObservedAt = Date()
                     Self.completeRunForClient(
                         &run, info: completionInfo, fallbackPromptTokens: tokens.count,
@@ -742,9 +741,8 @@ public actor Engine {
         // by design, and the run is recorded once as `cancelled` below —
         // never as a structured-output failure or success.
         let cancelled = Task.isCancelled
-        if !cancelled, let error = StructuredGeneration.postGenerationError(
-            plan: structuredPlan, stopReason: info?.stopReason,
-            toolCallCount: run.toolCalls.count) {
+        if !cancelled, let error = Self.terminalGenerationError(
+            info, structuredPlan: structuredPlan, toolCallCount: run.toolCalls.count) {
             throw error
         }
         if !finished {
@@ -771,6 +769,20 @@ public actor Engine {
         }
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat_stream")
+    }
+
+    private static func terminalGenerationError(
+        _ info: GenerateCompletionInfo?, structuredPlan: StructuredGeneration.Plan? = nil,
+        toolCallCount: Int = 0
+    ) -> EngineError? {
+        if let failure = structuredPlan?.runRecord.failure {
+            return StructuredGeneration.generationFailure(failure)
+        }
+        if let failure = info?.generationFailure {
+            return .generationFailed(failure.cause)
+        }
+        return StructuredGeneration.postGenerationError(
+            plan: structuredPlan, stopReason: info?.stopReason, toolCallCount: toolCallCount)
     }
 
     // MARK: - Text completion (/v1/completions)
@@ -865,11 +877,12 @@ public actor Engine {
             task.cancel()
         }
         await task.value
+        let cancelled = Task.isCancelled
+        if !cancelled, let error = Self.terminalGenerationError(info) { throw error }
         Self.completeRunForClient(
             &run, info: info, fallbackPromptTokens: tokens.count,
             restoreTracker: restoreTracker, iterationStart: iterationStart)
         run.wallMilliseconds = Date().timeIntervalSince(iterationStart) * 1000
-        let cancelled = Task.isCancelled
         if cancelled {
             run.finishReason = "cancelled"
         }
