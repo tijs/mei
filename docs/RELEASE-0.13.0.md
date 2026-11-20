@@ -36,8 +36,10 @@ and infinity on the current runtime. The raw-logit detection prototype remains
 unqualified for prefill coverage and ownership of cached state. This release
 changes how Mei handles errors the runtime already reports.
 
-## Release gates still pending
+## K8V4 research
 
-Finish K8V4 disposition before qualifying the combined release. Release tests must use a different scratch directory
-from the production build. Qualify the production executable and verify binary
-and Metal hashes against the extracted published artifact, then verify Homebrew.
+The reference K8V4 codec missed its attention error ceiling of 0.08, with
+a maximum absolute error of 0.08413 on the four-position fixture. The
+rotated 4-bit values accounted for nearly all of the error in that fixture.
+The experiment stopped at the numerical gate and the release uses the current
+cache formats.
