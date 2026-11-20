@@ -1,7 +1,4 @@
-# Mei 0.13.0 — release preparation
-
-This release is being qualified. The stable release remains 0.12.0 until the
-combined runtime, production package and Homebrew checks are complete.
+# Mei 0.13.0
 
 ## Scheduler verification
 
@@ -20,7 +17,7 @@ scheduler tests; it does not run the full offline or real-model suite.
 
 Quint Studio is connected. Its component map groups the scheduler with HTTP,
 inference, and cache code. The repository model and replay keep verification
-scoped to the scheduler. Combined release qualification remains pending.
+scoped to the scheduler.
 
 ## Generation errors
 
@@ -43,3 +40,18 @@ a maximum absolute error of 0.08413 on the four-position fixture. The
 rotated 4-bit values accounted for nearly all of the error in that fixture.
 The experiment stopped at the numerical gate and the release uses the current
 cache formats.
+
+## Release verification
+
+The offline suite recorded 512 XCTest cases with three fixture-dependent
+skips and zero failures, plus 12 passing Swift Testing cases. The production
+binary resolved vMLX `3c2823b7` through the published pin. Its Metal library
+matched the 0.12.0 asset byte for byte.
+
+The production binary passed 10 live Swift acceptance tests and 13 native API
+probes on Groot 19B/A3B, including streaming and buffered tools, structured
+output, growing disk-cache reuse, and the 8,192-token context boundary. Two cold
+0.12.0 controls and a cold 0.13.0 run produced identical greedy response
+content, finish reasons, and token counts at 27 and 2,257 prompt tokens, with
+40 generated tokens each. Peak sampled process footprint in live acceptance
+was 12.69 GiB with normal memory pressure and flat swap.

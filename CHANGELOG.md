@@ -2,7 +2,7 @@
 
 All notable changes to Mei are documented here.
 
-## [Unreleased]
+## [0.13.0] - 2026-11-20
 
 - Return an error when inference fails in buffered chat, raw completions, or
   streaming chat. A stream that already delivered content ends with
@@ -11,6 +11,8 @@ All notable changes to Mei are documented here.
 - Add a bounded Quint scheduler model and generated Swift trace replay for
   admission, priority/FIFO ordering, cancellation, timeout and cleanup ownership.
   Include a model-free check command and a scoped local PR-review policy.
+
+See the [release notes](docs/RELEASE-0.13.0.md) for verification and research results.
 
 ## [0.12.0] - 2026-11-18
 
