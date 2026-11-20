@@ -71,7 +71,10 @@ final class RuntimePolicyTests: XCTestCase {
             XCTAssertGreaterThan(before.peakMemory, 0)
             let captured = Engine.captureLoadMemorySnapshot()
             XCTAssertEqual(captured.peakMemory, before.peakMemory)
-            XCTAssertEqual(captured.activeMemory, before.activeMemory)
+            // The allocator can retire unrelated buffers between snapshots.
+            // The array held by this test must still be counted in both.
+            XCTAssertGreaterThanOrEqual(before.activeMemory, values.nbytes)
+            XCTAssertGreaterThanOrEqual(captured.activeMemory, values.nbytes)
             XCTAssertEqual(Memory.peakMemory, 0)
         }
     }
