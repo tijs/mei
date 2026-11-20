@@ -18,8 +18,9 @@ both in the model-free package and inside the complete Mei package using the
 published vMLX pin `3c2823b7`. The complete package check selects only those 20
 scheduler tests; it does not run the full offline or real-model suite.
 
-Studio account/connection assessment and combined release qualification are still
-pending; local model/replay evidence must not be described as full runtime proof.
+Quint Studio is connected. Its component map groups the scheduler with HTTP,
+inference, and cache code. The repository model and replay keep verification
+scoped to the scheduler. Combined release qualification remains pending.
 
 ## Release gates still pending
 
