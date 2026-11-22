@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { evidence, labels, methods, models, modelCommands, release, views, type View } from "./data.js";
+import { inkling, inklingCommands, models, modelCommands, release } from "./data.js";
 import { Code, SiteFooter, SiteHead, SiteHeader } from "./components.js";
 import { ExplainerPage, SystemDiagram } from "./explainer.js";
 
@@ -36,166 +36,7 @@ function Icon({ name }: { name: "tools" | "chat" | "code" | "arrow" }) {
   );
 }
 
-function Bar({
-  name,
-  value,
-  max,
-  text,
-  second = false,
-}: {
-  name: string;
-  value: number;
-  max: number;
-  text: string;
-  second?: boolean;
-}) {
-  return (
-    <div class={`bar-row${second ? " secondary" : ""}`}>
-      <span class="bar-name">{name}</span>
-      <div class="bar-track" aria-hidden="true">
-        <span class="bar-fill" style={`width:${(value / max) * 100}%`} />
-      </div>
-      <span class="bar-value">{text}</span>
-    </div>
-  );
-}
-
-export function Results({ view, base }: { view: View; base: string }) {
-  const titles = {
-    quality: "Tasks completed successfully",
-    time: "Average time per task",
-    memory: "Increase in wired memory",
-    decode: "Text generation speed",
-  };
-  return (
-    <div
-      id="results-panel"
-      class="results-panel"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <nav class="chart-nav" aria-label="Choose a measurement">
-        {views.map((v) => (
-          <a
-            id={`view-${v}`}
-            href={`${base}results/${v}.html#results`}
-            hx-get={`${base}fragments/results-${v}.html`}
-            hx-target="#results-panel"
-            hx-swap="outerHTML"
-            hx-sync="#results-panel:replace"
-            aria-current={v === view ? "page" : undefined}
-          >
-            {labels[v]}
-          </a>
-        ))}
-      </nav>
-      <div class="chart-heading">
-        <h3>{titles[view]}</h3>
-        <p>
-          {view === "quality"
-            ? "Passed tasks · more is better"
-            : view === "time"
-              ? "Seconds per task · less is better"
-              : view === "memory"
-                ? "Peak wired increase · GiB · less is better"
-                : "Generated tokens per second · more is better"}
-        </p>
-      </div>
-      {view === "quality" ? (
-        <>
-          <h4 class="plot-label">
-            Assistant tasks <span>out of 24 attempts</span>
-          </h4>
-          <div class="plot">
-            {models.map((m) => (
-              <Bar
-                name={m.name}
-                value={m.household}
-                max={24}
-                text={`${m.household}/24`}
-              />
-            ))}
-          </div>
-          <h4 class="plot-label">
-            Python tasks <span>out of 6 attempts</span>
-          </h4>
-          <div class="plot">
-            {models.map((m) => (
-              <Bar
-                name={m.name}
-                value={m.python}
-                max={6}
-                text={`${m.python}/6`}
-                second
-              />
-            ))}
-          </div>
-        </>
-      ) : view === "time" ? (
-        <div class="plot single">
-          {models.map((m) => (
-            <Bar
-              name={m.name}
-              value={m.taskSeconds}
-              max={50}
-              text={`${m.taskSeconds.toFixed(2)} s`}
-            />
-          ))}
-        </div>
-      ) : view === "memory" ? (
-        <div class="plot single">
-          {models.map((m) => (
-            <Bar
-              name={m.name}
-              value={m.wiredGiB}
-              max={24}
-              text={`${m.wiredGiB.toFixed(2)}`}
-            />
-          ))}
-        </div>
-      ) : (
-        <>
-          <h4 class="plot-label">
-            Short prompt <span>17 input tokens</span>
-          </h4>
-          <div class="plot">
-            {models.map((m) => (
-              <Bar
-                name={m.name}
-                value={m.shortDecode}
-                max={75}
-                text={`${m.shortDecode.toFixed(1)}`}
-              />
-            ))}
-          </div>
-          <h4 class="plot-label">
-            Long prompt <span>30,000 input tokens</span>
-          </h4>
-          <div class="plot">
-            {models.map((m) => (
-              <Bar
-                name={m.name}
-                value={m.longDecode}
-                max={75}
-                text={`${m.longDecode.toFixed(1)}`}
-                second
-              />
-            ))}
-          </div>
-        </>
-      )}
-      <p class="chart-method">{methods[view]}</p>
-      <a
-        class="text-link"
-        href={view === "decode" ? evidence.contextSource : evidence.source}
-      >
-        Test setup and full results ↗
-      </a>
-    </div>
-  );
-}
-
-function Page({ view, base }: { view: View; base: string }) {
+function Page({ base }: { base: string }) {
   return (
     <html lang="en">
       <SiteHead
@@ -301,19 +142,50 @@ function Page({ view, base }: { view: View; base: string }) {
                 <h2 id="models-title">Recommended models</h2>
               </div>
               <p>
-                Mei includes tested settings for these three models. The
-                descriptions below explain the differences we found in the same
-                set of tests.
+                Mei supports Inkling 2 Mini alongside Groot, Qwen and Ornith.
+                Choose a model that fits your Mac and the work you want to do.
               </p>
             </div>
             <p class="repack-explanation">
-              Mei uses repacks of existing, quantized MLX models. A repack
+              The Groot, Qwen and Ornith downloads below are repacks of
+              existing, quantized MLX models. A repack
               changes the packaged files, for example by removing unused
               components or adjusting the file layout. The repacking step leaves
               the retained language-model weights unchanged. Each Mei
               configuration selects a fixed version and includes the settings we
               tested with it.
             </p>
+            <article class="ongoing" id="inkling">
+              <h3>Inkling 2 Mini</h3>
+              <p>
+                New in Mei {release.version}: native text chat, streaming and
+                buffered or streaming tool calls. The tested NVFP4 bundle is
+                about 19.5 GB to download and was qualified on a 32 GB M1 Max
+                with one model loaded.
+              </p>
+              <p>
+                Mei automatically selects the tested settings: 8,192 total
+                tokens for prompt and output, a 4,096-token default output cap,
+                128-token prefill chunks and one active generation. Prefix
+                reuse, image input, speculative decoding and grammar-constrained
+                output are outside this profile.
+              </p>
+              <details class="profile">
+                <summary>Download and run Inkling 2 Mini</summary>
+                <p>Install Mei and the Hugging Face download helper below first.
+                  Stop any running Mei model before starting another.</p>
+                <Code label="Inkling 2 Mini model commands">{inklingCommands}</Code>
+                <p>Use <code>http://127.0.0.1:8024/v1</code> with model ID
+                  {" "}<code>inkling-2-mini</code> in your client.</p>
+              </details>
+              <div class="model-links">
+                <a href={inkling.guide}>Inkling setup and API example ↗</a>
+                <a href={`https://huggingface.co/${inkling.repo}/tree/${inkling.revision}`}>
+                  Tested model bundle ↗
+                </a>
+                <a href={`${github}#use-mei-with-pi`}>Pi client setup ↗</a>
+              </div>
+            </article>
             <div class="model-grid">
               {models.map((m) => (
                 <article class="model" id={m.id}>
@@ -331,10 +203,6 @@ function Page({ view, base }: { view: View; base: string }) {
                   </div>
                   <p class="model-size">{m.fullName}</p>
                   <p class="model-description">{m.description}</p>
-                  <div class="model-fact">
-                    <strong>{m.household}/24</strong>
-                    <span>assistant tasks passed</span>
-                  </div>
                   <p class="model-preparation">{m.preparation}</p>
                   <div class="model-links">
                     <a href={m.modelCard}>Original model card ↗</a>
@@ -358,93 +226,26 @@ function Page({ view, base }: { view: View; base: string }) {
             <p class="model-note">
               All three are mixture-of-experts models: they use about 3 billion
               parameters for each token, but the full set of weights must be
-              stored. Weight storage in these tests was about 11.45 GiB for
-              Groot and 18.17 GiB for Qwen and Ornith. Running a model also
-              needs memory for the prompt, generated text and calculations.
+              stored. Running a model also needs memory for the prompt,
+              generated text and calculations.
             </p>
-            <div class="ongoing">
-              <h3>We keep testing new models</h3>
-              <p>
-                We use test results to choose models and adjust their settings.
-                Earlier tests of Gemma on Mei 0.11.0 passed 22 of 24 assistant
-                tasks and 3 of 6 Python tasks, averaging 72.27 seconds per task.
-                Those results are separate from this refreshed comparison.
-                Our current recommendations remain Groot, Qwen and Ornith.
-              </p>
-              <a href={evidence.evaluationSource}>
-                Read the earlier model tests ↗
-              </a>
-            </div>
           </section>
-          <section class="results" id="results" aria-labelledby="results-title">
-            <div class="wrap">
-              <div class="results-intro">
-                <h2 id="results-title">Test results</h2>
-                <p>
-                  Compare task results, time per task, memory measurements and
-                  text generation speed for the three models.
-                </p>
-                <p class="test-stamp">
-                  {evidence.hardware} · {evidence.runtime}
-                  <br />
-                  Tested {evidence.dateLabel} · two runs per model
-                </p>
-              </div>
-              <Results view={view} base={base} />
-              <details class="methodology">
-                <summary>How we tested</summary>
-                <p>
-                  We used test suite {evidence.method} with random seeds 17 and
-                  29. Each model ran 12 simulated household-assistant tasks and
-                  3 small Python tasks per run. We gave both runs equal weight
-                  when calculating averages. Each model used its own sampling
-                  and cache settings. Mei 0.11.2 selected model-specific prefill
-                  and conversation anchors automatically; the benchmark's
-                  sampler and cache allowances remained explicit. These are
-                  current serving-profile results, not an isolated comparison
-                  of runtime versions. Two runs are too few to show that one
-                  model will consistently outperform another or to predict how
-                  it will work in your app.
-                </p>
-                <div class="table-scroll">
-                  <table>
-                    <caption>Results from two runs per model</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Model</th>
-                        <th scope="col">Assistant</th>
-                        <th scope="col">Python</th>
-                        <th scope="col">Task time</th>
-                        <th scope="col">Wired increase</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {models.map((m) => (
-                        <tr>
-                          <th scope="row">{m.name}</th>
-                          <td>{m.household}/24</td>
-                          <td>{m.python}/6</td>
-                          <td>{m.taskSeconds.toFixed(2)} s</td>
-                          <td>{m.wiredGiB.toFixed(2)} GiB</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p>
-                  The memory figures show changes in the Mac’s wired memory, not
-                  total memory used by each model. Task times include failures.
-                  Text generation speed was tested separately and does not show
-                  whether longer prompts produced correct answers. These charts
-                  show the three recommended Mei models. Earlier measurements
-                  of other models and engines remain historical evidence.
-                </p>
-                <p><a href={evidence.historicalSource}>Previous Mei 0.11.0 chart data ↗</a></p>
-                <a href={`${base}data/results.json`}>
-                  Download the chart data ↗
-                </a>
-              </details>
+          <section class="section wrap" id="results" aria-labelledby="release-title">
+            <div class="section-heading">
+              <div><h2 id="release-title">Latest release: Mei {release.version}</h2></div>
+              <p>Released 22 November 2026. Native Inkling 2 Mini support,
+                with automatic context, prefill and Metal settings.</p>
             </div>
+            <p>
+              The Inkling candidate completed all 25 benchmark cases on a
+              32 GB M1 Max with no harness errors: 8 of 10 model-only cases,
+              11 of 12 household cases and all 3 Python automation cases passed.
+              Two tasks hit the tool turn limit; one repeated a code from a
+              deleted source. Measured decode averaged 23.86 tokens/s on a
+              short prompt and 18.35 tokens/s at 2K context. Coding-specific
+              superiority has not been measured.
+            </p>
+            <p><a href={release.url}>Read the full release notes ↗</a></p>
           </section>
           <section class="section wrap engine">
             <div>
@@ -461,10 +262,11 @@ function Page({ view, base }: { view: View; base: string }) {
                 Python or manage a Python environment to use it.
               </p>
               <p>
-                It can stream generated text, return tool calls and produce JSON
-                using supported schema rules. It reads long prompts in chunks to
-                limit memory use and can reuse calculations from earlier
-                requests.
+                It can stream generated text and return tool calls. Supported
+                features depend on the model: Groot, Qwen and Ornith can also
+                produce JSON using supported schema rules and reuse calculations
+                from earlier requests. Inkling uses its separate text profile.
+                Mei reads long prompts in chunks to limit memory use.
               </p>
               <p>
                 We test on an M1 Max with 32 GB of memory. Other Apple Silicon
@@ -581,7 +383,7 @@ function Page({ view, base }: { view: View; base: string }) {
 
 export function createSite(base = basePath()) {
   const app = new Hono();
-  app.get("/", (c) => c.html(<Page view="quality" base={base} />));
+  app.get("/", (c) => c.html(<Page base={base} />));
   app.get("/how-mei-fits/", (c) => c.html(<ExplainerPage base={base} />));
   app.get("/how-mei-fits/llama-server.html", (c) =>
     c.html(<ExplainerPage base={base} system="llama" />),
@@ -591,17 +393,6 @@ export function createSite(base = basePath()) {
   );
   app.get("/fragments/system-llama.html", (c) =>
     c.html(<SystemDiagram base={base} system="llama" />),
-  );
-  for (const view of views) {
-    app.get(`/results/${view}.html`, (c) =>
-      c.html(<Page view={view} base={base} />),
-    );
-    app.get(`/fragments/results-${view}.html`, (c) =>
-      c.html(<Results view={view} base={base} />),
-    );
-  }
-  app.get("/data/results.json", (c) =>
-    c.json({ evidence, models, definitions: methods }),
   );
   app.get("/404.html", (c) =>
     c.html(
@@ -632,10 +423,5 @@ export const outputRoutes = [
   "/how-mei-fits/llama-server.html",
   "/fragments/system-mei.html",
   "/fragments/system-llama.html",
-  ...views.flatMap((v) => [
-    `/results/${v}.html`,
-    `/fragments/results-${v}.html`,
-  ]),
-  "/data/results.json",
   "/404.html",
 ];

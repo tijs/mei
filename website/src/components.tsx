@@ -82,7 +82,7 @@ export function SiteHeader({
         How Mei fits
       </a>
       <a href={`${base}#models`}>Models</a>
-      <a href={`${base}#results`}>Results</a>
+      <a href={`${base}#results`}>Latest release</a>
       <a href={`${base}#get-started`}>Get started</a>
       <a href={github}>GitHub ↗</a>
     </>

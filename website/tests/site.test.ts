@@ -2,10 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { createSite, basePath, outputRoutes } from "../src/site.js";
-import { evidence, models, release } from "../src/data.js";
-import measured from "../public/data/mei-0.11.2-20261116/measurements.json" with { type: "json" };
+import { inkling, inklingCommands, models, release } from "../src/data.js";
 
-test("current release matches the binary version; model examples use automatic settings without relabelling evidence", async () => {
+test("current release matches the binary version and model examples use automatic settings", async () => {
   const config = readFileSync(new URL("../../Sources/MeiCore/ServerConfig.swift", import.meta.url), "utf8");
   assert.equal(config.match(/static let version = "([^"]+)"/)?.[1], release.version);
   const html = await (await createSite("/").request("https://test.local/")).text();
@@ -19,74 +18,24 @@ test("current release matches the binary version; model examples use automatic s
     assert.ok(html.includes(model.automaticSettings));
   }
   assert.ok(!html.includes("--model-profile"));
-  assert.equal(evidence.runtime, "Mei 0.11.2");
+  assert.ok(html.includes(inkling.revision));
+  assert.ok(html.includes(inkling.guide));
+  assert.ok(html.includes("8,192 total"));
+  assert.ok(html.includes("inkling-2-mini"));
+  assert.ok(inklingCommands.includes("\\\n  --revision"), "download command must retain shell line continuations");
+  for (const old of ["0.11.0", "0.11.2", "Previous Mei", "results/quality.html"])
+    assert.ok(!html.includes(old), `old release detail: ${old}`);
   const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(ids).size, ids.length, "copy controls and sections must have unique IDs");
 });
 
-test("all four charts use the complete audited cohort and preserve historical values separately", async () => {
-  assert.equal(measured.taskObservations.length, 90);
-  assert.equal(measured.decodeObservations.length, 60);
-  assert.equal(evidence.date, "2026-11-16");
-  assert.equal(evidence.dateLabel, "16 November 2026");
-  const historical = JSON.parse(readFileSync(new URL("../public/data/mei-0.11.0-20261107/results.json", import.meta.url), "utf8"));
-  assert.equal(historical.evidence.runtime, "Mei 0.11.0");
-  assert.equal(historical.models.find((m: { id: string }) => m.id === "groot").household, 22);
-  const speedLabels = { groot: "Groot", qwen: "Base Qwen3.6", ornith: "Ornith1.5" };
-  for (const model of models) {
-    const rows = measured.taskObservations.filter((r) => r.model === model.id);
-    assert.equal(rows.length, 30);
-    assert.equal(new Set(rows.map((r) => `${r.seed}/${r.track}/${r.taskId}`)).size, 30);
-    for (const seed of [17, 29]) {
-      assert.equal(rows.filter((r) => r.seed === seed && r.track === "household").length, 12);
-      assert.equal(rows.filter((r) => r.seed === seed && r.track === "python").length, 3);
-    }
-    assert.equal(rows.filter((r) => r.track === "household" && r.passed).length, model.household);
-    assert.equal(rows.filter((r) => r.track === "python" && r.passed).length, model.python);
-    // Failed attempts remain in the task-time average.
-    assert.ok(Math.abs(rows.reduce((sum, r) => sum + r.wallSeconds, 0) / 30 - model.taskSeconds) < 1e-9);
-    const runs = measured.taskRuns.filter((r) => r.model === model.id);
-    assert.equal(runs.length, 2);
-    assert.deepEqual(runs.map((r) => r.seed).sort((a, b) => a - b), [17, 29]);
-    assert.ok(Math.abs(runs.reduce((sum, r) => sum + r.wiredIncreaseGiB, 0) / 2 - model.wiredGiB) < 1e-9);
-    for (const context of ["short", "long"] as const) {
-      const speed = measured.decodeObservations.filter((r) => r.model === speedLabels[model.id] && r.context === context);
-      assert.equal(speed.length, 10);
-      assert.equal(new Set(speed.map((r) => r.process_id)).size, 2);
-      for (const process of new Set(speed.map((r) => r.process_id))) {
-        assert.deepEqual(speed.filter((r) => r.process_id === process).map((r) => r.repeat).sort((a, b) => a - b), [1, 2, 3, 4, 5]);
-      }
-      assert.ok(speed.every((r) => r.completion_tokens === 128 && r.prompt_tokens === (context === "short" ? 17 : 30000)));
-      assert.ok(Math.abs(speed.reduce((sum, r) => sum + r.decode_tps, 0) / 10 - (context === "short" ? model.shortDecode : model.longDecode)) < 1e-9);
-    }
-  }
-  assert.ok(measured.taskObservations.some((r) => !r.passed), "do not select only successful attempts");
+test("retired comparison routes no longer serve old release details", async () => {
   const site = createSite("/");
-  const download = await (await site.request("https://test.local/data/results.json")).json();
-  assert.deepEqual(download.models, models.map((m) => ({ ...m })));
-  assert.equal(download.evidence.runtime, evidence.runtime);
-  assert.equal(download.evidence.date, evidence.date);
-  for (const view of ["quality", "time", "memory", "decode"]) {
-    const html = await (await site.request(`https://test.local/results/${view}.html`)).text();
-    assert.ok(html.includes("Mei 0.11.2") && html.includes("16 November 2026"));
-    const expected = view === "quality"
-      ? [...models.map((m) => [m.name, `${m.household}/24`]), ...models.map((m) => [m.name, `${m.python}/6`])]
-      : view === "time" ? models.map((m) => [m.name, `${m.taskSeconds.toFixed(2)} s`])
-      : view === "memory" ? models.map((m) => [m.name, m.wiredGiB.toFixed(2)])
-      : [...models.map((m) => [m.name, m.shortDecode.toFixed(1)]), ...models.map((m) => [m.name, m.longDecode.toFixed(1)])];
-    const fragment = await (await site.request(`https://test.local/fragments/results-${view}.html`)).text();
-    for (const rendered of [html, fragment]) {
-      const start = rendered.indexOf('id="results-panel"');
-      const end = rendered.indexOf('<p class="chart-method">', start);
-      assert.ok(start >= 0 && end > start);
-      const panel = rendered.slice(start, end);
-      const bars = [...panel.matchAll(/<span class="bar-name">([^<]+)<\/span>[\s\S]*?<span class="bar-value">([^<]+)<\/span>/g)].map((m) => [m[1], m[2]]);
-      assert.deepEqual(bars, expected, `${view}: chart labels and values must match in full pages and fragments`);
-    }
-  }
+  for (const path of ["/results/quality.html", "/fragments/results-memory.html", "/data/results.json"])
+    assert.equal((await site.request(`https://test.local${path}`)).status, 404);
 });
 
-test("all public routes render; chart links have complete-page and fragment destinations for both hosting paths", async () => {
+test("all public routes render and internal navigation resolves for both hosting paths", async () => {
   for (const base of ["/mei/", "/"]) {
     const site = createSite(base);
     for (const route of outputRoutes) {
@@ -94,28 +43,15 @@ test("all public routes render; chart links have complete-page and fragment dest
       assert.equal(response.status, 200, route);
       if (route.endsWith(".json")) continue;
       const html = await response.text();
-      const chartUrls = [
-        ...html.matchAll(
-          /(?:hx-get|href)="([^"]*(?:results\/|fragments\/)[^"]*)"/g,
-        ),
-      ];
-      for (const [, url] of chartUrls) {
-        if (url.startsWith("https://")) continue;
-        assert.ok(url.startsWith(base), `${base}: ${url}`);
-        const route = "/" + url.slice(base.length).split("#")[0];
-        assert.equal(
-          (await site.request(`https://test.local${route}`)).status,
-          200,
-          route,
-        );
+      for (const [, href] of html.matchAll(/href="([^"]+)"/g)) {
+        if (!href.startsWith(base) || href.includes("assets/")) continue;
+        const [path, fragment] = href.slice(base.length).split("#");
+        const destination = await site.request(`https://test.local/${path}`);
+        assert.equal(destination.status, 200, href);
+        if (fragment) assert.ok((await destination.text()).includes(`id="${fragment}"`), href);
       }
     }
-    const fragment = await (
-      await site.request("https://test.local/fragments/results-memory.html")
-    ).text();
-    assert.ok(fragment.includes('id="results-panel"'));
-    assert.ok(fragment.includes("not total model memory"));
-    assert.ok(!fragment.includes("<html"));
+
   }
 });
 

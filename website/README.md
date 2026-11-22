@@ -1,8 +1,8 @@
 # Mei website
 
 Mobile-first static website. Hono renders JSX full pages and HTML fragments during
-the build; htmx switches result views without a full reload. Every result link
-also targets a complete static page, so the site works without JavaScript.
+the build; htmx switches the explainer diagram without a full reload. Each
+comparison also has a complete static page, so the site works without JavaScript.
 No application server or model downloads run in production. The shared page
 template loads Simple Analytics asynchronously from its CDN, with
 `data-hostname="mei.computer"` for privacy-first page-view analytics.
@@ -31,17 +31,18 @@ GitHub Actions builds and publishes it. There is intentionally no CNAME file.
 
 ## Updating content
 
-`src/data.ts` freezes the curated benchmark snapshot and links to a full source
-commit. Values come from the published four-profile comparison and separate
-context-speed report at local-model-bench commit
-`abb0cbd7caa23c4ea41817559cc8dde3b0e0fabf` (verified on GitHub). Only the three tuned Mei profiles are
-plotted. The latest six-model evaluation is linked, with Gemma's tradeoffs stated.
+`src/data.ts` defines the current stable release links, pinned model downloads,
+and serving examples. The home page covers installation, client setup, supported
+models, and the latest release, including Inkling's context and feature limits.
 
-Refresh source commit, date, model revisions, values and interpretation together.
-Preserve metric definitions, failed attempts, equal run weighting and synthetic
-workload limits. Wired-memory increase is **not** total model memory. Do not use
-unfinished qualifications as completed results or silently blend runtimes.
-`/data/results.json` contains the rendered snapshot and definitions.
+When updating the release, verify the published tag, archive and checksum, then
+update the model revisions, examples and qualification claims together. Keep
+claims scoped to the tested model, runtime and hardware; do not present unfinished
+qualifications as completed results.
+
+Historical benchmark evidence remains in `public/data/` in the repository.
+The build excludes that directory from the published site. The old comparison
+pages, chart fragments and `/data/results.json` are no longer generated.
 
 ## Assets
 

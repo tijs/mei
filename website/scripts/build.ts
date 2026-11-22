@@ -3,7 +3,11 @@ import { createSite, outputRoutes } from "../src/site.js";
 
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist/assets", { recursive: true });
-await cp("public", "dist", { recursive: true });
+// Retain historical benchmark evidence in source without publishing old releases.
+await cp("public", "dist", {
+  recursive: true,
+  filter: (source) => source !== "public/data",
+});
 await cp("node_modules/htmx.org/dist/htmx.min.js", "dist/assets/htmx.min.js");
 await cp("node_modules/htmx.org/LICENSE", "dist/assets/HTMX-LICENSE.txt");
 const app = createSite();
