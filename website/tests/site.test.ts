@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { createSite, basePath, outputRoutes } from "../src/site.js";
-import { inkling, inklingDownload, inklingRun, models, release } from "../src/data.js";
+import { models, release } from "../src/data.js";
 
 test("current release matches the binary version and model examples use automatic settings", async () => {
   const config = readFileSync(new URL("../../Sources/MeiCore/ServerConfig.swift", import.meta.url), "utf8");
@@ -12,19 +12,17 @@ test("current release matches the binary version and model examples use automati
   assert.ok(html.includes(`href="${release.archive}"`));
   assert.ok(html.includes(`href="${release.archive}.sha256"`));
   for (const model of models) {
-    assert.ok(html.includes(`mei pull ${model.profile}`));
-    assert.ok(html.includes(`mei --model ${model.profile}`));
-    assert.ok(html.includes(model.automaticSettings));
+    const card = html.split(`<article class="model" id="${model.id}">`)[1]?.split("</article>")[0];
+    assert.ok(card, `missing shared model card for ${model.id}`);
+    assert.ok(card.includes(`Download and run ${model.name}`));
+    assert.ok(card.includes(`mei pull ${model.profile}\nmei --model ${model.profile}`));
+    assert.ok(card.includes(model.automaticSettings));
   }
   assert.ok(!html.includes("--model-profile"));
-  assert.ok(html.includes(inkling.revision));
-  assert.ok(html.includes(inkling.guide));
-  assert.ok(html.includes(inklingRun));
   assert.ok(html.includes("/assets/model-inkling-cobalt.png"));
   assert.ok(readFileSync(new URL("../public/assets/model-inkling-cobalt.png", import.meta.url)).length > 0);
-  assert.ok(html.includes("8,192 total"));
+  assert.ok(html.includes("8,192-token total context"));
   assert.ok(html.includes("inkling-2-mini"));
-  assert.ok(html.includes(inklingDownload));
   for (const old of ["0.11.0", "0.11.2", "Previous Mei", "results/quality.html"])
     assert.ok(!html.includes(old), `old release detail: ${old}`);
   const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);

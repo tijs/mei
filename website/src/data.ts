@@ -5,15 +5,6 @@ export const release = {
   archive: `https://github.com/tijs/mei/releases/download/v${releaseVersion}/mei-${releaseVersion}-macos-arm64.tar.gz`,
 };
 
-export const inkling = {
-  guide: "https://github.com/tijs/mei/blob/v0.15.0/docs/INKLING.md",
-  repo: "nativ-community/Inkling-2-Mini-nvfp4",
-  revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
-};
-
-export const inklingDownload = "mei pull inkling-2-mini";
-export const inklingRun = "mei --model inkling-2-mini";
-
 export const models = [
   {
     id: "groot",
@@ -59,6 +50,23 @@ export const models = [
       "Ornith’s 35B mixture-of-experts model, with aligned 4-bit MLX weights and an automatic serving profile.",
     preparation:
       "Uses Ornith’s 4-bit MLX version. We changed the file padding to align the stored weights. The weight values are unchanged.",
+  },
+  {
+    id: "inkling",
+    name: "Inkling 2 Mini",
+    logo: "model-inkling-cobalt.png",
+    modelCard: "https://thinkingmachines.ai/model-card/inkling-2-mini/",
+    guide: "https://github.com/tijs/mei/blob/v0.15.0/docs/INKLING.md",
+    fullName: "26.4B parameters · text-only in Mei · NVFP4/MXFP8",
+    profile: "inkling-2-mini",
+    automaticSettings:
+      "Mei applies the tested 8,192-token total context, 4,096-token default output cap, 128-token prefill and one active generation. This profile supports text chat, streaming and tool calls. Prefix reuse, image input, speculative decoding and constrained output are outside its scope.",
+    repo: "nativ-community/Inkling-2-Mini-nvfp4",
+    revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
+    description:
+      "A looped model that supports text chat and streaming tool calls. The tested bundle is about 19.5 GB and was qualified on a 32 GB M1 Max.",
+    preparation:
+      "Uses nativ-community’s MLX bundle. Mei fetches the pinned revision and skips unused speculative decoding weights.",
   },
 ] as const;
 

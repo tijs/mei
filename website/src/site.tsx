@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { inkling, inklingDownload, inklingRun, models, modelCommands, release } from "./data.js";
+import { models, modelCommands, release } from "./data.js";
 import { Code, SiteFooter, SiteHead, SiteHeader } from "./components.js";
 import { ExplainerPage, SystemDiagram } from "./explainer.js";
 
@@ -155,59 +155,13 @@ function Page({ base }: { base: string }) {
               configuration selects a fixed version and includes the settings we
               tested with it.
             </p>
-            <article class="ongoing" id="inkling">
-              <div class="model-heading">
-                <img
-                  class="model-logo"
-                  src={`${base}assets/model-inkling-cobalt.png`}
-                  alt=""
-                  width="64"
-                  height="64"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <h3>Inkling 2 Mini</h3>
-              </div>
-              <p>
-                Supports native text chat, streaming and
-                buffered or streaming tool calls. The tested NVFP4 bundle is
-                about 19.5 GB to download and was qualified on a 32 GB M1 Max
-                with one model loaded.
-              </p>
-              <p>
-                Mei automatically selects the tested settings: 8,192 total
-                tokens for prompt and output, a 4,096-token default output cap,
-                128-token prefill chunks and one active generation. Prefix
-                reuse, image input, speculative decoding and grammar-constrained
-                output are outside this profile.
-              </p>
-              <details class="profile">
-                <summary>Download the model once</summary>
-                <p>Install the Hugging Face download helper below first. This
-                  command fetches the tested revision and skips the unused
-                  speculative decoding weights.</p>
-                <Code label="Download Inkling 2 Mini">{inklingDownload}</Code>
-              </details>
-              <p>After downloading, start Inkling by name. Mei applies
-                Inkling’s settings automatically.</p>
-              <Code label="Run Inkling 2 Mini">{inklingRun}</Code>
-              <p>Use <code>http://127.0.0.1:8024/v1</code> with model ID
-                {" "}<code>inkling-2-mini</code> in your client.</p>
-              <div class="model-links">
-                <a href={inkling.guide}>Inkling setup and API example ↗</a>
-                <a href={`https://huggingface.co/${inkling.repo}/tree/${inkling.revision}`}>
-                  Tested model bundle ↗
-                </a>
-                <a href={`${github}#use-mei-with-pi`}>Pi client setup ↗</a>
-              </div>
-            </article>
             <div class="model-grid">
               {models.map((m) => (
                 <article class="model" id={m.id}>
                   <div class="model-heading">
                     <img
                       class="model-logo"
-                      src={`${base}assets/model-${m.id}.png`}
+                      src={`${base}assets/${"logo" in m ? m.logo : `model-${m.id}.png`}`}
                       alt=""
                       width="64"
                       height="64"
@@ -229,6 +183,12 @@ function Page({ base }: { base: string }) {
                     >
                       Files used by Mei ↗
                     </a>
+                    {"guide" in m && (
+                      <>
+                        <a href={m.guide}>Inkling setup and API example ↗</a>
+                        <a href={`${github}#use-mei-with-pi`}>Pi client setup ↗</a>
+                      </>
+                    )}
                   </div>
                   <details class="profile">
                     <summary>Download and run {m.name}</summary>
@@ -239,10 +199,9 @@ function Page({ base }: { base: string }) {
               ))}
             </div>
             <p class="model-note">
-              All three are mixture-of-experts models: they use about 3 billion
-              parameters for each token, but the full set of weights must be
-              stored. Running a model also needs memory for the prompt,
-              generated text and calculations.
+              These are mixture-of-experts models. Each token uses only part
+              of the model, but Mei still needs memory for the full set of
+              weights, the prompt and generated text.
             </p>
           </section>
           <section class="section wrap" id="results" aria-labelledby="release-title">
