@@ -363,3 +363,12 @@ and an opt-in fused Metal router. The upstream project's
 [Apache License 2.0](https://github.com/OpenSenseNova/SenseNova-Loop/blob/7e5f7cd97fc975fef27e9696be9128e386c0dff3/LICENSE)
 is reproduced in the Apache License section above. Mei distributes no model
 weights in its binary archive.
+
+## Inkling 2 Mini text port
+
+The vMLX implementation adapts Apache-2.0 Inkling source from the Hugging Face
+Team and the MLX-VLM reference. It follows the public Mini loop conversion
+patch by nativ-community. The mixed-storage vocabulary projection follows the
+reduction layout of Apple's MLX GEMV kernel. See the
+[vMLX Inkling source notes](https://github.com/tijs/vmlx-swift/blob/23fa28dd26aad9222ec2efe9bfdb19c3b75cb5d3/docs/INKLING2_SOURCE.md)
+for exact revisions and attribution. The Apache License 2.0 is reproduced above.

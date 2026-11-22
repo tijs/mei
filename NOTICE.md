@@ -13,7 +13,7 @@ Mei depends on the public Mei-maintained fork
 current source tree pins fork revision:
 
 ```text
-3aa7b086b22c67f5e36db29128f9f251b7227c63
+23fa28dd26aad9222ec2efe9bfdb19c3b75cb5d3
 ```
 
 The released Mei 0.6.1 build used the preceding pinned revision

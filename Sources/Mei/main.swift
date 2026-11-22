@@ -54,6 +54,10 @@ struct MeiMain {
             fflush(stdout)
         }
 
+        if config.isInklingMini {
+            InklingSupport.applyRuntimeEnvironment()
+            print("mei: Inkling 2 Mini text profile selected")
+        }
         config.optimizationProfile.applyRuntimeEnvironment(
             force: config.requestedOptimizationProfile.isQwen35MoE && !config.modelTuningWasDetected,
             modelDirectory: config.modelDirectory)

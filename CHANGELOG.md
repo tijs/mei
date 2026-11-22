@@ -2,6 +2,16 @@
 
 All notable changes to Mei are documented here.
 
+## [0.14.0] - 2026-11-22
+
+- Add native text inference and streaming tool calls for Inkling 2 Mini NVFP4.
+  Mei detects the bundle and selects the measured settings automatically.
+- Evaluate every Inkling attention and convolution cache at prefill chunk
+  boundaries. The decode projection reads BF16 weights directly and keeps FP32
+  accumulation.
+
+See the [Inkling guide](docs/INKLING.md) and [release notes](docs/RELEASE-0.14.0.md).
+
 ## [0.13.0] - 2026-11-20
 
 - Return an error when inference fails in buffered chat, raw completions, or

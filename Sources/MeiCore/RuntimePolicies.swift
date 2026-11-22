@@ -68,6 +68,7 @@ public extension ServerConfig {
     /// preserves the same instance-specific directory.
     mutating func resolveRuntimePolicies() throws {
         isSenseNovaLoop = try SenseNovaSupport.validateLoad(self)
+        isInklingMini = try InklingSupport.validateLoad(self)
         guard memoryLimitBytes >= 0, cacheLimitBytes >= 0 else {
             throw ConfigError.invalidValue("memory and allocator cache limits must be >= 0")
         }

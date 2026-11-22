@@ -43,6 +43,7 @@ public enum StreamEvent: Sendable {
     case reasoning(String)
     case prefill(completed: Int, total: Int)
     case toolCall(index: Int, call: GenerationRun.ToolCallEmitting)
+    case toolCallDelta(SSEChatChunk.DeltaToolCall)
     case finish(GenerationRun)
 }
 
@@ -116,6 +117,10 @@ public actor Engine {
             modelConfiguration = ModelConfiguration(
                 directory: directory, toolCallFormat: .xmlFunction,
                 reasoningParserName: "think_xml")
+        }
+        if config.isInklingMini {
+            modelConfiguration = ModelConfiguration(directory: directory, toolCallFormat: .inkling2,
+                reasoningParserName: "inkling2")
         }
         try config.applyFlintGenerationDefaults()
         print("mei: cache mode \(config.effectiveCacheMode.rawValue) (requested \(config.cacheMode.rawValue); \(config.cacheDecision))")
@@ -306,6 +311,7 @@ public actor Engine {
     private func chatRunLocked(request: ChatRequest, grant: SlotGrant) async throws -> GenerationRun {
         try Task.checkCancellation()
         try SenseNovaSupport.validateInput(request, textOnly: config.isSenseNovaLoop)
+        try InklingSupport.validateInput(request, enabled: config.isInklingMini)
         // Structured requests: compile + build the constraint processor
         // BEFORE any tokenization work, and force thinking off (the grammar
         // constrains the first sampled token to start a JSON value).
@@ -592,6 +598,7 @@ public actor Engine {
     ) async throws {
         try Task.checkCancellation()
         try SenseNovaSupport.validateInput(request, textOnly: config.isSenseNovaLoop)
+        try InklingSupport.validateInput(request, enabled: config.isInklingMini)
         // Structured requests: same pre-generation plan as the buffered path.
         let structuredPlan = try await makeStructuredPlan(for: request)
         let (template, tokens, context) = try await renderChatTemplate(
@@ -655,6 +662,8 @@ public actor Engine {
         // Set when vmlx's `.info` lands; the producer keeps working after it.
         var infoObservedAt: Date?
         var finished = false
+        var argumentStream = InklingToolArgumentStream(tools: config.isInklingMini ? request.tools : nil)
+        var argumentStreamFailure = false
         var restoreTracker = restoreBox.tracker
         var info: GenerateCompletionInfo?
         // True when the terminal frame was withheld because the request was
@@ -676,18 +685,30 @@ public actor Engine {
                     run.reasoning += reason
                     continuation.yield(.reasoning(reason))
                 case .toolCall(let call):
-                    let emitting = GenerationRun.ToolCallEmitting(
+                    var emitting = GenerationRun.ToolCallEmitting(
                         id: call.id ?? "call_\(UUID().uuidString.lowercased().prefix(12))",
                         name: call.function.name,
                         argumentsJSON: Self.toolArgumentsJSON(call, tools: request.tools))
+                    let streamedID: String?
+                    do {
+                        streamedID = try argumentStream.finish(
+                            name: emitting.name, argumentsJSON: emitting.argumentsJSON)
+                    } catch {
+                        argumentStreamFailure = true
+                        task.cancel()
+                        break streamLoop
+                    }
+                    if let streamedID { emitting.id = streamedID }
                     // Distinct tool calls must stream under distinct OpenAI indexes;
                     // clients merge deltas keyed by index, so two calls at index 0
                     // would otherwise concatenate name/arguments.
                     let index = run.toolCalls.count
                     run.toolCalls.append(emitting)
-                    continuation.yield(.toolCall(index: index, call: emitting))
-                case .toolCallProgress:
-                    break
+                    if streamedID == nil { continuation.yield(.toolCall(index: index, call: emitting)) }
+                case .toolCallProgress(let text):
+                    if let delta = argumentStream.feed(text, index: run.toolCalls.count) {
+                        continuation.yield(.toolCallDelta(delta))
+                    }
                 case .prefillProgress(let progress):
                     if config.logRequests {
                         logger.info("prefill \(progress.stage.rawValue, privacy: .public) \(progress.completedUnitCount)/\(progress.totalUnitCount)")
@@ -732,6 +753,9 @@ public actor Engine {
             task.cancel()
         }
         await task.value
+        if argumentStreamFailure {
+            throw EngineError.generationFailed("streamed tool arguments did not match the validated invocation")
+        }
         // A captured constraint failure — or a stop that contradicts the
         // constraint (no complete root value while the finish would say
         // `stop`) — fails the stream (the SSE handler turns the thrown error
@@ -1113,6 +1137,7 @@ public actor Engine {
         anchorOffsets: [Int] = []
     ) async throws -> GenerateParameters {
         try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
+        try InklingSupport.validateCapacity(promptTokens: tokens.count, config: config)
         guard tokens.count <= config.contextCap else {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
         }
@@ -1166,6 +1191,7 @@ public actor Engine {
         request: CompletionRequest
     ) async throws -> GenerateParameters {
         try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
+        try InklingSupport.validateCapacity(promptTokens: tokens.count, config: config)
         guard tokens.count <= config.contextCap else {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
         }

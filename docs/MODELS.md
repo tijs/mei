@@ -13,6 +13,12 @@ or the current household/Python ranking. The historical catalog and prior-releas
 proof below remain useful for reproducing those experiments; a new runtime or
 checkpoint requires its own admission and performance evidence.
 
+## Inkling 2 Mini
+
+Mei 0.14.0 supports the Inkling 2 Mini NVFP4 text bundle with automatic
+settings. Follow the [Inkling guide](INKLING.md) for the pinned download, launch
+command, and model limits.
+
 ## Earlier catalog status (historical)
 
 | Model | Repo (download) | Served id | Status |

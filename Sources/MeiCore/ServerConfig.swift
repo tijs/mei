@@ -5,13 +5,15 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.13.0"
+    public static let version = "0.14.0"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
     public var enableFlint: Bool = false
     /// Separately gated, payload-preserving JANGH2 adapter.
     public var enableFlintJANGH: Bool = false
+    public var enableInklingMini: Bool = false
+    public internal(set) var isInklingMini: Bool = false
     public var enableSenseNovaLoop: Bool = false
     public internal(set) var isSenseNovaLoop: Bool = false
     /// Set when --served-model-id was omitted and defaulted from the
@@ -155,12 +157,28 @@ public struct ServerConfig: Sendable {
 
     /// KV capacity bound: the cache must hold the full context plus a
     /// generation headroom window.
-    public var maxKVSize: Int { isSenseNovaLoop ? contextCap : contextCap + 4096 }
+    public var maxKVSize: Int { (isSenseNovaLoop || isInklingMini) ? contextCap : contextCap + 4096 }
 
     /// Flint's selected bundle declares its sampler. Adopt only its authored
     /// values when the operator did not set a CLI/programmatic override. This
     /// is also called by Engine.load for library callers that bypass parsing.
     mutating func applyFlintGenerationDefaults() throws {
+        if isInklingMini {
+            struct InklingDefaults: Decodable {
+                let temperature: Float
+                let top_p: Float?
+                let top_k: Int?
+            }
+            let url = URL(fileURLWithPath: modelDirectory).appendingPathComponent("generation_config.json")
+            let defaults = try JSONDecoder().decode(InklingDefaults.self, from: Data(contentsOf: url))
+            guard defaults.temperature.isFinite, defaults.temperature >= 0,
+                  (0...1).contains(defaults.top_p ?? 1), (defaults.top_k ?? 0) >= 0 else {
+                throw ConfigError.invalidValue("Inkling bundle has invalid sampling defaults")
+            }
+            if !temperatureExplicit { temperature = defaults.temperature; temperatureExplicit = false }
+            if !topPExplicit { topP = defaults.top_p ?? 1; topPExplicit = false }
+            if !topKExplicit { topK = defaults.top_k ?? 0; topKExplicit = false }
+        }
         guard enableFlint else { return }
         let directory = URL(fileURLWithPath: modelDirectory)
         guard let data = try? Data(contentsOf: directory.appendingPathComponent("config.json")),
@@ -228,7 +246,7 @@ public extension ServerConfig {
     ///   affordability check. Defaults to asking the GPU.
     static func parse(
         arguments: [String] = Array(CommandLine.arguments.dropFirst()),
-        recommendedWorkingSetBytes: Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) },
+        recommendedWorkingSetBytes: @autoclosure () -> Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) },
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) throws -> ServerConfig {
         var modelDirectory: String?
@@ -236,6 +254,7 @@ public extension ServerConfig {
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
         var prefillStepSizeExplicit = false
         var contextCapExplicit = false
+        var inklingOptIn: Bool?
         var modelProfileExplicit = false
         var ssmAnchorBoundariesExplicit = false
         var mlxPressExplicit = false
@@ -256,6 +275,7 @@ public extension ServerConfig {
             case "--served-model-id": servedModelID = try value()
             case "--enable-flint": config.enableFlint = try parseBool(flag, value())
             case "--enable-flint-jangh": config.enableFlintJANGH = try parseBool(flag, value())
+            case "--enable-inkling-mini": inklingOptIn = try parseBool(flag, value())
             case "--enable-sensenova-loop": config.enableSenseNovaLoop = try parseBool(flag, value())
             case "--host": config.host = try value()
             case "--port":
@@ -422,7 +442,7 @@ public extension ServerConfig {
                 // because prefill chunking changes what the model writes.
                 if step > 512,
                    !ModelOptimizationProfile.canAffordPrefill1024(
-                       recommendedWorkingSetBytes: recommendedWorkingSetBytes) {
+                       recommendedWorkingSetBytes: recommendedWorkingSetBytes()) {
                     config.prefillStepClampedFrom = step
                     config.prefillStepSize = 512
                 } else {
@@ -442,23 +462,32 @@ public extension ServerConfig {
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
+        let isInkling = InklingSupport.isModel(directory: modelDirectory)
+        config.enableInklingMini = inklingOptIn ?? isInkling
+        if isInkling {
+            if !contextCapExplicit { config.contextCap = 8192 }
+            if !prefillStepSizeExplicit { config.prefillStepSize = 128 }
+            if !config.maxTokensExplicit { config.maxTokensDefault = 4096 }
+            if config.cacheMode == .auto { config.cacheMode = .off }
+            if !config.cacheLimitExplicit { config.cacheLimitBytes = 536_870_912 }
+        }
         if !contextCapExplicit, config.optimizationProfile == .senseNovaLoop {
             config.contextCap = 4096
         }
-        if !prefillStepSizeExplicit {
+        if !prefillStepSizeExplicit, !isInkling {
             // No named profile: the architecture default, device-aware for
             // the ornith family. Restores behaviour 0.4.1 shipped and the
             // 0.5.0 branch lost (commit 93f9588 is not in this history).
             config.prefillStepSize = ModelOptimizationProfile.prefillStepSize(
                 modelDirectory: config.modelDirectory,
                 profile: config.optimizationProfile,
-                recommendedWorkingSetBytes: recommendedWorkingSetBytes)
+                recommendedWorkingSetBytes: recommendedWorkingSetBytes())
         }
 
         // Architecture-validated generation cap. An explicit --max-tokens
         // always wins; see ModelOptimizationProfile.defaultMaxTokens for the
         // runaway evidence behind the ornith value.
-        if !config.maxTokensExplicit,
+        if !config.maxTokensExplicit, !isInkling,
            let profileMax = config.optimizationProfile.defaultMaxTokens {
             config.maxTokensDefault = profileMax
         }
@@ -492,10 +521,10 @@ public extension ServerConfig {
     static let usage = """
     mei — native Swift/MLX OpenAI-compatible inference server
 
-    Usage: mei --model-dir DIR --served-model-id ID [options]
+    Usage: mei --model-dir DIR [--served-model-id ID] [options]
 
     Required:
-      --model-dir DIR        Local directory with model config + safetensors
+      --model-dir DIR        Local directory with model config + safetensors. Inkling 2 Mini is auto-detected.
       --served-model-id ID   Exact model ID served by GET /v1/models
     Fetching a model:
       mei pull <profile> [--dest DIR]
@@ -515,7 +544,7 @@ public extension ServerConfig {
       --enable-flint BOOL     EXPERIMENTAL standard MLX affine Flint support
                              (default false; JANGH2 requires its separate adapter flag)
       --enable-sensenova-loop BOOL  EXPERIMENTAL pinned 6/8-bit FP32 Loop text export
-                             Default false. One generation, 4K total context,
+                             Default false. One generation, up to 8K total context,
                              uncompiled decode and unquantized attention KV.
 
     Network:

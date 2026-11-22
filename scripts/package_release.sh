@@ -136,7 +136,7 @@ chmod 755 "$BUNDLE_DIR/bin/mei"
 for f in LICENSE NOTICE.md THIRD-PARTY-NOTICES.md CHANGELOG.md README.md; do
   [[ -f "$REPO/$f" ]] && cp -p "$REPO/$f" "$BUNDLE_DIR/$f"
 done
-for f in INSTALL.md RELEASE-${VERSION}.md INFERENCE-SCHEDULING.md VMLX-FORK.md RUNTIME-POLICIES.md MODELS.md FLINT.md FLINT-JANGH2.md; do
+for f in INSTALL.md RELEASE-${VERSION}.md INFERENCE-SCHEDULING.md VMLX-FORK.md RUNTIME-POLICIES.md MODELS.md INKLING.md FLINT.md FLINT-JANGH2.md; do
   [[ -f "$REPO/docs/$f" ]] && cp -p "$REPO/docs/$f" "$BUNDLE_DIR/docs/$f" || true
 done
 

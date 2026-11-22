@@ -124,6 +124,7 @@ public final class Router: @unchecked Sendable {
         do {
             let request = try ChatRequest(json: body)
             try SenseNovaSupport.validateInput(request, textOnly: engine.config.isSenseNovaLoop)
+            try InklingSupport.validateInput(request, enabled: engine.config.isInklingMini)
             // Structured requests are validated and compiled BEFORE
             // generation: compiler rejections and unsupported combinations
             // are HTTP 400, including for streaming requests (the response
@@ -174,6 +175,9 @@ public final class Router: @unchecked Sendable {
     public static func errorPlain(
         _ error: Error, serializer: ResponseSerializer
     ) -> (status: HTTPResponseStatus, contentType: String, body: String) {
+        if let inputError = error as? InklingSupport.InputError {
+            return (.badRequest, "application/json", serializer.errorPayload(inputError.localizedDescription, code: "inkling_input_unsupported", param: "messages"))
+        }
         if let formatError = error as? ResponseFormatError {
             return (
                 .badRequest, "application/json",
@@ -375,6 +379,15 @@ public final class Router: @unchecked Sendable {
         return "data: \(ResponseSerializer().json(chunk))\n\n"
     }
 
+    public static func toolCallDeltaSSEData(
+        delta: SSEChatChunk.DeltaToolCall, id: String, model: String, created: Int
+    ) -> String {
+        let chunk = SSEChatChunk(
+            id: id, created: created, model: model,
+            choices: [.init(delta: .init(toolCalls: [delta]))], usage: nil)
+        return "data: \(ResponseSerializer().json(chunk))\n\n"
+    }
+
     /// Serialize one content-delta StreamEvent into a single SSE `data:
     /// {...}\n\n` frame, exactly as the streaming handler ships it. Static and
     /// pure so streaming structured-output tests can assemble a stream (and
@@ -426,6 +439,10 @@ public final class Router: @unchecked Sendable {
         case .toolCall(let index, let call):
             return Self.toolCallSSEData(
                 call: call, index: index, id: id, model: model,
+                created: Int(Date().timeIntervalSince1970))
+        case .toolCallDelta(let delta):
+            return Self.toolCallDeltaSSEData(
+                delta: delta, id: id, model: model,
                 created: Int(Date().timeIntervalSince1970))
         case .prefill:
             return ""
