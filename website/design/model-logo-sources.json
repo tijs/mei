@@ -1,7 +1,13 @@
 {
   "retrieved": "2026-11-08",
-  "treatment": "Simplified single-cobalt icons with transparent backgrounds, adapted using the built-in image-generation tool. Original model identities retained.",
+  "treatment": "For Groot, Qwen and Ornith: simplified single-cobalt icons with transparent backgrounds, adapted using the built-in image-generation tool. Original model identities retained.",
   "models": {
+    "inkling": {
+      "page": "https://thinkingmachines.ai/inkling/",
+      "asset": "https://thinkingmachines.ai/inkling/images/cover-social-inkling-page.png",
+      "description": "Official Inkling artwork by Thinking Machines Lab, cropped and resized for the model card.",
+      "retrieved": "2026-11-22"
+    },
     "qwen": {
       "page": "https://huggingface.co/Qwen",
       "asset": "https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg",

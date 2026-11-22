@@ -18,7 +18,7 @@ struct MeiMain {
             guard args.count >= 2 else {
                 FileHandle.standardError.write(Data((
                     "usage: mei pull <profile> [--dest DIR] [--dry-run]\nprofiles: "
-                    + ModelTuningRegistry.names.joined(separator: ", ") + "\n").utf8))
+                    + ModelPull.names.joined(separator: ", ") + "\n").utf8))
                 exit(2)
             }
             var dest: String?

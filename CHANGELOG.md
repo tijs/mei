@@ -2,6 +2,15 @@
 
 All notable changes to Mei are documented here.
 
+## [0.15.0] - 2026-11-22
+
+- Pull the pinned Inkling 2 Mini text bundle with `mei pull inkling-2-mini`.
+- Start a downloaded model by name with `mei --model NAME`. Mei applies the
+  recognized bundle’s tested defaults and uses the selected name as the API
+  model ID.
+
+See the [release notes](docs/RELEASE-0.15.0.md).
+
 ## [0.14.0] - 2026-11-22
 
 - Add native text inference and streaming tool calls for Inkling 2 Mini NVFP4.

@@ -45,6 +45,17 @@ final class ModelPullTests: XCTestCase {
         XCTAssertTrue(dest.hasSuffix("Qwen3.6-35B-A3B-4bit-textonly"), dest)
     }
 
+    func testInklingPullUsesThePinnedTextBundle() throws {
+        let artifact = try XCTUnwrap(ModelPull.Artifact.named("inkling-2-mini"))
+        let plan = ModelPull.Plan(artifact: artifact, destination: "/tmp/inkling-2-mini")
+        XCTAssertEqual(artifact.directoryName, "inkling-2-mini")
+        XCTAssertEqual(plan.arguments, [
+            "download", "nativ-community/Inkling-2-Mini-nvfp4",
+            "--revision", "26f71eef259a1dd7fc476778d67020351e0dfb8c",
+            "--exclude", "mtp.safetensors", "--local-dir", "/tmp/inkling-2-mini",
+        ])
+    }
+
     func testUnknownProfileFailsWithoutTouchingTheNetwork() {
         XCTAssertEqual(ModelPull.run(profileName: "not-a-model",
                                      destination: "/tmp/should-not-appear"), 2)

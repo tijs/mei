@@ -5,7 +5,7 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.14.0"
+    public static let version = "0.15.0"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
@@ -16,8 +16,8 @@ public struct ServerConfig: Sendable {
     public internal(set) var isInklingMini: Bool = false
     public var enableSenseNovaLoop: Bool = false
     public internal(set) var isSenseNovaLoop: Bool = false
-    /// Set when --served-model-id was omitted and defaulted from the
-    /// bundle directory name, so startup can report the chosen ID.
+    /// Set when --served-model-id was omitted so startup can report the ID
+    /// derived from the selected model or bundle directory.
     public var servedModelIDWasDefaulted: Bool = false
     /// Requested profile from the operator. `auto` is resolved from config.json.
     public var requestedOptimizationProfile: ModelOptimizationProfile = .auto
@@ -244,11 +244,14 @@ public extension ServerConfig {
     /// - Parameter recommendedWorkingSetBytes: the device's Metal recommended
     ///   working set, injected so tests can exercise both sides of the
     ///   affordability check. Defaults to asking the GPU.
+    /// - Parameter modelCache: Override the default model cache for isolated tests.
     static func parse(
         arguments: [String] = Array(CommandLine.arguments.dropFirst()),
         recommendedWorkingSetBytes: @autoclosure () -> Int? = GPU.maxRecommendedWorkingSetBytes().map { Int($0) },
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        modelCache: URL? = nil
     ) throws -> ServerConfig {
+        var selectedModel: String?
         var modelDirectory: String?
         var servedModelID: String?
         var requestedOptimizationProfile: ModelOptimizationProfile = .auto
@@ -271,6 +274,7 @@ public extension ServerConfig {
                 return arguments[index]
             }
             switch flag {
+            case "--model": selectedModel = try value()
             case "--model-dir": modelDirectory = try value()
             case "--served-model-id": servedModelID = try value()
             case "--enable-flint": config.enableFlint = try parseBool(flag, value())
@@ -397,13 +401,27 @@ public extension ServerConfig {
             index += 1
         }
 
+        if let selectedModel {
+            guard modelDirectory == nil else {
+                throw ConfigError.invalidValue("use either --model or --model-dir")
+            }
+            guard let artifact = ModelPull.Artifact.named(selectedModel) else {
+                throw ConfigError.invalidValue("unknown model '\(selectedModel)'; choose from \(ModelPull.names.joined(separator: ", "))")
+            }
+            let directory = artifact.destination(in: modelCache ?? ModelPull.modelCache)
+            let configPath = URL(fileURLWithPath: directory).appendingPathComponent("config.json").path
+            guard FileManager.default.isReadableFile(atPath: configPath) else {
+                throw ConfigError.invalidValue("model '\(selectedModel)' is missing from \(directory); run mei pull \(selectedModel)")
+            }
+            modelDirectory = directory
+        }
         guard let modelDirectory else {
-            throw ConfigError.missingRequired("--model-dir")
+            throw ConfigError.missingRequired("--model or --model-dir")
         }
         // The served ID is a contract with clients, not a tuning knob: it is
         // whatever they will put in the "model" field. When the operator does
-        // not state one they have no expectation to violate, so default to the
-        // bundle's directory name and say so at startup.
+        // not state one, default to the selected model name or the bundle's
+        // directory name and say so at startup.
         //
         // Deliberately NOT inferred from the bundle: config.json carries no
         // name or path field, and a README's front-matter names the base model
@@ -411,7 +429,7 @@ public extension ServerConfig {
         // repo, where served IDs are HF-style org/name while directories carry
         // only the name (and one has `-aligned` appended). Guessing the org
         // would produce confidently wrong IDs.
-        let resolvedServedModelID = servedModelID
+        let resolvedServedModelID = servedModelID ?? selectedModel
             ?? URL(fileURLWithPath: modelDirectory).lastPathComponent
         config.servedModelIDWasDefaulted = (servedModelID == nil)
         config.modelDirectory = modelDirectory
@@ -521,15 +539,16 @@ public extension ServerConfig {
     static let usage = """
     mei — native Swift/MLX OpenAI-compatible inference server
 
-    Usage: mei --model-dir DIR [--served-model-id ID] [options]
+    Usage: mei (--model NAME | --model-dir DIR) [--served-model-id ID] [options]
 
-    Required:
+    Model selection:
+      --model NAME           Use a named model downloaded with mei pull
       --model-dir DIR        Local directory with model config + safetensors. Inkling 2 Mini is auto-detected.
       --served-model-id ID   Exact model ID served by GET /v1/models
     Fetching a model:
-      mei pull <profile> [--dest DIR]
-                             Download the exact repo and revision this profile
-                             was measured on, then verify the weights are
+      mei pull <model> [--dest DIR] [--dry-run]
+                             Download the exact repo and revision Mei uses for
+                             the named model, then verify the weights are
                              naturally aligned. Uses the `hf` CLI.
 
       --model-profile NAME   Override automatic measured model settings (none disables):

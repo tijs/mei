@@ -452,7 +452,7 @@ final class ServerConfigParsingTests: XCTestCase {
             guard case ConfigError.missingRequired(let field) = error else {
                 return XCTFail("expected missingRequired, got \(error)")
             }
-            XCTAssertEqual(field, "--model-dir")
+            XCTAssertEqual(field, "--model or --model-dir")
         }
     }
 

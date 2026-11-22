@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { inkling, inklingCommands, models, modelCommands, release } from "./data.js";
+import { inkling, inklingDownload, inklingRun, models, modelCommands, release } from "./data.js";
 import { Code, SiteFooter, SiteHead, SiteHeader } from "./components.js";
 import { ExplainerPage, SystemDiagram } from "./explainer.js";
 
@@ -156,9 +156,20 @@ function Page({ base }: { base: string }) {
               tested with it.
             </p>
             <article class="ongoing" id="inkling">
-              <h3>Inkling 2 Mini</h3>
+              <div class="model-heading">
+                <img
+                  class="model-logo"
+                  src={`${base}assets/model-inkling.png`}
+                  alt=""
+                  width="64"
+                  height="64"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <h3>Inkling 2 Mini</h3>
+              </div>
               <p>
-                New in Mei {release.version}: native text chat, streaming and
+                Supports native text chat, streaming and
                 buffered or streaming tool calls. The tested NVFP4 bundle is
                 about 19.5 GB to download and was qualified on a 32 GB M1 Max
                 with one model loaded.
@@ -171,13 +182,17 @@ function Page({ base }: { base: string }) {
                 output are outside this profile.
               </p>
               <details class="profile">
-                <summary>Download and run Inkling 2 Mini</summary>
-                <p>Install Mei and the Hugging Face download helper below first.
-                  Stop any running Mei model before starting another.</p>
-                <Code label="Inkling 2 Mini model commands">{inklingCommands}</Code>
-                <p>Use <code>http://127.0.0.1:8024/v1</code> with model ID
-                  {" "}<code>inkling-2-mini</code> in your client.</p>
+                <summary>Download the model once</summary>
+                <p>Install the Hugging Face download helper below first. This
+                  command fetches the tested revision and skips the unused
+                  speculative decoding weights.</p>
+                <Code label="Download Inkling 2 Mini">{inklingDownload}</Code>
               </details>
+              <p>After downloading, start Inkling by name. Mei applies
+                Inkling’s settings automatically.</p>
+              <Code label="Run Inkling 2 Mini">{inklingRun}</Code>
+              <p>Use <code>http://127.0.0.1:8024/v1</code> with model ID
+                {" "}<code>inkling-2-mini</code> in your client.</p>
               <div class="model-links">
                 <a href={inkling.guide}>Inkling setup and API example ↗</a>
                 <a href={`https://huggingface.co/${inkling.repo}/tree/${inkling.revision}`}>
@@ -233,17 +248,12 @@ function Page({ base }: { base: string }) {
           <section class="section wrap" id="results" aria-labelledby="release-title">
             <div class="section-heading">
               <div><h2 id="release-title">Latest release: Mei {release.version}</h2></div>
-              <p>Released 22 November 2026. Native Inkling 2 Mini support,
-                with automatic context, prefill and Metal settings.</p>
+              <p>Start a downloaded model by name. Mei applies its tested
+                settings automatically.</p>
             </div>
             <p>
-              The Inkling candidate completed all 25 benchmark cases on a
-              32 GB M1 Max with no harness errors: 8 of 10 model-only cases,
-              11 of 12 household cases and all 3 Python automation cases passed.
-              Two tasks hit the tool turn limit; one repeated a code from a
-              deleted source. Measured decode averaged 23.86 tokens/s on a
-              short prompt and 18.35 tokens/s at 2K context. Coding-specific
-              superiority has not been measured.
+              Inkling 2 Mini now downloads with <code>mei pull inkling-2-mini</code>,
+              which fetches the tested text bundle and skips unused weights.
             </p>
             <p><a href={release.url}>Read the full release notes ↗</a></p>
           </section>
@@ -341,11 +351,11 @@ function Page({ base }: { base: string }) {
                 <p>
                   Set your OpenAI-compatible client’s base URL to{" "}
                   <code>http://127.0.0.1:8024/v1</code> and use the served model
-                  ID <code>groot</code>.
+                  ID <code>groot-19b-a3b-text</code>.
                 </p>
                 <Code label="Make a first request">
                   {
-                    'curl http://127.0.0.1:8024/v1/chat/completions \\\n  -H \'Content-Type: application/json\' \\\n  -d \'{\n    "model": "groot",\n    "messages": [{\n      "role": "user",\n      "content": "Hello, Mei."\n    }]\n  }\''
+                    'curl http://127.0.0.1:8024/v1/chat/completions \\\n  -H \'Content-Type: application/json\' \\\n  -d \'{\n    "model": "groot-19b-a3b-text",\n    "messages": [{\n      "role": "user",\n      "content": "Hello, Mei."\n    }]\n  }\''
                   }
                 </Code>
                 <div class="integration">

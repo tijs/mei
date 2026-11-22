@@ -1,18 +1,19 @@
 # Run Inkling 2 Mini with Mei
 
-Install Mei 0.14.0 or later on an Apple Silicon Mac, and install the Hugging Face
-`hf` CLI. The tested NVFP4 bundle downloads about 19.5 GB. Qualification ran on a
-32 GB M1 Max with only one model loaded.
+Install Mei 0.15.0 or later and the Hugging Face `hf` CLI on an Apple Silicon
+Mac. The tested NVFP4 bundle downloads about 19.5 GB. Qualification ran on a
+32 GB M1 Max with one model loaded.
 
-```bash
-hf download nativ-community/Inkling-2-Mini-nvfp4 \
-  --revision 26f71eef259a1dd7fc476778d67020351e0dfb8c \
-  --exclude 'mtp.safetensors' --local-dir ./inkling-2-mini
-mei --model-dir ./inkling-2-mini
+```sh
+mei pull inkling-2-mini
+mei --model inkling-2-mini
 ```
 
-Mei identifies the bundle through `config.json`. The startup log reports the
-Inkling text profile, and the served model ID defaults to the directory name.
+Mei downloads the pinned revision, skips the unused speculative decoding
+weights, and applies the Inkling text profile automatically. The served model
+ID is `inkling-2-mini`. If you already have a compatible local bundle, select it
+with `mei --model-dir /path/to/bundle`.
+
 Point your OpenAI-compatible client at `http://127.0.0.1:8024/v1`, or try:
 
 ```bash

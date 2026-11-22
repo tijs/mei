@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { createSite, basePath, outputRoutes } from "../src/site.js";
-import { inkling, inklingCommands, models, release } from "../src/data.js";
+import { inkling, inklingDownload, inklingRun, models, release } from "../src/data.js";
 
 test("current release matches the binary version and model examples use automatic settings", async () => {
   const config = readFileSync(new URL("../../Sources/MeiCore/ServerConfig.swift", import.meta.url), "utf8");
@@ -13,16 +13,18 @@ test("current release matches the binary version and model examples use automati
   assert.ok(html.includes(`href="${release.archive}.sha256"`));
   for (const model of models) {
     assert.ok(html.includes(`mei pull ${model.profile}`));
-    assert.ok(html.includes(`models/${model.repo.split("/").at(-1)}`));
-    assert.ok(html.includes(`--served-model-id ${model.id}`));
+    assert.ok(html.includes(`mei --model ${model.profile}`));
     assert.ok(html.includes(model.automaticSettings));
   }
   assert.ok(!html.includes("--model-profile"));
   assert.ok(html.includes(inkling.revision));
   assert.ok(html.includes(inkling.guide));
+  assert.ok(html.includes(inklingRun));
+  assert.ok(html.includes("/assets/model-inkling.png"));
+  assert.ok(readFileSync(new URL("../public/assets/model-inkling.png", import.meta.url)).length > 0);
   assert.ok(html.includes("8,192 total"));
   assert.ok(html.includes("inkling-2-mini"));
-  assert.ok(inklingCommands.includes("\\\n  --revision"), "download command must retain shell line continuations");
+  assert.ok(html.includes(inklingDownload));
   for (const old of ["0.11.0", "0.11.2", "Previous Mei", "results/quality.html"])
     assert.ok(!html.includes(old), `old release detail: ${old}`);
   const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
@@ -73,7 +75,7 @@ test("explainer comparison has full-page fallbacks and separate client/CoCore se
     ).text();
     assert.ok(mei.includes('id="system-diagram"'));
     assert.ok(mei.includes("http://127.0.0.1:8024/v1"));
-    assert.ok(mei.includes("groot = http://127.0.0.1:8024</code>"));
+    assert.ok(mei.includes("groot-19b-a3b-text = http://127.0.0.1:8024</code>"));
     assert.ok(!mei.includes("Osaurus"));
     assert.ok(llama.includes("A compatible model in GGUF format."));
     for (const html of [mei, llama]) {

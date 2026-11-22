@@ -1,4 +1,4 @@
-const releaseVersion = "0.14.0";
+const releaseVersion = "0.15.0";
 export const release = {
   version: releaseVersion,
   url: `https://github.com/tijs/mei/releases/tag/v${releaseVersion}`,
@@ -6,15 +6,13 @@ export const release = {
 };
 
 export const inkling = {
-  guide: "https://github.com/tijs/mei/blob/v0.14.0/docs/INKLING.md",
+  guide: "https://github.com/tijs/mei/blob/v0.15.0/docs/INKLING.md",
   repo: "nativ-community/Inkling-2-Mini-nvfp4",
   revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
 };
 
-export const inklingCommands = `hf download ${inkling.repo} \\
-  --revision ${inkling.revision} \\
-  --exclude 'mtp.safetensors' --local-dir ./inkling-2-mini
-mei --model-dir ./inkling-2-mini`;
+export const inklingDownload = "mei pull inkling-2-mini";
+export const inklingRun = "mei --model inkling-2-mini";
 
 export const models = [
   {
@@ -65,11 +63,5 @@ export const models = [
 ] as const;
 
 export function modelCommands(model: (typeof models)[number]): string {
-  return [
-    `mei pull ${model.profile}`,
-    "",
-    "mei \\",
-    `  --model-dir ~/.cache/mei/models/${model.repo.split("/").at(-1)} \\`,
-    `  --served-model-id ${model.id}`,
-  ].join("\n");
+  return `mei pull ${model.profile}\nmei --model ${model.profile}`;
 }

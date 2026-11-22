@@ -249,7 +249,7 @@ export function ExplainerPage({
           >
             <h2 id="connect-title">Connect your app to Mei</h2>
             <p>
-              Start Mei with the model ID <code>groot</code>, as shown in the{" "}
+              Start Mei with the model ID <code>groot-19b-a3b-text</code>, as shown in the{" "}
               <a href={`${base}#get-started`}>installation instructions</a>.
               Then configure the model provider in your app.
             </p>
@@ -260,7 +260,7 @@ export function ExplainerPage({
                 these settings:
               </p>
               <Code label="OpenAI-compatible client settings">
-                {"Base URL: http://127.0.0.1:8024/v1\nModel ID: groot"}
+                {"Base URL: http://127.0.0.1:8024/v1\nModel ID: groot-19b-a3b-text"}
               </Code>
               <p>
                 The model ID must match the ID Mei serves. The app also needs to
@@ -275,7 +275,7 @@ export function ExplainerPage({
                 <code>~/.cocore/engine-map</code>:
               </p>
               <Code label="CoCore engine map">
-                {"groot = http://127.0.0.1:8024"}
+                {"groot-19b-a3b-text = http://127.0.0.1:8024"}
               </Code>
               <p>
                 CoCore checks the model’s capabilities when it connects. See the{" "}

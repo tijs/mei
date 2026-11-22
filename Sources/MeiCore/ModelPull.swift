@@ -14,37 +14,90 @@ import Foundation
 /// resumable chunking; a hand-rolled URLSession downloader would be a worse
 /// version of a tool the install guide already requires.
 public enum ModelPull {
+    struct Artifact: Sendable {
+        let name: String
+        let repo: String
+        let revision: String
+        let directoryName: String
+        let requiresAlignedWeights: Bool
+        var excludedFile: String? = nil
+
+        static func named(_ name: String) -> Self? {
+            if name == "inkling-2-mini" {
+                return Self(name: name, repo: "nativ-community/Inkling-2-Mini-nvfp4",
+                            revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
+                            directoryName: name, requiresAlignedWeights: false,
+                            excludedFile: "mtp.safetensors")
+            }
+            return ModelTuningRegistry.named(name).map(fromTuning)
+        }
+
+        static func fromTuning(_ tuning: ModelTuning) -> Self {
+            Self(name: tuning.name, repo: tuning.repo, revision: tuning.revision,
+                 directoryName: tuning.repo.split(separator: "/").last.map(String.init) ?? tuning.name,
+                 requiresAlignedWeights: tuning.requiresAlignedWeights)
+        }
+
+        func destination(in root: URL) -> String {
+            root.appendingPathComponent(directoryName, isDirectory: true).path
+        }
+    }
+
+    static var modelCache: URL {
+        URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".cache/mei/models", isDirectory: true)
+    }
+
+    public static var names: [String] { ModelTuningRegistry.names + ["inkling-2-mini"] }
+
     public struct Plan: Sendable {
-        public let tuning: ModelTuning
+        let artifact: Artifact
         public let destination: String
+
+        init(artifact: Artifact, destination: String) {
+            self.artifact = artifact
+            self.destination = destination
+        }
+
+        init(tuning: ModelTuning, destination: String) {
+            self.init(artifact: .fromTuning(tuning), destination: destination)
+        }
+
+        var arguments: [String] {
+            var args = ["download", artifact.repo, "--revision", artifact.revision]
+            if let excludedFile = artifact.excludedFile {
+                args += ["--exclude", excludedFile]
+            }
+            return args + ["--local-dir", destination]
+        }
     }
 
     public static func defaultDestination(for tuning: ModelTuning) -> String {
-        let base = (NSHomeDirectory() as NSString)
-            .appendingPathComponent(".cache/mei/models")
-        let leaf = tuning.repo.split(separator: "/").last.map(String.init) ?? tuning.name
-        return (base as NSString).appendingPathComponent(leaf)
+        Artifact.fromTuning(tuning).destination(in: modelCache)
     }
 
-    /// The command a user could run by hand. Printed on every path, so the
-    /// operation is never a black box.
+    /// Display the same arguments passed to the Hugging Face CLI.
     public static func downloadCommand(_ plan: Plan) -> String {
-        "hf download \(plan.tuning.repo) --revision \(plan.tuning.revision) "
-            + "--local-dir \(plan.destination)"
+        let args = plan.arguments.map { arg in
+            if arg.range(of: #"^[A-Za-z0-9_./-]+$"#, options: .regularExpression) != nil {
+                return arg
+            }
+            return "'" + arg.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        }
+        return (["hf"] + args).joined(separator: " ")
     }
 
     public static func run(profileName: String, destination: String?,
                            dryRun: Bool = false) -> Int32 {
-        guard let tuning = ModelTuningRegistry.named(profileName) else {
+        guard let artifact = Artifact.named(profileName) else {
             FileHandle.standardError.write(Data((
-                "mei: '\(profileName)' is not a supported model. Known profiles: "
-                + ModelTuningRegistry.names.joined(separator: ", ") + "\n").utf8))
+                "mei: '\(profileName)' is not a supported model. Known models: "
+                + names.joined(separator: ", ") + "\n").utf8))
             return 2
         }
-        let plan = Plan(tuning: tuning,
-                        destination: destination ?? defaultDestination(for: tuning))
-        print("mei: \(tuning.name) — \(tuning.model)")
-        print("mei: repo \(tuning.repo) @ \(tuning.revision)")
+        let plan = Plan(artifact: artifact,
+                        destination: destination ?? artifact.destination(in: modelCache))
+        print("mei: \(artifact.name)")
+        print("mei: repo \(artifact.repo) @ \(artifact.revision)")
         print("mei: destination \(plan.destination)")
         print("mei: $ \(downloadCommand(plan))")
 
@@ -68,11 +121,7 @@ public enum ModelPull {
             return 3
         }
 
-        let status = spawn(hf, [
-            "download", tuning.repo,
-            "--revision", tuning.revision,
-            "--local-dir", plan.destination,
-        ])
+        let status = spawn(hf, plan.arguments)
         guard status == 0 else {
             FileHandle.standardError.write(Data(
                 "mei: download failed (hf exited \(status))\n".utf8))
@@ -93,7 +142,7 @@ public enum ModelPull {
                 + "aligned. This profile's settings were measured on an aligned "
                 + "artifact; serving this one costs memory and long-context "
                 + "prefill speed.\n").utf8))
-            return plan.tuning.requiresAlignedWeights ? 4 : 0
+            return plan.artifact.requiresAlignedWeights ? 4 : 0
         case .unknown(let why):
             FileHandle.standardError.write(Data(
                 "mei: could not verify alignment (\(why))\n".utf8))

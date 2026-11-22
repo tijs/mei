@@ -49,8 +49,7 @@ download the profile's pinned model revision into your local cache.
 
 ```sh
 mei pull groot-19b-a3b-text
-mei --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly \
-    --served-model-id groot
+mei --model groot-19b-a3b-text
 ```
 
 Leave this terminal running. Wait for Mei to print
@@ -70,7 +69,7 @@ In another terminal:
 curl -fsS http://127.0.0.1:8024/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
-    "model": "groot",
+    "model": "groot-19b-a3b-text",
     "messages": [{"role": "user", "content": "Explain unified memory in two sentences."}],
     "max_tokens": 256
   }'
@@ -86,11 +85,12 @@ Choose your app's OpenAI-compatible Chat Completions provider and set:
 | Setting | Value for the quickstart |
 |---|---|
 | Base URL | `http://127.0.0.1:8024/v1` |
-| Model ID | `groot` |
+| Model ID | `groot-19b-a3b-text` |
 | API key | No key required by Mei; use `local` if your app requires a value |
 
 The model ID must match the one Mei serves. `--served-model-id` gives it a
-convenient name; when omitted, Mei chooses an ID and prints it at startup.
+custom name. By default, Mei uses the selected model name or the bundle
+directory name and prints it at startup.
 Check it at any time with:
 
 ```sh
@@ -112,14 +112,14 @@ These named profiles can be downloaded with `mei pull <profile>`:
 
 | Model | Profile | Input |
 |---|---|---|
+| Inkling 2 Mini | `inkling-2-mini` | Text |
 | Groot 19B-A3B | `groot-19b-a3b-text` | Text |
 | Qwen3.6 35B-A3B, text-only | `qwen3.6-35b-a3b-text` | Text |
 | Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | Text |
 | Qwen3.6 35B-A3B, vision bundle | `qwen3.6-35b-a3b` | Text and images; see model-specific limits |
 
-Each download prints its destination. Start Mei with that path as
-`--model-dir`. Mei recognizes known model metadata and selects the corresponding
-runtime settings automatically; startup logs show what was selected. Explicit
+Use the same name with `mei pull <model>` and `mei --model <model>`. Mei
+recognizes the downloaded bundle and selects its runtime settings automatically; startup logs show what was selected. Explicit
 flags override those settings.
 
 You can also point Mei at an existing compatible MLX model directory containing
@@ -129,7 +129,8 @@ for artifact requirements, preparation steps, and limitations before downloading
 an arbitrary checkpoint. Weights are not included with Mei and have their own
 licenses.
 
-For **Inkling 2 Mini**, including the pinned download and Pi setup, see below.
+For **Inkling 2 Mini**, see the [model guide](docs/INKLING.md) for the pinned
+download and automatic settings, or use the Pi setup below.
 For measured model comparisons and their hardware/runtime scope, see the
 [current benchmark results](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).
 
@@ -138,14 +139,12 @@ For measured model comparisons and their hardware/runtime scope, see the
 [Pi](https://pi.dev/) can connect to Mei through its built-in OpenAI Chat
 Completions provider. This example uses Inkling 2 Mini, a text model with
 streaming tool calls and an 8,192-token total budget for prompts and replies.
-Install Mei 0.14.0 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
-See the [Inkling guide](https://github.com/tijs/mei/blob/v0.14.0/docs/INKLING.md).
+Install Mei 0.15.0 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
+See the [Inkling guide](docs/INKLING.md).
 
 ```sh
-hf download nativ-community/Inkling-2-Mini-nvfp4 \
-  --revision 26f71eef259a1dd7fc476778d67020351e0dfb8c \
-  --exclude 'mtp.safetensors' --local-dir ./inkling-2-mini
-mei --model-dir ./inkling-2-mini
+mei pull inkling-2-mini
+mei --model inkling-2-mini
 ```
 
 Add the `mei` provider under `providers` in `~/.pi/agent/models.json`, or
@@ -203,6 +202,7 @@ Use `mei --help` for the full list of options. Common settings are:
 
 | Option | Purpose |
 |---|---|
+| `--model NAME` | Model previously downloaded with `mei pull` |
 | `--model-dir DIR` | Local model bundle to load |
 | `--served-model-id ID` | Model name clients send in requests |
 | `--port PORT` | Listen on another port; default `8024` |

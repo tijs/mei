@@ -33,6 +33,22 @@ final class InklingSupportTests: XCTestCase {
         XCTAssertEqual(c.temperature, 1)
         XCTAssertEqual(c.topP, 1)
         XCTAssertEqual(c.topK, 0)
+        let cache = directory.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
+        let namedDirectory = cache.appendingPathComponent("inkling-2-mini")
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: cache) }
+        try FileManager.default.copyItem(at: directory, to: namedDirectory)
+        let named = try ServerConfig.parse(
+            arguments: ["--model", "inkling-2-mini"], recommendedWorkingSetBytes: workingSet(),
+            environment: [:], modelCache: cache)
+        XCTAssertEqual(named.modelDirectory, namedDirectory.path)
+        XCTAssertEqual(named.servedModelID, "inkling-2-mini")
+        XCTAssertTrue(named.isInklingMini)
+        XCTAssertEqual(named.contextCap, c.contextCap)
+        XCTAssertEqual(named.prefillStepSize, c.prefillStepSize)
+        XCTAssertEqual(named.maxTokensDefault, c.maxTokensDefault)
+        XCTAssertEqual(named.effectiveCacheMode, c.effectiveCacheMode)
+
         let limited = try ServerConfig.parse(
             arguments: args + ["--context-cap", "4096", "--temperature", "0", "--prefill-step-size", "64"],
             recommendedWorkingSetBytes: workingSet(), environment: [:])
