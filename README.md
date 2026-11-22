@@ -4,115 +4,48 @@
 
 # Mei
 
-[Website](https://mei.computer/) · [Get started](https://mei.computer/#get-started)
+**Run language models locally on your Apple Silicon Mac and connect them to your apps.**
 
-Mei ([*Mei long*](https://en.wikipedia.org/wiki/Mei_long), the "sleeping dragon"
-dinosaur) is a narrow, **native Swift/MLX OpenAI-compatible inference server for
-Apple Silicon**. It is built directly on the pinned
-[`tijs/vmlx-swift`](https://github.com/tijs/vmlx-swift) fork of
-`osaurus-ai/vmlx-swift` (the engine, not the full Osaurus app). Inspired by
-[DwarfStar](https://github.com/antirez/ds4), Mei targets a compact machine — an
-M1 Mac with 32 GB of unified memory — and a 30+ decode tok/s goal with correct
-tool-calling and no long-context collapse.
+Mei is a native Swift/MLX inference server with an OpenAI-compatible API. Use it
+as a local backend for a chat app, coding agent, or your own software. Model
+inference runs on your Mac; Mei serves one model per process.
 
-Mei's scope is deliberately small: **one model per server process**, the
-OpenAI `chat/completions` surface, **chunked prefill** on for hybrid
-architectures, and **in-process KV/prefix reuse** across turns. It is a focused
-runtime, not a general MLX gateway — you run one `mei` server per model.
+[Website](https://mei.computer/) · [Releases](https://github.com/tijs/mei/releases/latest) · [API compatibility](docs/OPENAI-COMPATIBILITY.md)
 
-**License:** MIT. Model weights are never bundled; see
-[`NOTICE.md`](NOTICE.md). Install the
-[latest stable release](https://github.com/tijs/mei/releases/latest) with
-Homebrew. Published release notes and qualification evidence identify the exact
-runtime, Metal artifact and tested checkpoints; source work branches can contain
-unreleased changes.
+## What you need
 
-The separately installed preview formula is for explicit prerelease evaluation:
-`brew install tijs/tap/mei-preview`. Check `mei-preview --version` before
-comparing it with stable; a preview formula can trail the current stable release.
-Earlier [0.10.0-rc.2 notes](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.10.0-rc.2.md) retain text-only bundle
-preparation, the Groot profile admission and their original qualification scope.
+- An **Apple Silicon Mac** running **macOS 15 or later**.
+- Enough unified memory for the model, its context, and your other apps. The
+  larger models below have been tested on a **32 GB Mac**; memory needs vary
+  with the model and request size.
+- Disk space for model weights, which are downloaded separately. Check the
+  model repository for download size before fetching a bundle.
+- [Homebrew](https://brew.sh/) for the installation steps below.
 
-**0.7.0** introduced token-level constrained structured output (`json_object`
-and a strict recursive `json_schema` subset), plus exact-decimal numeric
-constraints and fail-closed schema validation. **0.7.1** fixed escape-prefix
-dead ends and whitespace-only generation stalls. **0.8.0** adds bounded
-admission scheduling in front of the strict single-flight execution slot — a
-bounded local queue (`--max-queue-depth`), a queue-wait budget
-(`--queue-wait-ms`), `mei_priority` interactive/background classes,
-end-to-end cancellation, and a `/v1/mei/status` scheduler block; overload
-refusals are HTTP 429 `queue_full` / 503 `queue_timeout`, and execution stays
-one generation at a time. The scheduling slice is verified by model-free
-tests and a 10-check live HTTP integration run against the packaged 0.8.0
-binary with `mlx-community/Qwen3-4B-4bit` (queue-full HTTP status, priority
-field behavior, disconnect cancellation, and queue-order readback). This is
-scheduler/HTTP lifecycle evidence, not a model-quality claim or evidence for
-overlapping generation.
+## Get started
 
-**0.9.0** adds *opt-in* bounded-overlap concurrency: `--max-active-generations 2`
-lets at most two generations run at once — never more, no batching, no
-preemption — while a process started without the flag still runs exactly as
-0.8.0 did. The mode is **experimental and not enabled by default**; values
-outside 1...2 are rejected at parse time. On `mlx-community/Qwen3-4B-4bit` the
-Peix-like multi-agent stand-in passed 10/10 paired runs (interactive TTFT p95
-1.486 s vs 3.552 s serial; ≥12.25 GiB reclaimable memory; no pressure warnings
-or swap growth; burst makespan median 1.42× faster than serial).
-Qwen3.6-35B-A3B text-only failed the 4-GiB memory reserve in every tested
-configuration (3.32–3.43 GiB) and is **not accepted** for this workload on the
-tested device; Peix end-to-end orchestration remains unverified (its harness
-does not exist yet), and the result does not generalize beyond the tested
-model/device. See [release notes](https://github.com/tijs/mei/blob/main/docs/RELEASE-0.9.0.md).
+### 1. Install Mei and the model downloader
 
-The latest live structured-output evidence remains
-the 0.7.1 runtime source (`ea5a67a`): the exact buffered and streaming CoCore
-canaries passed on Qwen3.6 text-only, Qwen3.6 vision (text-only requests), and
-aligned Ornith, as well as the existing Qwen3-4B checkpoint; image-conditioned
-structured output on Qwen3.6 vision remains unverified. See
-[inference scheduling](docs/INFERENCE-SCHEDULING.md),
-[CoCore compatibility](https://github.com/tijs/mei/blob/main/docs/COCORE.md), and the
-[compatibility matrix](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md).
+```sh
+brew install tijs/tap/mei
+mei --version
 
-Earlier releases fixed prefix reuse, added cross-conversation prefix anchors,
-per-request instrumentation, and source-built Metal kernel packaging; see
-**[CHANGELOG.md](CHANGELOG.md)**.
-
-## Supported models
-
-Mei's current text-model comparison uses these named presets:
-
-| Model | `--model-profile` | Evaluated scope |
-|---|---|---|
-| Qwen3.6 35B-A3B text-only | `qwen3.6-35b-a3b-text` | Text, tools and household/Python workflows |
-| Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | Text, tools and household/Python workflows |
-| Groot 19B-A3B text-only | `groot-19b-a3b-text` | Text, tools and household/Python workflows |
-
-Use the [current benchmark summary](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md)
-for task success, time, memory and exact runtime/model pins. The contenders have
-tradeoffs; older coding scores do not establish a universal winner. Logics-SWE
-is a separately pinned **llama.cpp** control in that comparison, not a qualified
-Mei/MLX pack. The stand-in workflows are synthetic; they do not establish real
-Peixinho application acceptance. Qualification of an unreleased runtime remains
-separate from published task results.
-
-Named presets and download revisions live in
-[`ModelTuningRegistry`](https://github.com/tijs/mei/blob/main/Sources/MeiCore/ModelTuning.swift).
-The vision preset `qwen3.6-35b-a3b` remains available; current text-only benchmark
-results do not qualify image-conditioned behavior. Earlier profile figures and
-the 0.6.1 coding comparison are preserved in
-[historical model results](https://github.com/tijs/mei/blob/main/docs/HISTORICAL-MODEL-RESULTS.md).
-
-```bash
-mei pull qwen3.6-35b-a3b-text        # fetches the exact pinned revision, verifies it
-mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly
+# Skip these if uv and the Hugging Face CLI are already installed.
+brew install uv
+uv tool install --upgrade huggingface_hub
+hf --version
 ```
 
-`mei pull <profile> --dry-run` shows you what it would fetch and where, without
-downloading anything.
+Already have Mei? Run `brew update && brew upgrade mei` to update it. You can
+also download a prebuilt bundle from the [latest release](https://github.com/tijs/mei/releases/latest):
+verify its accompanying SHA-256 checksum, unpack it, and run `bin/mei`. Keep
+`mlx.metallib` beside the executable. No Xcode or source build is needed for
+these installations.
 
+### 2. Download and start a model
 
-The `groot-19b-a3b-text` profile is pinned to the
-[prepared text-only artifact](https://huggingface.co/Tostibrown/Groot-19B-A3B-261023-rco-role-4.5bpw-textonly).
-Its full native tool/cache/context admission passed on the pinned artifact:
+This example uses the Groot text model. `mei pull` uses the Hugging Face CLI to
+download the profile's pinned model revision into your local cache.
 
 ```sh
 mei pull groot-19b-a3b-text
@@ -120,216 +53,197 @@ mei --model-dir ~/.cache/mei/models/Groot-19B-A3B-261023-rco-role-4.5bpw-textonl
     --served-model-id groot
 ```
 
-The profile keeps the measured 256-token prefill step, disables anchors and
-sets an 8192-token default generation cap. Sampling remains independently
-configurable. See the [current synthetic benchmark comparison](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md)
-for exact sampler/cache profiles and trial limits. Presets and explicit benchmark overrides are distinct.
+Leave this terminal running. Wait for Mei to print
+`listening on http://127.0.0.1:8024` before sending a request. Model loading can
+take a while. Stop the server with **Ctrl-C**.
 
-The profile sets the chunked-prefill step, cross-conversation anchor
-boundaries, the generation cap and the architecture handling together — these
-have different optima per model. Mei automatically selects the profile when
-the bundle matches a known artifact's metadata; no kernel flags are needed.
-Any serving flag you pass explicitly still wins.
+To inspect the download location and pinned revision first, use
+`mei pull groot-19b-a3b-text --dry-run`. To choose a download directory, use
+`mei pull groot-19b-a3b-text --dest /path/to/model`, then pass that directory
+to `--model-dir`.
 
-Profiles record their measured settings; they do not guarantee identical
-answers across hardware or sampling trajectories. One setting
-can be walked back: a 1024-token prefill step needs about 26 GB of recommended
-working set, and on a smaller device Mei drops to 512 and says so at startup.
-It says so because the two are not simply a fast and a slow setting — chunked
-prefill is not answer-invariant on this architecture, so a clamped server can
-generate different text than the numbers here were measured on. Pass
-`--prefill-step-size` yourself to override the clamp in either direction.
+### 3. Send a message
 
-**Automatic model settings:** Mei recognises exact metadata fingerprints from
-the curated artifact revisions, rather than guessing from a directory name or
-architecture. Known models load their validated profile automatically, including
-eligible Groot kernels. An unknown or modified bundle keeps safe architecture
-defaults. Startup reports which profile was selected. `--model-profile NAME`
-still selects a profile explicitly; `--model-profile none` disables automatic
-selection. Metadata recognition does not verify model weight payloads. Rationale in
-[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md).
+In another terminal:
 
-**Use the artifact named by the profile.** Profiles pin an exact repository and
-revision; some use an aligned derivative. `mei pull --dry-run` shows the precise
-plan before any download. Details and earlier alignment measurements are in
-[docs/MODELS.md](docs/MODELS.md).
-
-For explicit text-only preparation of compatible Qwen3.5-family bundles, see
-[the payload-preserving exporter](https://github.com/tijs/mei/blob/main/tools/export_qwen_text.md). Architecture defaults
-are reported as `qwen35-moe`; this identifies the family, not a named model or
-validated tuning for every derivative. Existing `--model-profile` names are unchanged.
-
-## How it works (high level)
-
-- **One native process.** `mei` is a single Swift/MLX server binary
-  (arm64). No Python glue, no model orchestrator — the fork-pinned vmlx engine
-  loads one checkpoint and serves it.
-- **OpenAI-compatible API.** `POST /v1/chat/completions` (streaming and
-  non-streaming), `GET /v1/models` identity, `reasoning_content` for
-  thinking models. Default `http://127.0.0.1:8024/v1`.
-- **Chunked prefill.** Prefill runs in bounded windows (`--prefill-step-size`),
-  the long-context safeguard for hybrid (GatedDelta) architectures.
-- **KV/prefix reuse.** vmlx's `CacheCoordinator` reuses the in-process KV/prefix
-  across turns (`--cache-reuse`, default on); an on-disk KV tier
-  (`--kv-cache-dir`) extends reuse to hybrid and dense families.
-- **One model per process.** Each server serves exactly one checkpoint by its
-  exact served id. Run other models as separate `mei` instances on their own
-  ports.
-
-Deeper detail on the runtime, optimization profiles, memory behavior, and
-design: **[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md)**.
-
-## Install on Apple Silicon (stable)
-
-Apple Silicon (arm64), macOS 15+. Model weights are never bundled.
-
-**Homebrew (recommended):**
-
-```bash
-brew install tijs/tap/mei
-mei --version     # -> mei 0.14.0
+```sh
+curl -fsS http://127.0.0.1:8024/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "groot",
+    "messages": [{"role": "user", "content": "Explain unified memory in two sentences."}],
+    "max_tokens": 256
+  }'
 ```
 
-**Manual — release asset:** download `mei-0.14.0-macos-arm64.tar.gz` and its
-`.sha256` file from the GitHub release page, verify the checksum, and unpack
-(`.../bin/mei --version`). The bundle carries the required `mlx.metallib`
-beside the executable.
+The response is JSON; the reply is in `choices[0].message.content`. Add
+`"stream": true` to the request and `-N` to curl for server-sent events.
 
-See **[docs/INSTALL.md](docs/INSTALL.md)** for the full install paths and the
-source-built `scripts/install_mei.sh` installer. See the [0.14.0 release notes](docs/RELEASE-0.14.0.md) and the
-[opt-in SenseNova setup](docs/RELEASE-0.12.0.md).
+## Connect an app
 
-## One-time prerequisite: `hf`
+Choose your app's OpenAI-compatible Chat Completions provider and set:
 
-Mei downloads its own **weights**, which are never bundled. The quickstarts use
-the Hugging Face `hf` CLI (`hf download REPO --local-dir DIR`). Install it once
-into an isolated tool directory (bypassing macOS's PEP-668
-externally-managed-Python protection via Homebrew `uv`; the `hf` binary is made
-available on your PATH without touching your system Python):
+| Setting | Value for the quickstart |
+|---|---|
+| Base URL | `http://127.0.0.1:8024/v1` |
+| Model ID | `groot` |
+| API key | No key required by Mei; use `local` if your app requires a value |
 
-```bash
-brew install uv                       # only if you don't already have `uv`
-uv tool install --upgrade huggingface_hub   # installs/updates the `hf` CLI
-hf --version                          # confirm it is on your PATH
+The model ID must match the one Mei serves. `--served-model-id` gives it a
+convenient name; when omitted, Mei chooses an ID and prints it at startup.
+Check it at any time with:
+
+```sh
+curl -fsS http://127.0.0.1:8024/v1/models
 ```
 
-Already have `hf` on your PATH? **Skip all three lines.** The quickstarts below
-assume `hf` resolves in your shell.
+Mei supports chat completions, streaming, native tool calls, and structured
+JSON output. Support depends on the model and chat template; the
+[compatibility guide](docs/OPENAI-COMPATIBILITY.md) describes the supported
+request fields and schema subset. Apps must support the Chat Completions API.
 
-## Quickstart
+Mei listens on loopback by default and has no built-in API authentication.
+Keep the default for apps on the same Mac. An app connected to Mei may still
+make its own network requests or execute tools locally.
 
-```bash
-mei pull qwen3.6-35b-a3b-text          # ~19 GB, pinned revision, verified
-mei --model-dir ~/.cache/mei/models/Qwen3.6-35B-A3B-4bit-textonly \
-    --model-profile qwen3.6-35b-a3b-text
-```
+## Choose a model
 
-That is the whole setup. `mei pull` writes to `~/.cache/mei/models/<name>` and
-prints the directory; `--dry-run` shows what it would fetch without downloading.
-Swap the profile name for any row in the table above — the vision build if you
-need image input.
+These named profiles can be downloaded with `mei pull <profile>`:
 
-The server listens on **127.0.0.1:8024** with an OpenAI-compatible
-`/v1/chat/completions`. One model per process: **Ctrl-C** before starting
-another. Point any OpenAI client at `http://127.0.0.1:8024/v1`.
+| Model | Profile | Input |
+|---|---|---|
+| Groot 19B-A3B | `groot-19b-a3b-text` | Text |
+| Qwen3.6 35B-A3B, text-only | `qwen3.6-35b-a3b-text` | Text |
+| Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | Text |
+| Qwen3.6 35B-A3B, vision bundle | `qwen3.6-35b-a3b` | Text and images; see model-specific limits |
 
-```bash
-curl -s http://127.0.0.1:8024/v1/chat/completions \
-  -H 'content-type: application/json' \
-  -d '{"model":"Qwen3.6-35B-A3B-4bit-textonly",
-       "messages":[{"role":"user","content":"hello"}]}'
-```
+Each download prints its destination. Start Mei with that path as
+`--model-dir`. Mei recognizes known model metadata and selects the corresponding
+runtime settings automatically; startup logs show what was selected. Explicit
+flags override those settings.
 
-Weights are never bundled and never uploaded — `mei pull` fetches from
-HuggingFace into your own cache. Provenance, quantization and per-model status:
-**[docs/MODELS.md](docs/MODELS.md)**.
+You can also point Mei at an existing compatible MLX model directory containing
+its configuration, tokenizer, chat template, and safetensors weights. Support is
+specific to the architecture and weight format. Check [the model guide](docs/MODELS.md)
+for artifact requirements, preparation steps, and limitations before downloading
+an arbitrary checkpoint. Weights are not included with Mei and have their own
+licenses.
 
-## Run Inkling 2 Mini
+For **Inkling 2 Mini**, including the pinned download and Pi setup, see below.
+For measured model comparisons and their hardware/runtime scope, see the
+[current benchmark results](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).
 
-With Mei 0.14.0 or later and the Hugging Face `hf` CLI installed:
+## Use Mei with Pi
 
-```bash
+[Pi](https://pi.dev/) can connect to Mei through its built-in OpenAI Chat
+Completions provider. This example uses Inkling 2 Mini, a text model with
+streaming tool calls and an 8,192-token total budget for prompts and replies.
+Install Mei 0.14.0 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
+See the [Inkling guide](https://github.com/tijs/mei/blob/v0.14.0/docs/INKLING.md).
+
+```sh
 hf download nativ-community/Inkling-2-Mini-nvfp4 \
   --revision 26f71eef259a1dd7fc476778d67020351e0dfb8c \
   --exclude 'mtp.safetensors' --local-dir ./inkling-2-mini
 mei --model-dir ./inkling-2-mini
 ```
 
-Use `http://127.0.0.1:8024/v1` and model ID `inkling-2-mini` in your
-OpenAI-compatible client. Mei recognizes the checkpoint and selects its
-optimized text profile automatically. The profile supports streaming and tool
-calls, with one active generation and up to 8,192 tokens combined across the
-prompt and output. See the [Inkling guide](docs/INKLING.md) for a sample request,
-memory requirements, and current limits.
+Add the `mei` provider under `providers` in `~/.pi/agent/models.json`, or
+create the file with the following contents. The `apiKey` is a placeholder for
+Pi's credential check. The local Mei server requires no API key.
 
-## CoCore attached engine
-
-[CoCore](https://github.com/graze-social/cocore) can serve a model through
-Mei instead of spawning its own backend: point its engine map at this
-server, and it probes `GET /v1/models`, runs a forced `report_status`
-tool-calling canary plus a `response_format` structured-output canary, and
-advertises exactly what passed.
-
-```bash
-mei --model-dir ~/.cache/mei/models/Qwen3-4B-4bit \
-    --served-model-id mlx-community/Qwen3-4B-4bit
+```json
+{
+  "providers": {
+    "mei": {
+      "baseUrl": "http://127.0.0.1:8024/v1",
+      "api": "openai-completions",
+      "apiKey": "local",
+      "compat": { "maxTokensField": "max_tokens" },
+      "models": [
+        { "id": "inkling-2-mini", "contextWindow": 8192, "maxTokens": 2048 }
+      ]
+    }
+  }
+}
 ```
 
-```text
-# ~/.cocore/engine-map — key must equal the --served-model-id above;
-# value is the server root, no /v1.
-mlx-community/Qwen3-4B-4bit = http://127.0.0.1:8024
+Set Pi's compaction budgets for the 8K window by merging this override into
+the project's `.pi/settings.json`.
+
+```json
+{
+  "compaction": {
+    "modelOverrides": {
+      "mei/inkling-2-mini": { "reserveTokens": 2048, "keepRecentTokens": 4096 }
+    }
+  }
+}
 ```
 
-Mei **0.9.0** carries the 0.7.1 structured-output fixes; the latest live
-verification is the 0.7.1 runtime source (`ea5a67a`), which passed strict
-structured-output canaries on Qwen3.6 text-only, Qwen3.6 vision (text-only
-request), and aligned Ornith; 0.7.0's Qwen3-4B pass also remains valid.
-CoCore's attached engine reads structured-output support for all three new
-checkpoints, while forced-tool support passed only for Ornith. The installed
-CoCore LaunchAgent/provider advertisement is not updated or verified by this
-release. Qwen3-8B has not been retested after the fix, and image-conditioned
-structured output on Qwen3.6 vision remains unverified. 0.9.0 carries the
-bounded local admission queue in front of the execution slot
-(429 `queue_full` / 503 `queue_timeout` refusals) — a backstop behind CoCore's
-gate — and adds opt-in bounded-overlap concurrency
-(`--max-active-generations 2`, experimental); the default remains strict
-single-flight. See
-[docs/OPENAI-COMPATIBILITY.md](https://github.com/tijs/mei/blob/main/docs/OPENAI-COMPATIBILITY.md) §8,
-[docs/COCORE.md](https://github.com/tijs/mei/blob/main/docs/COCORE.md), and
-[docs/INFERENCE-SCHEDULING.md](docs/INFERENCE-SCHEDULING.md) for exact
-evidence.
+Check text generation from a second terminal, then start Pi in the project
+you want to work on.
+
+```sh
+pi --model mei/inkling-2-mini --no-tools --no-session -p "Reply with OK."
+pi --model mei/inkling-2-mini
+```
+
+For a different model, use the ID returned by
+`curl -fsS http://127.0.0.1:8024/v1/models`. Set Pi's `contextWindow` to
+fit the model and Mei's configured context cap, and `maxTokens` to the desired
+reply budget. Pi runs tools locally and sends their results back to Mei
+for the next turn. Tool use depends on the model and its chat template.
+See [Pi's model configuration reference](https://docs.pi.dev/latest/models-configuration)
+and [compaction settings](https://docs.pi.dev/latest/compaction#settings).
+
+## Running Mei
+
+Use `mei --help` for the full list of options. Common settings are:
+
+| Option | Purpose |
+|---|---|
+| `--model-dir DIR` | Local model bundle to load |
+| `--served-model-id ID` | Model name clients send in requests |
+| `--port PORT` | Listen on another port; default `8024` |
+| `--context-cap TOKENS` | Cap accepted prompt length; stay within the model's supported total context |
+| `--max-tokens TOKENS` | Set the server's maximum reply length |
+| `--kv-cache-dir DIR` | Configure an on-disk KV cache; support varies by model |
+
+Run separate Mei processes on different ports to serve multiple models. By
+default, each process executes one generation at a time with a bounded queue.
+The experimental `--max-active-generations 2` option allows two overlapping
+generations and needs additional memory. See [inference scheduling](docs/INFERENCE-SCHEDULING.md)
+before enabling it.
+
+To check a running server:
+
+```sh
+curl -fsS http://127.0.0.1:8024/healthz
+curl -fsS http://127.0.0.1:8024/v1/mei/status
+```
+
+If a client cannot connect, check that model loading has finished and that the
+host and port match. If it reports an unknown model, use the ID from
+`/v1/models`. If loading or generation runs out of memory, free memory, choose
+a smaller model, or lower the context and reply budgets.
 
 ## Build
 
-Mei is bundled SwiftPM ([`Package.swift`](https://github.com/tijs/mei/blob/main/Package.swift), fork-pinned
-`Package.resolved`); most users just install the release. To build from source
-(debug/release, test, package, `mlx.metallib`, installer), see
-**[docs/DEVELOPMENT.md](https://github.com/tijs/mei/blob/main/docs/DEVELOPMENT.md)** — the release build is fast on
-Apple Silicon. The packaged Homebrew binary and the `docs/INSTALL.md`
-installer both assume an already-built (or prebuilt) binary.
+Mei uses SwiftPM and a pinned [vmlx-swift](https://github.com/tijs/vmlx-swift)
+runtime. Source builds require Xcode and its Metal toolchain. See the
+[development guide](docs/DEVELOPMENT.md) for build, test, and Metal resource
+setup, and the [installer guide](docs/INSTALL.md) for installing a built binary.
 
-## The docs
+## Further reading
 
-- **[docs/MODELS.md](docs/MODELS.md)** — candidate status, provenance and
-  quantization; the historical four-model comparator lineup; per-model
-  quickstarts.
-- **[docs/ARCHITECTURE.md](https://github.com/tijs/mei/blob/main/docs/ARCHITECTURE.md)** — runtime flow, optimization
-  profiles, memory/KV/prefill behavior, design notes.
-- **[docs/BENCHMARKING.md](https://github.com/tijs/mei/blob/main/docs/BENCHMARKING.md)** — memory measurement,
-  acceptance probes, `local-model-bench` integration, methodology, evidence
-  conventions.
-- **[docs/DEVELOPMENT.md](https://github.com/tijs/mei/blob/main/docs/DEVELOPMENT.md)** — repo layout, build/test/
-  package, `mlx.metallib`, vMLX fork pin and workflow.
-- **[docs/INSTALL.md](docs/INSTALL.md)** — installer paths and safety contract
-  (authoritative).
-- **[docs/COCORE.md](https://github.com/tijs/mei/blob/main/docs/COCORE.md)** — CoCore attached-engine integration:
-  engine map, canaries, streaming, and model-specific structured-output support.
-- **[docs/VMLX-FORK.md](docs/VMLX-FORK.md)** — the vMLX fork commits and
-  upstream-PR workflow (authoritative).
-- **[docs/INFERENCE-SCHEDULING.md](docs/INFERENCE-SCHEDULING.md)** — admission
-  and scheduling: the bounded queue, `mei_priority` classes, overload refusals,
-  cancellation semantics, the opt-in bounded-overlap mode, and the
-  `/v1/mei/status` scheduler counters.
-Cache and memory controls, precedence, and requested/effective status fields are
-explained in [Runtime policies](docs/RUNTIME-POLICIES.md).
+- [Models](docs/MODELS.md) — compatible bundles, provenance, and preparation.
+- [API compatibility](docs/OPENAI-COMPATIBILITY.md) — endpoints, tool calls, and structured output.
+- [Runtime policies](docs/RUNTIME-POLICIES.md) — cache and memory controls.
+- [Architecture](docs/ARCHITECTURE.md) — inference, chunked prefill, and prefix reuse.
+- [Benchmarking](docs/BENCHMARKING.md) — measurement and qualification methods.
+- [Changelog](CHANGELOG.md) — release history.
+
+Mei is named after [*Mei long*](https://en.wikipedia.org/wiki/Mei_long), the
+“sleeping dragon” dinosaur. Licensed under [MIT](LICENSE); see [NOTICE.md](NOTICE.md)
+for third-party notices.
