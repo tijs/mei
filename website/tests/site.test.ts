@@ -20,8 +20,8 @@ test("current release matches the binary version and model examples use automati
   assert.ok(html.includes(inkling.revision));
   assert.ok(html.includes(inkling.guide));
   assert.ok(html.includes(inklingRun));
-  assert.ok(html.includes("/assets/model-inkling.png"));
-  assert.ok(readFileSync(new URL("../public/assets/model-inkling.png", import.meta.url)).length > 0);
+  assert.ok(html.includes("/assets/model-inkling-cobalt.png"));
+  assert.ok(readFileSync(new URL("../public/assets/model-inkling-cobalt.png", import.meta.url)).length > 0);
   assert.ok(html.includes("8,192 total"));
   assert.ok(html.includes("inkling-2-mini"));
   assert.ok(html.includes(inklingDownload));

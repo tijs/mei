@@ -159,7 +159,7 @@ function Page({ base }: { base: string }) {
               <div class="model-heading">
                 <img
                   class="model-logo"
-                  src={`${base}assets/model-inkling.png`}
+                  src={`${base}assets/model-inkling-cobalt.png`}
                   alt=""
                   width="64"
                   height="64"
