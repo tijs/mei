@@ -3,6 +3,8 @@ import Foundation
 /// First Inkling envelope: native text AR with visit-local companion state.
 /// Unsupported cache/speculation/media paths fail before loading or sampling.
 public enum InklingSupport {
+    static let maximumContext = 1_048_576
+
     public static func isModel(directory: String) -> Bool {
         struct Architecture: Decodable { let model_type: String }
         let decoder = JSONDecoder(); decoder.allowsJSON5 = true
@@ -19,11 +21,11 @@ public enum InklingSupport {
         guard config.enableInklingMini else {
             throw ConfigError.invalidValue("Inkling Mini support is disabled")
         }
-        guard (1...8192).contains(config.contextCap), (1...128).contains(config.prefillStepSize),
+        guard (1...maximumContext).contains(config.contextCap), (1...128).contains(config.prefillStepSize),
               config.maxActiveGenerations == 1, !config.enableCompiledDecode,
               config.maxKVWindowSize == 0, config.kvBits == nil, config.modelTuning == nil,
               !config.enableFlint, !config.enableFlintJANGH, !config.enableSenseNovaLoop else {
-            throw ConfigError.invalidValue("Inkling Mini requires <=8K context, prefill <=128, one generation, native unquantized KV, no compile/window override or unrelated model tuning")
+            throw ConfigError.invalidValue("Inkling Mini requires context within 1...\(maximumContext), prefill <=128, one generation, native unquantized KV, no compile/window override or unrelated model tuning")
         }
         guard config.cacheMode == .off, config.kvCacheDir.isEmpty,
               !config.kvCacheDirExplicit, config.cacheReuseRequested != true,

@@ -67,7 +67,7 @@ final class InklingSupportTests: XCTestCase {
             var c = base
             switch index {
             case 0: c.enableInklingMini = false
-            case 1: c.contextCap = 8193
+            case 1: c.contextCap = InklingSupport.maximumContext + 1
             case 2: c.kvBits = 8
             case 3: c.enableCompiledDecode = true
             case 4: c.maxActiveGenerations = 2
@@ -104,8 +104,13 @@ final class InklingSupportTests: XCTestCase {
         XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 8191, config: c))
         XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 8192, config: c))
         XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 8193, config: c))
-        c.contextCap = 8193
-        XCTAssertThrowsError(try InklingSupport.validateLoad(c))
+        let larger = try ServerConfig.parse(
+            arguments: ["--model-dir", c.modelDirectory, "--context-cap", "200000"],
+            recommendedWorkingSetBytes: nil, environment: [:])
+        XCTAssertEqual(larger.contextCap, 200_000)
+        XCTAssertTrue(try InklingSupport.validateLoad(larger))
+        XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 199_999, config: larger))
+        XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 200_000, config: larger))
     }
 
 }
