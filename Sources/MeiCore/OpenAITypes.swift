@@ -790,6 +790,8 @@ public struct MeiCacheStatus: Sendable, Codable {
     public var maxRetainedBytes: Int? = nil
     /// Component of retainedBytes under maxRetainedBytes, not a separate pool.
     public var promptSnapshotBytes: Int? = nil
+    public var alignedPrefixHits: Int? = nil
+    public var alignedPrefixMisses: Int? = nil
     public var ssmHits: Int
     public var ssmMisses: Int
     public var ssmResidentBytes: Int? = nil

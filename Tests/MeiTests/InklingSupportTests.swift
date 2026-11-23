@@ -102,6 +102,16 @@ final class InklingSupportTests: XCTestCase {
                                                recommendedWorkingSetBytes: nil)
         let explicit = try ServerConfig.parse(arguments: args + ["--prefill-step-size", "64"],
                                               recommendedWorkingSetBytes: nil)
+        XCTAssertEqual(parsed.effectiveCacheMode, .off)
+        if InklingSupport.supportsQualifiedQ4(profile: profile, cpuBrand: InklingSupport.cpuBrand,
+                                              memory: ProcessInfo.processInfo.physicalMemory, cap: parsed.contextCap) {
+            let memory = try ServerConfig.parse(arguments: args + ["--cache-mode", "memory"],
+                                                recommendedWorkingSetBytes: nil)
+            XCTAssertEqual(memory.effectiveCacheMode, .memory)
+            XCTAssertTrue(try InklingSupport.validateLoad(memory))
+        }
+        XCTAssertThrowsError(try ServerConfig.parse(arguments: args + ["--cache-mode", "disk"],
+                                                     recommendedWorkingSetBytes: nil))
         XCTAssertNil(explicit.greedyCompletionPrefillStepSize)
         XCTAssertEqual(explicit.completionPrefillStep(temperature: 0), 64)
         XCTAssertNil(override.greedyCompletionPrefillStepSize)

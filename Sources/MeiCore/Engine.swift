@@ -152,18 +152,21 @@ public actor Engine {
                 try? FileManager.default.createDirectory(
                     at: diskCacheDir!, withIntermediateDirectories: true)
             }
-            await container.enableCachingAsync(config: CacheCoordinatorConfig(
-                usePagedCache: true,
+            var cacheConfig = CacheCoordinatorConfig(
+                usePagedCache: !config.isInklingMini,
                 enableDiskCache: diskEnabled,
                 pagedBlockSize: 16,
                 maxCacheBlocks: 8192,
                 maxCacheBytes: config.prefixCacheLimitBytes,
                 diskCacheDir: diskCacheDir,
                 enableSSMReDerive: config.enableSSMReDerive,
-                modelKey: config.servedModelID))
+                modelKey: config.servedModelID)
+            cacheConfig.useAlignedVisitSnapshots = config.isInklingMini
+            await container.enableCachingAsync(config: cacheConfig)
             let topology = await container.cacheTopologySnapshot()
+            let memoryTier = config.isInklingMini ? "aligned visit snapshot" : "paged in-memory"
             let tier = diskEnabled ? "disk at \(config.kvCacheDir)" : "no disk"
-            print("mei: prefix cache enabled (paged in-memory + \(tier), retained budget \(config.prefixCacheLimitBytes) bytes); topology \(topology.topologyTags.joined(separator: " "))")
+            print("mei: prefix cache enabled (\(memoryTier) + \(tier), retained budget \(config.prefixCacheLimitBytes) bytes); topology \(topology.topologyTags.joined(separator: " "))")
 
             // Recurrent state is distinct from the attention KV cache. The
             // pinned runtime can quantize supported attention layers in a
@@ -268,6 +271,7 @@ public actor Engine {
         let pagedEnabled = coordinator.pagedCache != nil && !coordinator.isPagedIncompatible
         let paged = pagedEnabled ? coordinator.pagedCache?.snapshotStats() : nil
         let ssm = coordinator.ssmStateCache.snapshotStats()
+        let aligned = coordinator.alignedVisitStats
         return MeiCacheStatus(
             pagedEnabled: pagedEnabled,
             pagedHits: paged?.cacheHits ?? 0,
@@ -279,6 +283,8 @@ public actor Engine {
             retainedBytes: coordinator.retainedCacheBytes,
             maxRetainedBytes: ssm.maxResidentBytes,
             promptSnapshotBytes: coordinator.promptSnapshotBytes,
+            alignedPrefixHits: aligned?.hits,
+            alignedPrefixMisses: aligned?.misses,
             ssmHits: ssm.hits,
             ssmMisses: ssm.misses,
             ssmResidentBytes: ssm.residentBytes,

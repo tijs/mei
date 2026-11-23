@@ -28,13 +28,13 @@ public enum InklingSupport {
         return bytes.withUnsafeBufferPointer { String(cString: $0.baseAddress!) }
     }
 
-    static func usesM1MaxQ4Kernels(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
-        profile == .vocabularyQ4 && cpuBrand == "Apple M1 Max"
-            && memory >= 32 << 30 && cap <= ServerConfig.defaultContextCap
+    static func greedyCompletionStep(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Int? {
+        supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand, memory: memory, cap: cap) ? 256 : nil
     }
 
-    static func greedyCompletionStep(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Int? {
-        usesM1MaxQ4Kernels(profile: profile, cpuBrand: cpuBrand, memory: memory, cap: cap) ? 256 : nil
+    static func supportsQualifiedQ4(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
+        profile == .vocabularyQ4 && cpuBrand == "Apple M1 Max" && memory >= 32 << 30
+            && cap <= ServerConfig.defaultContextCap
     }
 
     static func profile(directory: String) -> Profile? {
@@ -79,7 +79,7 @@ public enum InklingSupport {
     }
 
     static func validateLoad(_ config: ServerConfig) throws -> Bool {
-        guard isModel(directory: config.modelDirectory) else {
+        guard let profile = profile(directory: config.modelDirectory) else {
             if config.enableInklingMini { throw ConfigError.invalidValue("--enable-inkling-mini requires an inkling2_loop bundle") }
             return false
         }
@@ -92,10 +92,13 @@ public enum InklingSupport {
               !config.enableFlint, !config.enableFlintJANGH, !config.enableSenseNovaLoop else {
             throw ConfigError.invalidValue("Inkling Mini requires context within 1...\(maximumContext), prefill <=128, one generation, native unquantized KV, no compile/window override or unrelated model tuning")
         }
-        guard config.cacheMode == .off, config.kvCacheDir.isEmpty,
-              !config.kvCacheDirExplicit, config.cacheReuseRequested != true,
+        let alignedMemory = config.cacheMode == .memory
+            && supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand,
+                                   memory: ProcessInfo.processInfo.physicalMemory, cap: config.contextCap)
+        guard config.cacheMode == .off || alignedMemory, config.kvCacheDir.isEmpty,
+              !config.kvCacheDirExplicit, alignedMemory || config.cacheReuseRequested != true,
               config.ssmAnchorBoundaryCount == 0 else {
-            throw ConfigError.invalidValue("Inkling visit/convolution cache persistence is unqualified; use --cache-mode off with no cache directory/anchors")
+            throw ConfigError.invalidValue("Inkling supports cache mode off, or memory for qualified M1 Max vocabulary-Q4 models, with no cache directory or anchors")
         }
         return true
     }
@@ -104,7 +107,7 @@ public enum InklingSupport {
     /// single-model process, with explicit operator environment taking precedence.
     public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = ServerConfig.defaultContextCap) {
         if let modelDirectory, let profile = profile(directory: modelDirectory) {
-            if usesM1MaxQ4Kernels(profile: profile, cpuBrand: cpuBrand,
+            if supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand,
                                   memory: ProcessInfo.processInfo.physicalMemory, cap: contextCap) {
                 setenv("VMLX_INKLING_FUSED_MASK", "1", 0)
             }
