@@ -113,6 +113,7 @@ These named profiles can be downloaded with `mei pull <profile>`:
 | Model | Profile | Input |
 |---|---|---|
 | Inkling 2 Mini | `inkling-2-mini` | Text |
+| Inkling 2 Mini, Mei vocabulary Q4 | `inkling-2-mini-mei-q4` | Text |
 | Groot 19B-A3B | `groot-19b-a3b-text` | Text |
 | Qwen3.6 35B-A3B, text-only | `qwen3.6-35b-a3b-text` | Text |
 | Ornith 1.5 35B-A3B | `ornith-1.5-35b-a3b` | Text |
@@ -129,8 +130,11 @@ for artifact requirements, preparation steps, and limitations before downloading
 an arbitrary checkpoint. Weights are not included with Mei and have their own
 licenses.
 
-For **Inkling 2 Mini**, see the [model guide](docs/INKLING.md) for the pinned
-download and automatic settings, or use the Pi setup below.
+For **Inkling 2 Mini**, the Mei vocabulary Q4 bundle reduces serving memory
+and selects a 26,624-token context on a 32 GB M1 Max. This opt-in scored
+20/25 on the task suite versus 22/25 for the original release. See the
+[model guide](docs/INKLING.md) for both downloads and the context override.
+The Pi example below uses the original bundle.
 For measured model comparisons and their hardware/runtime scope, see the
 [current benchmark results](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).
 

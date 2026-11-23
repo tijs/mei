@@ -2,6 +2,23 @@
 
 All notable changes to Mei are documented here.
 
+## [0.16.0] - 2026-11-23
+
+- Add an Inkling 2 Mini bundle with 4-bit affine vocabulary tables and the
+  original mixed-precision routed experts. Its four shards carry 1.24 GiB
+  less tensor data than the original bundle.
+- Bound the local-attention caches to the trained 1,024-token window while
+  retaining the complete global attention history. Operators can use
+  `--context-cap` to select a total prompt and output budget.
+- The opt-in Q4 profile peaked at 20.19–20.21 GiB on a 32 GiB M1 Max.
+  The original weights peaked at 21.48–21.95 GiB. Median short decode rose
+  from 23.85 to 24.52 tokens/s. Q4 scored 20/25 on the task suite compared
+  with the original release’s 22/25. Both passed the two held-out coding tasks.
+- The Q4 total context defaults to 26,624 tokens on machines with at least
+  32 GiB. The original named profile retains its 8,192-token default.
+
+See the [Inkling model guide](docs/INKLING.md).
+
 ## [0.15.0] - 2026-11-22
 
 - Pull the pinned Inkling 2 Mini text bundle with `mei pull inkling-2-mini`.

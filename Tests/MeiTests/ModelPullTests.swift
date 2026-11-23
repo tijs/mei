@@ -56,6 +56,19 @@ final class ModelPullTests: XCTestCase {
         ])
     }
 
+    func testCustomInklingPullUsesTheMeasuredRevision() throws {
+        let name = "inkling-2-mini-mei-q4"
+        let artifact = try XCTUnwrap(ModelPull.Artifact.named(name))
+        let destination = artifact.destination(in: URL(fileURLWithPath: "/tmp"))
+        let plan = ModelPull.Plan(artifact: artifact, destination: destination)
+        XCTAssertEqual(destination, "/tmp/" + name)
+        XCTAssertTrue(ModelPull.names.contains(name))
+        XCTAssertEqual(plan.arguments, [
+            "download", "Tostibrown/Inkling-2-Mini-Mei-Vocab-Q4",
+            "--revision", "ab7a0a95072f7822cd47ee0eba93f7d7c1f770a7", "--local-dir", destination,
+        ])
+    }
+
     func testUnknownProfileFailsWithoutTouchingTheNetwork() {
         XCTAssertEqual(ModelPull.run(profileName: "not-a-model",
                                      destination: "/tmp/should-not-appear"), 2)

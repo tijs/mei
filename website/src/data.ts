@@ -1,4 +1,4 @@
-const releaseVersion = "0.15.0";
+const releaseVersion = "0.16.0";
 export const release = {
   version: releaseVersion,
   url: `https://github.com/tijs/mei/releases/tag/v${releaseVersion}`,
@@ -56,7 +56,7 @@ export const models = [
     name: "Inkling 2 Mini",
     logo: "model-inkling-cobalt.png",
     modelCard: "https://thinkingmachines.ai/model-card/inkling-2-mini/",
-    guide: "https://github.com/tijs/mei/blob/v0.15.0/docs/INKLING.md",
+    guide: `https://github.com/tijs/mei/blob/v${releaseVersion}/docs/INKLING.md`,
     fullName: "26.4B parameters · text-only in Mei · NVFP4/MXFP8",
     profile: "inkling-2-mini",
     automaticSettings:

@@ -55,7 +55,7 @@ struct MeiMain {
         }
 
         if config.isInklingMini {
-            InklingSupport.applyRuntimeEnvironment()
+            InklingSupport.applyRuntimeEnvironment(modelDirectory: config.modelDirectory, contextCap: config.contextCap)
             print("mei: Inkling 2 Mini text profile selected")
         }
         config.optimizationProfile.applyRuntimeEnvironment(

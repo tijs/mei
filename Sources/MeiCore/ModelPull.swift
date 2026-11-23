@@ -23,6 +23,11 @@ public enum ModelPull {
         var excludedFile: String? = nil
 
         static func named(_ name: String) -> Self? {
+            if name == "inkling-2-mini-mei-q4" {
+                return Self(name: name, repo: "Tostibrown/Inkling-2-Mini-Mei-Vocab-Q4",
+                            revision: "ab7a0a95072f7822cd47ee0eba93f7d7c1f770a7",
+                            directoryName: name, requiresAlignedWeights: false)
+            }
             if name == "inkling-2-mini" {
                 return Self(name: name, repo: "nativ-community/Inkling-2-Mini-nvfp4",
                             revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
@@ -47,7 +52,7 @@ public enum ModelPull {
         URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".cache/mei/models", isDirectory: true)
     }
 
-    public static var names: [String] { ModelTuningRegistry.names + ["inkling-2-mini"] }
+    public static var names: [String] { ModelTuningRegistry.names + ["inkling-2-mini", "inkling-2-mini-mei-q4"] }
 
     public struct Plan: Sendable {
         let artifact: Artifact
@@ -137,12 +142,16 @@ public enum ModelPull {
             print("mei: verified — tensors are naturally aligned")
             return 0
         case .unaligned(let bad, let total):
+            if !plan.artifact.requiresAlignedWeights {
+                print("mei: downloaded — alignment is optional for this profile (\(bad)/\(total) unaligned shards)")
+                return 0
+            }
             FileHandle.standardError.write(Data((
                 "mei: WARNING \(bad) of \(total) shards are not naturally "
                 + "aligned. This profile's settings were measured on an aligned "
                 + "artifact; serving this one costs memory and long-context "
                 + "prefill speed.\n").utf8))
-            return plan.artifact.requiresAlignedWeights ? 4 : 0
+            return 4
         case .unknown(let why):
             FileHandle.standardError.write(Data(
                 "mei: could not verify alignment (\(why))\n".utf8))

@@ -23,6 +23,8 @@ test("current release matches the binary version and model examples use automati
   assert.ok(readFileSync(new URL("../public/assets/model-inkling-cobalt.png", import.meta.url)).length > 0);
   assert.ok(html.includes("8,192-token total context"));
   assert.ok(html.includes("inkling-2-mini"));
+  assert.ok(html.includes("mei pull inkling-2-mini-mei-q4"));
+  assert.ok(html.includes("20/25"));
   for (const old of ["0.11.0", "0.11.2", "Previous Mei", "results/quality.html"])
     assert.ok(!html.includes(old), `old release detail: ${old}`);
   const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);

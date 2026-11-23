@@ -5,12 +5,60 @@ import Foundation
 public enum InklingSupport {
     static let maximumContext = 1_048_576
 
-    public static func isModel(directory: String) -> Bool {
+    enum Profile {
+        case original, vocabularyQ4
+
+        func usesBoundedLocalCache(contextCap: Int) -> Bool {
+            self != .original || contextCap > 8192
+        }
+
+        func defaultContext(physicalMemory: UInt64) -> Int {
+            if self == .vocabularyQ4, physicalMemory >= 32 * 1024 * 1024 * 1024 {
+                return 26_624
+            }
+            return 8192
+        }
+    }
+
+    static func profile(directory: String) -> Profile? {
+        struct Quant: Decodable {
+            let bits: Int
+            let group_size: Int
+            let mode: String
+            var matchesAffineQ4: Bool { bits == 4 && group_size == 64 && mode == "affine" }
+        }
+        struct Vocabulary: Decodable {
+            let embedding: Quant?
+            let head: Quant?
+            enum CodingKeys: String, CodingKey {
+                case embedding = "language_model.model.embed_tokens"
+                case head = "language_model.lm_head"
+            }
+        }
         struct Architecture: Decodable { let model_type: String }
-        let decoder = JSONDecoder(); decoder.allowsJSON5 = true
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: directory).appendingPathComponent("config.json")),
-              let object = try? decoder.decode(Architecture.self, from: data) else { return false }
-        return object.model_type == "inkling2_loop"
+        struct Precision: Decodable {
+            let quantization: Vocabulary?
+            let mei_affine_vocabulary_range: [String: Int]?
+        }
+        let url = URL(fileURLWithPath: directory).appendingPathComponent("config.json")
+        let decoder = JSONDecoder()
+        decoder.allowsJSON5 = true
+        guard let data = try? Data(contentsOf: url),
+              let config = try? decoder.decode(Architecture.self, from: data),
+              config.model_type == "inkling2_loop" else { return nil }
+        // A malformed quant table still belongs to the Inkling loader and
+        // its strict validation. Only a recognized pair selects this default.
+        let precision = try? decoder.decode(Precision.self, from: data)
+        if precision?.mei_affine_vocabulary_range == nil,
+           precision?.quantization?.embedding?.matchesAffineQ4 == true,
+           precision?.quantization?.head?.matchesAffineQ4 == true {
+            return .vocabularyQ4
+        }
+        return .original
+    }
+
+    public static func isModel(directory: String) -> Bool {
+        profile(directory: directory) != nil
     }
 
     static func validateLoad(_ config: ServerConfig) throws -> Bool {
@@ -37,7 +85,11 @@ public enum InklingSupport {
 
     /// Apply before the CLI initializes Metal. These are defaults for the
     /// single-model process, with explicit operator environment taking precedence.
-    public static func applyRuntimeEnvironment() {
+    public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = 8192) {
+        if let modelDirectory, let profile = profile(directory: modelDirectory) {
+            // The released original profile was scored using full K/V storage at 8K.
+            setenv("VMLX_INKLING_BOUNDED_LOCAL_KV", profile.usesBoundedLocalCache(contextCap: contextCap) ? "1" : "0", 0)
+        }
         let defaults = [
             "VMLX_INKLING_FUSED_SHORT_CONV": "1",
             "VMLX_INKLING_SORT_EXPERT_PREFILL": "1",

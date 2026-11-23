@@ -5,7 +5,7 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.15.0"
+    public static let version = "0.16.0"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
@@ -480,10 +480,13 @@ public extension ServerConfig {
         config.optimizationProfile = ModelOptimizationProfile.resolve(
             requested: requestedOptimizationProfile,
             modelDirectory: modelDirectory)
-        let isInkling = InklingSupport.isModel(directory: modelDirectory)
+        let inklingProfile = InklingSupport.profile(directory: modelDirectory)
+        let isInkling = inklingProfile != nil
         config.enableInklingMini = inklingOptIn ?? isInkling
-        if isInkling {
-            if !contextCapExplicit { config.contextCap = 8192 }
+        if let inklingProfile {
+            if !contextCapExplicit {
+                config.contextCap = inklingProfile.defaultContext(physicalMemory: ProcessInfo.processInfo.physicalMemory)
+            }
             if !prefillStepSizeExplicit { config.prefillStepSize = 128 }
             if !config.maxTokensExplicit { config.maxTokensDefault = 4096 }
             if config.cacheMode == .auto { config.cacheMode = .off }

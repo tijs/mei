@@ -8,6 +8,8 @@ final class InklingSupportTests: XCTestCase {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: root) }
         try Data(#"{"model_type":"inkling2_loop"}"#.utf8).write(to: root.appendingPathComponent("config.json"))
+        try Data(#"{"temperature":1.0}"#.utf8)
+            .write(to: root.appendingPathComponent("generation_config.json"))
         var config = ServerConfig(modelDirectory: root.path, servedModelID: "test")
         config.enableInklingMini = true; config.contextCap = 4096; config.cacheMode = .off
         return config
@@ -15,8 +17,6 @@ final class InklingSupportTests: XCTestCase {
     func testCLISelectsInklingDefaultsWithoutInitializingMetal() throws {
         let fixture = try config()
         let directory = URL(fileURLWithPath: fixture.modelDirectory)
-        try Data(#"{"temperature":1.0}"#.utf8)
-            .write(to: directory.appendingPathComponent("generation_config.json"))
         func workingSet() -> Int? {
             XCTFail("Inkling profile resolution must run before Metal initialization")
             return nil
@@ -58,6 +58,38 @@ final class InklingSupportTests: XCTestCase {
         XCTAssertThrowsError(try ServerConfig.parse(
             arguments: args + ["--cache-mode", "disk"],
             recommendedWorkingSetBytes: workingSet(), environment: [:]))
+    }
+
+    func testVocabularyQuantSelectsMeasuredContextAndPermitsExplicitOverride() throws {
+        let fixture = try config()
+        let url = URL(fileURLWithPath: fixture.modelDirectory).appendingPathComponent("config.json")
+        let q: [String: Any] = ["mode": "affine", "bits": 4, "group_size": 64]
+        let header: [String: Any] = [
+            "model_type": "inkling2_loop",
+            "quantization": ["language_model.model.embed_tokens": q, "language_model.lm_head": q],
+        ]
+        try JSONSerialization.data(withJSONObject: header).write(to: url)
+        let profile = try XCTUnwrap(InklingSupport.profile(directory: fixture.modelDirectory))
+        XCTAssertEqual(profile, .vocabularyQ4)
+        XCTAssertEqual(profile.defaultContext(physicalMemory: 32 << 30), 26_624)
+        XCTAssertEqual(profile.defaultContext(physicalMemory: 24 << 30), 8192)
+        XCTAssertTrue(profile.usesBoundedLocalCache(contextCap: 8192))
+        XCTAssertFalse(InklingSupport.Profile.original.usesBoundedLocalCache(contextCap: 8192))
+        XCTAssertTrue(InklingSupport.Profile.original.usesBoundedLocalCache(contextCap: 32_768))
+        let args = ["--model-dir", fixture.modelDirectory]
+        let parsed = try ServerConfig.parse(arguments: args, recommendedWorkingSetBytes: nil)
+        XCTAssertEqual(parsed.contextCap, profile.defaultContext(physicalMemory: ProcessInfo.processInfo.physicalMemory))
+        let override = try ServerConfig.parse(arguments: args + ["--context-cap", "200000"],
+                                               recommendedWorkingSetBytes: nil)
+        XCTAssertEqual(override.contextCap, 200_000)
+        XCTAssertTrue(try InklingSupport.validateLoad(override))
+
+        var tiered = header
+        tiered["mei_affine_vocabulary_range"] = ["lower": 24_576, "upper": 199_936]
+        try JSONSerialization.data(withJSONObject: tiered).write(to: url)
+        XCTAssertEqual(InklingSupport.profile(directory: fixture.modelDirectory), .original)
+        try Data(#"{"model_type":"inkling2_loop","quantization":false}"#.utf8).write(to: url)
+        XCTAssertEqual(InklingSupport.profile(directory: fixture.modelDirectory), .original)
     }
 
     func testAdmissionAndUnsupportedModes() throws {

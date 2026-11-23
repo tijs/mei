@@ -207,12 +207,13 @@ function Page({ base }: { base: string }) {
           <section class="section wrap" id="results" aria-labelledby="release-title">
             <div class="section-heading">
               <div><h2 id="release-title">Latest release: Mei {release.version}</h2></div>
-              <p>Start a downloaded model by name. Mei applies its tested
-                settings automatically.</p>
+              <p>Inkling 2 Mini now has an optional lower-memory profile for Apple Silicon.</p>
             </div>
             <p>
-              Inkling 2 Mini now downloads with <code>mei pull inkling-2-mini</code>,
-              which fetches the tested text bundle and skips unused weights.
+              Run <code>mei pull inkling-2-mini-mei-q4</code> to opt in.
+              Continue using <code>inkling-2-mini</code> for the original weights. The profile uses a 26,624-token context on a
+              32 GB M1 Max. Use <code>--context-cap</code> to override it. Q4 scored
+              20/25 on the task suite, compared with 22/25 for the original release.
             </p>
             <p><a href={release.url}>Read the full release notes ↗</a></p>
           </section>
