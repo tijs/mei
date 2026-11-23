@@ -207,7 +207,7 @@ function Page({ base }: { base: string }) {
           <section class="section wrap" id="results" aria-labelledby="release-title">
             <div class="section-heading">
               <div><h2 id="release-title">Latest release: Mei {release.version}</h2></div>
-              <p>Inkling 2 Mini now has an optional lower-memory profile for Apple Silicon.</p>
+              <p>The curated models now share a 26,624-token default on a 32 GB Mac. <a href="#context">Choose a context limit ↗</a></p>
             </div>
             <p>
               Run <code>mei pull inkling-2-mini-mei-q4</code> to opt in.
@@ -334,6 +334,23 @@ function Page({ base }: { base: string }) {
                 </div>
               </article>
             </div>
+            <section id="context" aria-labelledby="context-title">
+              <h3 id="context-title">Choose a context limit</h3>
+              <p>Restart Mei with <code>--context-cap</code> to override the default. Set your client’s context window to the same value.</p>
+              <Code label="Override the context limit">{"mei --model groot-19b-a3b-text --context-cap 65536"}</Code>
+              <div class="table-scroll">
+                <table>
+                  <caption>Example context caps for a single model</caption>
+                  <thead><tr><th scope="col">Mac unified memory</th><th scope="col">Tokens</th><th scope="col">When to use it</th></tr></thead>
+                  <tbody>
+                    <tr><th scope="row">24 GB</th><td>8,192</td><td>Try if the weights fit. Inkling uses this below 32 GB.</td></tr>
+                    <tr><th scope="row">32 GB</th><td>26,624</td><td>Curated default. Near-full Inkling Q4 prefill took 173 seconds on an M1 Max.</td></tr>
+                    <tr><th scope="row">64 GB or more</th><td>65,536</td><td>Try a long prompt and check Memory Pressure in Activity Monitor.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>Inkling shares the limit between prompt and reply. Groot, Qwen and Ornith apply it to the prompt and use a separate reply limit. Model weights and cache size affect how much fits. SenseNova Loop supports up to 4,096 tokens.</p>
+            </section>
             <div class="start-links">
               <a class="button" href={release.url}>
                 Get Mei {release.version} <Icon name="arrow" />

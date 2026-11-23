@@ -24,7 +24,7 @@ final class InklingSupportTests: XCTestCase {
         let args = ["--model-dir", fixture.modelDirectory]
         let c = try ServerConfig.parse(arguments: args, recommendedWorkingSetBytes: workingSet(), environment: [:])
         XCTAssertTrue(c.isInklingMini)
-        XCTAssertEqual(c.contextCap, 8192)
+        XCTAssertEqual(c.contextCap, ProcessInfo.processInfo.physicalMemory >= 32 << 30 ? 26_624 : 8192)
         XCTAssertEqual(c.prefillStepSize, 128)
         XCTAssertEqual(c.maxTokensDefault, 4096)
         XCTAssertEqual(c.cacheLimitBytes, 536_870_912)
@@ -73,6 +73,8 @@ final class InklingSupportTests: XCTestCase {
         XCTAssertEqual(profile, .vocabularyQ4)
         XCTAssertEqual(profile.defaultContext(physicalMemory: 32 << 30), 26_624)
         XCTAssertEqual(profile.defaultContext(physicalMemory: 24 << 30), 8192)
+        XCTAssertEqual(InklingSupport.Profile.original.defaultContext(physicalMemory: 32 << 30), 26_624)
+        XCTAssertEqual(InklingSupport.Profile.original.defaultContext(physicalMemory: 24 << 30), 8192)
         XCTAssertTrue(profile.usesBoundedLocalCache(contextCap: 8192))
         XCTAssertFalse(InklingSupport.Profile.original.usesBoundedLocalCache(contextCap: 8192))
         XCTAssertTrue(InklingSupport.Profile.original.usesBoundedLocalCache(contextCap: 32_768))

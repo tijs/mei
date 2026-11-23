@@ -13,8 +13,8 @@ public enum InklingSupport {
         }
 
         func defaultContext(physicalMemory: UInt64) -> Int {
-            if self == .vocabularyQ4, physicalMemory >= 32 * 1024 * 1024 * 1024 {
-                return 26_624
+            if physicalMemory >= 32 * 1024 * 1024 * 1024 {
+                return ServerConfig.defaultContextCap
             }
             return 8192
         }
@@ -85,7 +85,7 @@ public enum InklingSupport {
 
     /// Apply before the CLI initializes Metal. These are defaults for the
     /// single-model process, with explicit operator environment taking precedence.
-    public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = 8192) {
+    public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = ServerConfig.defaultContextCap) {
         if let modelDirectory, let profile = profile(directory: modelDirectory) {
             // The released original profile was scored using full K/V storage at 8K.
             setenv("VMLX_INKLING_BOUNDED_LOCAL_KV", profile.usesBoundedLocalCache(contextCap: contextCap) ? "1" : "0", 0)

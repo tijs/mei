@@ -21,7 +21,9 @@ test("current release matches the binary version and model examples use automati
   assert.ok(!html.includes("--model-profile"));
   assert.ok(html.includes("/assets/model-inkling-cobalt.png"));
   assert.ok(readFileSync(new URL("../public/assets/model-inkling-cobalt.png", import.meta.url)).length > 0);
-  assert.ok(html.includes("8,192-token total context"));
+  assert.ok(html.includes("26,624-token total context"));
+  assert.ok(html.includes("mei --model groot-19b-a3b-text --context-cap 65536"));
+  assert.ok(html.includes("<caption>Example context caps for a single model</caption>"));
   assert.ok(html.includes("inkling-2-mini"));
   assert.ok(html.includes("mei pull inkling-2-mini-mei-q4"));
   assert.ok(html.includes("20/25"));

@@ -5,7 +5,7 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.16.0"
+    public static let version = "0.16.1"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
@@ -25,7 +25,8 @@ public struct ServerConfig: Sendable {
     public private(set) var optimizationProfile: ModelOptimizationProfile = .generic
     public var host: String = "127.0.0.1"
     public var port: Int = 8024
-    public var contextCap: Int = 65_536
+    public static let defaultContextCap = 26_624
+    public var contextCap: Int = ServerConfig.defaultContextCap
     public var maxTokensDefault: Int = 32_768
     /// Set when --max-tokens was given, so a profile default never
     /// overrides an explicit operator choice.
@@ -574,7 +575,7 @@ public extension ServerConfig {
       --port PORT            (default 8024)
 
     Context / capacity:
-      --context-cap TOKENS   Reject prompts beyond this many tokens (default 65536)
+      --context-cap TOKENS   Set the context cap (default \(defaultContextCap); model limits apply)
       --max-tokens TOKENS    Server-side per-request generation cap (default 32768)
       --prefill-step-size N  Chunked prefill window (default 64 for generic;
                              auto Ornith profile uses validated 512; gemma4

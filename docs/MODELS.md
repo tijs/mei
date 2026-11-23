@@ -72,7 +72,7 @@ See [runtime policies](RUNTIME-POLICIES.md) for the new settings and migration.
 
 General rules for all three: weights go into a user-local
 `$HOME/.cache/mei/models/...` directory (never a system path), the server
-serves on **port 8024** with **context cap 65536**, and only **one** server
+in these examples listens on **port 8024** with an explicit **context cap of 65,536** (see the [current defaults](../README.md#choose-a-context-limit)), and only **one** server
 should run at a time — press **Ctrl-C** in the server terminal to stop it.
 Each block is standalone copy-paste. **These 30–35B presets target 32 GB Apple
 Silicon; 16 GB machines likely cannot fit them.**

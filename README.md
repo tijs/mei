@@ -138,12 +138,30 @@ The Pi example below uses the original bundle.
 For measured model comparisons and their hardware/runtime scope, see the
 [current benchmark results](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).
 
+## Choose a context limit
+
+Mei 0.16.1 defaults to **26,624 tokens** for the curated models on a 32 GB Mac. To use a different limit, restart Mei with `--context-cap` after the model name:
+
+```sh
+mei --model groot-19b-a3b-text --context-cap 65536
+```
+
+The same flag works with `--model-dir`. Match your client’s context window to the server setting. For Inkling, the prompt, conversation history, tool results and reply share the cap. For Groot, Qwen and Ornith the cap limits the prompt. Use `--max-tokens` to set the separate reply limit.
+
+| Mac unified memory | Example context cap | When to try it |
+|---|---:|---|
+| 24 GB | 8,192 | Start here if the model fits with room for macOS. Both Inkling profiles use this fallback below 32 GB. |
+| 32 GB | 26,624 | Default for the curated models. On an M1 Max, Inkling Q4 retrieved an early value from a near-full prompt in 173 seconds. |
+| 64 GB or more | 65,536 | A starting experiment for a larger Mac. Test a representative long prompt and check Memory Pressure in Activity Monitor. |
+
+Weight size and the model’s attention cache affect how much context fits. Lower the cap if your Mac starts swapping or long prompts take too long. SenseNova Loop has a separate 4,096-token runtime limit.
+
 ## Use Mei with Pi
 
 [Pi](https://pi.dev/) can connect to Mei through its built-in OpenAI Chat
 Completions provider. This example uses Inkling 2 Mini, a text model with
-streaming tool calls and an 8,192-token total budget for prompts and replies.
-Install Mei 0.15.0 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
+streaming tool calls and a 26,624-token total budget on a 32 GB Mac for prompts and replies.
+Install Mei 0.16.1 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
 See the [Inkling guide](docs/INKLING.md).
 
 ```sh
@@ -164,14 +182,14 @@ Pi's credential check. The local Mei server requires no API key.
       "apiKey": "local",
       "compat": { "maxTokensField": "max_tokens" },
       "models": [
-        { "id": "inkling-2-mini", "contextWindow": 8192, "maxTokens": 2048 }
+        { "id": "inkling-2-mini", "contextWindow": 26624, "maxTokens": 2048 }
       ]
     }
   }
 }
 ```
 
-Set Pi's compaction budgets for the 8K window by merging this override into
+For a different server cap, change Pi’s `contextWindow` to match. Set Pi’s compaction budgets by merging this override into
 the project's `.pi/settings.json`.
 
 ```json
@@ -210,7 +228,7 @@ Use `mei --help` for the full list of options. Common settings are:
 | `--model-dir DIR` | Local model bundle to load |
 | `--served-model-id ID` | Model name clients send in requests |
 | `--port PORT` | Listen on another port; default `8024` |
-| `--context-cap TOKENS` | Cap accepted prompt length; stay within the model's supported total context |
+| `--context-cap TOKENS` | Override the context limit at launch. See [Choose a context limit](#choose-a-context-limit). |
 | `--max-tokens TOKENS` | Set the server's maximum reply length |
 | `--kv-cache-dir DIR` | Configure an on-disk KV cache; support varies by model |
 

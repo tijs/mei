@@ -62,6 +62,14 @@ final class ServerConfigParsingTests: XCTestCase {
         }
     }
 
+    func testCuratedProfilesUseSharedContextAndAcceptOverrides() throws {
+        for profile in ModelTuningRegistry.names {
+            let flags = ["--model-profile", profile]
+            XCTAssertEqual(try parse(flags).contextCap, 26_624, profile)
+            XCTAssertEqual(try parse(flags + ["--context-cap", "65536"]).contextCap, 65_536, profile)
+        }
+    }
+
     func testGrootProfileKeepsMeasuredSettingsAndExplicitOverrides() throws {
         let configured = try parse(["--model-profile", "groot-19b-a3b-text"])
         XCTAssertEqual(configured.optimizationProfile, .qwen35MoE)
@@ -243,7 +251,7 @@ final class ServerConfigParsingTests: XCTestCase {
         XCTAssertEqual(config.prefillStepSize, 64)
         XCTAssertEqual(config.requestedOptimizationProfile, .auto)
         XCTAssertEqual(config.optimizationProfile, .generic)
-        XCTAssertEqual(config.contextCap, 65_536)
+        XCTAssertEqual(config.contextCap, 26_624)
         XCTAssertFalse(config.useMmapSafetensors)
         XCTAssertTrue(config.keepModelInMemory)
     }

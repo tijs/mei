@@ -1393,3 +1393,6 @@ pre code {
     font-size: 23px;
   }
 }
+
+#context { margin-block: 3rem; }
+#context td:last-child, #context th:last-child { text-align: left; white-space: normal; }

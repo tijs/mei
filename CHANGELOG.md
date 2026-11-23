@@ -2,6 +2,10 @@
 
 All notable changes to Mei are documented here.
 
+## [0.16.1] - 2026-11-23
+
+Use a shared 26,624-token context cap for curated models on a 32 GB Mac. Both Inkling bundles fall back to 8,192 below 32 GB. The README and website show how to override the cap and select a starting value for different memory sizes.
+
 ## [0.16.0] - 2026-11-23
 
 - Add an Inkling 2 Mini bundle with 4-bit affine vocabulary tables and the

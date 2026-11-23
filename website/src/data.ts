@@ -1,4 +1,4 @@
-const releaseVersion = "0.16.0";
+const releaseVersion = "0.16.1";
 export const release = {
   version: releaseVersion,
   url: `https://github.com/tijs/mei/releases/tag/v${releaseVersion}`,
@@ -60,7 +60,7 @@ export const models = [
     fullName: "26.4B parameters · text-only in Mei · NVFP4/MXFP8",
     profile: "inkling-2-mini",
     automaticSettings:
-      "Mei applies the tested 8,192-token total context, 4,096-token default output cap, 128-token prefill and one active generation. This profile supports text chat, streaming and tool calls. Prefix reuse, image input, speculative decoding and constrained output are outside its scope.",
+      "Mei applies a 26,624-token total context on Macs with at least 32 GB of memory, 4,096-token default output cap, 128-token prefill and one active generation. This profile supports text chat, streaming and tool calls. Prefix reuse, image input, speculative decoding and constrained output are outside its scope.",
     repo: "nativ-community/Inkling-2-Mini-nvfp4",
     revision: "26f71eef259a1dd7fc476778d67020351e0dfb8c",
     description:
