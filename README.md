@@ -140,7 +140,7 @@ For measured model comparisons and their hardware/runtime scope, see the
 
 ## Choose a context limit
 
-Mei 0.16.1 defaults to **26,624 tokens** for the curated models on a 32 GB Mac. To use a different limit, restart Mei with `--context-cap` after the model name:
+Mei defaults to **26,624 tokens** for the curated models on a 32 GB Mac. To use a different limit, restart Mei with `--context-cap` after the model name:
 
 ```sh
 mei --model groot-19b-a3b-text --context-cap 65536
@@ -151,7 +151,7 @@ The same flag works with `--model-dir`. Match your client’s context window to 
 | Mac unified memory | Example context cap | When to try it |
 |---|---:|---|
 | 24 GB | 8,192 | Start here if the model fits with room for macOS. Both Inkling profiles use this fallback below 32 GB. |
-| 32 GB | 26,624 | Default for the curated models. On an M1 Max, Inkling Q4 retrieved an early value from a near-full prompt in 173 seconds. |
+| 32 GB | 26,624 | Default for the curated models. On an M1 Max, a greedy raw Inkling Q4 completion retrieved an early value from 26,368 input tokens in 134 seconds of prefill. |
 | 64 GB or more | 65,536 | A starting experiment for a larger Mac. Test a representative long prompt and check Memory Pressure in Activity Monitor. |
 
 Weight size and the model’s attention cache affect how much context fits. Lower the cap if your Mac starts swapping or long prompts take too long. SenseNova Loop has a separate 4,096-token runtime limit.

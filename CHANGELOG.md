@@ -2,6 +2,10 @@
 
 All notable changes to Mei are documented here.
 
+## [0.17.0] - 2026-11-23
+
+Speed up greedy raw completions with the Inkling 2 Mini vocabulary Q4 bundle on an M1 Max with at least 32 GiB. At 2,048 input tokens, median prefill time fell from 8.91 to 7.51 seconds. Mei selects the larger step automatically for context caps up to 26,624. Chat, including tool calls, uses a 128-token default.
+
 ## [0.16.1] - 2026-11-23
 
 Use a shared 26,624-token context cap for curated models on a 32 GB Mac. Both Inkling bundles fall back to 8,192 below 32 GB. The README and website show how to override the cap and select a starting value for different memory sizes.

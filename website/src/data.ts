@@ -1,4 +1,4 @@
-const releaseVersion = "0.16.1";
+const releaseVersion = "0.17.0";
 export const release = {
   version: releaseVersion,
   url: `https://github.com/tijs/mei/releases/tag/v${releaseVersion}`,

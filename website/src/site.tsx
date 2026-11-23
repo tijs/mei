@@ -344,7 +344,7 @@ function Page({ base }: { base: string }) {
                   <thead><tr><th scope="col">Mac unified memory</th><th scope="col">Tokens</th><th scope="col">When to use it</th></tr></thead>
                   <tbody>
                     <tr><th scope="row">24 GB</th><td>8,192</td><td>Try if the weights fit. Inkling uses this below 32 GB.</td></tr>
-                    <tr><th scope="row">32 GB</th><td>26,624</td><td>Curated default. Near-full Inkling Q4 prefill took 173 seconds on an M1 Max.</td></tr>
+                    <tr><th scope="row">32 GB</th><td>26,624</td><td>Curated default. A greedy raw Inkling Q4 completion processed 26,368 input tokens in 134 seconds on an M1 Max.</td></tr>
                     <tr><th scope="row">64 GB or more</th><td>65,536</td><td>Try a long prompt and check Memory Pressure in Activity Monitor.</td></tr>
                   </tbody>
                 </table>
