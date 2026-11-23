@@ -28,10 +28,13 @@ public enum InklingSupport {
         return bytes.withUnsafeBufferPointer { String(cString: $0.baseAddress!) }
     }
 
+    static func usesM1MaxQ4Kernels(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
+        profile == .vocabularyQ4 && cpuBrand == "Apple M1 Max"
+            && memory >= 32 << 30 && cap <= ServerConfig.defaultContextCap
+    }
+
     static func greedyCompletionStep(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Int? {
-        guard profile == .vocabularyQ4, cpuBrand == "Apple M1 Max",
-              memory >= 32 << 30, cap <= ServerConfig.defaultContextCap else { return nil }
-        return 256
+        usesM1MaxQ4Kernels(profile: profile, cpuBrand: cpuBrand, memory: memory, cap: cap) ? 256 : nil
     }
 
     static func profile(directory: String) -> Profile? {
@@ -101,6 +104,10 @@ public enum InklingSupport {
     /// single-model process, with explicit operator environment taking precedence.
     public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = ServerConfig.defaultContextCap) {
         if let modelDirectory, let profile = profile(directory: modelDirectory) {
+            if usesM1MaxQ4Kernels(profile: profile, cpuBrand: cpuBrand,
+                                  memory: ProcessInfo.processInfo.physicalMemory, cap: contextCap) {
+                setenv("VMLX_INKLING_FUSED_MASK", "1", 0)
+            }
             // The released original profile was scored using full K/V storage at 8K.
             setenv("VMLX_INKLING_BOUNDED_LOCAL_KV", profile.usesBoundedLocalCache(contextCap: contextCap) ? "1" : "0", 0)
         }

@@ -213,7 +213,7 @@
       "kind": "remoteSourceControl",
       "location": "https://github.com/tijs/vmlx-swift.git",
       "state": {
-        "revision": "8190c46108195d397dee91b149271d0a19ca34b9"
+        "revision": "772d5a67e6dd61aee5a26084a0b51eda56eec3e8"
       }
     },
     {
