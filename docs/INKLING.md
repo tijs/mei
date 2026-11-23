@@ -32,6 +32,8 @@ Set the client's context window to the server's configured value.
 
 ### Performance and quality on the M1 Max
 
+With the Q4 bundle on an M1 Max with at least 32 GiB of memory and a context cap of 26,624 or less, raw `/v1/completions` requests at temperature zero use a 256-token prefill step. For a 2,048-token prompt, median prefill time fell from 8.91 to 7.51 seconds over ten measurements per setting. All measured greedy completions matched. Chat and sampled requests use the 128-token default. Set `--prefill-step-size 128` to use the same step for every request. The status endpoint reports the raw greedy override as `greedyCompletionPrefillStepSize` when active.
+
 Across two fresh processes per bundle, peak physical footprint was 20.19–20.21 GiB with Q4 and 21.48–21.95 GiB with the original weights. Median decode across ten measurements per prompt rose from 23.85 to 24.52 tokens/s for short input and from 20.21 to 20.44 tokens/s for 2,048 input tokens.
 
 The optional Q4 profile scored **20/25** on the task suite. The original historical release scored **22/25**. Q4 passed 7/10 model-only cases, 10/12 household cases and all three Python automation cases. The additional misses relative to that release were tool-error recovery and handling an uncertain outcome after an outage. Both bundles passed the two separate coding exercises with executable tests. A fresh run of the original weights on the experimental bounded-cache backend scored 21/25.

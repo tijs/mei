@@ -14,6 +14,23 @@ final class InklingSupportTests: XCTestCase {
         config.enableInklingMini = true; config.contextCap = 4096; config.cacheMode = .off
         return config
     }
+    func testGreedyCompletionPrefillEligibility() throws {
+        func step(_ profile: InklingSupport.Profile = .vocabularyQ4, _ cpu: String = "Apple M1 Max",
+                  _ memory: UInt64 = 32 << 30, _ cap: Int = 26_624) -> Int? {
+            InklingSupport.greedyCompletionStep(profile: profile, cpuBrand: cpu, memory: memory, cap: cap)
+        }
+        XCTAssertEqual(step(), 256)
+        XCTAssertNil(step(.original))
+        XCTAssertNil(step(.vocabularyQ4, "Apple M5"))
+        XCTAssertNil(step(.vocabularyQ4, "Apple M1 Max", 16 << 30))
+        XCTAssertNil(step(.vocabularyQ4, "Apple M1 Max", 32 << 30, 26_625))
+        var fixture = try config()
+        fixture.prefillStepSize = 128
+        fixture.greedyCompletionPrefillStepSize = step()
+        XCTAssertEqual(fixture.completionPrefillStep(temperature: 0), 256)
+        XCTAssertEqual(fixture.completionPrefillStep(temperature: 0.1), 128)
+    }
+
     func testCLISelectsInklingDefaultsWithoutInitializingMetal() throws {
         let fixture = try config()
         let directory = URL(fileURLWithPath: fixture.modelDirectory)
@@ -83,6 +100,11 @@ final class InklingSupportTests: XCTestCase {
         XCTAssertEqual(parsed.contextCap, profile.defaultContext(physicalMemory: ProcessInfo.processInfo.physicalMemory))
         let override = try ServerConfig.parse(arguments: args + ["--context-cap", "200000"],
                                                recommendedWorkingSetBytes: nil)
+        let explicit = try ServerConfig.parse(arguments: args + ["--prefill-step-size", "64"],
+                                              recommendedWorkingSetBytes: nil)
+        XCTAssertNil(explicit.greedyCompletionPrefillStepSize)
+        XCTAssertEqual(explicit.completionPrefillStep(temperature: 0), 64)
+        XCTAssertNil(override.greedyCompletionPrefillStepSize)
         XCTAssertEqual(override.contextCap, 200_000)
         XCTAssertTrue(try InklingSupport.validateLoad(override))
 

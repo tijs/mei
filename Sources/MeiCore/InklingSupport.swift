@@ -20,6 +20,20 @@ public enum InklingSupport {
         }
     }
 
+    static var cpuBrand: String {
+        var size = 0
+        guard sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0) == 0, size > 0 else { return "" }
+        var bytes = [CChar](repeating: 0, count: size)
+        guard sysctlbyname("machdep.cpu.brand_string", &bytes, &size, nil, 0) == 0 else { return "" }
+        return bytes.withUnsafeBufferPointer { String(cString: $0.baseAddress!) }
+    }
+
+    static func greedyCompletionStep(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Int? {
+        guard profile == .vocabularyQ4, cpuBrand == "Apple M1 Max",
+              memory >= 32 << 30, cap <= ServerConfig.defaultContextCap else { return nil }
+        return 256
+    }
+
     static func profile(directory: String) -> Profile? {
         struct Quant: Decodable {
             let bits: Int

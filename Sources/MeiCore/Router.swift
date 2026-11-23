@@ -82,6 +82,7 @@ public final class Router: @unchecked Sendable {
             model: config.servedModelID,
             contextCap: config.contextCap,
             prefillStepSize: config.prefillStepSize,
+            greedyCompletionPrefillStepSize: config.greedyCompletionPrefillStepSize,
             maxTokens: config.maxTokensDefault,
             kvBits: config.kvBits,
             cacheReuse: engine.config.cacheReuse,

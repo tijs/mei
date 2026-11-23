@@ -37,6 +37,11 @@ public struct ServerConfig: Sendable {
     public private(set) var modelTuning: ModelTuning?
     public private(set) var modelTuningWasDetected: Bool = false
     public var prefillStepSize: Int = 64
+    public internal(set) var greedyCompletionPrefillStepSize: Int?
+
+    func completionPrefillStep(temperature: Float) -> Int {
+        temperature == 0 ? greedyCompletionPrefillStepSize ?? prefillStepSize : prefillStepSize
+    }
     /// Set when a named profile's prefill step did not fit this device's
     /// recommended working set and was reduced. Carries the ORIGINAL value so
     /// startup can name what was given up.
@@ -488,7 +493,12 @@ public extension ServerConfig {
             if !contextCapExplicit {
                 config.contextCap = inklingProfile.defaultContext(physicalMemory: ProcessInfo.processInfo.physicalMemory)
             }
-            if !prefillStepSizeExplicit { config.prefillStepSize = 128 }
+            if !prefillStepSizeExplicit {
+                config.prefillStepSize = 128
+                config.greedyCompletionPrefillStepSize = InklingSupport.greedyCompletionStep(
+                    profile: inklingProfile, cpuBrand: InklingSupport.cpuBrand,
+                    memory: ProcessInfo.processInfo.physicalMemory, cap: config.contextCap)
+            }
             if !config.maxTokensExplicit { config.maxTokensDefault = 4096 }
             if config.cacheMode == .auto { config.cacheMode = .off }
             if !config.cacheLimitExplicit { config.cacheLimitBytes = 536_870_912 }

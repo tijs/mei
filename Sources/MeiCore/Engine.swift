@@ -1196,7 +1196,6 @@ public actor Engine {
             throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
         }
         var parameters = GenerateParameters()
-        parameters.prefillStepSize = config.prefillStepSize
         parameters.maxKVSize = config.maxKVSize
         parameters.enableCompiledDecode = config.enableCompiledDecode
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
@@ -1209,6 +1208,7 @@ public actor Engine {
             parameters.quantizedKVStart = config.quantizedKVStart
         }
         parameters.temperature = Float(request.temperature ?? Double(config.temperature))
+        parameters.prefillStepSize = config.completionPrefillStep(temperature: parameters.temperature)
         parameters.topP = Float(request.topP ?? Double(config.topP))
         parameters.topK = request.topK ?? config.topK
         parameters.minP = Float(request.minP ?? Double(config.minP))

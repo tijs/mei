@@ -717,6 +717,7 @@ public struct MeiStatusResponse: Sendable, Codable {
     public var model: String
     public var contextCap: Int
     public var prefillStepSize: Int
+    public var greedyCompletionPrefillStepSize: Int? = nil
     public var maxTokens: Int
     public var kvBits: Int?
     public var cacheReuse: Bool
