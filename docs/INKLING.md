@@ -30,6 +30,35 @@ The maximum configurable value is the model's 1,048,576-token architectural
 limit. Available memory and prefill latency determine the practical limit.
 Set the client's context window to the server's configured value.
 
+On the 32 GiB M1 Max, a vocabulary-Q4 server with prefix reuse off crossed
+24 GiB of process memory when a 26,368-token request followed two 2,048-token
+requests. With `--cache-limit-bytes 134217728`, Mei 0.17.0 completed the same
+requests and the 26,623-input plus one-output boundary at 23.89 GiB peak.
+
+### Reuse a repeated prompt prefix in memory
+
+On an M1 Max with at least 32 GiB of memory and a context cap up to 26,624,
+start the vocabulary-Q4 model with the memory cache to speed up repeated chat
+turns or raw completions.
+
+```sh
+mei --model inkling-2-mini-mei-q4 --cache-mode memory
+```
+
+Mei can retain the state after the first 1,024 input tokens. A subsequent
+request can reuse it when its first 1,024 tokens and effective prefill step
+match. Eligible prompts have 1,025 through 4,096 tokens and use a prefill step
+of 128 or 256. The common prefix includes any chat template, system message,
+and tool definitions. Edits later in the prompt can still reuse that prefix.
+
+The server keeps one entry in RAM. A different eligible prefix replaces it,
+and an ineligible prompt clears it. The measured entry used about 200 MiB.
+In this mode, Mei defaults to 128 MiB of reusable allocator buffers. An explicit
+`--cache-limit-bytes` takes precedence.
+If the entry exceeds `--prefix-cache-limit-bytes`, Mei processes the whole
+prompt. Prefix reuse is off by default. To see what a request reused, read
+`usage.prompt_tokens_details.cached_tokens` in the response.
+
 ### Performance and quality on the M1 Max
 
 With the Q4 bundle on an M1 Max with at least 32 GiB of memory and a context cap of 26,624 or less, raw `/v1/completions` requests at temperature zero use a 256-token prefill step. For a 2,048-token prompt, median prefill time fell from 8.91 to 7.51 seconds over ten measurements per setting. All measured greedy completions matched. Chat and sampled requests use the 128-token default. Set `--prefill-step-size 128` to use the same step for every request. The status endpoint reports the raw greedy override as `greedyCompletionPrefillStepSize` when active.

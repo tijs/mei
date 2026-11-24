@@ -109,6 +109,12 @@ final class InklingSupportTests: XCTestCase {
                                                 recommendedWorkingSetBytes: nil)
             XCTAssertEqual(memory.effectiveCacheMode, .memory)
             XCTAssertTrue(try InklingSupport.validateLoad(memory))
+            XCTAssertEqual(memory.cacheLimitBytes, 128 << 20)
+            XCTAssertEqual(parsed.cacheLimitBytes, 512 << 20)
+            let custom = try ServerConfig.parse(
+                arguments: args + ["--cache-mode", "memory", "--cache-limit-bytes", "0"],
+                recommendedWorkingSetBytes: nil)
+            XCTAssertEqual(custom.cacheLimitBytes, 0)
         }
         XCTAssertThrowsError(try ServerConfig.parse(arguments: args + ["--cache-mode", "disk"],
                                                      recommendedWorkingSetBytes: nil))

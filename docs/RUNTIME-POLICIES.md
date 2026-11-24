@@ -26,6 +26,12 @@ selector retain legacy selection rules, except an explicit empty directory is
 rejected when it would break required disk reuse. Use `--cache-mode off` to opt
 out. Library users can set `ServerConfig.cacheMode` and `mlxPressPolicy` directly.
 
+Inkling vocabulary Q4 supports an opt-in memory cache on qualified M1 Max
+configurations. It retains one recurrent state snapshot for repeated text
+prefixes. `GET /v1/mei/status` reports `cache.alignedPrefixHits`,
+`cache.alignedPrefixMisses`, and `cache.promptSnapshotBytes` in this mode.
+[Inkling configuration and prompt limits](INKLING.md#reuse-a-repeated-prompt-prefix-in-memory)
+
 Weights now use owned storage. The upstream loader removed cold-tier MLXPress
 advice and no longer uses mmap weight storage. Remove `--load-mmap true` and
 non-off `--mlxpress`/`MLXPRESS`/`JANGPRESS` settings when upgrading; Mei rejects
@@ -58,7 +64,8 @@ There are three distinct memory controls:
   or for auxiliary requests, Mei skips those snapshots; auxiliary requests
   may still restore a previously cached prefix.
 - `--cache-limit-bytes`: freed MLX allocator buffers. Omitted uses the backend
-  default; explicitly passing `0` disables the buffer pool. Nonnegative explicit
+  default on other models. Inkling uses 128 MiB with memory prefix reuse and
+  512 MiB with reuse off. Passing `0` disables the buffer pool. Nonnegative explicit
   values are passed to model loading and reapplied for inference. Returned
   buffers that fit displace older cached entries as needed; a single buffer
   larger than the allowance is released. This lets decode-sized buffers replace

@@ -501,7 +501,10 @@ public extension ServerConfig {
             }
             if !config.maxTokensExplicit { config.maxTokensDefault = 4096 }
             if config.cacheMode == .auto { config.cacheMode = .off }
-            if !config.cacheLimitExplicit { config.cacheLimitBytes = 536_870_912 }
+            if !config.cacheLimitExplicit {
+                // Leave room for a long prompt after serving a prefix hit.
+                config.cacheLimitBytes = config.cacheMode == .memory ? 128 << 20 : 512 << 20
+            }
         }
         if !contextCapExplicit, config.optimizationProfile == .senseNovaLoop {
             config.contextCap = 4096
@@ -641,8 +644,10 @@ public extension ServerConfig {
                                 False leaves residency to the OS/runtime.
                                 Weights use owned storage. Old --load-mmap true
                                 and non-off --mlxpress settings are rejected.
-      --cache-limit-bytes N     Freed allocator buffer cache: explicit 0 disables;
-                                omitted uses backend default. Not a RAM ceiling.
+      --cache-limit-bytes N     Freed allocator buffer cache. Use 0 to disable.
+                                Inkling defaults to 128 MiB with prefix memory
+                                reuse and 512 MiB otherwise. Other models use
+                                the backend default.
       --prefix-cache-limit-bytes N Retained prefix KV/companion budget
                                 (default 536870912; separate from buffer pool)
       --kv-cache-dir DIR        Explicit disk-cache directory. Omit for an
