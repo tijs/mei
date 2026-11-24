@@ -215,6 +215,10 @@ function Page({ base }: { base: string }) {
               32 GB M1 Max. Use <code>--context-cap</code> to override it. Q4 scored
               20/25 on the task suite, compared with 22/25 for the original release.
             </p>
+            <p>
+              For repeated Q4 chat prompts on the M1 Max, start Mei with <code>--cache-mode memory</code>.
+              Reusing the first 1,024 tokens cut prompt processing from about 12 seconds to 6.30 seconds in the chat benchmark.
+            </p>
             <p><a href={release.url}>Read the full release notes ↗</a></p>
           </section>
           <section class="section wrap engine">

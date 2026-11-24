@@ -134,6 +134,9 @@ For **Inkling 2 Mini**, the Mei vocabulary Q4 bundle reduces serving memory
 and selects a 26,624-token context on a 32 GB M1 Max. This opt-in scored
 20/25 on the task suite versus 22/25 for the original release. See the
 [model guide](docs/INKLING.md) for both downloads and the context override.
+On a 32 GB M1 Max, repeated requests can reuse their first 1,024 tokens
+with `mei --model inkling-2-mini-mei-q4 --cache-mode memory`. In the chat
+benchmark this reduced repeated prompt processing from 12.02–12.04 to 6.30 seconds.
 The Pi example below uses the original bundle.
 For measured model comparisons and their hardware/runtime scope, see the
 [current benchmark results](https://github.com/tijs/local-model-bench/blob/main/results/AGENT_SUMMARY.md).
