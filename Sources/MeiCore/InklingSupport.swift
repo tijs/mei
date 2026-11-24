@@ -33,6 +33,12 @@ public enum InklingSupport {
         supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand, memory: memory, cap: cap) ? 256 : nil
     }
 
+    private static let indexedHistoryDisabled = ProcessInfo.processInfo.environment["VMLX_INKLING_INDEXED_KV"] == "0"
+
+    static func useIndexedHistory(promptTokens: Int, outputBudget: Int) -> Bool {
+        !indexedHistoryDisabled && promptTokens >= 7936 && outputBudget >= 2048
+    }
+
     static func supportsQualifiedQ4(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
         profile == .vocabularyQ4 && supportsMeasuredHardware(cpuBrand: cpuBrand, memory: memory, cap: cap)
     }

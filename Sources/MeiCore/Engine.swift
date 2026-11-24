@@ -854,13 +854,25 @@ public actor Engine {
             MeiBox(context.model)
         }
         let model = modelBox.value
+        let cache: [any KVCache]
+        if config.greedyCompletionPrefillStepSize == 256,
+           parameters.prefillStepSize == 256,
+           InklingSupport.useIndexedHistory(promptTokens: tokens.count, outputBudget: parameters.maxTokens ?? 0),
+           let inkling = model as? Inkling2LoopModel {
+            cache = inkling.newCache(parameters: parameters, indexedHistory: true)
+            if config.logRequests {
+                print("mei: Inkling indexed KV enabled for \(tokens.count) prompt tokens and output budget \(parameters.maxTokens ?? 0)")
+            }
+        } else {
+            cache = model.newCache(parameters: parameters)
+        }
         let restoreBox = RestoreBox()
             let logProgress = self.config.logRequests
         let iterationStart = Date()
         let iterator = try TokenIterator(
             input: input,
             model: model,
-            cache: model.newCache(parameters: parameters),
+            cache: cache,
             parameters: parameters,
             cacheCoordinator: container.cacheCoordinator,
             prefillProgressHandler: { progress in

@@ -6,6 +6,8 @@ The same profile converts the dense attention projections to eight-bit weights w
 
 Greedy raw Q4 completions at the automatic 256-token prefill step share normalization across depth queries during generation. Chat and sampled requests use the original reduction. With eight-bit attention already active, this raised median generation from 25.00 to 27.12 tokens/s at 2,048 input tokens. The complete request fell from 12.80 to 12.39 seconds. Set `VMLX_INKLING_DEPTH_MIX=0` to use the original reduction.
 
+Greedy raw Q4 completions on the qualified M1 Max profile use indexed KV writes when the prompt contains at least 7,936 tokens and the available output budget is at least 2,048 tokens. On the 7,936-input, 2,048-output test, the full response fell from 114.18 to 108.03 seconds. Both process pairs returned identical choices. Set `VMLX_INKLING_INDEXED_KV=0` to disable this selection.
+
 For the original publisher bundle, start `mei --model inkling-2-mini`. The fused mask raised 2,048-token generation by 8.72% at the named context cap. Both settings scored 22/25, retained the same individual task grades and gave identical maximum-context answers.
 
 For repeated chat or tool requests, use `mei --model inkling-2-mini-mei-q4 --cache-mode memory`. Mei keeps one reusable 1,024-token prefix in memory. On repeated prompts with a matching prefix, chat prefill fell from 12.02–12.04 seconds to 6.30 seconds. The response reports the number of reused tokens in `usage.prompt_tokens_details.cached_tokens`.

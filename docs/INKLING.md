@@ -70,6 +70,8 @@ model load. The model bundle on disk retains its original weights. To use
 the original attention precision, launch with
 `VMLX_INKLING_ATTENTION_BITS=0 mei --model inkling-2-mini-mei-q4`.
 
+Greedy raw Q4 completions on the qualified M1 Max profile use indexed KV writes when the prompt contains at least 7,936 tokens and the available output budget is at least 2,048 tokens. On the 7,936-input, 2,048-output test, the full response fell from 114.18 to 108.03 seconds. Both process pairs returned identical choices. Set `VMLX_INKLING_INDEXED_KV=0` to disable this selection.
+
 For greedy raw completions at the automatic 256-token prefill step, the same Q4 profile shares each depth state’s normalization across its learned queries. With the eight-bit projections already enabled, this increased median generation from 25.00 to 27.12 tokens/s for a 2,048-token prompt. Set `VMLX_INKLING_DEPTH_MIX=0` to use the original reduction order. Both the reduction order and the weight precision can change a generated continuation.
 
 With the Q4 bundle on an M1 Max with at least 32 GiB of memory and a context cap of 26,624 or less, raw `/v1/completions` requests at temperature zero use a 256-token prefill step. For a 2,048-token prompt, median prefill time fell from 8.91 to 7.51 seconds over ten measurements per setting. All measured greedy completions matched. Chat and sampled requests use the 128-token default. Set `--prefill-step-size 128` to use the same step for every request. The status endpoint reports the raw greedy override as `greedyCompletionPrefillStepSize` when active.

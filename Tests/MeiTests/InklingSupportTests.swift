@@ -32,6 +32,10 @@ final class InklingSupportTests: XCTestCase {
         fixture.greedyCompletionPrefillStepSize = step()
         XCTAssertEqual(fixture.completionPrefillStep(temperature: 0), 256)
         XCTAssertEqual(fixture.completionPrefillStep(temperature: 0.1), 128)
+        XCTAssertFalse(InklingSupport.useIndexedHistory(promptTokens: 7935, outputBudget: 2048))
+        XCTAssertFalse(InklingSupport.useIndexedHistory(promptTokens: 7936, outputBudget: 2047))
+        XCTAssertEqual(InklingSupport.useIndexedHistory(promptTokens: 7936, outputBudget: 2048),
+                       ProcessInfo.processInfo.environment["VMLX_INKLING_INDEXED_KV"] != "0")
     }
 
     func testCLISelectsInklingDefaultsWithoutInitializingMetal() throws {
