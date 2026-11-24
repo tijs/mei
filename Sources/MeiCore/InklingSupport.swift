@@ -124,7 +124,7 @@ public enum InklingSupport {
                 }
                 if profile == .vocabularyQ4 {
                     setenv("VMLX_INKLING_ATTENTION_BITS", "8", 0)
-                    setenv("VMLX_INKLING_DEPTH_MIX", "1", 0)
+                    setenv("VMLX_INKLING_DEPTH_MIX", "step256", 0)
                 }
             }
             // The released original profile was scored using full K/V storage at 8K.
