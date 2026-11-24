@@ -212,7 +212,7 @@ function Page({ base }: { base: string }) {
             <p>
               Run <code>mei pull inkling-2-mini-mei-q4</code> to opt in.
               Continue using <code>inkling-2-mini</code> for the original weights. The profile uses a 26,624-token context on a
-              32 GB M1 Max. Use <code>--context-cap</code> to override it. With the original weights, the fused mask improved generation by 8.72% at 2,048 input tokens and preserved all 25 task grades.
+              32 GB M1 Max. Use <code>--context-cap</code> to override it. With the original weights, the fused mask improved generation by 8.72% at 2,048 input tokens and preserved all 25 task grades (22/25 passed).
             </p>
             <p>
               For repeated Q4 chat prompts on the M1 Max, start Mei with <code>--cache-mode memory</code>.
