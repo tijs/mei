@@ -110,6 +110,7 @@ public enum InklingSupport {
             if supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand,
                                   memory: ProcessInfo.processInfo.physicalMemory, cap: contextCap) {
                 setenv("VMLX_INKLING_FUSED_MASK", "1", 0)
+                setenv("VMLX_INKLING_ATTENTION_BITS", "8", 0)
             }
             // The released original profile was scored using full K/V storage at 8K.
             setenv("VMLX_INKLING_BOUNDED_LOCAL_KV", profile.usesBoundedLocalCache(contextCap: contextCap) ? "1" : "0", 0)

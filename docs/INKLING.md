@@ -61,6 +61,14 @@ prompt. Prefix reuse is off by default. To see what a request reused, read
 
 ### Performance and quality on the M1 Max
 
+On an M1 Max with at least 32 GiB and a context cap up to 26,624, the
+vocabulary-Q4 profile converts the query, key, value, output and gate
+projection weights of each attention layer to eight-bit affine groups at
+model load. The model bundle on disk retains its original weights. To use
+the original attention precision, launch with
+`VMLX_INKLING_ATTENTION_BITS=0 mei --model inkling-2-mini-mei-q4`.
+
+
 With the Q4 bundle on an M1 Max with at least 32 GiB of memory and a context cap of 26,624 or less, raw `/v1/completions` requests at temperature zero use a 256-token prefill step. For a 2,048-token prompt, median prefill time fell from 8.91 to 7.51 seconds over ten measurements per setting. All measured greedy completions matched. Chat and sampled requests use the 128-token default. Set `--prefill-step-size 128` to use the same step for every request. The status endpoint reports the raw greedy override as `greedyCompletionPrefillStepSize` when active.
 
 Across two fresh processes per bundle, peak physical footprint was 20.19–20.21 GiB with Q4 and 21.48–21.95 GiB with the original weights. Median decode across ten measurements per prompt rose from 23.85 to 24.52 tokens/s for short input and from 20.21 to 20.44 tokens/s for 2,048 input tokens.
