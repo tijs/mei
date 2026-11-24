@@ -131,8 +131,8 @@ an arbitrary checkpoint. Weights are not included with Mei and have their own
 licenses.
 
 For **Inkling 2 Mini**, the Mei vocabulary Q4 bundle reduces serving memory
-and selects a 26,624-token context on a 32 GB M1 Max. This opt-in scored
-20/25 on the task suite versus 22/25 for the original release. See the
+and selects a 26,624-token context on a 32 GB M1 Max. In Mei 0.17.0, Q4 scored
+20/25 on the task suite versus 22/25 for the original weights. See the
 [model guide](docs/INKLING.md) for both downloads and the context override.
 On a 32 GB M1 Max, repeated requests can reuse their first 1,024 tokens
 with `mei --model inkling-2-mini-mei-q4 --cache-mode memory`. In the chat
