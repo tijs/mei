@@ -5,6 +5,7 @@ All notable changes to Mei are documented here.
 ## [0.18.0] - 2026-11-24
 
 - On an M1 Max with at least 32 GiB and a context cap up to 26,624, Mei uses a fused attention mask for the Inkling vocabulary-Q4 bundle. At 2,048 input tokens it raised median generation speed from 20.43 to 22.68 tokens/s. A 128-token response took 13.21 seconds, down from 13.96 seconds.
+- The same Q4 profile prepares eight-bit attention projections at load. With the mask already active, 2,048-token generation rose from 22.66 to 25.01 tokens/s and active model memory fell by 555 MiB. Set `VMLX_INKLING_ATTENTION_BITS=0` to use the checkpoint precision.
 - Start `mei --model inkling-2-mini-mei-q4 --cache-mode memory` to reuse 1,024 prompt tokens across eligible requests. Repeated chat prefill fell from 12.02–12.04 seconds to 6.30 seconds on the 32 GiB M1 Max. See the [Inkling guide](docs/INKLING.md) for prompt lengths, memory use, and cache counters.
 
 ## [0.17.0] - 2026-11-23
