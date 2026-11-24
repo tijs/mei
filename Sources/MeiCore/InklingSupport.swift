@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// First Inkling envelope: native text AR with visit-local companion state.
@@ -6,10 +7,10 @@ public enum InklingSupport {
     static let maximumContext = 1_048_576
 
     enum Profile {
-        case original, vocabularyQ4
+        case original, publishedOriginal, vocabularyQ4
 
         func usesBoundedLocalCache(contextCap: Int) -> Bool {
-            self != .original || contextCap > 8192
+            self == .vocabularyQ4 || contextCap > 8192
         }
 
         func defaultContext(physicalMemory: UInt64) -> Int {
@@ -33,8 +34,11 @@ public enum InklingSupport {
     }
 
     static func supportsQualifiedQ4(profile: Profile, cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
-        profile == .vocabularyQ4 && cpuBrand == "Apple M1 Max" && memory >= 32 << 30
-            && cap <= ServerConfig.defaultContextCap
+        profile == .vocabularyQ4 && supportsMeasuredHardware(cpuBrand: cpuBrand, memory: memory, cap: cap)
+    }
+
+    private static func supportsMeasuredHardware(cpuBrand: String, memory: UInt64, cap: Int) -> Bool {
+        cpuBrand == "Apple M1 Max" && memory >= 32 << 30 && (1...ServerConfig.defaultContextCap).contains(cap)
     }
 
     static func profile(directory: String) -> Profile? {
@@ -70,6 +74,12 @@ public enum InklingSupport {
            precision?.quantization?.embedding?.matchesAffineQ4 == true,
            precision?.quantization?.head?.matchesAffineQ4 == true {
             return .vocabularyQ4
+        }
+        // The publisher build and unrecognized Inkling variants share the original
+        // cache policy. Only the tested publisher configuration enables the mask.
+        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        if digest == "b7be690b1c064bb26aa13ce96dde6189aec8b9d434d20de89d115b0011d01487" {
+            return .publishedOriginal
         }
         return .original
     }
@@ -107,11 +117,15 @@ public enum InklingSupport {
     /// single-model process, with explicit operator environment taking precedence.
     public static func applyRuntimeEnvironment(modelDirectory: String? = nil, contextCap: Int = ServerConfig.defaultContextCap) {
         if let modelDirectory, let profile = profile(directory: modelDirectory) {
-            if supportsQualifiedQ4(profile: profile, cpuBrand: cpuBrand,
-                                  memory: ProcessInfo.processInfo.physicalMemory, cap: contextCap) {
-                setenv("VMLX_INKLING_FUSED_MASK", "1", 0)
-                setenv("VMLX_INKLING_ATTENTION_BITS", "8", 0)
-                setenv("VMLX_INKLING_DEPTH_MIX", "1", 0)
+            if supportsMeasuredHardware(cpuBrand: cpuBrand, memory: ProcessInfo.processInfo.physicalMemory,
+                                        cap: contextCap) {
+                if profile == .publishedOriginal || profile == .vocabularyQ4 {
+                    setenv("VMLX_INKLING_FUSED_MASK", "1", 0)
+                }
+                if profile == .vocabularyQ4 {
+                    setenv("VMLX_INKLING_ATTENTION_BITS", "8", 0)
+                    setenv("VMLX_INKLING_DEPTH_MIX", "1", 0)
+                }
             }
             // The released original profile was scored using full K/V storage at 8K.
             setenv("VMLX_INKLING_BOUNDED_LOCAL_KV", profile.usesBoundedLocalCache(contextCap: contextCap) ? "1" : "0", 0)

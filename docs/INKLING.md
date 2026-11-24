@@ -35,6 +35,8 @@ On the 32 GiB M1 Max, a vocabulary-Q4 server with prefix reuse off crossed
 requests. With `--cache-limit-bytes 134217728`, Mei 0.17.0 completed the same
 requests and the 26,623-input plus one-output boundary at 23.89 GiB peak.
 
+The original publisher bundle also uses the fused attention mask on the qualified M1 Max. At its named 26,624-token context cap, 2,048-token generation improved 8.72%. Both settings scored 22/25. Both maximum-context answers matched. Use `VMLX_INKLING_FUSED_MASK=0` to run with the original mask implementation.
+
 ### Reuse a repeated prompt prefix in memory
 
 On an M1 Max with at least 32 GiB of memory and a context cap up to 26,624,

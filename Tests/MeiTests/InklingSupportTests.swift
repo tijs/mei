@@ -21,6 +21,9 @@ final class InklingSupportTests: XCTestCase {
         }
         XCTAssertEqual(step(), 256)
         XCTAssertNil(step(.original))
+        XCTAssertNil(step(.publishedOriginal))
+        XCTAssertFalse(InklingSupport.Profile.publishedOriginal.usesBoundedLocalCache(contextCap: 8192))
+        XCTAssertTrue(InklingSupport.Profile.publishedOriginal.usesBoundedLocalCache(contextCap: 26_624))
         XCTAssertNil(step(.vocabularyQ4, "Apple M5"))
         XCTAssertNil(step(.vocabularyQ4, "Apple M1 Max", 16 << 30))
         XCTAssertNil(step(.vocabularyQ4, "Apple M1 Max", 32 << 30, 26_625))
