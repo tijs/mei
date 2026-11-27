@@ -215,6 +215,7 @@ final class AdmissionContractTests: XCTestCase {
         else { return XCTFail("expected retryable pressure error before headers") }
         XCTAssertEqual(memoryStatus, .serviceUnavailable)
         XCTAssertTrue(memoryBody.contains("insufficient_memory"))
+        XCTAssertTrue(memoryBody.contains("server_error"))
         guard case .httpError(let structuredStatus, _, let structuredBody) = ResponseWriter.failureResponse(
             for: EngineError.generationFailed("structured output constraint failed: boom"),
             streamStarted: false, serializer: serializer)

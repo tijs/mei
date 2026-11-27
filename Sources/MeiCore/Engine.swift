@@ -74,14 +74,24 @@ public actor Engine {
     private let contextProfile: ContextProfile
 
     public nonisolated func availableContextTokens() -> Int {
-        reservations.withLock { $0.available(cap: config.contextCap, profile: contextProfile, headroom: .sample()) }
+        reservations.withLock { $0.available(cap: config.contextCap, profile: contextProfile, headroom: .sample(allocatorLimit: config.memoryLimitBytes)) }
     }
 
     private func reserve(_ id: UUID, prompt: Int, maxTokens: Int?) throws -> Int {
-        try reservations.withLock {
-            try $0.admit(id: id, cap: config.contextCap, prompt: prompt,
-                         requested: maxTokens ?? config.maxTokensDefault,
-                         profile: contextProfile, headroom: .sample())
+        try reservations.withLock { budget in
+            let requested = maxTokens ?? config.maxTokensDefault
+            var room = ContextHeadroom.sample(allocatorLimit: config.memoryLimitBytes)
+            let reply = try ContextReservations.replyLimit(prompt: prompt, requested: requested, cap: config.contextCap)
+            if room.pressure < 2, budget.isIdle,
+               prompt + reply > budget.available(cap: config.contextCap, profile: contextProfile, headroom: room),
+               Memory.cacheMemory > 0 {
+                // Reclaim idle allocator buffers before refusing a warm request.
+                // Live prefix entries and other generations retain their buffers.
+                Memory.clearCache()
+                room = .sample(allocatorLimit: config.memoryLimitBytes)
+            }
+            return try budget.admit(id: id, cap: config.contextCap, prompt: prompt, requested: requested,
+                                    profile: contextProfile, headroom: room)
         }
     }
 

@@ -152,6 +152,8 @@ curl -s http://127.0.0.1:8024/v1/mei/status | jq '{contextMode, contextCap, avai
 
 `contextCap` is the stable server ceiling. Auto uses the supported ceiling for the model profile. On a Mac with more memory you can request a higher numeric ceiling within the model’s positional limit. Set the client's context window to that value. `availableContextTokens` is an estimate for a new request at the instant you check. The sum of input and output must fit the server ceiling. A 26,000-token formatted prompt at a fixed 26,624 cap leaves at most 624 tokens for output. A smaller requested reply limit still wins; when omitted, Mei uses its configured `--max-tokens` default.
 
+On the 32 GiB M1 Max, the stock Inkling bundles and Qwen text use a 32,768-token automatic ceiling. Groot uses 65,536. SenseNova Q6/Q8, Ornith, Qwen with vision, and Inkling Q4 with in-memory prefix snapshots use 26,624. See the [release qualification](docs/RELEASE-0.19.0.md) for the tested configurations.
+
 | Mac unified memory | Example fixed cap | Evidence and trade-off |
 |---|---:|---|
 | 24 GB | 8,192 | A starting point for a model that fits alongside macOS. |

@@ -54,12 +54,23 @@ final class ContextBudgetTests: XCTestCase {
         for flags in [[], ["--context-cap", "auto"], ["--context-cap","8192","--context-cap","auto"]] {
             let config = try parse(flags)
             XCTAssertTrue(config.automaticContext)
-            XCTAssertEqual(config.contextCap, 65_536)
+            XCTAssertEqual(config.contextCap, ServerConfig.defaultContextCap)
         }
         let fixed = try parse(["--context-cap","auto","--context-cap","72000"])
         XCTAssertFalse(fixed.automaticContext)
         XCTAssertEqual(fixed.contextCap, 72_000)
         XCTAssertThrowsError(try parse(["--context-cap","98305"]))
+        let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/AutomaticModelSettings")
+        let ceilings = ["groot-19b-a3b-text": 65_536, "qwen3.6-35b-a3b-text": 32_768,
+                        "qwen3.6-35b-a3b": 26_624, "ornith-1.5-35b-a3b": 26_624]
+        for (name, ceiling) in ceilings {
+            let model = fixtures.appendingPathComponent(name)
+            XCTAssertEqual(ContextProfile.resolve(directory: model.path, fallback: 26_624).autoLimit, ceiling, name)
+        }
+        let profile = ContextProfile.resolve(directory: directory.path, fallback: 26_624)
+        XCTAssertEqual(ContextReservations().available(cap: fixed.contextCap, profile: profile,
+                                                       headroom: .init(bytes: nil, pressure: 0)), 8192)
     }
 
     func testPressureRecoveryAndMissingTelemetry() {
@@ -76,6 +87,18 @@ final class ContextBudgetTests: XCTestCase {
         XCTAssertTrue(swap.isBusy(pages: 7_048, pageSize: 16_384, now: 108))
         XCTAssertFalse(swap.isBusy(pages: 7_048, pageSize: 16_384, now: 113))
         XCTAssertFalse(swap.isBusy(pages: 15_000, pageSize: 16_384, now: 200))
+    }
+
+    func testHostResidencyAndMetalBoundsUseTheSameUnifiedMemory() {
+        let gib = 1 << 30
+        func room(reclaimable: Int, footprint: Int, active: Int, limit: Int = 0) -> Int {
+            ContextHeadroom.admissibleBytes(physical: 32*gib, reclaimable: reclaimable*gib,
+                footprint: footprint*gib, active: active*gib, deviceLimit: 25*gib, allocatorLimit: limit*gib)
+        }
+        XCTAssertEqual(room(reclaimable: 10, footprint: 16, active: 18), 6*gib)
+        XCTAssertEqual(room(reclaimable: 10, footprint: 16, active: 18, limit: 20), 2*gib)
+        XCTAssertEqual(room(reclaimable: 20, footprint: 25, active: 16), 0)
+        XCTAssertEqual(room(reclaimable: 3, footprint: 16, active: 18), 0)
     }
 
     func testCriticalPressureInterruptsAnActiveStreamAfterItsFirstEvent() async {

@@ -341,6 +341,7 @@ function Page({ base }: { base: string }) {
             <section id="context" aria-labelledby="context-title">
               <h3 id="context-title">Choose a context limit</h3>
               <p>Mei defaults to <code>--context-cap auto</code>. Restart with a numeric cap to choose a fixed total. Set your client’s context window to the same value.</p>
+              <p>On the 32 GiB M1 Max, the auto ceiling is 65,536 for Groot, 32,768 for stock Inkling and Qwen text, and 26,624 for SenseNova, Ornith and Qwen with vision. Inkling Q4 uses 26,624 with its in-memory prefix cache.</p>
               <Code label="Override the context limit">{"mei --model groot-19b-a3b-text --context-cap 65536"}</Code>
               <div class="table-scroll">
                 <table>

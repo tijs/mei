@@ -235,9 +235,11 @@ public final class Router: @unchecked Sendable {
             case .invalidOutputLimit: code = "invalid_max_tokens"
             default: code = "engine_error"
             }
+            let status = errorStatus(engineError)
             return (
-                errorStatus(engineError), "application/json",
-                serializer.errorPayload(engineError.localizedDescription, code: code)
+                status, "application/json",
+                serializer.errorPayload(engineError.localizedDescription,
+                    type: status == .serviceUnavailable ? "server_error" : "invalid_request_error", code: code)
             )
         }
         // Structured-generation construction failures (unreadable model
@@ -429,7 +431,8 @@ public final class Router: @unchecked Sendable {
         } else {
             code = "stream_error"
         }
-        return "data: \(ResponseSerializer().errorPayload(error.localizedDescription, code: code))\n\n"
+        let type = code == "generation_interrupted" ? "server_error" : "invalid_request_error"
+        return "data: \(ResponseSerializer().errorPayload(error.localizedDescription, type: type, code: code))\n\n"
     }
 
     /// SSE frame for one stream event. Returns "" for events that should not

@@ -28,14 +28,32 @@ struct ContextProfile: Sendable {
         // Unrecognized exports keep the existing conservative window.
         switch family {
         case "inkling2_loop":
-            limit = 57_344
-            cost = 80 << 10
+            let profile = InklingSupport.profile(directory: directory)
+            limit = profile == .original ? fallback : 32_768
+            cost = (profile == .publishedOriginal ? 152 : 192) << 10
         case "sensenova_loop":
             limit = 26_624
-            cost = 128 << 10
+            // Q6 and Q8 grew 8.94–8.95 GiB at 26,368 input + 32 output
+            // on the 32 GiB M1 Max. Separately charge unfaulted weights.
+            cost = 384 << 10
         case "qwen3_5_moe", "qwen3_5_moe_text":
-            limit = 65_536
-            cost = 48 << 10
+            switch ModelTuningIdentity.detect(modelDirectory: directory)?.name {
+            case "groot-19b-a3b-text":
+                limit = 65_536
+                cost = 96 << 10
+            case "qwen3.6-35b-a3b":
+                limit = 26_624
+                cost = 144 << 10
+            case "ornith-1.5-35b-a3b":
+                limit = 26_624
+                cost = 160 << 10
+            case "qwen3.6-35b-a3b-text":
+                limit = 32_768
+                cost = 128 << 10
+            default:
+                limit = fallback
+                cost = 128 << 10
+            }
         default:
             limit = fallback
             cost = 128 << 10
@@ -53,8 +71,9 @@ struct ContextProfile: Sendable {
             tokenCost = max(cost, attentionLayers * heads * dimension * 4)
         }
         let ceiling = max(1, min(maximum ?? fallback, limit))
+        let unmeasuredLimit = family == "sensenova_loop" ? 4096 : 8192
         return Self(maximum: maximum, autoLimit: ceiling, bytesPerToken: tokenCost,
-                    workspace: 768 << 20, fallback: min(fallback, ceiling))
+                    workspace: 768 << 20, fallback: min(unmeasuredLimit, fallback, ceiling))
     }
 }
 
@@ -80,7 +99,7 @@ struct ContextHeadroom {
     let bytes: Int?
     let pressure: Int32
 
-    static func sample() -> Self {
+    static func sample(allocatorLimit: Int) -> Self {
         let physical = Int(ProcessInfo.processInfo.physicalMemory)
         var stats = vm_statistics64()
         var count = mach_msg_type_number_t(MemoryLayout.size(ofValue: stats) / MemoryLayout<integer_t>.size)
@@ -103,21 +122,39 @@ struct ContextHeadroom {
               host_page_size(host, &pageSize) == KERN_SUCCESS else {
             return Self(bytes: nil, pressure: pressure)
         }
-        let available = (Int(stats.free_count) + Int(stats.inactive_count)) * Int(pageSize)
+        // Clean file-backed pages are reclaimable even on the active list.
+        // Mach includes speculative pages in both free and external counts.
+        let free = max(0, Int(stats.free_count) - Int(stats.speculative_count))
+        let available = (free + Int(stats.external_page_count)) * Int(pageSize)
         let swapping = swapActivity.withLock { [pages = stats.swapouts, bytes = Int(pageSize)] in
             $0.isBusy(pages: pages, pageSize: bytes, now: ProcessInfo.processInfo.systemUptime)
         }
-        let footprintRoom = physical - min(8 << 30, physical / 4) - Int(usage.ri_phys_footprint)
         let mlx = Memory.snapshot()
-        let metalRoom = min(Memory.memoryLimit, GPU.maxRecommendedWorkingSetBytes() ?? physical) - mlx.activeMemory
+        let bytes = admissibleBytes(physical: physical, reclaimable: available,
+                                    footprint: Int(usage.ri_phys_footprint), active: mlx.activeMemory,
+                                    deviceLimit: GPU.maxRecommendedWorkingSetBytes() ?? physical,
+                                    allocatorLimit: allocatorLimit)
+        return Self(bytes: bytes, pressure: swapping ? max(2, pressure) : pressure)
+    }
+
+    static func admissibleBytes(physical: Int, reclaimable: Int, footprint: Int, active: Int,
+                                deviceLimit: Int, allocatorLimit: Int) -> Int {
+        // A mapped checkpoint may have allocated weights that have not yet
+        // faulted into the process. Leave room for those pages on first use.
+        let pendingResidency = max(0, active - footprint)
+        let hostRoom = reclaimable - min(2 << 30, physical / 16) - pendingResidency
+        let footprintRoom = physical - min(8 << 30, physical / 4) - max(footprint, active)
+        // MLX's default allocator threshold waits for scheduled work and can
+        // be crossed briefly. An explicit operator limit remains an upper bound.
+        let metalRoom = min(allocatorLimit > 0 ? allocatorLimit : deviceLimit, deviceLimit) - active
         // Each bound measures the same unified memory through a different lens.
-        return Self(bytes: max(0, min(available - min(2 << 30, physical / 16), footprintRoom, metalRoom)),
-                    pressure: swapping ? max(2, pressure) : pressure)
+        return max(0, min(hostRoom, footprintRoom, metalRoom))
     }
 }
 
 struct ContextReservations {
     private var outstanding: [UUID: Int] = [:]
+    var isIdle: Bool { outstanding.isEmpty }
 
     func available(cap: Int, profile: ContextProfile, headroom: ContextHeadroom) -> Int {
         guard headroom.pressure < 2 else { return 0 }
