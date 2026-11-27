@@ -197,7 +197,7 @@ func admitAfterReclaim(
             throw EngineError.memoryCapacity(required: required, available: available)
         }
     }
-    for delay in [0, 10, 25, 50, 100] {
+    for delay in [0, 75] {
         try Task.checkCancellation()
         if delay > 0 { try await Task.sleep(for: .milliseconds(delay)) }
         do {
@@ -206,7 +206,10 @@ func admitAfterReclaim(
             continue
         }
     }
-    try await Task.sleep(for: .milliseconds(200))
+    // XNU's rate_limit_host_statistics (osfmk/kern/host.c) can return a
+    // cached HOST_VM_INFO64 sample for a one-second window.
+    // A final sample in the next window covers a visibly completed trim.
+    try await Task.sleep(for: .milliseconds(1050))
     return try attempt()
 }
 
