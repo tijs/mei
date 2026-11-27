@@ -716,6 +716,8 @@ public struct MeiStatusResponse: Sendable, Codable {
     public var status: String
     public var model: String
     public var contextCap: Int
+    public var contextMode: String? = nil
+    public var availableContextTokens: Int? = nil
     public var prefillStepSize: Int
     public var greedyCompletionPrefillStepSize: Int? = nil
     public var maxTokens: Int

@@ -55,8 +55,8 @@ final class SenseNovaSupportTests: XCTestCase {
         }
         let smaller = try parse(directory, ["--context-cap", "2048", "--cache-reuse", "false"])
         XCTAssertEqual(smaller.maxKVSize, 2048)
-        XCTAssertNoThrow(try SenseNovaSupport.validateCapacity(promptTokens: 2047, config: smaller))
-        XCTAssertThrowsError(try SenseNovaSupport.validateCapacity(promptTokens: 2048, config: smaller))
+        XCTAssertNoThrow(try ContextReservations.replyLimit(prompt: 2047, requested: 1, cap: smaller.contextCap))
+        XCTAssertThrowsError(try ContextReservations.replyLimit(prompt: 2048, requested: 1, cap: smaller.contextCap))
     }
 
     func testJSON5ExportsUseTheSameAdmissionAndCachePolicy() throws {

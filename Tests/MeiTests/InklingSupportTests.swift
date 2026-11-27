@@ -159,8 +159,8 @@ final class InklingSupportTests: XCTestCase {
     }
     func testCapacityAndHTTPRejection() throws {
         var c = try config(); c.isInklingMini = true
-        XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 4095, config: c))
-        XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 4096, config: c))
+        XCTAssertNoThrow(try ContextReservations.replyLimit(prompt: 4095, requested: 1, cap: c.contextCap))
+        XCTAssertThrowsError(try ContextReservations.replyLimit(prompt: 4096, requested: 1, cap: c.contextCap))
         let text = try ChatRequest(json: Data(#"{"model":"test","messages":[{"role":"user","content":"hello"}]}"#.utf8))
         XCTAssertNoThrow(try InklingSupport.validateInput(text, enabled: true))
         let format = try ChatRequest(json: Data(#"{"model":"test","messages":[{"role":"user","content":"hello"}],"response_format":{"type":"json_object"}}"#.utf8))
@@ -179,17 +179,17 @@ final class InklingSupportTests: XCTestCase {
         var c = try config()
         c.contextCap = 8192; c.isInklingMini = true
         XCTAssertTrue(try InklingSupport.validateLoad(c))
-        XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 4179, config: c))
-        XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 8191, config: c))
-        XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 8192, config: c))
-        XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 8193, config: c))
+        XCTAssertNoThrow(try ContextReservations.replyLimit(prompt: 4179, requested: 1, cap: c.contextCap))
+        XCTAssertNoThrow(try ContextReservations.replyLimit(prompt: 8191, requested: 1, cap: c.contextCap))
+        XCTAssertThrowsError(try ContextReservations.replyLimit(prompt: 8192, requested: 1, cap: c.contextCap))
+        XCTAssertThrowsError(try ContextReservations.replyLimit(prompt: 8193, requested: 1, cap: c.contextCap))
         let larger = try ServerConfig.parse(
             arguments: ["--model-dir", c.modelDirectory, "--context-cap", "200000"],
             recommendedWorkingSetBytes: nil, environment: [:])
         XCTAssertEqual(larger.contextCap, 200_000)
         XCTAssertTrue(try InklingSupport.validateLoad(larger))
-        XCTAssertNoThrow(try InklingSupport.validateCapacity(promptTokens: 199_999, config: larger))
-        XCTAssertThrowsError(try InklingSupport.validateCapacity(promptTokens: 200_000, config: larger))
+        XCTAssertEqual(try ContextReservations.replyLimit(prompt: 199_999, requested: 10, cap: larger.contextCap), 1)
+        XCTAssertThrowsError(try ContextReservations.replyLimit(prompt: 200_000, requested: 1, cap: larger.contextCap))
     }
 
 }

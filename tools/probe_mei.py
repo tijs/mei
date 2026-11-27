@@ -4,7 +4,7 @@
 Uses the shared local-model-bench acceptance contract so the same
 validation logic gates Mei: exact /v1/models identity, plain completion,
 structured add-numbers tool calls (non-streaming AND streaming), cache reuse
-reporting, and the exact-token context-cap 65536 pass / 65537 reject gate.
+reporting, and the total context boundary (cap minus one prompt plus one reply).
 
 Mei-specific additions on top of the oMLX probe:
   - `usage.prompt_tokens_details.cached_tokens` on repeated prefixes
@@ -578,7 +578,7 @@ def main() -> int:
                 "error": "no --tokenizer path provided",
             }
         else:
-            prompt_at_cap = exact_prompt(args.tokenizer, args.context_cap)
+            prompt_at_cap = exact_prompt(args.tokenizer, args.context_cap - 1)
 
             def context_at_cap() -> dict[str, Any]:
                 response, elapsed = request_json(completions_url, {
@@ -589,8 +589,8 @@ def main() -> int:
                     "stream": False,
                 }, timeout=args.timeout)
                 usage = response.get("usage") or {}
-                if int(usage.get("prompt_tokens", -1)) != args.context_cap:
-                    raise AssertionError(f"usage did not confirm {args.context_cap} prompt tokens: {usage!r}")
+                if int(usage.get("prompt_tokens", -1)) != args.context_cap - 1:
+                    raise AssertionError(f"usage did not confirm {args.context_cap - 1} prompt tokens: {usage!r}")
                 if int(usage.get("completion_tokens", 0)) < 1:
                     raise AssertionError(f"no completion at exact context cap: {usage!r}")
                 return {"usage": usage, "request_seconds": elapsed}
@@ -598,7 +598,7 @@ def main() -> int:
             record_probe("context_exact_cap", result, context_at_cap)
 
             def context_over_cap() -> dict[str, Any]:
-                over = exact_prompt(args.tokenizer, args.context_cap + 1)
+                over = exact_prompt(args.tokenizer, args.context_cap)
                 try:
                     response, elapsed = request_json(completions_url, {
                         "model": args.model,
@@ -611,7 +611,7 @@ def main() -> int:
                     if "HTTP 400" not in str(exc):
                         raise
                     return {"rejected_as_expected": True, "error": str(exc)}
-                raise AssertionError(f"{args.context_cap + 1}-token prompt unexpectedly succeeded in {elapsed:.3f}s: {response!r}")
+                raise AssertionError(f"{args.context_cap}-token prompt unexpectedly succeeded in {elapsed:.3f}s: {response!r}")
 
             record_probe("context_over_cap_rejected", result, context_over_cap)
 

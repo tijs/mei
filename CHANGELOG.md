@@ -2,6 +2,11 @@
 
 All notable changes to Mei are documented here.
 
+## [0.19.0] - 2026-11-27
+
+- Mei now chooses a context ceiling automatically. Chat and raw completions share the same total-token rule across models, including SenseNova. Set `--context-cap` to a number to choose an explicit ceiling.
+- Mei checks available memory for the prompt and its allowed reply before starting generation. Clients can inspect the ceiling and current capacity estimate at `/v1/mei/status`.
+
 ## [0.18.0] - 2026-11-24
 
 - On an M1 Max with at least 32 GiB and a context cap up to 26,624, Mei uses a fused attention mask for the Inkling vocabulary-Q4 bundle. At 2,048 input tokens it raised median generation speed from 20.43 to 22.68 tokens/s. A 128-token response took 13.21 seconds, down from 13.96 seconds.

@@ -16,6 +16,9 @@ final class MeiBox<Value>: @unchecked Sendable {
 public enum EngineError: LocalizedError, Sendable {
     case modelDirectoryMissing(String)
     case overContextCap(promptTokens: Int, cap: Int)
+    case memoryCapacity(required: Int, available: Int)
+    case criticalMemoryPressure
+    case invalidOutputLimit
     case emptyPrompt
     case generationFailed(String)
     case modelNotLoaded
@@ -25,7 +28,13 @@ public enum EngineError: LocalizedError, Sendable {
         case .modelDirectoryMissing(let path):
             "model directory does not exist: \(path)"
         case .overContextCap(let promptTokens, let cap):
-            "request exceeded context cap: \(promptTokens) prompt tokens > \(cap) allowed"
+            "request exceeded context cap: \(promptTokens) prompt tokens leave no space for a reply within \(cap) total tokens"
+        case .memoryCapacity(let required, let available):
+            "request needs \(required) total tokens; current memory headroom allows \(available). Retry later or shorten the request."
+        case .invalidOutputLimit:
+            "max_tokens must be positive"
+        case .criticalMemoryPressure:
+            "generation interrupted by critical memory pressure; discard incomplete output"
         case .emptyPrompt:
             "request prompt was empty after tokenization"
         case .generationFailed(let message):
@@ -61,6 +70,21 @@ public enum StreamEvent: Sendable {
 /// revision's model forward path is not proven safe for two concurrent
 /// prefills (see artifacts/concurrent-generations-rlog.md, R4).
 public actor Engine {
+    private nonisolated let reservations = OSAllocatedUnfairLock(initialState: ContextReservations())
+    private let contextProfile: ContextProfile
+
+    public nonisolated func availableContextTokens() -> Int {
+        reservations.withLock { $0.available(cap: config.contextCap, profile: contextProfile, headroom: .sample()) }
+    }
+
+    private func reserve(_ id: UUID, prompt: Int, maxTokens: Int?) throws -> Int {
+        try reservations.withLock {
+            try $0.admit(id: id, cap: config.contextCap, prompt: prompt,
+                         requested: maxTokens ?? config.maxTokensDefault,
+                         profile: contextProfile, headroom: .sample())
+        }
+    }
+
     private let container: ModelContainer
     public let config: ServerConfig
     private let logger = Logger(subsystem: "mei.engine", category: "engine")
@@ -91,6 +115,7 @@ public actor Engine {
     private var fragmentTableCache: (vocabularySize: Int, table: any TokenFragmentTable)?
 
     public init(container: ModelContainer, config: ServerConfig, loadMemory: Memory.Snapshot? = nil) {
+        self.contextProfile = ContextProfile.resolve(directory: config.modelDirectory, fallback: min(config.contextCap, ServerConfig.defaultContextCap))
         self.container = container
         self.config = config
         self.loadMemory = loadMemory
@@ -160,7 +185,7 @@ public actor Engine {
                 maxCacheBytes: config.prefixCacheLimitBytes,
                 diskCacheDir: diskCacheDir,
                 enableSSMReDerive: config.enableSSMReDerive,
-                modelKey: config.servedModelID)
+                modelKey: "\(config.servedModelID)-total-\(config.contextCap)")
             cacheConfig.useAlignedVisitSnapshots = config.isInklingMini
             await container.enableCachingAsync(config: cacheConfig)
             let topology = await container.cacheTopologySnapshot()
@@ -296,7 +321,9 @@ public actor Engine {
 
     public func chatRun(request: ChatRequest) async throws -> GenerationRun {
         try await scheduler.submit(priority: request.priority) { grant in
-            try await self.chatRunLocked(request: request, grant: grant)
+            try await withContextPressureGuard {
+                try await self.chatRunLocked(request: request, grant: grant)
+            }
         }
     }
 
@@ -308,8 +335,10 @@ public actor Engine {
         // run.
         makeCancellableStream { continuation in
             try await self.scheduler.submit(priority: request.priority) { grant in
-                try await self.runStreamingLocked(
-                    request: request, grant: grant, continuation: continuation)
+                try await withContextPressureGuard {
+                    try await self.runStreamingLocked(
+                        request: request, grant: grant, continuation: continuation)
+                }
             }
         }
     }
@@ -332,8 +361,11 @@ public actor Engine {
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
+        let reservation = UUID()
+        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        defer { reservations.withLock { $0.release(reservation) } }
         let parameters = try await makeParameters(
-            tokens: tokens, request: request, templateCount: template.count,
+            reply: reply, tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
         let prefixCounts = await canonicalPrefixBoundaries(
             template: template, tools: request.tools, context: context,
@@ -617,8 +649,11 @@ public actor Engine {
         let anchors = try await ssmAnchorOffsets(
             template: template, tools: request.tools,
             context: context, tokens: tokens)
+        let reservation = UUID()
+        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        defer { reservations.withLock { $0.release(reservation) } }
         let parameters = try await makeParameters(
-            tokens: tokens, request: request, templateCount: template.count,
+            reply: reply, tokens: tokens, request: request, templateCount: template.count,
             context: context, anchorOffsets: anchors)
         // Batch-first `[1, T]` tokens like generateLocked and the raw path — see
         // the comment there; Gemma4's VLM prepare crashed on 1-D chat tokens.
@@ -750,8 +785,8 @@ public actor Engine {
                     terminalCancelled = Task.isCancelled
                     if !terminalCancelled {
                         continuation.yield(.finish(run))
+                        continuation.finish()
                     }
-                    continuation.finish()
                     finished = true
                 }
             }
@@ -785,8 +820,8 @@ public actor Engine {
                 // client still needs a terminal frame, so finish here exactly
                 // as before.
                 continuation.yield(.finish(run))
+                continuation.finish()
             }
-            continuation.finish()
         }
 
         // Logged after the producer ends: `wall_ms` still covers the whole run,
@@ -799,6 +834,9 @@ public actor Engine {
         }
         captureRunMemory(&run)
         RequestLog.record(run, kind: "chat_stream")
+        // Let the outer pressure guard distinguish a critical interruption
+        // from a disconnect before the producer closes the HTTP stream.
+        try Task.checkCancellation()
     }
 
     private static func terminalGenerationError(
@@ -819,7 +857,9 @@ public actor Engine {
 
     public func completionRun(request: CompletionRequest) async throws -> GenerationRun {
         try await scheduler.submit(priority: request.priority) { grant in
-            try await self.completionRunLocked(request: request, grant: grant)
+            try await withContextPressureGuard {
+                try await self.completionRunLocked(request: request, grant: grant)
+            }
         }
     }
 
@@ -828,7 +868,10 @@ public actor Engine {
         let tokenizer = await container.tokenizer
         let tokens = tokenizer.encode(text: request.prompt)
         guard !tokens.isEmpty else { throw EngineError.emptyPrompt }
-        let parameters = try await makeCompletionParameters(tokens: tokens, request: request)
+        let reservation = UUID()
+        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        defer { reservations.withLock { $0.release(reservation) } }
+        let parameters = try await makeCompletionParameters(reply: reply, tokens: tokens, request: request)
 
         // Raw completions participate in the same paged prefix cache as chat:
         // any request whose token stream extends a stored prefix resumes from
@@ -1148,20 +1191,16 @@ public actor Engine {
     }
 
     private func makeParameters(
+        reply: Int,
         tokens: [Int],
         request: ChatRequest,
         templateCount: Int,
         context: [String: any Sendable]?,
         anchorOffsets: [Int] = []
     ) async throws -> GenerateParameters {
-        try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
-        try InklingSupport.validateCapacity(promptTokens: tokens.count, config: config)
-        guard tokens.count <= config.contextCap else {
-            throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
-        }
         var parameters = GenerateParameters()
         parameters.prefillStepSize = config.prefillStepSize
-        parameters.maxKVSize = config.maxKVSize
+        parameters.maxKVSize = config.contextCap
         // Structured requests stay off the compiled decode path (the plan's
         // decode-path gate): an operator's --compiled-decode applies to text
         // requests only until constrained-processor replay is proven safe.
@@ -1198,23 +1237,17 @@ public actor Engine {
         if let stop = request.stop, !stop.isEmpty {
             parameters.extraStopStrings = stop
         }
-        let requestedMax = request.maxTokens ?? config.maxTokensDefault
-        let capacity = config.maxKVSize - tokens.count
-        parameters.maxTokens = min(requestedMax, max(1, capacity))
+        parameters.maxTokens = reply
         return parameters
     }
 
     private func makeCompletionParameters(
+        reply: Int,
         tokens: [Int],
         request: CompletionRequest
     ) async throws -> GenerateParameters {
-        try SenseNovaSupport.validateCapacity(promptTokens: tokens.count, config: config)
-        try InklingSupport.validateCapacity(promptTokens: tokens.count, config: config)
-        guard tokens.count <= config.contextCap else {
-            throw EngineError.overContextCap(promptTokens: tokens.count, cap: config.contextCap)
-        }
         var parameters = GenerateParameters()
-        parameters.maxKVSize = config.maxKVSize
+        parameters.maxKVSize = config.contextCap
         parameters.enableCompiledDecode = config.enableCompiledDecode
         parameters.compiledDecodeMaxPromptOffset = config.compiledDecodeMaxPromptOffset
         if config.maxKVWindowSize > 0 {
@@ -1245,9 +1278,7 @@ public actor Engine {
         if let stop = request.stop, !stop.isEmpty {
             parameters.extraStopStrings = stop
         }
-        let requestedMax = request.maxTokens ?? config.maxTokensDefault
-        let capacity = config.maxKVSize - tokens.count
-        parameters.maxTokens = min(requestedMax, max(1, capacity))
+        parameters.maxTokens = reply
         return parameters
     }
 

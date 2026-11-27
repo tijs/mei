@@ -208,7 +208,13 @@ final class AdmissionContractTests: XCTestCase {
             return XCTFail("expected an HTTP error for an over-context prompt")
         }
         XCTAssertEqual(capStatus, .badRequest)
-        XCTAssertTrue(capBody.contains("engine_error"))
+        XCTAssertTrue(capBody.contains("context_length_exceeded"))
+        guard case .httpError(let memoryStatus, _, let memoryBody) = ResponseWriter.failureResponse(
+            for: EngineError.memoryCapacity(required: 26_624, available: 8192),
+            streamStarted: false, serializer: serializer)
+        else { return XCTFail("expected retryable pressure error before headers") }
+        XCTAssertEqual(memoryStatus, .serviceUnavailable)
+        XCTAssertTrue(memoryBody.contains("insufficient_memory"))
         guard case .httpError(let structuredStatus, _, let structuredBody) = ResponseWriter.failureResponse(
             for: EngineError.generationFailed("structured output constraint failed: boom"),
             streamStarted: false, serializer: serializer)
@@ -220,18 +226,19 @@ final class AdmissionContractTests: XCTestCase {
     }
 
     func testPostStartFailureStaysAnSSEErrorFrame() {
-        let errors: [Error] = [
-            AdmissionError.queueFull(limit: 1),
-            EngineError.generationFailed("structured output constraint failed: boom"),
+        let errors: [(Error, String)] = [
+            (EngineError.criticalMemoryPressure, "generation_interrupted"),
+            (AdmissionError.queueFull(limit: 1), "stream_error"),
+            (EngineError.generationFailed("structured output constraint failed: boom"), "stream_error"),
         ]
-        for error in errors {
+        for (error, code) in errors {
             let result = ResponseWriter.failureResponse(
                 for: error, streamStarted: true, serializer: ResponseSerializer())
             guard case .sseErrorFrame(let frame) = result else {
                 return XCTFail("a failure after the first event must stay in-band: \(result)")
             }
             XCTAssertEqual(frame, Router.streamErrorSSEData(error))
-            XCTAssertTrue(frame.contains("\"code\":\"stream_error\""))
+            XCTAssertTrue(frame.contains("\"code\":\"\(code)\""))
         }
     }
 

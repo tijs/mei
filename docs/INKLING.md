@@ -2,9 +2,8 @@
 
 ## Mei vocabulary Q4
 
-On a 32 GB M1 Max, Mei's custom Inkling bundle uses a 26,624-token total
-context by default. Input, conversation history, tool results and generated
-output share that budget. Install Mei 0.16.1 or later and the Hugging Face `hf` CLI,
+Mei sizes context automatically when you launch the Inkling bundle by name. Input, conversation history, tool results and generated
+output share that budget. Install Mei 0.19.0 or later and the Hugging Face `hf` CLI,
 then run:
 
 ```sh
@@ -18,8 +17,7 @@ contain 18.19 GB of tensor data. The embedding and output projection use
 NVFP4 and MXFP8 weights and scales. Mei keeps 1,024 tokens in the local
 attention caches and full history in the global attention caches.
 
-The custom profile uses the measured default on machines with at least 32 GiB
-of physical memory. Below that it uses 8,192 tokens. To set a different limit
+Use the status endpoint to see the configured ceiling and current headroom. To set a different limit
 on a machine with more headroom, pass it explicitly, for example:
 
 ```sh
@@ -84,7 +82,7 @@ The 26,624-token window allows room for both the prompt and response. A greedy r
 
 ## Original mixed-precision bundle
 
-Install Mei 0.16.1 or later and the Hugging Face `hf` CLI on an Apple Silicon
+Install Mei 0.19.0 or later and the Hugging Face `hf` CLI on an Apple Silicon
 Mac. The tested NVFP4 bundle downloads about 19.5 GB. Qualification ran on a
 32 GB M1 Max with one model loaded.
 
@@ -106,7 +104,7 @@ curl http://127.0.0.1:8024/v1/chat/completions \
   -d '{"model":"inkling-2-mini","messages":[{"role":"user","content":"Write a Python function that groups strings by their first letter."}]}'
 ```
 
-The automatic profile uses a total context limit of 26,624 tokens on Macs with at least 32 GiB of memory (8,192 below that), a 4,096-token
+The automatic profile uses automatic total-context admission, a 4,096-token
 default output cap, a 128-token prefill step, and one active generation. Mei
 uses the bundle's sampling defaults and selects the qualified native kernels
 and bounded Metal command buffers. Text chat, streaming, and native tool calls

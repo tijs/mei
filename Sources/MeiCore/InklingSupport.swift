@@ -162,9 +162,5 @@ public enum InklingSupport {
         if request.containsUnsupportedContent { throw InputError.textOnly }
         if request.responseFormat != .text { throw InputError.structuredUnsupported }
     }
-    static func validateCapacity(promptTokens: Int, config: ServerConfig) throws {
-        if config.isInklingMini, promptTokens >= config.contextCap {
-            throw EngineError.overContextCap(promptTokens: promptTokens, cap: config.contextCap - 1)
-        }
-    }
+
 }

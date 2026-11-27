@@ -55,7 +55,9 @@ struct MeiMain {
         }
 
         if config.isInklingMini {
-            InklingSupport.applyRuntimeEnvironment(modelDirectory: config.modelDirectory, contextCap: config.contextCap)
+            // Auto retains the released load-time kernel policy on qualified Macs.
+            let kernelCap = config.automaticContext ? min(config.contextCap, ServerConfig.defaultContextCap) : config.contextCap
+            InklingSupport.applyRuntimeEnvironment(modelDirectory: config.modelDirectory, contextCap: kernelCap)
             print("mei: Inkling 2 Mini text profile selected")
         }
         config.optimizationProfile.applyRuntimeEnvironment(

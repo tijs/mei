@@ -359,7 +359,9 @@ all pre-existing errors keep their previous bytes (no `param`).
 | 400 | `response_format` decode/validation failure (not an object, missing/wrong `type`, missing `json_schema`/`name`/`schema`, non-strict, structured + non-empty `tools`) | `code: "invalid_response_format"` (structured + tools: `"response_format_unsupported"`), `param: "response_format"` | `Router.errorResult` (`Router.swift:163-246`), `ResponseFormat.swift` |
 | 400 | Schema outside the supported strict subset (unsupported keywords at any level, unions other than exactly one scalar plus `"null"`, arrays without a supported `items`, malformed shapes, duplicate/invalid names) | message prefixed `response_format.json_schema.schema: `; nested locations are named in the message (`at 'meta.id': …`), `code: "response_format_unsupported"`, `param: "response_format"` | `Router.errorResult`, `JSONSchemaCompiler.swift` |
 | 400 | Prompt empty after tokenization | `type: invalid_request_error`, `code: "engine_error"` | `Router.swift:139,143-144`, `EngineError.emptyPrompt` (`Engine.swift:19,743`) |
-| 400 | Prompt exceeds `--context-cap` | message `"request exceeded context cap: N prompt tokens > CAP allowed"`, `type: invalid_request_error`, `code: "engine_error"` | `Router.errorStatus` (`Router.swift:267-273`), `Engine.swift:1056,1108` |
+| 400 | Formatted prompt fills or exceeds the total context ceiling | `context_length_exceeded`; the message includes the input count and ceiling | `ContextReservations.replyLimit` |
+| 503 | The prompt and allowed reply exceed current memory headroom | `insufficient_memory` | `ContextReservations.admit` |
+| 503 before streaming, otherwise SSE error | Critical pressure during generation | `generation_interrupted` | `withContextPressureGuard` |
 | 404 | Unmatched route | `type: invalid_request_error`, `code: "not_found"` | `HTTPServer.swift:209-213` |
 | 413 | Body > 64 MiB | `type: invalid_request_error`, `code: "payload_too_large"` | `HTTPRequestLimiter` (`HTTPServer.swift:228-246`), `HTTPServer.swift:195-201` |
 | 429 | Admission refusal: the bounded queue already holds `--max-queue-depth` waiting requests (never enqueued) — even for a streaming request, because the SSE head is deferred until the first event | `type: rate_limit_error`, `code: "queue_full"` | `Router.errorPlain` (`Router.swift`), `RequestScheduler` (`Scheduling.swift`) |
@@ -371,9 +373,7 @@ all pre-existing errors keep their previous bytes (no `param`).
 | 500 (payload) | Serializer encoding failure (theoretically unreachable for encodable DTOs) | literal `{"error":{"message":"encoding failure","type":"internal_error"}}` | `Router.swift:18-19` |
 
 Deviations vs upstream (deliberate, local-server scope): **no authentication**
-— no `Authorization: Bearer` check, so no 401/403 paths exist; the only
-429/503 responses are the admission refusals above (`queue_full` /
-`queue_timeout`), not rate limiting or quota; **no 422** (input validation is
+— no `Authorization: Bearer` check, so no 401/403 paths exist; 429 and 503 describe local queue and memory conditions; **no 422** (input validation is
 minimal by design, §3); errors after a stream starts keep HTTP 200 with an
 SSE error frame — but any failure before the stream's first event (admission
 refusals, decode failures, pre-generation engine failures) arrives **before**
@@ -392,12 +392,8 @@ does not document the both-supplied conflict (§1 open ambiguity).
   `Tests/` (verified by whole-tree search, 2026-09-23). Because unknown keys are
   ignored, a request that sends it is accepted silently and its value has zero
   effect — it neither errors nor influences generation.
-- Effective per-request cap (`Engine.swift:1097-1099,1142-1144`):
-  `maxTokens = min(request.maxTokens ?? config.maxTokensDefault, max(1, maxKVSize − promptTokens))`
-  with `maxKVSize = contextCap + 4096` (`ServerConfig.swift:125`). A request
-  with no `max_tokens` uses the server default (`--max-tokens`, default 32768,
-  or the profile's measured cap). A prompt longer than `--context-cap` is
-  rejected with 400 before this formula applies.
+- From Mei 0.19.0 the effective output allowance is `min(max_tokens ?? serverDefault, contextCap − formattedPromptTokens)`. Every backend uses this rule. A request with no remaining reply space receives HTTP 400. An admitted reply keeps its allowance through generation.
+- `/v1/mei/status` reports `contextMode` (auto or fixed), `contextCap` (stable total ceiling), and `availableContextTokens` (current admission estimate).
 
 **Frozen policy (P0):**
 - `max_tokens` is the **sole supported token-budget field**. When both fields

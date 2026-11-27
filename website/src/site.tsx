@@ -194,6 +194,10 @@ function Page({ base }: { base: string }) {
                     <summary>Download and run {m.name}</summary>
                     <p>{m.automaticSettings}</p>
                     <Code label={`${m.name} model commands`}>{modelCommands(m)}</Code>
+                    {m.profile === "inkling-2-mini" && <>
+                      <p>On the original weights, 22/25 passed the task suite. The optional vocabulary Q4 scored 20/25 and uses less memory. Use its memory cache for repeated chat prompts.</p>
+                      <Code label="Run the optional Inkling Q4">{"mei pull inkling-2-mini-mei-q4\nmei --model inkling-2-mini-mei-q4 --cache-mode memory"}</Code>
+                    </>}
                   </details>
                 </article>
               ))}
@@ -207,16 +211,13 @@ function Page({ base }: { base: string }) {
           <section class="section wrap" id="results" aria-labelledby="release-title">
             <div class="section-heading">
               <div><h2 id="release-title">Latest release: Mei {release.version}</h2></div>
-              <p>The curated models now share a 26,624-token default on a 32 GB Mac. <a href="#context">Choose a context limit ↗</a></p>
+              <p>Mei now sizes each request against available memory. <a href="#context">Choose a context limit ↗</a></p>
             </div>
             <p>
-              Run <code>mei pull inkling-2-mini-mei-q4</code> to opt in.
-              Continue using <code>inkling-2-mini</code> for the original weights. The profile uses a 26,624-token context on a
-              32 GB M1 Max. Use <code>--context-cap</code> to override it. With the original weights, the fused mask improved generation by 8.72% at 2,048 input tokens and preserved all 25 task grades (22/25 passed).
+              Chat and raw completions count the formatted prompt and reply against one ceiling. With a fixed 26,624-token ceiling, a 26,000-token prompt leaves 624 tokens for the reply.
             </p>
             <p>
-              For repeated Q4 chat prompts on the M1 Max, start Mei with <code>--cache-mode memory</code>.
-              Reusing the first 1,024 tokens cut prompt processing from about 12 seconds to 6.30 seconds in the chat benchmark.
+              Read <code>contextCap</code> and <code>availableContextTokens</code> from <code>/v1/mei/status</code> to see the model’s server ceiling and how much fits now. If Mei returns HTTP 503, request a shorter reply or retry when memory is available.
             </p>
             <p><a href={release.url}>Read the full release notes ↗</a></p>
           </section>
@@ -339,20 +340,20 @@ function Page({ base }: { base: string }) {
             </div>
             <section id="context" aria-labelledby="context-title">
               <h3 id="context-title">Choose a context limit</h3>
-              <p>Restart Mei with <code>--context-cap</code> to override the default. Set your client’s context window to the same value.</p>
+              <p>Mei defaults to <code>--context-cap auto</code>. Restart with a numeric cap to choose a fixed total. Set your client’s context window to the same value.</p>
               <Code label="Override the context limit">{"mei --model groot-19b-a3b-text --context-cap 65536"}</Code>
               <div class="table-scroll">
                 <table>
                   <caption>Example context caps for a single model</caption>
                   <thead><tr><th scope="col">Mac unified memory</th><th scope="col">Tokens</th><th scope="col">When to use it</th></tr></thead>
                   <tbody>
-                    <tr><th scope="row">24 GB</th><td>8,192</td><td>Try if the weights fit. Inkling uses this below 32 GB.</td></tr>
-                    <tr><th scope="row">32 GB</th><td>26,624</td><td>Curated default. A greedy raw Inkling Q4 completion processed 26,368 input tokens in 134 seconds on an M1 Max.</td></tr>
+                    <tr><th scope="row">24 GB</th><td>8,192</td><td>Try if the weights fit. Leave room for macOS.</td></tr>
+                    <tr><th scope="row">32 GB</th><td>26,624</td><td>Fixed latency-oriented example. A greedy raw Inkling Q4 completion processed 26,368 input tokens in 134 seconds on an M1 Max.</td></tr>
                     <tr><th scope="row">64 GB or more</th><td>65,536</td><td>Try a long prompt and check Memory Pressure in Activity Monitor.</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p>Inkling shares the limit between prompt and reply. Groot, Qwen and Ornith apply it to the prompt and use a separate reply limit. Model weights and cache size affect how much fits. SenseNova Loop supports up to 4,096 tokens.</p>
+              <p>Every model shares its cap between the formatted prompt and generated reply. Earlier Groot, Qwen and Ornith releases allowed extra reply space. Read contextCap and availableContextTokens from /v1/mei/status to see the configured ceiling and current estimate.</p>
             </section>
             <div class="start-links">
               <a class="button" href={release.url}>

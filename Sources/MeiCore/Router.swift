@@ -80,7 +80,8 @@ public final class Router: @unchecked Sendable {
             runtimePolicies: engine.runtimePolicyStatus(),
             status: "ok",
             model: config.servedModelID,
-            contextCap: config.contextCap,
+            contextCap: config.contextCap, contextMode: config.automaticContext ? "auto" : "fixed",
+            availableContextTokens: engine.availableContextTokens(),
             prefillStepSize: config.prefillStepSize,
             greedyCompletionPrefillStepSize: config.greedyCompletionPrefillStepSize,
             maxTokens: config.maxTokensDefault,
@@ -226,9 +227,17 @@ public final class Router: @unchecked Sendable {
             }
         }
         if let engineError = error as? EngineError {
+            let code: String
+            switch engineError {
+            case .overContextCap: code = "context_length_exceeded"
+            case .memoryCapacity: code = "insufficient_memory"
+            case .criticalMemoryPressure: code = "generation_interrupted"
+            case .invalidOutputLimit: code = "invalid_max_tokens"
+            default: code = "engine_error"
+            }
             return (
                 errorStatus(engineError), "application/json",
-                serializer.errorPayload(engineError.localizedDescription, code: "engine_error")
+                serializer.errorPayload(engineError.localizedDescription, code: code)
             )
         }
         // Structured-generation construction failures (unreadable model
@@ -273,7 +282,8 @@ public final class Router: @unchecked Sendable {
 
     public static func errorStatus(_ error: EngineError) -> HTTPResponseStatus {
         switch error {
-        case .overContextCap: return .badRequest
+        case .overContextCap, .invalidOutputLimit: return .badRequest
+        case .memoryCapacity, .criticalMemoryPressure: return .serviceUnavailable
         case .modelDirectoryMissing, .modelNotLoaded, .generationFailed: return .internalServerError
         case .emptyPrompt: return .badRequest
         }
@@ -413,7 +423,13 @@ public final class Router: @unchecked Sendable {
     /// pure so the structured-generation failure mapping is unit-testable
     /// without a channel, matching `toolCallSSEData`/`chunkSSEData`.
     public static func streamErrorSSEData(_ error: Error) -> String {
-        "data: \(ResponseSerializer().errorPayload(error.localizedDescription, code: "stream_error"))\n\n"
+        let code: String
+        if let failure = error as? EngineError, case .criticalMemoryPressure = failure {
+            code = "generation_interrupted"
+        } else {
+            code = "stream_error"
+        }
+        return "data: \(ResponseSerializer().errorPayload(error.localizedDescription, code: code))\n\n"
     }
 
     /// SSE frame for one stream event. Returns "" for events that should not

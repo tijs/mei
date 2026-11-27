@@ -131,7 +131,7 @@ an arbitrary checkpoint. Weights are not included with Mei and have their own
 licenses.
 
 For **Inkling 2 Mini**, the Mei vocabulary Q4 bundle reduces serving memory
-and selects a 26,624-token context on a 32 GB M1 Max. In Mei 0.17.0, Q4 scored
+on a 32 GB M1 Max. In Mei 0.17.0, Q4 scored
 20/25 on the task suite versus 22/25 for the original weights. See the
 [model guide](docs/INKLING.md) for both downloads and the context override.
 On a 32 GB M1 Max, repeated requests can reuse their first 1,024 tokens
@@ -143,27 +143,28 @@ For measured model comparisons and their hardware/runtime scope, see the
 
 ## Choose a context limit
 
-Mei defaults to **26,624 tokens** for the curated models on a 32 GB Mac. To use a different limit, restart Mei with `--context-cap` after the model name:
+Start Mei by model name. The default, `--context-cap auto`, gives each request room for its formatted prompt and reply according to the model’s supported window and the Mac’s available memory. Mei counts cached history once. Use a number for repeatable runs:
 
 ```sh
 mei --model groot-19b-a3b-text --context-cap 65536
+curl -s http://127.0.0.1:8024/v1/mei/status | jq '{contextMode, contextCap, availableContextTokens}'
 ```
 
-The same flag works with `--model-dir`. Match your client’s context window to the server setting. For Inkling, the prompt, conversation history, tool results and reply share the cap. For Groot, Qwen and Ornith the cap limits the prompt. Use `--max-tokens` to set the separate reply limit.
+`contextCap` is the stable server ceiling. Auto uses the supported ceiling for the model profile. On a Mac with more memory you can request a higher numeric ceiling within the model’s positional limit. Set the client's context window to that value. `availableContextTokens` is an estimate for a new request at the instant you check. The sum of input and output must fit the server ceiling. A 26,000-token formatted prompt at a fixed 26,624 cap leaves at most 624 tokens for output. A smaller requested reply limit still wins; when omitted, Mei uses its configured `--max-tokens` default.
 
-| Mac unified memory | Example context cap | When to try it |
+| Mac unified memory | Example fixed cap | Evidence and trade-off |
 |---|---:|---|
-| 24 GB | 8,192 | Start here if the model fits with room for macOS. Both Inkling profiles use this fallback below 32 GB. |
-| 32 GB | 26,624 | Default for the curated models. On an M1 Max, a greedy raw Inkling Q4 completion retrieved an early value from 26,368 input tokens in 134 seconds of prefill. |
-| 64 GB or more | 65,536 | A starting experiment for a larger Mac. Test a representative long prompt and check Memory Pressure in Activity Monitor. |
+| 24 GB | 8,192 | A starting point for a model that fits alongside macOS. |
+| 32 GB | 26,624 | Latency-oriented Inkling baseline on the M1 Max. Coding runs also exercised 32,768 total with up to 16,384 output. |
+| 64 GB or more | 65,536 | Try a representative long prompt. Memory usage varies with attention architecture, weight size, and other apps. |
 
-Weight size and the model’s attention cache affect how much context fits. Lower the cap if your Mac starts swapping or long prompts take too long. SenseNova Loop has a separate 4,096-token runtime limit.
+Groot, Qwen and Ornith previously allowed additional reply tokens after a full prompt. Now reserve reply space within the window or explicitly raise the cap. A full prompt receives HTTP 400. Temporary memory pressure before generation receives HTTP 503; compact the conversation, request a shorter reply or retry after memory is available. In a stream, discard unfinished output or tool calls if a terminal error frame arrives.
 
 ## Use Mei with Pi
 
 [Pi](https://pi.dev/) can connect to Mei through its built-in OpenAI Chat
 Completions provider. This example uses Inkling 2 Mini, a text model with
-streaming tool calls and a 26,624-token total budget on a 32 GB Mac for prompts and replies.
+streaming tool calls and an example 26,624-token client window for prompts and replies.
 Install Mei 0.16.1 or later and the `hf` CLI. The pinned bundle is about 19.5 GB.
 See the [Inkling guide](docs/INKLING.md).
 
@@ -231,7 +232,7 @@ Use `mei --help` for the full list of options. Common settings are:
 | `--model-dir DIR` | Local model bundle to load |
 | `--served-model-id ID` | Model name clients send in requests |
 | `--port PORT` | Listen on another port; default `8024` |
-| `--context-cap TOKENS` | Override the context limit at launch. See [Choose a context limit](#choose-a-context-limit). |
+| `--context-cap auto\|TOKENS` | Choose automatic sizing or a fixed total at launch. See [Choose a context limit](#choose-a-context-limit). |
 | `--max-tokens TOKENS` | Set the server's maximum reply length |
 | `--kv-cache-dir DIR` | Configure an on-disk KV cache; support varies by model |
 

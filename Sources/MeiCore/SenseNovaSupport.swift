@@ -60,12 +60,12 @@ public enum SenseNovaSupport {
               export.quantization.group_size == 64 else {
             throw ConfigError.invalidValue("SenseNova experiment requires the pinned release text export with 6-bit or 8-bit group-64 weights and activation_dtype=float32")
         }
-        guard config.contextCap > 0, config.contextCap <= 4096,
+        guard config.contextCap > 0, config.contextCap <= (ContextProfile.resolve(directory: config.modelDirectory, fallback: 4096).maximum ?? 4096),
               config.prefillStepSize > 0, config.prefillStepSize <= 64,
               config.maxActiveGenerations == 1,
               !config.enableCompiledDecode, config.maxKVWindowSize == 0,
               !config.enableFlint, !config.enableFlintJANGH, config.modelTuning == nil else {
-            throw ConfigError.invalidValue("SenseNova experiment supports at most 4K total context, prefill chunks <=64, one active generation, uncompiled decode and no sliding KV window")
+            throw ConfigError.invalidValue("SenseNova experiment supports total context within the checkpoint position limit, prefill chunks <=64, one active generation, uncompiled decode and no sliding KV window")
         }
         guard config.kvBits == nil else {
             throw ConfigError.invalidValue("SenseNova experiment requires unquantized attention KV")
@@ -84,9 +84,5 @@ public enum SenseNovaSupport {
         if textOnly, request.containsUnsupportedContent { throw InputError.textOnly }
     }
 
-    static func validateCapacity(promptTokens: Int, config: ServerConfig) throws {
-        if config.isSenseNovaLoop, promptTokens >= config.contextCap {
-            throw EngineError.overContextCap(promptTokens: promptTokens, cap: config.contextCap - 1)
-        }
-    }
+
 }

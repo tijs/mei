@@ -5,7 +5,7 @@ import MLXLMCommon
 /// Immutable server configuration, resolved from CLI flags with the same
 /// shape the local-model-bench start scripts use for the other engines.
 public struct ServerConfig: Sendable {
-    public static let version = "0.18.0"
+    public static let version = "0.19.0"
     public var modelDirectory: String
     public var servedModelID: String
     /// Experimental app-owned Flint affine architecture. Never auto-enabled.
@@ -27,6 +27,7 @@ public struct ServerConfig: Sendable {
     public var port: Int = 8024
     public static let defaultContextCap = 26_624
     public var contextCap: Int = ServerConfig.defaultContextCap
+    public var automaticContext = true
     public var maxTokensDefault: Int = 32_768
     /// Set when --max-tokens was given, so a profile default never
     /// overrides an explicit operator choice.
@@ -163,7 +164,7 @@ public struct ServerConfig: Sendable {
 
     /// KV capacity bound: the cache must hold the full context plus a
     /// generation headroom window.
-    public var maxKVSize: Int { (isSenseNovaLoop || isInklingMini) ? contextCap : contextCap + 4096 }
+    public var maxKVSize: Int { contextCap }
 
     /// Flint's selected bundle declares its sampler. Adopt only its authored
     /// values when the operator did not set a CLI/programmatic override. This
@@ -291,8 +292,10 @@ public extension ServerConfig {
             case "--port":
                 config.port = try parseInt(flag, value())
             case "--context-cap":
-                config.contextCap = try parseInt(flag, value())
-                contextCapExplicit = true
+                let argument = try value()
+                config.automaticContext = argument == "auto"
+                contextCapExplicit = !config.automaticContext
+                config.contextCap = config.automaticContext ? Self.defaultContextCap : try parseInt(flag, argument)
             case "--max-tokens":
                 config.maxTokensDefault = try parseInt(flag, value())
                 config.maxTokensExplicit = true
@@ -509,6 +512,13 @@ public extension ServerConfig {
         if !contextCapExplicit, config.optimizationProfile == .senseNovaLoop {
             config.contextCap = 4096
         }
+        let contextProfile = ContextProfile.resolve(directory: modelDirectory, fallback: config.contextCap)
+        if config.automaticContext {
+            config.contextCap = isInkling && config.cacheMode == .memory
+                ? min(contextProfile.autoLimit, config.contextCap) : contextProfile.autoLimit
+        } else if let maximum = contextProfile.maximum, config.contextCap > maximum {
+            throw ConfigError.invalidValue("--context-cap exceeds the model maximum of \(maximum)")
+        }
         if !prefillStepSizeExplicit, !isInkling {
             // No named profile: the architecture default, device-aware for
             // the ornith family. Restores behaviour 0.4.1 shipped and the
@@ -588,7 +598,7 @@ public extension ServerConfig {
       --port PORT            (default 8024)
 
     Context / capacity:
-      --context-cap TOKENS   Set the context cap (default \(defaultContextCap); model limits apply)
+      --context-cap TOKENS   Total prompt + reply tokens (default auto; numeric override)
       --max-tokens TOKENS    Server-side per-request generation cap (default 32768)
       --prefill-step-size N  Chunked prefill window (default 64 for generic;
                              auto Ornith profile uses validated 512; gemma4
