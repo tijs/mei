@@ -122,4 +122,21 @@ final class ContextBudgetTests: XCTestCase {
             XCTFail("unexpected stream outcome: \(error)")
         }
     }
+
+    func testWarmAdmissionWaitsForKernelAccountingAfterATrim() async throws {
+        var samples = 0
+        var trims = 0
+        let result = try await admitAfterReclaim {
+            samples += 1
+            guard samples == 4 else { throw EngineError.memoryCapacity(required: 20, available: 9) }
+            return 3
+        } reclaim: { required, available in
+            XCTAssertEqual(required - available, 11)
+            trims += 1
+            return true
+        }
+        XCTAssertEqual(result, 3)
+        XCTAssertEqual(trims, 1)
+        XCTAssertEqual(samples, 4)
+    }
 }

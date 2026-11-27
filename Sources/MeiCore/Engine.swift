@@ -77,21 +77,23 @@ public actor Engine {
         reservations.withLock { $0.available(cap: config.contextCap, profile: contextProfile, headroom: .sample(allocatorLimit: config.memoryLimitBytes)) }
     }
 
-    private func reserve(_ id: UUID, prompt: Int, maxTokens: Int?) throws -> Int {
-        try reservations.withLock { budget in
-            let requested = maxTokens ?? config.maxTokensDefault
-            var room = ContextHeadroom.sample(allocatorLimit: config.memoryLimitBytes)
-            let reply = try ContextReservations.replyLimit(prompt: prompt, requested: requested, cap: config.contextCap)
-            if room.pressure < 2, budget.isIdle,
-               prompt + reply > budget.available(cap: config.contextCap, profile: contextProfile, headroom: room),
-               Memory.cacheMemory > 0 {
-                // Reclaim idle allocator buffers before refusing a warm request.
-                // Live prefix entries and other generations retain their buffers.
-                Memory.clearCache()
-                room = .sample(allocatorLimit: config.memoryLimitBytes)
+    private func reserve(_ id: UUID, prompt: Int, maxTokens: Int?) async throws -> Int {
+        let requested = maxTokens ?? config.maxTokensDefault
+        func attempt() throws -> Int {
+            try reservations.withLock { budget in
+                try budget.admit(id: id, cap: config.contextCap, prompt: prompt, requested: requested,
+                                 profile: contextProfile, headroom: .sample(allocatorLimit: config.memoryLimitBytes))
             }
-            return try budget.admit(id: id, cap: config.contextCap, prompt: prompt, requested: requested,
-                                    profile: contextProfile, headroom: room)
+        }
+        return try await admitAfterReclaim(attempt: attempt) { required, available in
+            reservations.withLock { budget in
+                let room = ContextHeadroom.sample(allocatorLimit: config.memoryLimitBytes)
+                guard budget.isIdle, room.pressure < 2,
+                      required - available <= Memory.cacheMemory / contextProfile.bytesPerToken else { return false }
+                // Inactive allocator buffers can be reclaimed without evicting live prefix entries.
+                Memory.clearCache()
+                return true
+            }
         }
     }
 
@@ -372,7 +374,7 @@ public actor Engine {
             template: template, tools: request.tools,
             context: context, tokens: tokens)
         let reservation = UUID()
-        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        let reply = try await reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
         defer { reservations.withLock { $0.release(reservation) } }
         let parameters = try await makeParameters(
             reply: reply, tokens: tokens, request: request, templateCount: template.count,
@@ -660,7 +662,7 @@ public actor Engine {
             template: template, tools: request.tools,
             context: context, tokens: tokens)
         let reservation = UUID()
-        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        let reply = try await reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
         defer { reservations.withLock { $0.release(reservation) } }
         let parameters = try await makeParameters(
             reply: reply, tokens: tokens, request: request, templateCount: template.count,
@@ -879,7 +881,7 @@ public actor Engine {
         let tokens = tokenizer.encode(text: request.prompt)
         guard !tokens.isEmpty else { throw EngineError.emptyPrompt }
         let reservation = UUID()
-        let reply = try reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
+        let reply = try await reserve(reservation, prompt: tokens.count, maxTokens: request.maxTokens)
         defer { reservations.withLock { $0.release(reservation) } }
         let parameters = try await makeCompletionParameters(reply: reply, tokens: tokens, request: request)
 

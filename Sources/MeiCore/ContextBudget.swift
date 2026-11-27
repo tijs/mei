@@ -182,6 +182,34 @@ struct ContextReservations {
     mutating func release(_ id: UUID) { outstanding.removeValue(forKey: id) }
 }
 
+/// Darwin's footprint and host counters can lag a successful allocator trim.
+/// Wait only after an actual trim, without holding an engine slot's memory
+/// reservation or lock. Every attempt samples and reserves atomically.
+func admitAfterReclaim(
+    isolation: isolated (any Actor)? = #isolation,
+    attempt: () throws -> Int,
+    reclaim: (Int, Int) -> Bool
+) async throws -> Int {
+    do {
+        return try attempt()
+    } catch EngineError.memoryCapacity(let required, let available) {
+        guard reclaim(required, available) else {
+            throw EngineError.memoryCapacity(required: required, available: available)
+        }
+    }
+    for delay in [0, 10, 25, 50, 100] {
+        try Task.checkCancellation()
+        if delay > 0 { try await Task.sleep(for: .milliseconds(delay)) }
+        do {
+            return try attempt()
+        } catch EngineError.memoryCapacity {
+            continue
+        }
+    }
+    try await Task.sleep(for: .milliseconds(200))
+    return try attempt()
+}
+
 /// Cancel the underlying generation on a critical pressure event. The caller
 /// waits for the backend task to drain, just as it does on a client disconnect.
 func withContextPressureGuard<T: Sendable>(
