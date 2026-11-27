@@ -4,6 +4,8 @@ Start Mei with a model name to use automatic context sizing. For chat and raw co
 
 Use `--context-cap 32768` for a fixed ceiling, or `--context-cap auto` to return to automatic sizing. A numeric ceiling still observes the model's positional limit and machine memory. The status endpoint `/v1/mei/status` exposes the selected mode, the server ceiling and an estimate of the tokens available to a new request.
 
+Disk prefix caches use the configured context ceiling as part of their identity. After upgrading, or after changing that ceiling, the first request builds a fresh prefix entry.
+
 If macOS memory telemetry is unavailable, Mei limits a new request to at most 8,192 total tokens (4,096 for SenseNova), subject to its configured ceiling.
 
 If the prompt fills the entire window, shorten it to leave room for the reply. If memory admission returns HTTP 503, retry after the active request finishes or reduce the requested output length.
